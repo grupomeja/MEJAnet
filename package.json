@@ -1,0 +1,14 @@
+{
+  "name": "orden-de-carga",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "express": "^4.19.2",
+    "nodemailer": "^6.9.14",
+    "pdf-lib": "^1.17.1",
+    "pg": "^8.12.0"
+  }
+}

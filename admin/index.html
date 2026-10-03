@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Órdenes de carga - Administración</title>
+<style>
+  :root{--bg:#f4f5f7;--card:#fff;--ink:#15181d;--muted:#5d6672;--line:#d5d9df;--accent:#1f4e8c}
+  @media (prefers-color-scheme:dark){:root{--bg:#14171b;--card:#1d2127;--ink:#eef0f3;--muted:#a2abb7;--line:#363c45;--accent:#6aa3ec}}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,sans-serif}
+  main{max-width:1000px;margin:0 auto;padding:16px}
+  h1{font-size:22px;margin:0 0 12px}
+  input{font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);width:100%;margin-bottom:12px}
+  .item{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;gap:12px;align-items:center}
+  .item b{display:block}
+  .item small{color:var(--muted)}
+  a.btn{background:var(--accent);color:#fff;text-decoration:none;padding:9px 14px;border-radius:8px;font-weight:600;white-space:nowrap}
+  @media (prefers-color-scheme:dark){a.btn{color:#0b1626}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Órdenes de carga recibidas</h1>
+  <input id="q" type="search" placeholder="Buscar por cliente, pedimento, tráfico, placas…">
+  <div id="lista">Cargando…</div>
+</main>
+<script>
+let todas = [];
+const lista = document.getElementById('lista');
+function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function pinta(){
+  const q = document.getElementById('q').value.toLowerCase();
+  const r = todas.filter(o => !q || JSON.stringify(o.datos).toLowerCase().includes(q));
+  lista.innerHTML = r.length ? r.map(o => {
+    const d = o.datos, n = (d.filas||[]).filter(f=>f.trafico||f.bultos||f.pedimento||f.nota).length;
+    return `<div class="item"><div><b>#${o.id} · ${esc(d.cliente)||'Sin cliente'}</b>
+      <small>${esc(d.fecha)} · Caja/Placas: ${esc(d.caja)} · Sello: ${esc(d.sello)} · ${n} renglón(es)${d.capturista?' · '+esc(d.capturista):''}<br>
+      Recibida: ${new Date(o.creada).toLocaleString('es-MX')}</small></div>
+      <a class="btn" target="_blank" href="/api/admin/ordenes/${o.id}/pdf">Ver PDF</a></div>`;
+  }).join('') : 'No hay órdenes.';
+}
+fetch('/api/admin/ordenes').then(r=>r.json()).then(j=>{todas=j;pinta()});
+document.getElementById('q').oninput = pinta;
+</script>
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orden de Carga</title>
+<style>
+  :root{
+    --bg:#f4f5f7; --card:#fff; --ink:#15181d; --muted:#5d6672; --line:#d5d9df;
+    --accent:#1f4e8c; --accent-ink:#fff; --ok:#17794a; --err:#b3261e;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{ --bg:#14171b; --card:#1d2127; --ink:#eef0f3; --muted:#a2abb7; --line:#363c45; --accent:#6aa3ec; --accent-ink:#0b1626; --ok:#52c28a; --err:#ff8a80; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  main{max-width:960px;margin:0 auto;padding:16px}
+  header{text-align:center;padding:8px 0 16px}
+  header img{height:56px;max-width:80%;object-fit:contain;filter:contrast(1.4) brightness(.7)}
+  h1{margin:6px 0 0;font-size:clamp(26px,6vw,40px);letter-spacing:.5px;font-style:italic;text-decoration:underline;text-decoration-thickness:3px;text-underline-offset:6px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+  .grid{display:grid;gap:12px;grid-template-columns:1fr 1fr}
+  .full{grid-column:1/-1}
+  label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+  input[type=text],input[type=date]{width:100%;font:inherit;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+  input:focus{outline:2px solid var(--accent);outline-offset:1px}
+
+  /* Renglones: tarjetas en celular, tabla en pantalla ancha */
+  .row{border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px;display:grid;gap:10px;grid-template-columns:1fr 1fr;background:var(--bg)}
+  .row .num{grid-column:1/-1;font-weight:700;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
+  .row .nota{grid-column:1/-1}
+  .checks{grid-column:1/-1;display:flex;gap:12px}
+  .check{flex:1;display:flex;align-items:center;justify-content:center;gap:10px;border:1px solid var(--line);border-radius:8px;padding:12px;background:var(--card);cursor:pointer;margin:0;color:var(--ink);text-transform:none;font-size:15px;letter-spacing:0}
+  .check input{width:24px;height:24px;accent-color:var(--accent);margin:0}
+  .head{display:none}
+  @media (min-width:760px){
+    .head,.row{grid-template-columns:34px 1.1fr 1.1fr 1.2fr 2fr 90px 90px;align-items:center;gap:6px}
+    .head{display:grid;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;text-align:center;padding:0 12px 6px}
+    .row{padding:6px 12px;margin-bottom:6px}
+    .row .num{grid-column:auto;justify-content:center}
+    .row .nota{grid-column:auto}
+    .row input[type=text]{text-align:center;padding:8px}
+    .row label.lbl{display:none}
+    .checks{display:contents}
+    .check{border:0;padding:0;background:transparent}
+    .check span{display:none}
+  }
+  button{font:inherit;font-weight:700;border:0;border-radius:10px;padding:14px 20px;cursor:pointer}
+  .primary{background:var(--accent);color:var(--accent-ink);width:100%;font-size:18px}
+  .primary:disabled{opacity:.6}
+  .ghost{background:transparent;color:var(--accent);border:1px dashed var(--accent);width:100%}
+  .msg{margin-top:12px;padding:14px;border-radius:10px;font-weight:600;display:none}
+  .msg.ok{display:block;background:color-mix(in srgb,var(--ok) 15%,transparent);color:var(--ok)}
+  .msg.err{display:block;background:color-mix(in srgb,var(--err) 15%,transparent);color:var(--err)}
+  @media (max-width:480px){ .grid{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <img src="logo.png" alt="Grupo Meja" onerror="this.remove()">
+    <h1>ORDEN DE CARGA</h1>
+  </header>
+
+  <form id="f" autocomplete="off">
+    <section class="card grid">
+      <div class="full"><label for="cliente">Cliente</label><input type="text" id="cliente" maxlength="200"></div>
+      <div><label for="caja">Caja / Placas</label><input type="text" id="caja" maxlength="200"></div>
+      <div><label for="sello">Sello</label><input type="text" id="sello" maxlength="200"></div>
+      <div><label for="fecha">Fecha de cruce</label><input type="date" id="fecha"></div>
+      <div><label for="capturista">Tu nombre (opcional)</label><input type="text" id="capturista" maxlength="80"></div>
+    </section>
+
+    <section class="card">
+      <div class="head"><span>#</span><span>Tráfico</span><span>Bultos</span><span>Pedimento</span><span>Nota</span><span>Separado</span><span>Cargado</span></div>
+      <div id="filas"></div>
+      <button type="button" class="ghost" id="mas">+ Agregar renglón</button>
+    </section>
+
+    <button class="primary" id="enviar" type="submit">Enviar orden</button>
+    <div class="msg" id="msg" role="status"></div>
+  </form>
+</main>
+
+<script>
+const MAX = 20, INICIAL = 5;
+const filas = document.getElementById('filas');
+const msg = document.getElementById('msg');
+
+function nuevaFila() {
+  const n = filas.children.length + 1;
+  if (n > MAX) return;
+  const d = document.createElement('div');
+  d.className = 'row';
+  d.innerHTML = `
+    <div class="num">${n}</div>
+    <div><label class="lbl">Tráfico</label><input type="text" data-k="trafico" maxlength="60"></div>
+    <div><label class="lbl">Bultos</label><input type="text" data-k="bultos" maxlength="60"></div>
+    <div><label class="lbl">Pedimento</label><input type="text" data-k="pedimento" maxlength="60"></div>
+    <div class="nota"><label class="lbl">Nota</label><input type="text" data-k="nota" maxlength="300"></div>
+    <div class="checks">
+      <label class="check"><input type="checkbox" data-k="separado" aria-label="Separado ${n}"><span>Separado</span></label>
+      <label class="check"><input type="checkbox" data-k="cargado" aria-label="Cargado ${n}"><span>Cargado</span></label>
+    </div>`;
+  filas.appendChild(d);
+  document.getElementById('mas').style.display = n >= MAX ? 'none' : '';
+}
+function limpiarForm() {
+  document.getElementById('f').reset();
+  filas.innerHTML = '';
+  for (let i = 0; i < INICIAL; i++) nuevaFila();
+  document.getElementById('mas').style.display = '';
+  poneFechaHoy();
+}
+function poneFechaHoy() {
+  const h = new Date(), p = (x) => String(x).padStart(2, '0');
+  document.getElementById('fecha').value = `${h.getFullYear()}-${p(h.getMonth() + 1)}-${p(h.getDate())}`;
+}
+function fechaDDMMYYYY(iso) { const [y, m, d] = iso.split('-'); return y ? `${d}/${m}/${y}` : ''; }
+
+document.getElementById('mas').onclick = nuevaFila;
+
+document.getElementById('f').onsubmit = async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('enviar');
+  const datos = {
+    cliente: cliente.value, caja: caja.value, sello: sello.value,
+    fecha: fechaDDMMYYYY(fecha.value), capturista: capturista.value,
+    filas: [...filas.children].map((r) => {
+      const o = {};
+      r.querySelectorAll('[data-k]').forEach((i) => { o[i.dataset.k] = i.type === 'checkbox' ? i.checked : i.value; });
+      return o;
+    }),
+  };
+  btn.disabled = true; btn.textContent = 'Enviando…'; msg.className = 'msg';
+  try {
+    const r = await fetch('/api/ordenes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || 'Error');
+    limpiarForm();
+    msg.className = 'msg ok';
+    msg.textContent = `Orden #${j.id} enviada y guardada.` + (j.correo ? '' : ' (El aviso por correo no se pudo enviar.)');
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  } catch (err) {
+    msg.className = 'msg err';
+    msg.textContent = 'No se pudo enviar: ' + err.message + '. Revisa tu conexión e intenta de nuevo.';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Enviar orden';
+  }
+};
+limpiarForm();
+</script>
+</body>
+</html>
