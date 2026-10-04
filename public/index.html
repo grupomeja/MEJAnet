@@ -46,9 +46,8 @@
     .check span{display:none}
   }
   button{font:inherit;font-weight:700;border:0;border-radius:10px;padding:14px 20px;cursor:pointer}
-  .nueva{background:transparent;color:var(--accent);border:2px solid var(--accent);display:block;margin:0 auto 16px}
   .oc{display:flex;align-items:baseline;gap:10px}
-  .oc output{font-size:28px;font-weight:800;letter-spacing:1px;font-variant-numeric:tabular-nums}
+  .oc output{font-size:20px;font-weight:800;color:var(--accent);letter-spacing:1px;font-variant-numeric:tabular-nums}
   .primary{background:var(--accent);color:var(--accent-ink);width:100%;font-size:18px}
   .primary:disabled{opacity:.6}
   .ghost{background:transparent;color:var(--accent);border:1px dashed var(--accent);width:100%}
@@ -64,8 +63,6 @@
     <img src="logo.png" alt="Grupo Meja" onerror="this.remove()">
     <h1>ORDEN DE CARGA</h1>
   </header>
-
-  <button type="button" class="nueva" id="nueva">Nueva Orden de Carga</button>
 
   <form id="f" autocomplete="off">
     <section class="card grid">
@@ -114,12 +111,8 @@ function nuevaFila() {
 async function cargaSiguiente() {
   try {
     const r = await fetch('/api/siguiente'); const j = await r.json();
-    document.getElementById('oc').textContent = j.oc || '----';
+    document.getElementById('oc').textContent = j.oc ? String(j.oc).padStart(4, '0') : '----';
   } catch (_) { document.getElementById('oc').textContent = '----'; }
-}
-function hayDatos() {
-  return [...document.querySelectorAll('#f input[type=text]')].some((i) => i.value.trim()) ||
-         [...document.querySelectorAll('#f input[type=checkbox]')].some((i) => i.checked);
 }
 function limpiarForm() {
   document.getElementById('f').reset();
@@ -136,17 +129,12 @@ function poneFechaHoy() {
 function fechaDDMMYYYY(iso) { const [y, m, d] = iso.split('-'); return y ? `${d}/${m}/${y}` : ''; }
 
 document.getElementById('mas').onclick = nuevaFila;
-document.getElementById('nueva').onclick = () => {
-  if (hayDatos() && !confirm('¿Empezar una nueva orden? Se borrará lo que has capturado y no se ha enviado.')) return;
-  msg.className = 'msg';
-  limpiarForm();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-};
 
 document.getElementById('f').onsubmit = async (e) => {
   e.preventDefault();
   const btn = document.getElementById('enviar');
   const datos = {
+    oc: parseInt(document.getElementById('oc').textContent, 10) || null,
     cliente: cliente.value, caja: caja.value, sello: sello.value,
     fecha: fechaDDMMYYYY(fecha.value), capturista: capturista.value,
     filas: [...filas.children].map((r) => {

@@ -44,9 +44,12 @@ function admin(req, res, next) {
 }
 
 // --- Rutas para los trabajadores (sin contraseña) ---
+// Cada vez que alguien abre la página se le reserva un número de OC nuevo.
 app.get('/api/siguiente', async (_req, res) => {
-  try { res.json({ oc: formatoOC(await db.siguiente()) }); }
-  catch (e) { console.error(e); res.status(500).json({ error: 'No disponible' }); }
+  try {
+    res.set('Cache-Control', 'no-store');
+    res.json({ oc: await db.reservarOC() });
+  } catch (e) { console.error(e); res.status(500).json({ error: 'No disponible' }); }
 });
 
 app.post('/api/ordenes', async (req, res) => {
@@ -54,14 +57,23 @@ app.post('/api/ordenes', async (req, res) => {
     const datos = limpiar(req.body);
     const hayDatos = datos.cliente || datos.filas.some((f) => f.trafico || f.bultos || f.pedimento || f.nota);
     if (!hayDatos) return res.status(400).json({ error: 'La orden está vacía.' });
-    const reg = await db.guardar(datos);
+    // Usa el número reservado al abrir la página; si falta, es inválido o ya se usó, se asigna uno nuevo.
+    let oc = Number.parseInt(req.body.oc, 10);
+    const valido = Number.isInteger(oc) && oc >= 1 && oc <= (await db.ultimoOCEmitido()) && !(await db.existeOC(oc));
+    if (!valido) oc = await db.reservarOC();
+    let reg;
+    try { reg = await db.guardar(datos, oc); }
+    catch (e) {
+      if (e.code !== '23505') throw e;           // OC repetida por una carrera: se asigna otra
+      reg = await db.guardar(datos, await db.reservarOC());
+    }
     let correo = false;
     try {
-      correo = await enviarOrden(reg, await generarPDF(datos, reg.id));
+      correo = await enviarOrden(reg, await generarPDF(datos, reg.oc));
     } catch (e) {
       console.error('Error enviando correo:', e.message);
     }
-    res.json({ ok: true, id: reg.id, oc: formatoOC(reg.id), correo });
+    res.json({ ok: true, oc: formatoOC(reg.oc), correo });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'No se pudo guardar la orden.' });
@@ -74,8 +86,8 @@ app.get('/api/admin/ordenes', admin, async (_req, res) => res.json(await db.list
 app.get('/api/admin/ordenes/:id/pdf', admin, async (req, res) => {
   const reg = await db.obtener(Number(req.params.id));
   if (!reg) return res.status(404).send('No encontrada');
-  res.type('pdf').set('Content-Disposition', `inline; filename="ORDEN_DE_CARGA_${formatoOC(reg.id)}.pdf"`)
-     .send(await generarPDF(reg.datos, reg.id));
+  res.type('pdf').set('Content-Disposition', `inline; filename="ORDEN_DE_CARGA_${formatoOC(reg.oc)}.pdf"`)
+     .send(await generarPDF(reg.datos, reg.oc));
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
