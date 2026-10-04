@@ -27,6 +27,9 @@
 
   /* Renglones: tarjetas en celular, tabla en pantalla ancha */
   .row{border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px;display:grid;gap:10px;grid-template-columns:1fr 1fr;background:var(--bg)}
+  .bul{display:flex;gap:6px}
+  .bul input{width:30%!important;min-width:0;padding-left:4px!important;padding-right:4px!important}
+  .bul select{flex:1;min-width:0;font:inherit;font-size:13px;padding:10px 2px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
   .row .num{grid-column:1/-1;font-weight:700;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
   .row .nota{grid-column:1/-1}
   .checks{grid-column:1/-1;display:flex;gap:12px}
@@ -100,7 +103,7 @@ function nuevaFila() {
   d.innerHTML = `
     <div class="num">${n}</div>
     <div><label class="lbl">Tráfico</label><input type="text" data-k="trafico" maxlength="60"></div>
-    <div><label class="lbl">Bultos</label><input type="text" data-k="bultos" maxlength="60"></div>
+    <div><label class="lbl">Bultos</label><div class="bul"><input type="text" inputmode="numeric" data-k="bultosCant" maxlength="6" placeholder="Cant." aria-label="Cantidad ${n}" oninput="this.value=this.value.replace(/\\D/g,'')"><select data-k="bultosTipo" aria-label="Tipo de bulto ${n}"><option>BULTOS</option><option>ATADOS</option><option>CAJAS</option><option>CAJAS DE MADERA</option><option>MEZCLADO</option></select></div></div>
     <div><label class="lbl">Pedimento</label><input type="text" data-k="pedimento" maxlength="60"></div>
     <div class="nota"><label class="lbl">Nota</label><input type="text" data-k="nota" maxlength="300"></div>
     <div class="checks">
@@ -134,6 +137,9 @@ document.getElementById('f').onsubmit = async (e) => {
     filas: [...filas.children].map((r) => {
       const o = {};
       r.querySelectorAll('[data-k]').forEach((i) => { o[i.dataset.k] = i.type === 'checkbox' ? i.checked : i.value; });
+      const c = (o.bultosCant || '').trim(), t = o.bultosTipo || '';
+      o.bultos = c ? `${c} ${t}` : (t && t !== 'BULTOS' ? t : '');
+      delete o.bultosCant; delete o.bultosTipo;
       return o;
     }),
   };

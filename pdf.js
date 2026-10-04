@@ -17,9 +17,20 @@ async function generarPDF(d, id) {
       x: 590 - fuente.widthOfTextAtSize(texto, tam), y: 762, size: tam, font: fuente, color: rgb(0, 0, 0),
     });
   }
-  const txt = (nombre, valor) => {
-    try { form.getTextField(nombre).setText(String(valor ?? '').replace(/[^\x20-\x7E\xA0-\xFF]/g, '?')); } catch (_) {}
+  const medida = await pdf.embedFont(StandardFonts.Helvetica);
+  // Escribe el texto con letra de tamaño `max` y la reduce solo si no cabe en la celda.
+  const txt = (nombre, valor, max = 11, min = 5) => {
+    try {
+      const campo = form.getTextField(nombre);
+      const texto = String(valor ?? '').replace(/[^\x20-\x7E\xA0-\xFF]/g, '?');
+      const ancho = campo.acroField.getWidgets()[0].getRectangle().width - 6;
+      let tam = max;
+      while (tam > min && medida.widthOfTextAtSize(texto, tam) > ancho) tam -= 0.5;
+      try { campo.setFontSize(tam); } catch (_) {}
+      campo.setText(texto);
+    } catch (_) {}
   };
+  const CELDA = 8.5; // tamaño máximo de letra dentro de la tabla
   txt('CLIENTE', d.cliente);
   txt('CAJA / PLACAS', d.caja);
   txt('SELLO', d.sello);
@@ -27,10 +38,10 @@ async function generarPDF(d, id) {
 
   (d.filas || []).slice(0, 20).forEach((f, i) => {
     const n = i + 1;
-    txt(`TRAFICORow${n}`, f.trafico);
-    txt(`BULTOSRow${n}`, f.bultos);
-    txt(`PEDIMENTORow${n}`, f.pedimento);
-    txt(`NOTARow${n}`, f.nota);
+    txt(`TRAFICORow${n}`, f.trafico, CELDA);
+    txt(`BULTOSRow${n}`, f.bultos, CELDA);
+    txt(`PEDIMENTORow${n}`, f.pedimento, CELDA);
+    txt(`NOTARow${n}`, f.nota, CELDA);
     for (const [campo, nombre] of [['separado', 'SEPARADO'], ['cargado', 'CARGADO']]) {
       try {
         const cb = form.getCheckBox(`${nombre}Row${n}`);

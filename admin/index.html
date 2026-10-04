@@ -11,6 +11,10 @@
   body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
   main{max-width:1100px;margin:0 auto;padding:16px}
   h1{font-size:22px;margin:0}
+  .marca{display:flex;align-items:center;gap:14px}
+  .marca img{height:44px;width:auto;display:block}
+  @media (prefers-color-scheme:dark){.marca img{filter:invert(1)}}
+  @media (max-width:560px){.marca{flex-wrap:wrap;gap:6px}.marca img{height:30px}h1{font-size:19px}}
   .top{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;margin:0 0 14px}
   .acc{display:flex;gap:8px;flex-wrap:wrap}
   .acc a{text-decoration:none;font-weight:700;border-radius:10px;padding:10px 14px;font-size:15px}
@@ -58,7 +62,7 @@
 <body>
 <main>
   <div class="top">
-    <h1>TABLERO DE ORDENES DE CARGA</h1>
+    <div class="marca"><a href="/" aria-label="MEJAnet"><img src="/logo-negro.png" alt="Grupo Meja"></a><h1>TABLERO DE ORDENES DE CARGA</h1></div>
     <div class="acc"><a class="nuevo" href="/nueva-orden">+ Crear Nueva Orden de Carga</a><a class="inicio" href="/">MEJAnet</a></div>
   </div>
 
