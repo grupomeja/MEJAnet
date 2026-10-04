@@ -24,6 +24,7 @@ async function init() {
     )`);
     await pool.query('ALTER TABLE ordenes ADD COLUMN IF NOT EXISTS oc INTEGER');
     await pool.query('ALTER TABLE ordenes ADD COLUMN IF NOT EXISTS correo BOOLEAN NOT NULL DEFAULT false');
+    await pool.query("ALTER TABLE ordenes ADD COLUMN IF NOT EXISTS manual JSONB NOT NULL DEFAULT '{}'::jsonb");
     await pool.query('UPDATE ordenes SET oc = id WHERE oc IS NULL');
     await pool.query('CREATE UNIQUE INDEX IF NOT EXISTS ordenes_oc_idx ON ordenes (oc)');
   } else {
@@ -68,9 +69,39 @@ async function marcarCorreo(id, ok) {
   if (o) { o.correo = ok; fs.writeFileSync(FILE, JSON.stringify(lista)); }
 }
 
+// Cambio manual de estado. valor: true / false, o null para quitar el cambio manual (vuelve a lo que diga el escaneo).
+function aplicaManual(manual, n, campo, valor) {
+  const m = { ...(manual || {}) };
+  const fila = { ...(m[n] || {}) };
+  if (valor === null) delete fila[campo]; else fila[campo] = valor;
+  if (Object.keys(fila).length) m[n] = fila; else delete m[n];
+  return m;
+}
+
+async function cambiarManual(id, n, campo, valor) {
+  if (pool) {
+    const c = await pool.connect();
+    try {
+      await c.query('BEGIN');
+      const r = await c.query('SELECT manual FROM ordenes WHERE id = $1 FOR UPDATE', [id]);
+      if (!r.rowCount) { await c.query('ROLLBACK'); return null; }
+      const m = aplicaManual(r.rows[0].manual, n, campo, valor);
+      await c.query('UPDATE ordenes SET manual = $2 WHERE id = $1', [id, m]);
+      await c.query('COMMIT');
+      return m;
+    } catch (e) { await c.query('ROLLBACK').catch(() => {}); throw e; } finally { c.release(); }
+  }
+  const lista = JSON.parse(fs.readFileSync(FILE, 'utf8'));
+  const o = lista.find((x) => x.id === id);
+  if (!o) return null;
+  o.manual = aplicaManual(o.manual, n, campo, valor);
+  fs.writeFileSync(FILE, JSON.stringify(lista));
+  return o.manual;
+}
+
 async function listar() {
   if (pool) {
-    const r = await pool.query('SELECT id, oc, creada, correo, datos FROM ordenes ORDER BY oc DESC LIMIT 500');
+    const r = await pool.query('SELECT id, oc, creada, correo, manual, datos FROM ordenes ORDER BY oc DESC LIMIT 500');
     return r.rows;
   }
   return JSON.parse(fs.readFileSync(FILE, 'utf8')).reverse().slice(0, 500);
@@ -78,10 +109,10 @@ async function listar() {
 
 async function obtener(id) {
   if (pool) {
-    const r = await pool.query('SELECT id, oc, creada, datos FROM ordenes WHERE id = $1', [id]);
+    const r = await pool.query('SELECT id, oc, creada, manual, datos FROM ordenes WHERE id = $1', [id]);
     return r.rows[0] || null;
   }
   return JSON.parse(fs.readFileSync(FILE, 'utf8')).find((o) => o.id === id) || null;
 }
 
-module.exports = { init, guardar, marcarCorreo, listar, obtener };
+module.exports = { init, guardar, marcarCorreo, cambiarManual, listar, obtener };

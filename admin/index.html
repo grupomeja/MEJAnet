@@ -40,6 +40,10 @@
   .card{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
   a.btn{color:var(--accent);font-weight:700;text-decoration:none;padding:0 14px 12px;display:inline-block}
   .pill.rojo{background:color-mix(in srgb,var(--err) 16%,transparent);color:var(--err)}
+  button.chip{border:1px solid transparent;cursor:pointer;font:inherit;font-size:12px;font-weight:700;padding:3px 10px;color:var(--ink)}
+  button.chip:hover{outline:2px solid var(--accent)}
+  .pill.amb{color:var(--warn)}
+  .pill.verde{background:var(--ok);color:#fff}
   a.btn.dis{color:var(--muted);pointer-events:none;font-weight:600}
   .aviso{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:13px;display:none}
   .vacio{padding:30px;text-align:center;color:var(--muted)}
@@ -82,6 +86,7 @@ const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const oc4 = (n) => String(n).padStart(4, '0');
 let ordenes = [], vista = 'orden';
+const abiertas = new Set();
 
 function fechaCruce(s) { // dd/mm/yyyy -> Date | null
   const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(s || '');
@@ -92,30 +97,57 @@ const tieneTrafico = (f) => !!String(f.trafico || '').trim();
 let terminadas = {};   // oc (4 dígitos) -> archivo más reciente revisado
 
 // Estado de un renglón (f._i = posición en la orden). Solo cuenta si hay TRAFICO.
+// Cada campo: v = true/false/undefined(sin dato), man = cambiado a mano, ver = verificado (manual o escaneo claro).
 function est(o, f) {
   if (!tieneTrafico(f)) return { t: false };
-  const sc = terminadas[oc4(o.oc)];
-  if (!sc) return { t: true, scan: false };
-  const r = (sc.filas || []).find((x) => x.n === f._i + 1);
-  return { t: true, scan: true, sep: !!(r && r.separado), car: !!(r && r.cargado) };
+  const sc = terminadas[oc4(o.oc)], n = f._i + 1;
+  const m = (o.manual || {})[String(n)] || {};
+  const r = sc && (sc.filas || []).find((x) => x.n === n);
+  const campo = (c) => {
+    if (typeof m[c] === 'boolean') return { v: m[c], man: true, ver: true };
+    if (sc) return { v: !!(r && r[c]), man: false, ver: !sc.revisar };
+    return { v: undefined, man: false, ver: false };
+  };
+  return { t: true, scan: !!sc, sep: campo('separado'), car: campo('cargado') };
+}
+function chip(o, f, c, e) {
+  const x = e[c], et = c === 'sep' ? 'Separado' : 'Cargado', nombre = c === 'sep' ? 'separado' : 'cargado';
+  const cls = x.v === undefined ? '' : x.v ? 'ok' : 'rojo';
+  const txt = x.v === undefined ? et + ': —' : x.v ? '✓ ' + et : '✗ No ' + et.toLowerCase();
+  const nota = x.man ? ' ✎' : (!x.ver && x.v !== undefined ? ' ?' : '');
+  return `<button type="button" class="pill chip ${cls}" data-id="${o.id}" data-n="${f._i + 1}" data-c="${nombre}" data-v="${x.v === undefined ? '' : x.v}" title="Clic para cambiar a mano${x.man ? ' (✎ = cambiado a mano)' : ''}">${txt}${nota}</button>`;
 }
 function pillEstado(o, f) {
   const e = est(o, f);
   if (!e.t) return '<span class="meta">—</span>';
-  if (!e.scan) return '<span class="pill">Sin escaneo</span>';
-  return `<span class="pill ${e.sep ? 'ok' : 'rojo'}">${e.sep ? 'Separado' : 'No separado'}</span> <span class="pill ${e.car ? 'ok' : 'rojo'}">${e.car ? 'Cargado' : 'No cargado'}</span>`;
+  const hayManual = !!(o.manual || {})[String(f._i + 1)];
+  return chip(o, f, 'sep', e) + ' ' + chip(o, f, 'car', e) +
+    (hayManual ? ` <button type="button" class="pill chip quita" data-id="${o.id}" data-n="${f._i + 1}" title="Quitar cambios manuales y volver a lo que dice el escaneo">↺</button>` : '');
 }
+const txtV = (x, si, no) => x.v === undefined ? 'SIN DATO' : x.v ? si : no;
 function textoEstado(o, f) {
   const e = est(o, f);
   if (!e.t) return '';
-  return !e.scan ? 'SIN ESCANEO' : `${e.sep ? 'SEPARADO' : 'NO SEPARADO'} / ${e.car ? 'CARGADO' : 'NO CARGADO'}`;
+  return `${txtV(e.sep, 'SEPARADO', 'NO SEPARADO')} / ${txtV(e.car, 'CARGADO', 'NO CARGADO')}`;
 }
 function cumple(o, f, s) {
   const e = est(o, f);
-  if (s === 'noscan') return e.t && !e.scan;
-  if (s === 'pend') return e.t && !(e.scan && e.car);
-  if (!e.t || !e.scan) return false;
-  return s === 'nosep' ? !e.sep : s === 'sep' ? e.sep && !e.car : e.car;
+  if (!e.t) return false;
+  if (s === 'noscan') return e.sep.v === undefined || e.car.v === undefined;
+  if (s === 'pend') return e.car.v !== true;
+  if (s === 'nosep') return e.sep.v === false;
+  if (s === 'sep') return e.sep.v === true && e.car.v !== true;
+  return e.car.v === true;
+}
+// Resumen de una orden a partir de sus renglones con tráfico
+function resumenOrden(o) {
+  const filas = (o.datos.filas || []).map((f, i) => ({ ...f, _i: i })).filter(tieneTrafico);
+  const es = filas.map((f) => est(o, f));
+  const nSep = es.filter((e) => e.sep.v === false).length, nCar = es.filter((e) => e.car.v === false).length;
+  const nDato = es.filter((e) => e.sep.v === undefined || e.car.v === undefined).length;
+  const todoSi = es.length > 0 && es.every((e) => e.sep.v === true && e.car.v === true);
+  const verificado = es.every((e) => e.sep.ver && e.car.ver);
+  return { n: es.length, nSep, nCar, nDato, completa: todoSi && verificado, porVerificar: todoSi && !verificado };
 }
 
 // Filtro: devuelve órdenes con sus renglones ya filtrados
@@ -148,14 +180,16 @@ function pinta() {
   if (vista === 'orden') {
     $('lista').innerHTML = r.map(({ o, filas }) => {
       const d = o.datos, sc = terminadas[oc4(o.oc)];
-      const conT = filas.filter(tieneTrafico);
-      const ests = conT.map((f) => est(o, f));
-      const nSep = ests.filter((e) => e.scan && !e.sep).length, nCar = ests.filter((e) => e.scan && !e.car).length;
-      let resumen = `<span class="pill">${conT.length} tráfico(s)</span> `;
-      if (!sc) resumen += '<span class="pill">Sin escaneo terminado</span>';
-      else if (!nSep && !nCar) resumen += '<span class="pill ok">Terminada</span>';
-      else resumen += (nSep ? `<span class="pill rojo">${nSep} sin separar</span> ` : '') + (nCar ? `<span class="pill rojo">${nCar} sin cargar</span>` : '');
-      return `<details><summary>
+      const rs = resumenOrden(o);
+      let resumen = `<span class="pill">${rs.n} tráfico(s)</span> `;
+      if (rs.completa) resumen += '<span class="pill verde">Carga Completada</span>';
+      else {
+        if (rs.nSep) resumen += `<span class="pill rojo">${rs.nSep} sin separar</span> `;
+        if (rs.nCar) resumen += `<span class="pill rojo">${rs.nCar} sin cargar</span> `;
+        if (rs.porVerificar) resumen += '<span class="pill amb">Por verificar</span> ';
+        if (rs.nDato) resumen += `<span class="pill">${rs.nDato} sin revisar</span>`;
+      }
+      return `<details data-oid="${o.id}"${abiertas.has(o.id) ? ' open' : ''}><summary>
         <div><span class="oc">OC # ${oc4(o.oc)}</span> · <b>${esc(d.cliente) || 'Sin cliente'}</b>
           <div class="meta">Cruce: ${esc(d.fecha) || 'PENDIENTE'} · Caja/Placas: ${esc(d.caja)} · Sello: ${esc(d.sello)}${d.capturista ? ' · ' + esc(d.capturista) : ''}<br>Recibida: ${new Date(o.creada).toLocaleString('es-MX')}</div></div>
         <div style="text-align:right">${resumen}</div></summary>
@@ -179,8 +213,8 @@ function kpis() {
   const es = tr.map(({ o, f }) => est(o, f));
   $('k1').textContent = ordenes.length;
   $('k2').textContent = tr.length;
-  $('k3').textContent = es.filter((e) => !(e.scan && e.car)).length;
-  $('k4').textContent = es.filter((e) => e.scan && e.car).length;
+  $('k3').textContent = es.filter((e) => e.car.v !== true).length;
+  $('k4').textContent = es.filter((e) => e.car.v === true).length;
 }
 
 function csv() {
@@ -195,6 +229,29 @@ function csv() {
   a.href = URL.createObjectURL(new Blob(['﻿' + txt], { type: 'text/csv;charset=utf-8' }));
   a.download = 'ordenes_de_carga.csv'; a.click();
 }
+
+$('lista').addEventListener('toggle', (e) => {
+  const d = e.target; if (!d.dataset || !d.dataset.oid) return;
+  const id = Number(d.dataset.oid); d.open ? abiertas.add(id) : abiertas.delete(id);
+}, true);
+
+async function guardaManual(id, n, campo, valor) {
+  const r = await fetch(`/api/admin/ordenes/${id}/estado`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ n, campo, valor }) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || !j.ok) throw new Error(j.error || 'No se pudo guardar');
+  const o = ordenes.find((x) => x.id === id); if (o) o.manual = j.manual;
+}
+$('lista').addEventListener('click', async (e) => {
+  const b = e.target.closest('button.chip'); if (!b) return;
+  e.preventDefault(); e.stopPropagation();
+  const id = Number(b.dataset.id), n = Number(b.dataset.n);
+  b.disabled = true;
+  try {
+    if (b.classList.contains('quita')) { await guardaManual(id, n, 'separado', null); await guardaManual(id, n, 'cargado', null); }
+    else await guardaManual(id, n, b.dataset.c, b.dataset.v === '' ? true : b.dataset.v !== 'true');
+    kpis(); pinta();
+  } catch (err) { b.disabled = false; alert('No se pudo guardar el cambio: ' + err.message); }
+});
 
 ['q', 'est', 'd1', 'd2'].forEach((id) => $(id).addEventListener('input', pinta));
 $('limpia').onclick = () => { ['q', 'est', 'd1', 'd2'].forEach((id) => ($(id).value = '')); pinta(); };

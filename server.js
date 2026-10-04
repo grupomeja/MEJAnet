@@ -98,6 +98,20 @@ app.get('/api/admin/terminadas', admin, async (_req, res) => {
   }
 });
 
+// Cambiar a mano si un tráfico está separado / cargado (valor null = quitar el cambio manual)
+app.put('/api/admin/ordenes/:id/estado', admin, async (req, res) => {
+  try {
+    const id = Number(req.params.id), n = Number(req.body.n), campo = req.body.campo, valor = req.body.valor;
+    if (!Number.isInteger(id) || !Number.isInteger(n) || n < 1 || n > 20 ||
+        !['separado', 'cargado'].includes(campo) || !(valor === null || typeof valor === 'boolean')) {
+      return res.status(400).json({ error: 'Datos inválidos' });
+    }
+    const manual = await db.cambiarManual(id, String(n), campo, valor);
+    if (!manual) return res.status(404).json({ error: 'No encontrada' });
+    res.json({ ok: true, manual });
+  } catch (e) { console.error(e); res.status(500).json({ error: 'No se pudo guardar' }); }
+});
+
 app.get('/api/admin/ordenes', admin, async (_req, res) => res.json(await db.listar()));
 app.get('/api/admin/ordenes/:id/pdf', admin, async (req, res) => {
   const reg = await db.obtener(Number(req.params.id));
