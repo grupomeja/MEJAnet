@@ -2,7 +2,7 @@
 // (2) entrega al tablero el resultado de la revisión de OC_TERMINADAS (archivo _tablero_resultados.json),
 // (3) copia las Entradas Bodega de MEJAnet a la hoja de Google "Entradas Bodega".
 // Cambia TOKEN por la misma clave que pongas en Render como DRIVE_TOKEN.
-const TOKEN = 'PON_AQUI_TU_CLAVE';
+const TOKEN = 'A9S8D7F6G5H4';
 const CARPETA_ID = '1mvLs_ZEfAYozwmjxtbegqPbziONLOxRZ'; // carpeta "Ordenes de Carga"
 const HOJA_EB_ID = '18gdfi8oqDxVnrdcj4yWxjHaR2OEC-kr5V6QnQ0Evw2E'; // hoja de Google "Entradas Bodega"
 
