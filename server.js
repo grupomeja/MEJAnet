@@ -78,7 +78,9 @@ app.post('/api/ordenes', admin, async (req, res) => {
 });
 
 // --- Entradas de bodega ---
-const CAMPOS_EB = ['fecha', 'cliente', 'bultos', 'descripcion', 'peso_lbs', 'peso_kgs', 'linea', 'tracking', 'po', 'proveedor', 'pedimento'];
+const CAMPOS_EB = ['fecha', 'cliente', 'bultos', 'descripcion', 'peso_lbs', 'peso_kgs', 'linea', 'tracking', 'po', 'proveedor', 'pedimento', 'tipo', 'notas'];
+const TIPOS_EB = ['', 'IN-BOND', 'EXPORT LOT'];
+const maxEB = (k) => (k === 'notas' ? 500 : 120);
 app.get('/entradas-bodega', admin, (_req, res) => res.sendFile(path.join(__dirname, 'admin', 'entradas-bodega.html')));
 app.get('/entradas-bodega/nueva', admin, (_req, res) => res.sendFile(path.join(__dirname, 'admin', 'nueva-entrada-bodega.html')));
 app.get('/api/admin/entradas-bodega', admin, async (_req, res) => {
@@ -102,7 +104,8 @@ app.post('/api/admin/entradas-bodega', admin, async (req, res) => {
     const referencia = refEB(req.body.referencia);
     if (!referencia) return res.status(400).json({ error: 'Escribe la referencia con el formato ####/## (por ejemplo 1628/26).' });
     const datos = {};
-    for (const k of CAMPOS_EB) datos[k] = t(req.body[k], 120);
+    for (const k of CAMPOS_EB) datos[k] = t(req.body[k], maxEB(k));
+    if (!TIPOS_EB.includes(datos.tipo)) return res.status(400).json({ error: 'Tipo inválido' });
     if (datos.fecha && !/^\d{4}-\d{2}-\d{2}$/.test(datos.fecha)) return res.status(400).json({ error: 'Fecha inválida' });
     const reg = await db.guardarEntradaEB(referencia, datos);
     res.json({ ok: true, id: reg.id, referencia: reg.referencia });
@@ -140,7 +143,8 @@ app.put('/api/admin/entradas-bodega/:id', admin, async (req, res) => {
     const id = Number(req.params.id);
     if (!Number.isInteger(id)) return res.status(400).json({ error: 'Datos inválidos' });
     const cambios = {};
-    for (const k of CAMPOS_EB) if (k in req.body) cambios[k] = t(req.body[k], 120);
+    for (const k of CAMPOS_EB) if (k in req.body) cambios[k] = t(req.body[k], maxEB(k));
+    if ('tipo' in cambios && !TIPOS_EB.includes(cambios.tipo)) return res.status(400).json({ error: 'Tipo inválido' });
     if ('referencia' in req.body) {
       cambios.referencia = refEB(req.body.referencia);
       if (!cambios.referencia) return res.status(400).json({ error: 'La referencia debe tener el formato ####/##.' });

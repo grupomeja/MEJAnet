@@ -42,7 +42,7 @@ function salida(obj, sinOk) {
 
 // ---------- Entradas Bodega ----------
 // Columnas: REFERENCIA, FECHA ARRIBO, CLIENTE, BULTOS, DESCRIPCION, PESO (Lbs), PESO (KGS),
-//           LINEA FLETERA, TRACKING #, P.O., PROVEEDOR, PEDIMENTO
+//           LINEA FLETERA, TRACKING #, P.O., PROVEEDOR, PEDIMENTO, TIPO, NOTAS
 const NUMERICAS_EB = [3, 5, 6]; // BULTOS, PESO (Lbs), PESO (KGS)
 
 function hojaEB() {
@@ -75,6 +75,7 @@ function entradaBodegaFila(buscar, fila) {
   try {
     const hoja = hojaEB();
     const celdas = [celdasEB(fila, zonaEB(hoja))];
+    if (hoja.getMaxColumns() < celdas[0].length) hoja.insertColumnsAfter(hoja.getMaxColumns(), celdas[0].length - hoja.getMaxColumns());
     const ultima = hoja.getLastRow();
     let n = 0;
     if (ultima > 1) {
@@ -85,7 +86,7 @@ function entradaBodegaFila(buscar, fila) {
       n = ultima + 1;
       if (n > hoja.getMaxRows()) hoja.insertRowsAfter(hoja.getMaxRows(), 500);
     }
-    hoja.getRange(n, 1, 1, 12).setValues(celdas);
+    hoja.getRange(n, 1, 1, celdas[0].length).setValues(celdas);
     return { ok: true, fila: n };
   } finally {
     lock.releaseLock();
@@ -100,8 +101,10 @@ function entradaBodegaTodo(filas) {
     const hoja = hojaEB();
     const total = filas.length + 1;
     if (hoja.getMaxRows() < total) hoja.insertRowsAfter(hoja.getMaxRows(), total - hoja.getMaxRows() + 200);
-    if (hoja.getLastRow() > 1) hoja.getRange(2, 1, hoja.getLastRow() - 1, 12).clearContent();
-    if (filas.length) { const zona = zonaEB(hoja); hoja.getRange(2, 1, filas.length, 12).setValues(filas.map(function (f) { return celdasEB(f, zona); })); }
+    const ancho = filas.length ? filas[0].length : hoja.getLastColumn();
+    if (hoja.getMaxColumns() < ancho) hoja.insertColumnsAfter(hoja.getMaxColumns(), ancho - hoja.getMaxColumns());
+    if (hoja.getLastRow() > 1) hoja.getRange(2, 1, hoja.getLastRow() - 1, Math.max(ancho, hoja.getLastColumn())).clearContent();
+    if (filas.length) { const zona = zonaEB(hoja); hoja.getRange(2, 1, filas.length, ancho).setValues(filas.map(function (f) { return celdasEB(f, zona); })); }
     return { ok: true, filas: filas.length };
   } finally {
     lock.releaseLock();

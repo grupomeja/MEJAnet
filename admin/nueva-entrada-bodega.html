@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Agregar Entrada Bodega</title>
 <style>
-  :root{--bg:#f4f5f7;--card:#fff;--ink:#15181d;--muted:#5d6672;--line:#d5d9df;--accent:#1f4e8c;--accent-ink:#fff;--ok:#17794a;--err:#b3261e}
-  @media (prefers-color-scheme:dark){:root{--bg:#14171b;--card:#1d2127;--ink:#eef0f3;--muted:#a2abb7;--line:#363c45;--accent:#6aa3ec;--accent-ink:#0b1626;--ok:#52c28a;--err:#ff8a80}}
+  :root{--bg:#f4f5f7;--card:#fff;--ink:#15181d;--muted:#5d6672;--line:#d5d9df;--accent:#1f4e8c;--accent-ink:#fff;--ok:#17794a;--err:#b3261e;--azul:#1a64c8}
+  @media (prefers-color-scheme:dark){:root{--bg:#14171b;--card:#1d2127;--ink:#eef0f3;--muted:#a2abb7;--line:#363c45;--accent:#6aa3ec;--accent-ink:#0b1626;--ok:#52c28a;--err:#ff8a80;--azul:#6aa3ec}}
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
   main{max-width:820px;margin:0 auto;padding:16px}
@@ -28,6 +28,15 @@
   .ref input{border:0;outline:0;background:transparent;font-weight:800;padding-left:4px}
   select{width:100%;font:inherit;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
   #descOtro{margin-top:8px}
+  textarea{width:100%;font:inherit;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);resize:vertical;min-height:90px}
+  textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+  .tipo{display:flex;gap:10px;flex-wrap:wrap}
+  .tipo label{margin:0;cursor:pointer}
+  .tipo input{position:absolute;opacity:0;width:1px;height:1px}
+  .tipo span{display:inline-block;border:2px solid var(--line);border-radius:999px;padding:9px 20px;font-weight:700;font-size:15px;color:var(--muted);text-transform:none;letter-spacing:.3px;background:var(--bg)}
+  .tipo input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+  .tipo .ib input:checked+span{border-color:var(--ok);color:var(--ok);background:color-mix(in srgb,var(--ok) 15%,transparent)}
+  .tipo .ex input:checked+span{border-color:var(--azul);color:var(--azul);background:color-mix(in srgb,var(--azul) 15%,transparent)}
   .peso{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:end}
   .peso .eq{padding-bottom:12px;color:var(--muted);font-weight:700}
   .ayuda{color:var(--muted);font-size:13px;margin:6px 0 0}
@@ -74,6 +83,12 @@
       <div><label for="po">P.O.</label><input type="text" id="po" maxlength="120"></div>
       <div><label for="proveedor">Proveedor</label><input type="text" id="proveedor" list="lPro" maxlength="120"></div>
       <div><label for="pedimento">Pedimento</label><input type="text" id="pedimento" maxlength="120"></div>
+      <div class="full"><label>Tipo</label>
+        <div class="tipo" role="radiogroup" aria-label="Tipo">
+          <label class="ib"><input type="radio" name="tipo" value="IN-BOND"><span>IN-BOND</span></label>
+          <label class="ex"><input type="radio" name="tipo" value="EXPORT LOT"><span>EXPORT LOT</span></label>
+        </div></div>
+      <div class="full"><label for="notas">Notas</label><textarea id="notas" maxlength="500" placeholder="Observaciones de esta entrada"></textarea></div>
     </section>
     <datalist id="lCli"></datalist><datalist id="lLin"></datalist><datalist id="lPro"></datalist>
 
@@ -118,6 +133,8 @@ $('f').onsubmit = async (e) => {
   const datos = {};
   for (const k of CAMPOS) datos[k] = $(k).value.trim().toUpperCase();
   datos.fecha = $('fecha').value;
+  datos.tipo = (document.querySelector('input[name=tipo]:checked') || {}).value || '';
+  datos.notas = $('notas').value.trim();
   if (datos.descripcion === '__OTRO') datos.descripcion = $('descOtro').value.trim().toUpperCase();
   datos.referencia = $('referencia').value.trim();
   if (!/^\d{1,4}\/\d{2}$/.test(datos.referencia)) {

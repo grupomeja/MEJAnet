@@ -141,7 +141,14 @@ async function cargarSemillaEB() {
   const filas = JSON.parse(fs.readFileSync(SEED_EB, 'utf8'));
   if (pool) {
     const { rows } = await pool.query('SELECT count(*)::int AS n FROM entradas_bodega');
-    if (rows[0].n) return;
+    if (rows[0].n) {
+      // Tabla ya cargada: solo agrega las NOTAS del Excel a los registros que aún no tienen ese campo
+      for (const f of filas.filter((x) => x.notas)) {
+        await pool.query("UPDATE entradas_bodega SET datos = datos || jsonb_build_object('notas', $2::text) WHERE referencia = $1 AND NOT datos ? 'notas'",
+          [f.referencia, f.notas]);
+      }
+      return;
+    }
     const c = await pool.connect();
     try {
       await c.query('BEGIN');
@@ -155,7 +162,14 @@ async function cargarSemillaEB() {
     } catch (e) { await c.query('ROLLBACK').catch(() => {}); throw e; } finally { c.release(); }
     return;
   }
-  if (JSON.parse(fs.readFileSync(FILE_EB, 'utf8')).length) return;
+  const actual = JSON.parse(fs.readFileSync(FILE_EB, 'utf8'));
+  if (actual.length) {
+    const notas = Object.fromEntries(filas.filter((x) => x.notas).map((x) => [x.referencia, x.notas]));
+    let cambio = false;
+    for (const o of actual) if (notas[o.referencia] && !('notas' in o.datos)) { o.datos.notas = notas[o.referencia]; cambio = true; }
+    if (cambio) fs.writeFileSync(FILE_EB, JSON.stringify(actual));
+    return;
+  }
   const lista = filas.map((f, i) => {
     const { referencia, ...datos } = f, p = partesRef(referencia);
     return { id: i + 1, referencia, ...p, creada: new Date().toISOString(), datos };

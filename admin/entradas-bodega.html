@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TABLERO DE ENTRADAS BODEGA</title>
 <style>
-  :root{--bg:#f4f5f7;--card:#fff;--ink:#15181d;--muted:#5d6672;--line:#d5d9df;--accent:#1f4e8c;--accent-ink:#fff;--soft:#eef2f8;--ok:#17794a;--err:#b3261e}
-  @media (prefers-color-scheme:dark){:root{--bg:#14171b;--card:#1d2127;--ink:#eef0f3;--muted:#a2abb7;--line:#363c45;--accent:#6aa3ec;--accent-ink:#0b1626;--soft:#232a33;--ok:#52c28a;--err:#ff8a80}}
+  :root{--bg:#f4f5f7;--card:#fff;--ink:#15181d;--muted:#5d6672;--line:#d5d9df;--accent:#1f4e8c;--accent-ink:#fff;--soft:#eef2f8;--ok:#17794a;--err:#b3261e;--azul:#1a64c8}
+  @media (prefers-color-scheme:dark){:root{--bg:#14171b;--card:#1d2127;--ink:#eef0f3;--muted:#a2abb7;--line:#363c45;--accent:#6aa3ec;--accent-ink:#0b1626;--soft:#232a33;--ok:#52c28a;--err:#ff8a80;--azul:#6aa3ec}}
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
   main{max-width:none;margin:0 auto;padding:16px 20px}
@@ -24,7 +24,7 @@
   .kpi span{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.4px}
   .kpi small{font-size:14px;font-weight:600;color:var(--muted)}
   .kpi .verde{color:var(--ok)} .kpi .rojo{color:var(--err)}
-  .filters{display:grid;gap:8px;grid-template-columns:2fr repeat(4,1fr) .9fr .9fr;margin-bottom:12px;align-items:end}
+  .filters{display:grid;gap:8px;grid-template-columns:2fr repeat(5,1fr) .9fr .9fr;margin-bottom:12px;align-items:end}
   label{display:block;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
   input,select{font:inherit;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);width:100%;min-width:0}
   button{font:inherit;font-weight:600;border-radius:8px;padding:10px 14px;cursor:pointer;background:transparent;color:var(--accent);border:1px solid var(--accent)}
@@ -32,19 +32,29 @@
   .barra .sp{flex:1}
   .count{color:var(--muted);font-size:13px;margin:0}
   .tablewrap{overflow:auto;max-height:70vh;background:var(--card);border:1px solid var(--line);border-radius:10px}
-  table{border-collapse:collapse;width:100%;font-size:13px}
-  th,td{padding:6px 6px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
+  table{border-collapse:collapse;width:100%;font-size:12px}
+  th,td{padding:5px 4px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
   th{position:sticky;top:0;z-index:1;font-size:11px;text-transform:uppercase;color:var(--muted);letter-spacing:.4px;background:var(--soft)}
   td{cursor:text;font-variant-numeric:tabular-nums}
   td:hover{outline:1px dashed var(--accent);outline-offset:-3px}
-  td[data-c=cliente],td[data-c=linea],td[data-c=po],td[data-c=proveedor],td[data-c=descripcion]{white-space:normal;min-width:70px}
+  td[data-c=cliente],td[data-c=linea],td[data-c=po],td[data-c=proveedor],td[data-c=descripcion]{white-space:normal;min-width:64px}
+  td[data-c=tracking],td[data-c=po],td[data-c=linea],td[data-c=cliente]{white-space:normal;overflow-wrap:anywhere;max-width:120px}
+  td[data-c=bultos],td[data-c=peso_lbs],td[data-c=peso_kgs],td[data-c=pedimento]{white-space:normal;overflow-wrap:anywhere}
+  td[data-c=tracking]{min-width:96px}
+  td[data-c=fecha]{min-width:74px}
+  th[data-c=notas],td[data-c=notas]{white-space:normal;text-align:left;min-width:140px;width:20%;overflow-wrap:anywhere}
+  td[data-c=tipo]{padding:3px}
   th{white-space:normal}
-  th[data-c=proveedor],td[data-c=proveedor]{width:150px;max-width:150px}
+  th[data-c=proveedor],td[data-c=proveedor]{width:100px;max-width:110px}
   td.acc-borrar{cursor:default;padding:2px 4px}
   td.acc-borrar:hover{outline:none}
   button.borrar{border:0;background:transparent;color:var(--err);padding:4px;border-radius:6px;line-height:0;cursor:pointer}
   button.borrar:hover{background:color-mix(in srgb,var(--err) 14%,transparent)}
   button.borrar:disabled{opacity:.4}
+  .pill{display:inline-block;border-radius:999px;padding:3px 7px;font-size:10.5px;font-weight:700;white-space:nowrap;letter-spacing:.2px}
+  .pill.inbond{background:color-mix(in srgb,var(--ok) 15%,transparent);color:var(--ok)}
+  .pill.export{background:color-mix(in srgb,var(--azul) 15%,transparent);color:var(--azul)}
+  .pill.nada{color:var(--muted);font-weight:400}
   td.ref{font-weight:800}
   td.ref.ped{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
   td.edit{padding:3px 4px;outline:2px solid var(--accent);outline-offset:-2px}
@@ -76,10 +86,11 @@
   </section>
 
   <section class="filters">
-    <div class="q"><label for="q">Buscar</label><input id="q" type="search" placeholder="Referencia, tracking, P.O., pedimento…"></div>
+    <div class="q"><label for="q">Buscar</label><input id="q" type="search" placeholder="Referencia, tracking, P.O., pedimento, notas…"></div>
     <div><label for="fCli">Cliente</label><select id="fCli"><option value="">Todos</option></select></div>
     <div><label for="fPro">Proveedor</label><select id="fPro"><option value="">Todos</option></select></div>
     <div><label for="fLin">Línea fletera</label><select id="fLin"><option value="">Todas</option></select></div>
+    <div><label for="fTipo">Tipo</label><select id="fTipo"><option value="">Todos</option><option>IN-BOND</option><option>EXPORT LOT</option><option value="sin">Sin tipo</option></select></div>
     <div><label for="fPed">Pedimento</label><select id="fPed"><option value="">Todos</option><option value="con">Con pedimento</option><option value="sin">Sin pedimento</option></select></div>
     <div><label for="d1">Arribo desde</label><input id="d1" type="date"></div>
     <div><label for="d2">Arribo hasta</label><input id="d2" type="date"></div>
@@ -95,10 +106,10 @@
   <div class="tablewrap">
     <table>
       <thead><tr>
-        <th>Referencia</th><th>Fecha arribo</th><th>Cliente</th><th>Bultos</th><th>Descripcion</th>
-        <th>Peso (Lbs)</th><th>Peso (Kgs)</th><th>Linea fletera</th><th>Tracking #</th><th>P.O.</th><th data-c="proveedor">Proveedor</th><th>Pedimento</th><th aria-label="Borrar"></th>
+        <th>Referencia</th><th>Tipo</th><th>Fecha arribo</th><th>Cliente</th><th>Bultos</th><th>Descripcion</th>
+        <th>Peso (Lbs)</th><th>Peso (Kgs)</th><th>Linea fletera</th><th>Tracking #</th><th>P.O.</th><th data-c="proveedor">Proveedor</th><th>Pedimento</th><th data-c="notas">Notas</th><th aria-label="Borrar"></th>
       </tr></thead>
-      <tbody id="filas"><tr><td colspan="13" class="vacio">Cargando…</td></tr></tbody>
+      <tbody id="filas"><tr><td colspan="15" class="vacio">Cargando…</td></tr></tbody>
     </table>
   </div>
   <button class="mas" id="mas" type="button" hidden>Mostrar más</button>
@@ -109,7 +120,8 @@ const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const POR_PAGINA = 200, LB_POR_KG = 2.20462;
 const DESCRIPCIONES = ['ATADO(S)', 'CARTON/ES', 'BULTOS', 'CAJA(S)', 'CAJA(S) DE MADERA', 'BOLSAS', 'SACOS'];
-const COLS = ['referencia', 'fecha', 'cliente', 'bultos', 'descripcion', 'peso_lbs', 'peso_kgs', 'linea', 'tracking', 'po', 'proveedor', 'pedimento'];
+const COLS = ['referencia', 'tipo', 'fecha', 'cliente', 'bultos', 'descripcion', 'peso_lbs', 'peso_kgs', 'linea', 'tracking', 'po', 'proveedor', 'pedimento', 'notas'];
+const TIPOS = ['IN-BOND', 'EXPORT LOT'];
 let datos = [], limite = POR_PAGINA;
 
 const fechaTxt = (iso) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); return m ? `${m[3]}/${m[2]}/${m[1]}` : (iso || ''); };
@@ -128,12 +140,14 @@ function llenaSelect(id, campo) {
 
 function filtrar() {
   const q = $('q').value.trim().toLowerCase();
-  const cli = $('fCli').value, pro = $('fPro').value, lin = $('fLin').value, ped = $('fPed').value;
+  const cli = $('fCli').value, pro = $('fPro').value, lin = $('fLin').value, ped = $('fPed').value, tipo = $('fTipo').value;
   const d1 = $('d1').value, d2 = $('d2').value;
   return datos.filter((r) => {
     if (cli && (r.cliente || '').trim() !== cli) return false;
     if (pro && (r.proveedor || '').trim() !== pro) return false;
     if (lin && (r.linea || '').trim() !== lin) return false;
+    if (tipo === 'sin' && r.tipo) return false;
+    if (tipo && tipo !== 'sin' && r.tipo !== tipo) return false;
     if (ped === 'con' && !conPed(r)) return false;
     if (ped === 'sin' && conPed(r)) return false;
     if ((d1 || d2) && (!r.fecha || (d1 && r.fecha < d1) || (d2 && r.fecha > d2))) return false;
@@ -142,7 +156,9 @@ function filtrar() {
   });
 }
 
+const pill = (t) => t === 'IN-BOND' ? '<span class="pill inbond">IN-BOND</span>' : t === 'EXPORT LOT' ? '<span class="pill export">EXPORT LOT</span>' : '<span class="pill nada">—</span>';
 const celda = (r, c) => {
+  if (c === 'tipo') return `<td data-c="tipo" title="Clic para cambiar">${pill(r.tipo)}</td>`;
   const v = c === 'fecha' ? fechaTxt(r.fecha) : r[c];
   const cls = c === 'referencia' ? `ref${conPed(r) ? ' ped' : ''}` : '';
   return `<td data-c="${c}"${cls ? ` class="${cls}"` : ''}>${esc(v)}</td>`;
@@ -168,7 +184,7 @@ function pinta() {
   kpis(r);
   $('count').textContent = r.length > limite ? `Mostrando ${fmt(limite)} de ${fmt(r.length)} registros` : `${fmt(r.length)} registro(s)`;
   $('mas').hidden = r.length <= limite;
-  $('filas').innerHTML = r.length ? r.slice(0, limite).map(filaHTML).join('') : '<tr><td colspan="13" class="vacio">No hay resultados.</td></tr>';
+  $('filas').innerHTML = r.length ? r.slice(0, limite).map(filaHTML).join('') : '<tr><td colspan="15" class="vacio">No hay resultados.</td></tr>';
 }
 
 // ---------- Edición en la celda ----------
@@ -176,6 +192,8 @@ let editando = null;
 function editor(r, c) {
   if (c === 'referencia') return `<span class="pref">MEJA</span><input class="refin" value="${esc(r.referencia.replace(/^MEJA\s*/i, ''))}" placeholder="####/##" maxlength="7">`;
   if (c === 'fecha') return `<input type="date" value="${esc(r.fecha)}">`;
+  if (c === 'tipo') return `<select><option value=""${r.tipo ? '' : ' selected'}>— Sin tipo —</option>${TIPOS.map((o) => `<option${o === r.tipo ? ' selected' : ''}>${o}</option>`).join('')}</select>`;
+  if (c === 'notas') return `<textarea rows="3" maxlength="500" style="width:100%;min-width:180px;font:inherit;padding:5px;resize:vertical">${esc(r.notas)}</textarea>`;
   if (c === 'descripcion') {
     const opts = [...DESCRIPCIONES];
     if (r.descripcion && !opts.includes(r.descripcion)) opts.unshift(r.descripcion);
@@ -190,8 +208,8 @@ function abre(td) {
   editando = { td, r, c };
   td.classList.add('edit');
   td.innerHTML = editor(r, c);
-  const campo = td.querySelector('input,select');
-  campo.focus(); if (campo.select) campo.select();
+  const campo = td.querySelector('input,select,textarea');
+  campo.focus(); if (campo.select && c !== 'notas') campo.select();
   if (c === 'descripcion') campo.addEventListener('change', () => {
     if (campo.value !== '__otro') return;
     td.innerHTML = `<input maxlength="120" placeholder="Escribe la descripción" size="18">`;
@@ -202,7 +220,7 @@ function abre(td) {
 function conecta(campo) {
   campo.focus();
   campo.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { e.preventDefault(); guarda(); }
+    if (e.key === 'Enter' && !(campo.tagName === 'TEXTAREA' && e.shiftKey)) { e.preventDefault(); guarda(); }
     if (e.key === 'Escape') { e.preventDefault(); cierra(); }
   });
   campo.addEventListener('blur', () => setTimeout(() => { if (editando && !editando.td.contains(document.activeElement)) guarda(); }, 0));
@@ -219,10 +237,10 @@ let guardando = false;
 async function guarda() {
   if (!editando || guardando) return;
   const { td, r, c } = editando;
-  const campo = td.querySelector('input,select');
+  const campo = td.querySelector('input,select,textarea');
   let v = campo.value.trim();
   if (v === '__otro') return;
-  if (c !== 'fecha') v = v.toUpperCase();
+  if (c !== 'fecha' && c !== 'notas') v = v.toUpperCase();
   const cambios = {};
   if (c === 'referencia') {
     if (!/^\d{1,4}\/\d{2}$/.test(v)) { alert('La referencia debe tener el formato ####/## (por ejemplo 1628/26).'); campo.focus(); return; }
@@ -272,7 +290,7 @@ $('filas').addEventListener('click', async (e) => {
 
 function csv() {
   const enc = (v) => '"' + String(v ?? '').replace(/"/g, '""') + '"';
-  const cab = ['REFERENCIA', 'FECHA ARRIBO', 'CLIENTE', 'BULTOS', 'DESCRIPCION', 'PESO (Lbs)', 'PESO (KGS)', 'LINEA FLETERA', 'TRACKING #', 'P.O.', 'PROVEEDOR', 'PEDIMENTO'];
+  const cab = ['REFERENCIA', 'TIPO', 'FECHA ARRIBO', 'CLIENTE', 'BULTOS', 'DESCRIPCION', 'PESO (Lbs)', 'PESO (KGS)', 'LINEA FLETERA', 'TRACKING #', 'P.O.', 'PROVEEDOR', 'PEDIMENTO', 'NOTAS'];
   const txt = [cab, ...filtrar().map((r) => COLS.map((c) => c === 'fecha' ? fechaTxt(r.fecha) : r[c]))].map((f) => f.map(enc).join(',')).join('\r\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob(['﻿' + txt], { type: 'text/csv;charset=utf-8' }));
@@ -280,8 +298,8 @@ function csv() {
 }
 
 const reinicia = () => { limite = POR_PAGINA; pinta(); };
-['q', 'fCli', 'fPro', 'fLin', 'fPed', 'd1', 'd2'].forEach((id) => $(id).addEventListener('input', reinicia));
-$('limpia').onclick = () => { ['q', 'fCli', 'fPro', 'fLin', 'fPed', 'd1', 'd2'].forEach((id) => ($(id).value = '')); reinicia(); };
+['q', 'fCli', 'fPro', 'fLin', 'fTipo', 'fPed', 'd1', 'd2'].forEach((id) => $(id).addEventListener('input', reinicia));
+$('limpia').onclick = () => { ['q', 'fCli', 'fPro', 'fLin', 'fTipo', 'fPed', 'd1', 'd2'].forEach((id) => ($(id).value = '')); reinicia(); };
 $('mas').onclick = () => { limite += POR_PAGINA; pinta(); };
 $('csv').onclick = csv;
 $('hoja').onclick = async () => {
@@ -302,7 +320,7 @@ fetch('/api/admin/entradas-bodega').then((r) => { if (!r.ok) throw new Error(); 
     llenaSelect('fCli', 'cliente'); llenaSelect('fPro', 'proveedor'); llenaSelect('fLin', 'linea');
     pinta();
   })
-  .catch(() => { $('filas').innerHTML = '<tr><td colspan="13" class="vacio">No se pudieron cargar los registros.</td></tr>'; });
+  .catch(() => { $('filas').innerHTML = '<tr><td colspan="15" class="vacio">No se pudieron cargar los registros.</td></tr>'; });
 </script>
 </body>
 </html>
