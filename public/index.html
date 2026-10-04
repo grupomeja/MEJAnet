@@ -32,6 +32,7 @@
   @media (max-width:420px){a.boton{height:66px}a.boton .ico{flex-basis:66px}a.boton .ico svg{width:46px;height:46px}a.boton .txt{font-size:20px;letter-spacing:1px;white-space:nowrap}}
   a.boton.carga{--c:#ff6100;--c-osc:#c24a00}
   a.boton.bodega{--c:#875a86;--c-osc:#5f3f5e}
+  a.boton.cotizador{--c:#0f8a6c;--c-osc:#0a6650}
 </style>
 </head>
 <body>
@@ -70,6 +71,19 @@
         </svg>
       </span>
       <span class="txt">Entradas Bodega</span>
+    </a>
+    <a class="boton cotizador" href="/cotizador">
+      <span class="ico" aria-hidden="true">
+        <svg viewBox="0 0 64 64">
+          <rect x="12" y="4" width="40" height="56" rx="5" fill="currentColor"/>
+          <rect x="17" y="10" width="30" height="14" rx="2" fill="#fff"/>
+          <text x="42" y="21.5" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="11" fill="currentColor">$</text>
+          <g fill="#fff"><rect x="17" y="29" width="8" height="6" rx="1"/><rect x="28" y="29" width="8" height="6" rx="1"/><rect x="39" y="29" width="8" height="6" rx="1"/>
+            <rect x="17" y="38.5" width="8" height="6" rx="1"/><rect x="28" y="38.5" width="8" height="6" rx="1"/><rect x="39" y="38.5" width="8" height="15.5" rx="1"/>
+            <rect x="17" y="48" width="8" height="6" rx="1"/><rect x="28" y="48" width="8" height="6" rx="1"/></g>
+        </svg>
+      </span>
+      <span class="txt">Cotizador</span>
     </a>
   </div>
 </main>

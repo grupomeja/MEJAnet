@@ -35,3 +35,15 @@ Sin `DATABASE_URL` las órdenes se guardan en un archivo local, que se borra cua
 - `/entradas-bodega/nueva` → formulario "Agregar Nuevo".
 - La primera vez que arranca con la tabla vacía, carga los registros de `seed/entradas_bodega.json` (primera pestaña del Excel "-STATUS- 2026 -").
 - Cada registro nuevo o editado se copia a la hoja de Google "Entradas Bodega" mediante el mismo Apps Script de Drive (`apps-script/Code.gs`, acciones `eb_fila` y `eb_todo`). El botón "Actualizar Google Sheet" del tablero manda todos los registros.
+
+## Cotizador
+
+- `/cotizador` → tablero de cotizaciones (pide contraseña): buscar, cambiar estado (BORRADOR / ENVIADA / ACEPTADA / RECHAZADA), ver PDF, duplicar y borrar.
+- `/cotizador/nueva` y `/cotizador/editar/:id` → formulario de cotización. Cada partida tiene su moneda (MXN o USD) y su IVA; con el tipo de cambio se muestra el total combinado. El folio es consecutivo (`COT-0001`).
+- `/cotizador/tarifas` → catálogo de conceptos. Cada concepto puede ser:
+  - **Precio fijo**: importe = cantidad × precio.
+  - **Precio manual**: el precio se escribe en cada cotización.
+  - **Fórmula**: el importe se calcula con los datos del embarque. Variables: `precio`, `cantidad`, `peso_kg`, `peso_lb`, `tarimas`, `bultos`, `dias`, `km`, `valor`, `tc`. Funciones: `min`, `max`, `redondear`, `techo`, `piso`, `abs`, `si(condición, sí, no)`. Ejemplo: `max(precio * km, 6500)`.
+- El PDF se genera en `/api/admin/cot/cotizaciones/:id/pdf`.
+- Archivos: `cotizador.js` (datos y rutas), `cotizacion-pdf.js` (PDF), `public/formula.js` (cálculo, se usa en el servidor y en el navegador), `admin/cotizador.html`, `admin/cotizacion.html`, `admin/cot-tarifas.html`.
+- Las tablas `cot_conceptos` y `cotizaciones` se crean solas al arrancar; la primera vez se carga un catálogo de ejemplo con precios "por definir".

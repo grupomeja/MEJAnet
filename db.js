@@ -290,4 +290,4 @@ async function migraciones() {
   return aplicadas;
 }
 
-module.exports = { init, guardar, marcarCorreo, cambiarManual, listar, obtener, guardarEntradaEB, actualizarEntradaEB, borrarEntradaEB, listarEntradasEB, RefRepetida };
+module.exports = { pool, DIR, init, guardar, marcarCorreo, cambiarManual, listar, obtener, guardarEntradaEB, actualizarEntradaEB, borrarEntradaEB, listarEntradasEB, RefRepetida };
