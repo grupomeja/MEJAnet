@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TABLERO DE ENTRADAS BODEGA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600&display=swap" rel="stylesheet">
 <style>
   :root{--bg:#f4f5f7;--card:#fff;--ink:#15181d;--muted:#5d6672;--line:#d5d9df;--accent:#1f4e8c;--accent-ink:#fff;--soft:#eef2f8;--ok:#17794a;--err:#b3261e;--azul:#1a64c8;--nar:#d95a00}
   @media (prefers-color-scheme:dark){:root{--bg:#14171b;--card:#1d2127;--ink:#eef0f3;--muted:#a2abb7;--line:#363c45;--accent:#6aa3ec;--accent-ink:#0b1626;--soft:#232a33;--ok:#52c28a;--err:#ff8a80;--azul:#6aa3ec;--nar:#ff9a4d}}
@@ -13,11 +16,18 @@
   .logo img{height:40px;width:auto;display:block}
   .top{display:grid;grid-template-columns:1fr auto 1fr;gap:10px 16px;align-items:center;margin:0 0 14px}
   .top h1{margin:0;text-align:center;font-size:20px}
+  /* Título con el estilo lila del botón Entradas Bodega */
+  .top h1.titulo{display:inline-flex;align-items:center;gap:12px;justify-self:center;padding:6px 22px 6px 6px;border-radius:14px;
+    background:linear-gradient(180deg,#f4ecf4,#ebdeeb);border:1px solid #d9c3d8;box-shadow:0 2px 0 #d2b9d1,0 6px 16px rgba(135,90,134,.14);
+    color:#875a86;font-family:"Oswald","Arial Narrow",system-ui,sans-serif;font-weight:600;font-size:27px;letter-spacing:1.2px;line-height:1.1;white-space:nowrap}
+  .top h1.titulo .ico{flex:0 0 44px;height:44px;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:10px;color:#875a86;box-shadow:inset 0 -3px 6px rgba(0,0,0,.05)}
+  .top h1.titulo .ico svg{width:34px;height:34px}
+  @media (prefers-color-scheme:dark){.top h1.titulo{background:linear-gradient(180deg,#3a2c3a,#332633);border-color:#5a435a;box-shadow:0 2px 0 #241a24;color:#e2c4e1}.top h1.titulo .ico{background:#f4ecf4}}
   .acc{display:flex;gap:8px;justify-content:flex-end}
   .acc a{white-space:nowrap;text-decoration:none;font-weight:700;border-radius:10px;padding:9px 12px;font-size:14px}
   .acc .nuevo{background:var(--accent);color:var(--accent-ink)}
   .acc .inicio{border:1px solid var(--line);color:var(--accent);background:var(--card)}
-  @media (max-width:760px){.top{grid-template-columns:1fr;justify-items:center}.acc{justify-content:center;flex-wrap:wrap}.top h1{font-size:19px}}
+  @media (max-width:760px){.top{grid-template-columns:1fr;justify-items:center}.acc{justify-content:center;flex-wrap:wrap}.top h1{font-size:19px}.top h1.titulo{font-size:20px;white-space:normal}}
   .kpis{display:grid;gap:10px;grid-template-columns:1fr 1.6fr 1fr 1fr 1fr;margin-bottom:14px}
   .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-width:0}
   .kpi b{display:block;font-size:26px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -90,7 +100,7 @@
 <main>
   <div class="top">
     <a class="logo" href="/" aria-label="MEJAnet"><img src="/logo.png" alt="Grupo Meja"></a>
-    <h1>TABLERO DE ENTRADAS BODEGA</h1>
+    <h1 class="titulo"><span class="ico" aria-hidden="true"><svg viewBox="0 0 64 64"> <path d="M2 30 L20 22 H62 V52 H2 Z" fill="currentColor"/> <rect x="24" y="16" width="36" height="11" rx="1" fill="#fff"/> <rect x="25.5" y="17.5" width="33" height="8" fill="currentColor"/> <text x="42" y="24" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="7" fill="#fff" letter-spacing=".3">BODEGA</text> <rect x="20" y="24" width="1.6" height="28" fill="#fff"/> <rect x="7" y="38" width="7" height="14" fill="#fff"/> <rect x="31" y="35" width="22" height="13" fill="#fff"/> <g fill="currentColor"><rect x="31" y="37.5" width="22" height="1.2"/><rect x="31" y="40.5" width="22" height="1.2"/><rect x="31" y="43.5" width="22" height="1.2"/></g> <path d="M29 48h26v4H29z" fill="#fff"/><path d="M30.5 49.5h23v2.5h-23z" fill="currentColor"/> <rect x="1" y="52" width="62" height="2.5" fill="currentColor"/> </svg></span>TABLERO DE ENTRADAS BODEGA</h1>
     <div class="acc"><a class="nuevo" href="/entradas-bodega/nueva">+ Agregar Nuevo</a><a class="inicio" href="/">MEJAnet</a></div>
   </div>
 
