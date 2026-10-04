@@ -28,3 +28,10 @@ Sin `DATABASE_URL` las órdenes se guardan en un archivo local, que se borra cua
 2. Cambia `PON_AQUI_TU_CLAVE` por una clave inventada por ti.
 3. Implementar → Nueva implementación → tipo "Aplicación web". Ejecutar como: **Yo**. Quién tiene acceso: **Cualquier persona**. Autoriza los permisos y copia la URL que termina en `/exec`.
 4. En Render agrega `DRIVE_WEBHOOK_URL` (esa URL) y `DRIVE_TOKEN` (la misma clave del paso 2).
+
+## Entradas Bodega
+
+- `/entradas-bodega` → tablero de entradas (pide contraseña). Cada celda se edita con un clic.
+- `/entradas-bodega/nueva` → formulario "Agregar Nuevo".
+- La primera vez que arranca con la tabla vacía, carga los registros de `seed/entradas_bodega.json` (primera pestaña del Excel "-STATUS- 2026 -").
+- Cada registro nuevo o editado se copia a la hoja de Google "Entradas Bodega" mediante el mismo Apps Script de Drive (`apps-script/Code.gs`, acciones `eb_fila` y `eb_todo`). El botón "Actualizar Google Sheet" del tablero manda todos los registros.

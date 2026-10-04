@@ -5,7 +5,7 @@ const db = require('./db');
 const { generarPDF } = require('./pdf');
 const { enviarOrden } = require('./mail');
 const { formatoOC } = require('./oc');
-const { guardarEnDrive, configurado: driveListo } = require('./drive');
+const { guardarEnDrive, enviarHojaEB, configurado: driveListo } = require('./drive');
 
 const app = express();
 app.use(express.json({ limit: '200kb' }));
@@ -74,6 +74,73 @@ app.post('/api/ordenes', admin, async (req, res) => {
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'No se pudo guardar la orden.' });
+  }
+});
+
+// --- Entradas de bodega ---
+const CAMPOS_EB = ['fecha', 'cliente', 'bultos', 'descripcion', 'peso_lbs', 'peso_kgs', 'linea', 'tracking', 'po', 'proveedor', 'pedimento'];
+app.get('/entradas-bodega', admin, (_req, res) => res.sendFile(path.join(__dirname, 'admin', 'entradas-bodega.html')));
+app.get('/entradas-bodega/nueva', admin, (_req, res) => res.sendFile(path.join(__dirname, 'admin', 'nueva-entrada-bodega.html')));
+app.get('/api/admin/entradas-bodega', admin, async (_req, res) => {
+  try { res.json(await db.listarEntradasEB()); } catch (e) { console.error(e); res.status(500).json({ error: 'No se pudieron leer las entradas' }); }
+});
+// Copia a la hoja de Google "Entradas Bodega" (en segundo plano; si falla solo se anota en el log)
+const filaHoja = (referencia, d) => [referencia, ...CAMPOS_EB.map((k) => d[k] ?? '')];
+function copiarAHoja(buscar, referencia, datos) {
+  if (!driveListo()) return;
+  enviarHojaEB({ accion: 'eb_fila', buscar, fila: filaHoja(referencia, datos) })
+    .catch((e) => console.error(`No se pudo copiar ${referencia} a la hoja:`, e.message));
+}
+
+// Referencia: el usuario escribe ####/## y se guarda como "MEJA ####/##"
+function refEB(v) {
+  const m = /^\s*(?:MEJA\s*)?(\d{1,4})\s*\/\s*(\d{2})\s*$/i.exec(String(v ?? ''));
+  return m ? `MEJA ${m[1].padStart(4, '0')}/${m[2]}` : null;
+}
+app.post('/api/admin/entradas-bodega', admin, async (req, res) => {
+  try {
+    const referencia = refEB(req.body.referencia);
+    if (!referencia) return res.status(400).json({ error: 'Escribe la referencia con el formato ####/## (por ejemplo 1628/26).' });
+    const datos = {};
+    for (const k of CAMPOS_EB) datos[k] = t(req.body[k], 120);
+    if (datos.fecha && !/^\d{4}-\d{2}-\d{2}$/.test(datos.fecha)) return res.status(400).json({ error: 'Fecha inválida' });
+    const reg = await db.guardarEntradaEB(referencia, datos);
+    res.json({ ok: true, id: reg.id, referencia: reg.referencia });
+    copiarAHoja(reg.referencia, reg.referencia, reg.datos);
+  } catch (e) {
+    if (e instanceof db.RefRepetida) return res.status(409).json({ error: 'Esa referencia ya existe.' });
+    console.error(e); res.status(500).json({ error: 'No se pudo guardar el registro.' });
+  }
+});
+// Manda todos los registros a la hoja de Google (reemplaza su contenido)
+app.post('/api/admin/entradas-bodega/hoja', admin, async (_req, res) => {
+  try {
+    if (!driveListo()) return res.status(503).json({ error: 'Falta configurar DRIVE_WEBHOOK_URL y DRIVE_TOKEN en Render.' });
+    const lista = (await db.listarEntradasEB()).sort((a, b) => a.referencia.localeCompare(b.referencia));
+    const r = await enviarHojaEB({ accion: 'eb_todo', filas: lista.map((x) => filaHoja(x.referencia, x.datos)) });
+    res.json({ ok: true, filas: r.filas });
+  } catch (e) { console.error(e); res.status(502).json({ error: e.message }); }
+});
+app.put('/api/admin/entradas-bodega/:id', admin, async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id)) return res.status(400).json({ error: 'Datos inválidos' });
+    const cambios = {};
+    for (const k of CAMPOS_EB) if (k in req.body) cambios[k] = t(req.body[k], 120);
+    if ('referencia' in req.body) {
+      cambios.referencia = refEB(req.body.referencia);
+      if (!cambios.referencia) return res.status(400).json({ error: 'La referencia debe tener el formato ####/##.' });
+    }
+    if (cambios.fecha && !/^\d{4}-\d{2}-\d{2}$/.test(cambios.fecha)) return res.status(400).json({ error: 'Fecha inválida' });
+    if (!Object.keys(cambios).length) return res.status(400).json({ error: 'Sin cambios' });
+    const antes = (await db.listarEntradasEB()).find((x) => x.id === id);
+    const reg = await db.actualizarEntradaEB(id, cambios);
+    if (!reg) return res.status(404).json({ error: 'No encontrado' });
+    res.json({ ok: true, ...reg });
+    copiarAHoja(antes ? antes.referencia : reg.referencia, reg.referencia, reg.datos);
+  } catch (e) {
+    if (e instanceof db.RefRepetida) return res.status(409).json({ error: 'Esa referencia ya existe.' });
+    console.error(e); res.status(500).json({ error: 'No se pudo guardar el cambio.' });
   }
 });
 

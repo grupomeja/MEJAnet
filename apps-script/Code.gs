@@ -1,13 +1,17 @@
 // Google Apps Script: (1) recibe el PDF de cada orden y lo guarda en la carpeta "Ordenes de Carga" de Drive,
-// (2) entrega al tablero el resultado de la revisión de OC_TERMINADAS (archivo _tablero_resultados.json).
+// (2) entrega al tablero el resultado de la revisión de OC_TERMINADAS (archivo _tablero_resultados.json),
+// (3) copia las Entradas Bodega de MEJAnet a la hoja de Google "Entradas Bodega".
 // Cambia TOKEN por la misma clave que pongas en Render como DRIVE_TOKEN.
 const TOKEN = 'PON_AQUI_TU_CLAVE';
 const CARPETA_ID = '1mvLs_ZEfAYozwmjxtbegqPbziONLOxRZ'; // carpeta "Ordenes de Carga"
+const HOJA_EB_ID = '18gdfi8oqDxVnrdcj4yWxjHaR2OEC-kr5V6QnQ0Evw2E'; // hoja de Google "Entradas Bodega"
 
 function doPost(e) {
   try {
     const d = JSON.parse(e.postData.contents);
     if (d.token !== TOKEN) return salida({ ok: false, error: 'token incorrecto' });
+    if (d.accion === 'eb_fila') return salida(entradaBodegaFila(d.buscar, d.fila));
+    if (d.accion === 'eb_todo') return salida(entradaBodegaTodo(d.filas));
     const carpeta = DriveApp.getFolderById(CARPETA_ID);
     // Si ya existe un archivo con ese nombre, no se duplica
     const existentes = carpeta.getFilesByName(d.nombre);
@@ -34,4 +38,67 @@ function doGet(e) {
 function salida(obj, sinOk) {
   if (sinOk) obj.ok = true;
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+}
+
+// ---------- Entradas Bodega ----------
+// Columnas: REFERENCIA, FECHA ARRIBO, CLIENTE, BULTOS, DESCRIPCION, PESO (Lbs), PESO (KGS),
+//           LINEA FLETERA, TRACKING #, P.O., PROVEEDOR, PEDIMENTO
+const NUMERICAS_EB = [3, 5, 6]; // BULTOS, PESO (Lbs), PESO (KGS)
+
+function hojaEB() {
+  return SpreadsheetApp.openById(HOJA_EB_ID).getSheets()[0];
+}
+
+// Convierte los textos que manda MEJAnet a lo que va en cada celda
+function celdasEB(fila) {
+  return fila.map(function (v, i) {
+    v = String(v == null ? '' : v).trim();
+    if (v === '') return '';
+    if (i === 1) { // fecha AAAA-MM-DD
+      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v);
+      return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : "'" + v;
+    }
+    if (NUMERICAS_EB.indexOf(i) >= 0) return /^-?\d+(\.\d+)?$/.test(v) ? Number(v) : "'" + v;
+    return v;
+  });
+}
+
+// Agrega un registro o corrige el que tenga la referencia `buscar` (la anterior, si cambió)
+function entradaBodegaFila(buscar, fila) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    const hoja = hojaEB();
+    const celdas = [celdasEB(fila)];
+    const ultima = hoja.getLastRow();
+    let n = 0;
+    if (ultima > 1) {
+      const encontrada = hoja.getRange(2, 1, ultima - 1, 1).createTextFinder(buscar || fila[0]).matchEntireCell(true).findNext();
+      if (encontrada) n = encontrada.getRow();
+    }
+    if (!n) {
+      n = ultima + 1;
+      if (n > hoja.getMaxRows()) hoja.insertRowsAfter(hoja.getMaxRows(), 500);
+    }
+    hoja.getRange(n, 1, 1, 12).setValues(celdas);
+    return { ok: true, fila: n };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// Reescribe toda la hoja con los registros de MEJAnet
+function entradaBodegaTodo(filas) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    const hoja = hojaEB();
+    const total = filas.length + 1;
+    if (hoja.getMaxRows() < total) hoja.insertRowsAfter(hoja.getMaxRows(), total - hoja.getMaxRows() + 200);
+    if (hoja.getLastRow() > 1) hoja.getRange(2, 1, hoja.getLastRow() - 1, 12).clearContent();
+    if (filas.length) hoja.getRange(2, 1, filas.length, 12).setValues(filas.map(celdasEB));
+    return { ok: true, filas: filas.length };
+  } finally {
+    lock.releaseLock();
+  }
 }

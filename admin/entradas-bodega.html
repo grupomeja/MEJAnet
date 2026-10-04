@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TABLERO DE ENTRADAS BODEGA</title>
+<style>
+  :root{--bg:#f4f5f7;--card:#fff;--ink:#15181d;--muted:#5d6672;--line:#d5d9df;--accent:#1f4e8c;--accent-ink:#fff;--soft:#eef2f8;--ok:#17794a;--err:#b3261e}
+  @media (prefers-color-scheme:dark){:root{--bg:#14171b;--card:#1d2127;--ink:#eef0f3;--muted:#a2abb7;--line:#363c45;--accent:#6aa3ec;--accent-ink:#0b1626;--soft:#232a33;--ok:#52c28a;--err:#ff8a80}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  main{max-width:1400px;margin:0 auto;padding:16px}
+  .logo img{height:40px;width:auto;display:block}
+  .top{display:grid;grid-template-columns:1fr auto 1fr;gap:10px 16px;align-items:center;margin:0 0 14px}
+  .top h1{margin:0;text-align:center;font-size:20px}
+  .acc{display:flex;gap:8px;justify-content:flex-end}
+  .acc a{white-space:nowrap;text-decoration:none;font-weight:700;border-radius:10px;padding:9px 12px;font-size:14px}
+  .acc .nuevo{background:var(--accent);color:var(--accent-ink)}
+  .acc .inicio{border:1px solid var(--line);color:var(--accent);background:var(--card)}
+  @media (max-width:760px){.top{grid-template-columns:1fr;justify-items:center}.acc{justify-content:center;flex-wrap:wrap}.top h1{font-size:19px}}
+  .kpis{display:grid;gap:10px;grid-template-columns:1fr 1.6fr 1fr 1fr;margin-bottom:14px}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-width:0}
+  .kpi b{display:block;font-size:26px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .kpi span{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.4px}
+  .kpi small{font-size:14px;font-weight:600;color:var(--muted)}
+  .kpi .verde{color:var(--ok)} .kpi .rojo{color:var(--err)}
+  .filters{display:grid;gap:8px;grid-template-columns:2fr repeat(4,1fr) .9fr .9fr;margin-bottom:12px;align-items:end}
+  label{display:block;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+  input,select{font:inherit;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);width:100%;min-width:0}
+  button{font:inherit;font-weight:600;border-radius:8px;padding:10px 14px;cursor:pointer;background:transparent;color:var(--accent);border:1px solid var(--accent)}
+  .barra{display:flex;gap:8px;align-items:center;margin:0 0 8px;flex-wrap:wrap}
+  .barra .sp{flex:1}
+  .count{color:var(--muted);font-size:13px;margin:0}
+  .tablewrap{overflow:auto;max-height:70vh;background:var(--card);border:1px solid var(--line);border-radius:10px}
+  table{border-collapse:collapse;width:auto;margin:0 auto;font-size:14px}
+  th,td{padding:7px 12px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
+  th{position:sticky;top:0;z-index:1;font-size:12px;text-transform:uppercase;color:var(--muted);letter-spacing:.4px;background:var(--soft)}
+  td{cursor:text;font-variant-numeric:tabular-nums}
+  td:hover{outline:1px dashed var(--accent);outline-offset:-3px}
+  td.ref{font-weight:800}
+  td.ref.ped{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
+  td.edit{padding:3px 4px;outline:2px solid var(--accent);outline-offset:-2px}
+  td.edit input,td.edit select{padding:5px 6px;font-size:14px;text-align:center;width:auto;min-width:90px}
+  td.edit .pref{font-weight:800;margin-right:4px}
+  td.edit .refin{width:80px;min-width:80px;font-weight:800}
+  td.ok{animation:ok 1.2s}
+  @keyframes ok{from{background:color-mix(in srgb,var(--ok) 35%,transparent)}}
+  .vacio{padding:30px;text-align:center;color:var(--muted)}
+  .mas{display:block;margin:12px auto 0}
+  .nota{color:var(--muted);font-size:13px;margin:0 0 8px}
+  @media (max-width:1000px){.filters{grid-template-columns:repeat(3,1fr)}.filters .q{grid-column:1/-1}}
+  @media (max-width:760px){.kpis{grid-template-columns:1fr 1fr}.kpis .cli{grid-column:1/-1}.filters{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <a class="logo" href="/" aria-label="MEJAnet"><img src="/logo.png" alt="Grupo Meja"></a>
+    <h1>TABLERO DE ENTRADAS BODEGA</h1>
+    <div class="acc"><a class="nuevo" href="/entradas-bodega/nueva">+ Agregar Nuevo</a><a class="inicio" href="/">MEJAnet</a></div>
+  </div>
+
+  <section class="kpis">
+    <div class="kpi"><b id="k1">–</b><span>Registros</span></div>
+    <div class="kpi cli"><b id="k2">–</b><span>Cliente con más tráficos <small id="k2n"></small></span></div>
+    <div class="kpi"><b class="verde" id="k3">–</b><span>Con pedimento</span></div>
+    <div class="kpi"><b class="rojo" id="k4">–</b><span>Sin pedimento</span></div>
+  </section>
+
+  <section class="filters">
+    <div class="q"><label for="q">Buscar</label><input id="q" type="search" placeholder="Referencia, tracking, P.O., pedimento…"></div>
+    <div><label for="fCli">Cliente</label><select id="fCli"><option value="">Todos</option></select></div>
+    <div><label for="fPro">Proveedor</label><select id="fPro"><option value="">Todos</option></select></div>
+    <div><label for="fLin">Línea fletera</label><select id="fLin"><option value="">Todas</option></select></div>
+    <div><label for="fPed">Pedimento</label><select id="fPed"><option value="">Todos</option><option value="con">Con pedimento</option><option value="sin">Sin pedimento</option></select></div>
+    <div><label for="d1">Arribo desde</label><input id="d1" type="date"></div>
+    <div><label for="d2">Arribo hasta</label><input id="d2" type="date"></div>
+  </section>
+
+  <div class="barra">
+    <p class="count" id="count"></p><span class="sp"></span>
+    <button id="limpia" type="button">Limpiar filtros</button>
+    <button id="csv" type="button">Descargar Excel (CSV)</button>
+    <button id="hoja" type="button" title="Copia todos los registros a la hoja de Google Entradas Bodega">Actualizar Google Sheet</button>
+  </div>
+  <p class="nota">Haz clic en cualquier celda para editarla. Enter o clic afuera guarda; Esc cancela.</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr>
+        <th>Referencia</th><th>Fecha arribo</th><th>Cliente</th><th>Bultos</th><th>Descripcion</th>
+        <th>Peso (Lbs)</th><th>Peso (Kgs)</th><th>Linea fletera</th><th>Tracking #</th><th>P.O.</th><th>Proveedor</th><th>Pedimento</th>
+      </tr></thead>
+      <tbody id="filas"><tr><td colspan="12" class="vacio">Cargando…</td></tr></tbody>
+    </table>
+  </div>
+  <button class="mas" id="mas" type="button" hidden>Mostrar más</button>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const POR_PAGINA = 200, LB_POR_KG = 2.20462;
+const DESCRIPCIONES = ['ATADO(S)', 'CARTON/ES', 'BULTOS', 'CAJA(S)', 'CAJA(S) DE MADERA', 'BOLSAS', 'SACOS'];
+const COLS = ['referencia', 'fecha', 'cliente', 'bultos', 'descripcion', 'peso_lbs', 'peso_kgs', 'linea', 'tracking', 'po', 'proveedor', 'pedimento'];
+let datos = [], limite = POR_PAGINA;
+
+const fechaTxt = (iso) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); return m ? `${m[3]}/${m[2]}/${m[1]}` : (iso || ''); };
+const fmt = (n) => n.toLocaleString('es-MX');
+const leeNum = (s) => { const n = parseFloat(String(s).replace(/,/g, '').trim()); return Number.isFinite(n) && n >= 0 ? n : null; };
+const redondea = (n) => String(Math.round(n * 10) / 10);
+const conPed = (r) => !!String(r.pedimento || '').trim();
+
+function llenaSelect(id, campo) {
+  const sel = $(id), actual = sel.value;
+  const vals = [...new Set(datos.map((r) => (r[campo] || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
+  sel.length = 1;
+  sel.insertAdjacentHTML('beforeend', vals.map((v) => `<option>${esc(v)}</option>`).join(''));
+  sel.value = actual;
+}
+
+function filtrar() {
+  const q = $('q').value.trim().toLowerCase();
+  const cli = $('fCli').value, pro = $('fPro').value, lin = $('fLin').value, ped = $('fPed').value;
+  const d1 = $('d1').value, d2 = $('d2').value;
+  return datos.filter((r) => {
+    if (cli && (r.cliente || '').trim() !== cli) return false;
+    if (pro && (r.proveedor || '').trim() !== pro) return false;
+    if (lin && (r.linea || '').trim() !== lin) return false;
+    if (ped === 'con' && !conPed(r)) return false;
+    if (ped === 'sin' && conPed(r)) return false;
+    if ((d1 || d2) && (!r.fecha || (d1 && r.fecha < d1) || (d2 && r.fecha > d2))) return false;
+    if (q && !COLS.map((c) => c === 'fecha' ? fechaTxt(r.fecha) : r[c]).join(' ').toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+const celda = (r, c) => {
+  const v = c === 'fecha' ? fechaTxt(r.fecha) : r[c];
+  const cls = c === 'referencia' ? `ref${conPed(r) ? ' ped' : ''}` : '';
+  return `<td data-c="${c}"${cls ? ` class="${cls}"` : ''}>${esc(v)}</td>`;
+};
+const filaHTML = (r) => `<tr data-id="${r.id}">${COLS.map((c) => celda(r, c)).join('')}</tr>`;
+
+function kpis(r) {
+  $('k1').textContent = fmt(r.length);
+  const cuenta = {};
+  for (const x of r) { const c = (x.cliente || '').trim(); if (c) cuenta[c] = (cuenta[c] || 0) + 1; }
+  const top = Object.entries(cuenta).sort((a, b) => b[1] - a[1])[0];
+  $('k2').textContent = top ? top[0] : '—';
+  $('k2').title = top ? top[0] : '';
+  $('k2n').textContent = top ? `(${fmt(top[1])} registros)` : '';
+  const con = r.filter(conPed).length;
+  $('k3').textContent = fmt(con);
+  $('k4').textContent = fmt(r.length - con);
+}
+
+function pinta() {
+  const r = filtrar();
+  kpis(r);
+  $('count').textContent = r.length > limite ? `Mostrando ${fmt(limite)} de ${fmt(r.length)} registros` : `${fmt(r.length)} registro(s)`;
+  $('mas').hidden = r.length <= limite;
+  $('filas').innerHTML = r.length ? r.slice(0, limite).map(filaHTML).join('') : '<tr><td colspan="12" class="vacio">No hay resultados.</td></tr>';
+}
+
+// ---------- Edición en la celda ----------
+let editando = null;
+function editor(r, c) {
+  if (c === 'referencia') return `<span class="pref">MEJA</span><input class="refin" value="${esc(r.referencia.replace(/^MEJA\s*/i, ''))}" placeholder="####/##" maxlength="7">`;
+  if (c === 'fecha') return `<input type="date" value="${esc(r.fecha)}">`;
+  if (c === 'descripcion') {
+    const opts = [...DESCRIPCIONES];
+    if (r.descripcion && !opts.includes(r.descripcion)) opts.unshift(r.descripcion);
+    return `<select>${opts.map((o) => `<option${o === r.descripcion ? ' selected' : ''}>${esc(o)}</option>`).join('')}<option value="__otro">OTRO…</option></select>`;
+  }
+  return `<input value="${esc(r[c])}" maxlength="120" size="${Math.max(6, String(r[c] || '').length + 2)}">`;
+}
+
+function abre(td) {
+  if (editando) return;
+  const tr = td.closest('tr'), r = datos.find((x) => x.id === Number(tr.dataset.id)), c = td.dataset.c;
+  editando = { td, r, c };
+  td.classList.add('edit');
+  td.innerHTML = editor(r, c);
+  const campo = td.querySelector('input,select');
+  campo.focus(); if (campo.select) campo.select();
+  if (c === 'descripcion') campo.addEventListener('change', () => {
+    if (campo.value !== '__otro') return;
+    td.innerHTML = `<input maxlength="120" placeholder="Escribe la descripción" size="18">`;
+    conecta(td.querySelector('input'));
+  });
+  conecta(campo);
+}
+function conecta(campo) {
+  campo.focus();
+  campo.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); guarda(); }
+    if (e.key === 'Escape') { e.preventDefault(); cierra(); }
+  });
+  campo.addEventListener('blur', () => setTimeout(() => { if (editando && !editando.td.contains(document.activeElement)) guarda(); }, 0));
+}
+function cierra(ok) {
+  if (!editando) return;
+  const { td, r } = editando;
+  editando = null;
+  const nueva = document.createElement('tbody'); nueva.innerHTML = filaHTML(r);
+  const tr = td.closest('tr'); tr.replaceWith(nueva.firstChild);
+  if (ok) for (const c of ok) document.querySelector(`tr[data-id="${r.id}"] td[data-c="${c}"]`)?.classList.add('ok');
+}
+let guardando = false;
+async function guarda() {
+  if (!editando || guardando) return;
+  const { td, r, c } = editando;
+  const campo = td.querySelector('input,select');
+  let v = campo.value.trim();
+  if (v === '__otro') return;
+  if (c !== 'fecha') v = v.toUpperCase();
+  const cambios = {};
+  if (c === 'referencia') {
+    if (!/^\d{1,4}\/\d{2}$/.test(v)) { alert('La referencia debe tener el formato ####/## (por ejemplo 1628/26).'); campo.focus(); return; }
+    if ('MEJA ' + v.padStart(7, '0') === r.referencia) return cierra();
+    cambios.referencia = v;
+  } else {
+    if (v === String(r[c] ?? '')) return cierra();
+    cambios[c] = v;
+    // Peso: al cambiar uno se recalcula el otro
+    if (c === 'peso_lbs') { const n = leeNum(v); cambios.peso_kgs = n === null ? '' : redondea(n / LB_POR_KG); }
+    if (c === 'peso_kgs') { const n = leeNum(v); cambios.peso_lbs = n === null ? '' : redondea(n * LB_POR_KG); }
+  }
+  guardando = true; campo.disabled = true;
+  try {
+    const res = await fetch(`/api/admin/entradas-bodega/${r.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cambios) });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok || !j.ok) throw new Error(j.error || 'No se pudo guardar');
+    Object.assign(r, j.datos, { referencia: j.referencia });
+    cierra(Object.keys(cambios));
+    kpis(filtrar());
+    if (['cliente', 'proveedor', 'linea'].includes(c)) { llenaSelect('fCli', 'cliente'); llenaSelect('fPro', 'proveedor'); llenaSelect('fLin', 'linea'); }
+  } catch (e) {
+    alert('No se pudo guardar el cambio: ' + e.message);
+    campo.disabled = false; campo.focus();
+  } finally { guardando = false; }
+}
+$('filas').addEventListener('click', (e) => {
+  const td = e.target.closest('td[data-c]');
+  if (td && !td.classList.contains('edit')) abre(td);
+});
+
+function csv() {
+  const enc = (v) => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+  const cab = ['REFERENCIA', 'FECHA ARRIBO', 'CLIENTE', 'BULTOS', 'DESCRIPCION', 'PESO (Lbs)', 'PESO (KGS)', 'LINEA FLETERA', 'TRACKING #', 'P.O.', 'PROVEEDOR', 'PEDIMENTO'];
+  const txt = [cab, ...filtrar().map((r) => COLS.map((c) => c === 'fecha' ? fechaTxt(r.fecha) : r[c]))].map((f) => f.map(enc).join(',')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['﻿' + txt], { type: 'text/csv;charset=utf-8' }));
+  a.download = 'entradas_bodega.csv'; a.click();
+}
+
+const reinicia = () => { limite = POR_PAGINA; pinta(); };
+['q', 'fCli', 'fPro', 'fLin', 'fPed', 'd1', 'd2'].forEach((id) => $(id).addEventListener('input', reinicia));
+$('limpia').onclick = () => { ['q', 'fCli', 'fPro', 'fLin', 'fPed', 'd1', 'd2'].forEach((id) => ($(id).value = '')); reinicia(); };
+$('mas').onclick = () => { limite += POR_PAGINA; pinta(); };
+$('csv').onclick = csv;
+$('hoja').onclick = async () => {
+  if (!confirm('Se va a reemplazar el contenido de la hoja de Google "Entradas Bodega" con todos los registros del tablero. ¿Continuar?')) return;
+  const b = $('hoja'); b.disabled = true; b.textContent = 'Enviando…';
+  try {
+    const r = await fetch('/api/admin/entradas-bodega/hoja', { method: 'POST' });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.ok) throw new Error(j.error || 'Error');
+    alert(`Listo: ${j.filas} registros copiados a la hoja de Google.`);
+  } catch (e) { alert('No se pudo actualizar la hoja: ' + e.message); }
+  finally { b.disabled = false; b.textContent = 'Actualizar Google Sheet'; }
+};
+
+fetch('/api/admin/entradas-bodega').then((r) => { if (!r.ok) throw new Error(); return r.json(); })
+  .then((lista) => {
+    datos = lista.map((e) => ({ id: e.id, referencia: e.referencia, ...e.datos }));
+    llenaSelect('fCli', 'cliente'); llenaSelect('fPro', 'proveedor'); llenaSelect('fLin', 'linea');
+    pinta();
+  })
+  .catch(() => { $('filas').innerHTML = '<tr><td colspan="12" class="vacio">No se pudieron cargar los registros.</td></tr>'; });
+</script>
+</body>
+</html>
