@@ -49,14 +49,19 @@ function hojaEB() {
   return SpreadsheetApp.openById(HOJA_EB_ID).getSheets()[0];
 }
 
+// Zona horaria de la hoja: la fecha se arma en esa zona para que no se recorra un día
+function zonaEB(hoja) {
+  return hoja.getParent().getSpreadsheetTimeZone();
+}
+
 // Convierte los textos que manda MEJAnet a lo que va en cada celda
-function celdasEB(fila) {
+function celdasEB(fila, zona) {
   return fila.map(function (v, i) {
     v = String(v == null ? '' : v).trim();
     if (v === '') return '';
     if (i === 1) { // fecha AAAA-MM-DD
       const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v);
-      return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : "'" + v;
+      return m ? Utilities.parseDate(v + ' 12:00', zona, 'yyyy-MM-dd HH:mm') : "'" + v;
     }
     if (NUMERICAS_EB.indexOf(i) >= 0) return /^-?\d+(\.\d+)?$/.test(v) ? Number(v) : "'" + v;
     return v;
@@ -69,7 +74,7 @@ function entradaBodegaFila(buscar, fila) {
   lock.waitLock(30000);
   try {
     const hoja = hojaEB();
-    const celdas = [celdasEB(fila)];
+    const celdas = [celdasEB(fila, zonaEB(hoja))];
     const ultima = hoja.getLastRow();
     let n = 0;
     if (ultima > 1) {
@@ -96,7 +101,7 @@ function entradaBodegaTodo(filas) {
     const total = filas.length + 1;
     if (hoja.getMaxRows() < total) hoja.insertRowsAfter(hoja.getMaxRows(), total - hoja.getMaxRows() + 200);
     if (hoja.getLastRow() > 1) hoja.getRange(2, 1, hoja.getLastRow() - 1, 12).clearContent();
-    if (filas.length) hoja.getRange(2, 1, filas.length, 12).setValues(filas.map(celdasEB));
+    if (filas.length) { const zona = zonaEB(hoja); hoja.getRange(2, 1, filas.length, 12).setValues(filas.map(function (f) { return celdasEB(f, zona); })); }
     return { ok: true, filas: filas.length };
   } finally {
     lock.releaseLock();
