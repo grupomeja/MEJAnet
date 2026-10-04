@@ -10,7 +10,12 @@
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
   main{max-width:1100px;margin:0 auto;padding:16px}
-  h1{font-size:22px;margin:0 0 14px}
+  h1{font-size:22px;margin:0}
+  .top{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;margin:0 0 14px}
+  .acc{display:flex;gap:8px;flex-wrap:wrap}
+  .acc a{text-decoration:none;font-weight:700;border-radius:10px;padding:10px 14px;font-size:15px}
+  .acc .nuevo{background:var(--accent);color:var(--accent-ink)}
+  .acc .inicio{border:1px solid var(--line);color:var(--accent);background:var(--card)}
   .kpis{display:grid;gap:10px;grid-template-columns:repeat(4,1fr);margin-bottom:14px}
   .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
   .kpi b{display:block;font-size:26px;font-variant-numeric:tabular-nums}
@@ -52,7 +57,10 @@
 </head>
 <body>
 <main>
-  <h1>TABLERO DE ORDENES DE CARGA</h1>
+  <div class="top">
+    <h1>TABLERO DE ORDENES DE CARGA</h1>
+    <div class="acc"><a class="nuevo" href="/nueva-orden">+ Crear Nueva Orden de Carga</a><a class="inicio" href="/">MEJAnet</a></div>
+  </div>
 
   <div class="aviso" id="aviso"></div>
   <section class="kpis">

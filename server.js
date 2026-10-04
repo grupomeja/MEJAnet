@@ -37,15 +37,18 @@ function admin(req, res, next) {
   if (!clave) return res.status(503).send('Falta definir ADMIN_PASSWORD en el servidor.');
   const [tipo, cred] = (req.headers.authorization || '').split(' ');
   if (tipo === 'Basic' && cred) {
-    const pass = Buffer.from(cred, 'base64').toString().split(':').slice(1).join(':');
-    const a = Buffer.from(pass), b = Buffer.from(clave);
-    if (a.length === b.length && crypto.timingSafeEqual(a, b)) return next();
+    const texto = Buffer.from(cred, 'base64').toString();
+    const i = texto.indexOf(':');
+    const user = texto.slice(0, i), pass = texto.slice(i + 1);
+    const igual = (x, y) => { const a = Buffer.from(x), b = Buffer.from(y); return a.length === b.length && crypto.timingSafeEqual(a, b); };
+    const usuario = process.env.ADMIN_USER || 'amedina';
+    if (i >= 0 && igual(user, usuario) && igual(pass, clave)) return next();
   }
-  res.set('WWW-Authenticate', 'Basic realm="Administracion"').status(401).send('Acceso restringido');
+  res.set('WWW-Authenticate', 'Basic realm="MEJAnet"').status(401).send('Acceso restringido');
 }
 
-// --- Rutas para los trabajadores (sin contraseña) ---
-app.post('/api/ordenes', async (req, res) => {
+// --- Crear órdenes (requiere usuario y contraseña) ---
+app.post('/api/ordenes', admin, async (req, res) => {
   try {
     const datos = limpiar(req.body);
     const hayDatos = datos.cliente || datos.filas.some((f) => f.trafico || f.bultos || f.pedimento || f.nota);
@@ -75,7 +78,9 @@ app.post('/api/ordenes', async (req, res) => {
 });
 
 // --- Rutas del administrador ---
-app.get('/admin', admin, (_req, res) => res.sendFile(path.join(__dirname, 'admin', 'index.html')));
+app.get('/orden-de-carga', admin, (_req, res) => res.sendFile(path.join(__dirname, 'admin', 'index.html')));
+app.get('/nueva-orden', admin, (_req, res) => res.sendFile(path.join(__dirname, 'admin', 'nueva-orden.html')));
+app.get('/admin', (_req, res) => res.redirect('/orden-de-carga'));
 // Resultado de la revisión de OC_TERMINADAS (lo escribe la tarea de revisión en Drive; se lee vía Apps Script).
 let cacheTerm = { t: 0, data: null };
 app.get('/api/admin/terminadas', admin, async (_req, res) => {
