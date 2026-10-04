@@ -40,6 +40,11 @@
   td[data-c=cliente],td[data-c=linea],td[data-c=po],td[data-c=proveedor],td[data-c=descripcion]{white-space:normal;min-width:70px}
   th{white-space:normal}
   th[data-c=proveedor],td[data-c=proveedor]{width:150px;max-width:150px}
+  td.acc-borrar{cursor:default;padding:2px 4px}
+  td.acc-borrar:hover{outline:none}
+  button.borrar{border:0;background:transparent;color:var(--err);padding:4px;border-radius:6px;line-height:0;cursor:pointer}
+  button.borrar:hover{background:color-mix(in srgb,var(--err) 14%,transparent)}
+  button.borrar:disabled{opacity:.4}
   td.ref{font-weight:800}
   td.ref.ped{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
   td.edit{padding:3px 4px;outline:2px solid var(--accent);outline-offset:-2px}
@@ -91,9 +96,9 @@
     <table>
       <thead><tr>
         <th>Referencia</th><th>Fecha arribo</th><th>Cliente</th><th>Bultos</th><th>Descripcion</th>
-        <th>Peso (Lbs)</th><th>Peso (Kgs)</th><th>Linea fletera</th><th>Tracking #</th><th>P.O.</th><th data-c="proveedor">Proveedor</th><th>Pedimento</th>
+        <th>Peso (Lbs)</th><th>Peso (Kgs)</th><th>Linea fletera</th><th>Tracking #</th><th>P.O.</th><th data-c="proveedor">Proveedor</th><th>Pedimento</th><th aria-label="Borrar"></th>
       </tr></thead>
-      <tbody id="filas"><tr><td colspan="12" class="vacio">Cargando…</td></tr></tbody>
+      <tbody id="filas"><tr><td colspan="13" class="vacio">Cargando…</td></tr></tbody>
     </table>
   </div>
   <button class="mas" id="mas" type="button" hidden>Mostrar más</button>
@@ -142,7 +147,8 @@ const celda = (r, c) => {
   const cls = c === 'referencia' ? `ref${conPed(r) ? ' ped' : ''}` : '';
   return `<td data-c="${c}"${cls ? ` class="${cls}"` : ''}>${esc(v)}</td>`;
 };
-const filaHTML = (r) => `<tr data-id="${r.id}">${COLS.map((c) => celda(r, c)).join('')}</tr>`;
+const ICONO_BORRAR = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M9 3h6l1 2h4v2H4V5h4l1-2zm-3 6h12l-1 12H7L6 9zm4 2v8h1.5v-8H10zm3.5 0v8H15v-8h-1.5z"/></svg>';
+const filaHTML = (r) => `<tr data-id="${r.id}">${COLS.map((c) => celda(r, c)).join('')}<td class="acc-borrar"><button type="button" class="borrar" title="Borrar ${esc(r.referencia)}" aria-label="Borrar ${esc(r.referencia)}">${ICONO_BORRAR}</button></td></tr>`;
 
 function kpis(r) {
   $('k1').textContent = fmt(r.length);
@@ -162,7 +168,7 @@ function pinta() {
   kpis(r);
   $('count').textContent = r.length > limite ? `Mostrando ${fmt(limite)} de ${fmt(r.length)} registros` : `${fmt(r.length)} registro(s)`;
   $('mas').hidden = r.length <= limite;
-  $('filas').innerHTML = r.length ? r.slice(0, limite).map(filaHTML).join('') : '<tr><td colspan="12" class="vacio">No hay resultados.</td></tr>';
+  $('filas').innerHTML = r.length ? r.slice(0, limite).map(filaHTML).join('') : '<tr><td colspan="13" class="vacio">No hay resultados.</td></tr>';
 }
 
 // ---------- Edición en la celda ----------
@@ -243,7 +249,23 @@ async function guarda() {
     campo.disabled = false; campo.focus();
   } finally { guardando = false; }
 }
-$('filas').addEventListener('click', (e) => {
+$('filas').addEventListener('click', async (e) => {
+  const bb = e.target.closest('button.borrar');
+  if (bb) {
+    if (editando) return;
+    const tr = bb.closest('tr'), id = Number(tr.dataset.id), r = datos.find((x) => x.id === id);
+    if (!r || !confirm(`¿Borrar el registro ${r.referencia}? Esta acción no se puede deshacer.`)) return;
+    bb.disabled = true;
+    try {
+      const res = await fetch(`/api/admin/entradas-bodega/${id}`, { method: 'DELETE' });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || !j.ok) throw new Error(j.error || 'No se pudo borrar');
+      datos = datos.filter((x) => x.id !== id);
+      llenaSelect('fCli', 'cliente'); llenaSelect('fPro', 'proveedor'); llenaSelect('fLin', 'linea');
+      pinta();
+    } catch (err) { bb.disabled = false; alert('No se pudo borrar: ' + err.message); }
+    return;
+  }
   const td = e.target.closest('td[data-c]');
   if (td && !td.classList.contains('edit')) abre(td);
 });
@@ -280,7 +302,7 @@ fetch('/api/admin/entradas-bodega').then((r) => { if (!r.ok) throw new Error(); 
     llenaSelect('fCli', 'cliente'); llenaSelect('fPro', 'proveedor'); llenaSelect('fLin', 'linea');
     pinta();
   })
-  .catch(() => { $('filas').innerHTML = '<tr><td colspan="12" class="vacio">No se pudieron cargar los registros.</td></tr>'; });
+  .catch(() => { $('filas').innerHTML = '<tr><td colspan="13" class="vacio">No se pudieron cargar los registros.</td></tr>'; });
 </script>
 </body>
 </html>

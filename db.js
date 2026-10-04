@@ -215,6 +215,20 @@ async function actualizarEntradaEB(id, cambios) {
   return { id, referencia: o.referencia, datos: o.datos };
 }
 
+// Borra un registro. Devuelve la referencia borrada, o null si no existía.
+async function borrarEntradaEB(id) {
+  if (pool) {
+    const r = await pool.query('DELETE FROM entradas_bodega WHERE id = $1 RETURNING referencia', [id]);
+    return r.rowCount ? r.rows[0].referencia : null;
+  }
+  const lista = JSON.parse(fs.readFileSync(FILE_EB, 'utf8'));
+  const i = lista.findIndex((x) => x.id === id);
+  if (i < 0) return null;
+  const [o] = lista.splice(i, 1);
+  fs.writeFileSync(FILE_EB, JSON.stringify(lista));
+  return o.referencia;
+}
+
 async function listarEntradasEB() {
   if (pool) {
     const r = await pool.query('SELECT id, referencia, creada, datos FROM entradas_bodega ORDER BY anio DESC, num DESC');
@@ -224,4 +238,4 @@ async function listarEntradasEB() {
     .map(({ id, referencia, creada, datos }) => ({ id, referencia, creada, datos }));
 }
 
-module.exports = { init, guardar, marcarCorreo, cambiarManual, listar, obtener, guardarEntradaEB, actualizarEntradaEB, listarEntradasEB, RefRepetida };
+module.exports = { init, guardar, marcarCorreo, cambiarManual, listar, obtener, guardarEntradaEB, actualizarEntradaEB, borrarEntradaEB, listarEntradasEB, RefRepetida };

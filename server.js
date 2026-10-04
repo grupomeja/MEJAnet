@@ -113,13 +113,27 @@ app.post('/api/admin/entradas-bodega', admin, async (req, res) => {
   }
 });
 // Manda todos los registros a la hoja de Google (reemplaza su contenido)
+async function hojaCompleta() {
+  const lista = (await db.listarEntradasEB()).sort((a, b) => a.referencia.localeCompare(b.referencia));
+  return enviarHojaEB({ accion: 'eb_todo', filas: lista.map((x) => filaHoja(x.referencia, x.datos)) });
+}
 app.post('/api/admin/entradas-bodega/hoja', admin, async (_req, res) => {
   try {
     if (!driveListo()) return res.status(503).json({ error: 'Falta configurar DRIVE_WEBHOOK_URL y DRIVE_TOKEN en Render.' });
-    const lista = (await db.listarEntradasEB()).sort((a, b) => a.referencia.localeCompare(b.referencia));
-    const r = await enviarHojaEB({ accion: 'eb_todo', filas: lista.map((x) => filaHoja(x.referencia, x.datos)) });
+    const r = await hojaCompleta();
     res.json({ ok: true, filas: r.filas });
   } catch (e) { console.error(e); res.status(502).json({ error: e.message }); }
+});
+// Borrar un registro; después se reescribe la hoja de Google sin él
+app.delete('/api/admin/entradas-bodega/:id', admin, async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id)) return res.status(400).json({ error: 'Datos inválidos' });
+    const referencia = await db.borrarEntradaEB(id);
+    if (!referencia) return res.status(404).json({ error: 'No encontrado' });
+    res.json({ ok: true, referencia });
+    if (driveListo()) hojaCompleta().catch((e) => console.error(`No se pudo quitar ${referencia} de la hoja:`, e.message));
+  } catch (e) { console.error(e); res.status(500).json({ error: 'No se pudo borrar el registro.' }); }
 });
 app.put('/api/admin/entradas-bodega/:id', admin, async (req, res) => {
   try {
