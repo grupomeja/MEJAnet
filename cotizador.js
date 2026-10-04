@@ -40,10 +40,12 @@ async function init() {
     )`);
     await pool.query(`CREATE TABLE IF NOT EXISTS cotizaciones (
       id SERIAL PRIMARY KEY,
-      folio INTEGER UNIQUE NOT NULL,
+      serie TEXT NOT NULL,
+      folio INTEGER NOT NULL,
       creada TIMESTAMPTZ NOT NULL DEFAULT now(),
       actualizada TIMESTAMPTZ NOT NULL DEFAULT now(),
-      datos JSONB NOT NULL
+      datos JSONB NOT NULL,
+      UNIQUE (serie, folio)
     )`);
     if (!rows[0].hay) for (const c of SEMILLA) await pool.query('INSERT INTO cot_conceptos (datos) VALUES ($1)', [c]);
     return;
@@ -84,38 +86,63 @@ async function borrarConcepto(id) {
 }
 
 // ---------- Cotizaciones ----------
+// Cada tipo lleva su propia serie y numeración: CT terrestre, CM marítima, CF ferrocarril.
+const SERIES = { TERRESTRE: 'CT', MARITIMA: 'CM', FFCC: 'CF' };
+const serieDe = (tipo) => SERIES[tipo];
+const COLS = 'id, serie, folio, creada, actualizada, datos';
+
 async function listarCotizaciones() {
-  if (pool) return (await pool.query('SELECT id, folio, creada, actualizada, datos FROM cotizaciones ORDER BY folio DESC LIMIT 1000')).rows;
-  return leer(FILE_COT).sort((a, b) => b.folio - a.folio);
+  if (pool) return (await pool.query(`SELECT ${COLS} FROM cotizaciones ORDER BY creada DESC LIMIT 1000`)).rows;
+  return leer(FILE_COT).sort((a, b) => String(b.creada).localeCompare(String(a.creada)));
 }
 async function obtenerCotizacion(id) {
-  if (pool) return (await pool.query('SELECT id, folio, creada, actualizada, datos FROM cotizaciones WHERE id = $1', [id])).rows[0] || null;
+  if (pool) return (await pool.query(`SELECT ${COLS} FROM cotizaciones WHERE id = $1`, [id])).rows[0] || null;
   return leer(FILE_COT).find((x) => x.id === id) || null;
 }
-// El folio es consecutivo: siempre el siguiente al más alto.
+// El folio se asigna al guardar: el siguiente al más alto de su serie, sin huecos.
 async function crearCotizacion(datos) {
+  const serie = serieDe(datos.tipo);
   if (pool) {
     const c = await pool.connect();
     try {
       await c.query('BEGIN');
       await c.query('LOCK TABLE cotizaciones IN EXCLUSIVE MODE');
-      const r = await c.query('INSERT INTO cotizaciones (folio, datos) SELECT COALESCE(MAX(folio), 0) + 1, $1 FROM cotizaciones RETURNING id, folio, creada, actualizada', [datos]);
+      const r = await c.query(`INSERT INTO cotizaciones (serie, folio, datos)
+        SELECT $1, COALESCE(MAX(folio), 0) + 1, $2 FROM cotizaciones WHERE serie = $1 RETURNING ${COLS}`, [serie, datos]);
       await c.query('COMMIT');
-      return { ...r.rows[0], datos };
+      return r.rows[0];
     } catch (e) { await c.query('ROLLBACK').catch(() => {}); throw e; } finally { c.release(); }
   }
   const lista = leer(FILE_COT);
   const ahora = new Date().toISOString();
-  const reg = { id: lista.reduce((m, x) => Math.max(m, x.id), 0) + 1, folio: lista.reduce((m, x) => Math.max(m, x.folio), 0) + 1, creada: ahora, actualizada: ahora, datos };
+  const folio = lista.filter((x) => x.serie === serie).reduce((m, x) => Math.max(m, x.folio), 0) + 1;
+  const reg = { id: lista.reduce((m, x) => Math.max(m, x.id), 0) + 1, serie, folio, creada: ahora, actualizada: ahora, datos };
   lista.push(reg); escribir(FILE_COT, lista); return reg;
 }
+// Si al editar se cambia el tipo, la cotización toma el siguiente folio de la nueva serie.
 async function actualizarCotizacion(id, datos) {
+  const serie = serieDe(datos.tipo);
   if (pool) {
-    const r = await pool.query('UPDATE cotizaciones SET datos = $2, actualizada = now() WHERE id = $1 RETURNING id, folio, creada, actualizada', [id, datos]);
-    return r.rowCount ? { ...r.rows[0], datos } : null;
+    const c = await pool.connect();
+    try {
+      await c.query('BEGIN');
+      const a = await c.query('SELECT serie FROM cotizaciones WHERE id = $1 FOR UPDATE', [id]);
+      if (!a.rowCount) { await c.query('ROLLBACK'); return null; }
+      let r;
+      if (a.rows[0].serie === serie) {
+        r = await c.query(`UPDATE cotizaciones SET datos = $2, actualizada = now() WHERE id = $1 RETURNING ${COLS}`, [id, datos]);
+      } else {
+        await c.query('LOCK TABLE cotizaciones IN EXCLUSIVE MODE');
+        r = await c.query(`UPDATE cotizaciones SET serie = $2, folio = (SELECT COALESCE(MAX(folio), 0) + 1 FROM cotizaciones WHERE serie = $2),
+          datos = $3, actualizada = now() WHERE id = $1 RETURNING ${COLS}`, [id, serie, datos]);
+      }
+      await c.query('COMMIT');
+      return r.rows[0];
+    } catch (e) { await c.query('ROLLBACK').catch(() => {}); throw e; } finally { c.release(); }
   }
   const lista = leer(FILE_COT), o = lista.find((x) => x.id === id);
   if (!o) return null;
+  if (o.serie !== serie) { o.folio = lista.filter((x) => x.serie === serie).reduce((m, x) => Math.max(m, x.folio), 0) + 1; o.serie = serie; }
   o.datos = datos; o.actualizada = new Date().toISOString(); escribir(FILE_COT, lista); return o;
 }
 async function borrarCotizacion(id) {
@@ -200,13 +227,12 @@ function limpiarCotizacion(b) {
     notas: t(b.notas, 3000),
     elaboro: t(b.elaboro, 80),
   };
+  if (!datos.tipo) throw new Error('Elige el tipo de cotización (Terrestre, Marítima o FFCC).');
   if (!datos.cliente && !cargos.length) throw new Error('La cotización está vacía.');
   return datos;
 }
 
-// Prefijo del folio según el tipo: CT terrestre, CM marítima (FFCC y sin tipo: COT por ahora)
-const PREFIJOS = { TERRESTRE: 'CT', MARITIMA: 'CM' };
-const folioTxt = (f, tipo) => `${PREFIJOS[tipo] || 'COT'}-${String(f).padStart(4, '0')}`;
+const folioTxt = (reg) => `${reg.serie}-${String(reg.folio).padStart(4, '0')}`;
 
 // ---------- Rutas ----------
 function rutas(admin) {
@@ -249,7 +275,7 @@ function rutas(admin) {
   // Cotizaciones
   const conTotales = (reg) => {
     const c = Formula.calcular(reg.datos);
-    return { ...reg, folio_txt: folioTxt(reg.folio, reg.datos.tipo), totalMXN: c.totalMXN, totalUSD: c.totalUSD, granMXN: c.granMXN, granUSD: c.granUSD };
+    return { ...reg, folio_txt: folioTxt(reg), totalMXN: c.totalMXN, totalUSD: c.totalUSD, granMXN: c.granMXN, granUSD: c.granUSD };
   };
   r.get('/api/admin/cot/cotizaciones', admin, async (_req, res) => {
     try { res.json((await listarCotizaciones()).map(conTotales)); } catch (e) { err(res, e, 'No se pudieron leer las cotizaciones'); }
@@ -264,7 +290,7 @@ function rutas(admin) {
   r.post('/api/admin/cot/cotizaciones', admin, async (req, res) => {
     let datos;
     try { datos = limpiarCotizacion(req.body); } catch (e) { return res.status(400).json({ error: e.message }); }
-    try { const reg = await crearCotizacion(datos); res.json({ ok: true, id: reg.id, folio: folioTxt(reg.folio, datos.tipo) }); }
+    try { const reg = await crearCotizacion(datos); res.json({ ok: true, id: reg.id, folio: folioTxt(reg) }); }
     catch (e) { err(res, e, 'No se pudo guardar la cotización'); }
   });
   r.put('/api/admin/cot/cotizaciones/:id', admin, async (req, res) => {
@@ -273,7 +299,7 @@ function rutas(admin) {
     try { datos = limpiarCotizacion(req.body); } catch (e) { return res.status(400).json({ error: e.message }); }
     try {
       const reg = await actualizarCotizacion(id, datos);
-      reg ? res.json({ ok: true, id: reg.id, folio: folioTxt(reg.folio, datos.tipo) }) : res.status(404).json({ error: 'No encontrada' });
+      reg ? res.json({ ok: true, id: reg.id, folio: folioTxt(reg) }) : res.status(404).json({ error: 'No encontrada' });
     } catch (e) { err(res, e, 'No se pudo guardar la cotización'); }
   });
   // Cambiar solo el estado desde el tablero
@@ -296,8 +322,8 @@ function rutas(admin) {
     try {
       const reg = await obtenerCotizacion(id);
       if (!reg) return res.status(404).send('No encontrada');
-      const pdf = await generarPDFCotizacion(reg, Formula.calcular(reg.datos), folioTxt(reg.folio, reg.datos.tipo));
-      res.type('pdf').set('Content-Disposition', `inline; filename="COTIZACION_${folioTxt(reg.folio, reg.datos.tipo)}.pdf"`).send(pdf);
+      const pdf = await generarPDFCotizacion(reg, Formula.calcular(reg.datos), folioTxt(reg));
+      res.type('pdf').set('Content-Disposition', `inline; filename="COTIZACION_${folioTxt(reg)}.pdf"`).send(pdf);
     } catch (e) { console.error(e); res.status(500).send('No se pudo generar el PDF'); }
   });
   return r;

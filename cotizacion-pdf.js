@@ -1,5 +1,5 @@
-// Genera el PDF "Cotización de servicios" (hoja carta) con pdf-lib, sin plantilla.
-// Secciones: 1) Detalles del embarque  2) Desglose de cargos  3) Impuestos aduanales  + total y notas.
+// Genera el PDF "Cotización de servicios" en UNA hoja carta, compacto y a todo lo ancho (pdf-lib, sin plantilla).
+// Secciones: Detalles del embarque · Desglose de cargos · Impuestos aduanales · Notas y total estimado.
 const fs = require('fs');
 const path = require('path');
 const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
@@ -12,18 +12,18 @@ const VERDE = hex('#0f8a6c');
 const TINTA = hex('#15181d');
 const GRIS = hex('#5d6672');
 const GRIS2 = hex('#8a929c');
-const LINEA = hex('#d9dee5');
+const LINEA = hex('#dde2e9');
 const SUAVE = hex('#f3f6fa');
-const SUAVE2 = hex('#e9eff7');
+const SUAVE2 = hex('#eaf0f8');
+const ENC = hex('#dce7f5');        // encabezados de tabla (azul claro)
+const ENC_BORDE = hex('#b9c9e0');
 const BLANCO = rgb(1, 1, 1);
 const CLARO = hex('#9fb0c8');
 const ORO = hex('#ffc861');
 const AMBAR = hex('#fdf6e7');
-const ENC = hex('#dce7f5');        // encabezados de tabla (azul claro)
-const ENC_BORDE = hex('#b9c9e0');
 const AMBAR2 = hex('#e8a33d');
 
-const TIPOS = { TERRESTRE: 'TERRESTRE', MARITIMA: 'MARÍTIMA', FFCC: 'FFCC' };
+const TIPOS = { TERRESTRE: 'TERRESTRE', MARITIMA: 'MARÍTIMA', FFCC: 'FFCC (FERROCARRIL)' };
 const OPER = { IMPORTACION: 'IMPORTACIÓN', EXPORTACION: 'EXPORTACIÓN' };
 const CONT = {
   '20ST': "20' Estándar", '40ST': "40' Estándar", '40HC': "40' High Cube", '45HC': "45' High Cube", '20RF': "20' Refrigerado",
@@ -49,11 +49,11 @@ async function generarPDFCotizacion(reg, calc, folio) {
   let logo = null;
   try { logo = await pdf.embedPng(fs.readFileSync(path.join(__dirname, 'public', 'logo.png'))); } catch (_) {}
 
-  const W = 612, H = 792, M = 36, ANCHO = W - 2 * M, PIE = 62;
+  const W = 612, H = 792, M = 22, ANCHO = W - 2 * M, PIE = 34;
   let page, y;
 
   const ancho = (s, f, size, esp = 0) => { const t = limpio(s); return f.widthOfTextAtSize(t, size) + esp * Math.max(t.length - 1, 0); };
-  const texto = (s, x, yy, { f = F, size = 9, color = TINTA, align = 'left', maxW, espacio = 0 } = {}) => {
+  const texto = (s, x, yy, { f = F, size = 7.5, color = TINTA, align = 'left', maxW, espacio = 0 } = {}) => {
     let t = limpio(s);
     if (maxW && f.widthOfTextAtSize(t, size) > maxW) {
       while (t.length > 1 && f.widthOfTextAtSize(`${t}...`, size) > maxW) t = t.slice(0, -1);
@@ -63,9 +63,9 @@ async function generarPDFCotizacion(reg, calc, folio) {
     const xx = align === 'right' ? x - w : align === 'center' ? x - w / 2 : x;
     page.drawText(t, { x: xx, y: yy, size, font: f, color, ...(espacio ? { characterSpacing: espacio } : {}) });
   };
-  const caja = (x, yy, w, h, color, borde) => page.drawRectangle({ x, y: yy, width: w, height: h, color, ...(borde ? { borderColor: borde, borderWidth: 0.6 } : {}) });
-  const linea = (x1, y1, x2, y2, color = LINEA, grosor = 0.6) => page.drawLine({ start: { x: x1, y: y1 }, end: { x: x2, y: y2 }, thickness: grosor, color });
-  const renglones = (s, w, f = F, size = 9) => {
+  const caja = (x, yy, w, h, color, borde) => page.drawRectangle({ x, y: yy, width: w, height: h, color, ...(borde ? { borderColor: borde, borderWidth: 0.5 } : {}) });
+  const linea = (x1, y1, x2, y2, color = LINEA, grosor = 0.5) => page.drawLine({ start: { x: x1, y: y1 }, end: { x: x2, y: y2 }, thickness: grosor, color });
+  const renglones = (s, w, f = F, size = 7.5) => {
     const out = [];
     for (const parrafo of limpio(s).split('\n')) {
       let l = '';
@@ -77,143 +77,145 @@ async function generarPDFCotizacion(reg, calc, folio) {
     }
     return out;
   };
+  const centro = (a, b) => (a + b) / 2;
 
   // ---------- Encabezado ----------
   const subt = [TIPOS[d.tipo], d.contenedor, d.modalidad].filter(Boolean).join('  |  ');
   function encabezado(primera) {
     page = pdf.addPage([W, H]);
+    y = H - 14;
     if (logo) {
-      const h = primera ? 40 : 28, w = logo.width * (h / logo.height);
-      page.drawImage(logo, { x: M, y: H - (primera ? 64 : 46), width: w, height: h });
+      const h = primera ? 30 : 22, w = logo.width * (h / logo.height);
+      page.drawImage(logo, { x: M, y: y - h, width: w, height: h });
     }
+    texto('COTIZACIÓN DE SERVICIOS', W - M, y - 13, { f: FB, size: primera ? 14 : 10, color: NAVY, align: 'right', espacio: 0.5 });
     if (primera) {
-      texto('COTIZACIÓN DE SERVICIOS', W - M, H - 40, { f: FB, size: 16, color: NAVY, align: 'right', espacio: 0.6 });
-      if (subt) {
-        const tw = ancho(subt, FB, 7, 0.8) + 22;
-        caja(W - M - tw, H - 62, tw, 15, AZUL);
-        texto(subt, W - M - 11, H - 57.5, { f: FB, size: 7, color: BLANCO, align: 'right', espacio: 0.8 });
-      }
       const ref = [`Folio ${folio}`, d.trafico && `Tráfico ${d.trafico}`, d.fecha && `Emitida: ${fechaTxt(d.fecha)}`].filter(Boolean).join('   |   ');
-      texto(ref, W - M, H - 77, { size: 7.5, color: GRIS, align: 'right' });
-      y = H - 90;
-    } else {
-      texto('COTIZACIÓN DE SERVICIOS', W - M, H - 32, { f: FB, size: 11, color: NAVY, align: 'right', espacio: 0.5 });
-      texto(`${folio}  (continuación)`, W - M, H - 45, { size: 7.5, color: GRIS, align: 'right' });
-      y = H - 60;
-    }
-    caja(0, y - 3, W, 3, AZUL);
-    y -= 3;
+      let xr = W - M;
+      if (subt) {
+        const tw = ancho(subt, FB, 6.5, 0.7) + 16;
+        caja(W - M - tw, y - 29, tw, 12, AZUL);
+        texto(subt, W - M - 8, y - 25, { f: FB, size: 6.5, color: BLANCO, align: 'right', espacio: 0.7 });
+        xr = W - M - tw - 10;
+      }
+      texto(ref, xr, y - 25, { size: 6.5, color: GRIS, align: 'right' });
+      y -= 36;
+    } else { texto(`${folio} (continuación)`, W - M, y - 23, { size: 6.5, color: GRIS, align: 'right' }); y -= 28; }
+    caja(0, y - 2, W, 2, AZUL);
+    y -= 2;
     if (primera) {
-      // Banda oscura: cliente / operación / vigencia
-      const hB = 54;
+      const hB = 30;
       caja(0, y - hB, W, hB, NAVY);
-      texto('COTIZACIÓN DIRIGIDA A', M, y - 19, { f: FB, size: 6.5, color: CLARO, espacio: 1.2 });
-      texto(d.cliente || '-', M, y - 35, { f: FB, size: 12, color: BLANCO, maxW: 360 });
-      linea(W - M - 150, y - 12, W - M - 150, y - hB + 12, hex('#2c3e5c'), 0.8);
-      texto('OPERACIÓN', W - M, y - 19, { f: FB, size: 6.5, color: CLARO, align: 'right', espacio: 1.2 });
-      texto(OPER[d.operacion] || '-', W - M, y - 35, { f: FB, size: 12, color: BLANCO, align: 'right' });
-      if (d.valido_hasta) texto(`Válida hasta ${fechaTxt(d.valido_hasta)}`, W - M, y - 46, { size: 7, color: CLARO, align: 'right' });
-      y -= hB + 24;
-    } else y -= 24;
+      texto('COTIZACIÓN DIRIGIDA A', M, y - 11, { f: FB, size: 5.5, color: CLARO, espacio: 1 });
+      texto(d.cliente || '-', M, y - 23, { f: FB, size: 10, color: BLANCO, maxW: W - 2 * M - 220 });
+      texto('OPERACIÓN', W - M - 200, y - 11, { f: FB, size: 5.5, color: CLARO, espacio: 1 });
+      texto(OPER[d.operacion] || '-', W - M - 200, y - 23, { f: FB, size: 10, color: BLANCO });
+      texto('VÁLIDA HASTA', W - M, y - 11, { f: FB, size: 5.5, color: CLARO, align: 'right', espacio: 1 });
+      texto(fechaTxt(d.valido_hasta) || '-', W - M, y - 23, { f: FB, size: 10, color: BLANCO, align: 'right' });
+      y -= hB + 12;
+    } else y -= 12;
   }
   const espacio = (h) => { if (y - h < PIE) encabezado(false); };
   const titulo = (t) => {
-    espacio(46);
-    texto(t, M, y, { f: FB, size: 7.5, color: AZUL, espacio: 1.6 });
-    linea(M + ancho(t, FB, 7.5, 1.6) + 10, y + 3, W - M, y + 3, LINEA, 0.8);
-    y -= 16;
+    espacio(30);
+    texto(t, M, y, { f: FB, size: 6.5, color: AZUL, espacio: 1.4 });
+    linea(M + ancho(t, FB, 6.5, 1.4) + 8, y + 2.5, W - M, y + 2.5, LINEA, 0.7);
+    y -= 7;
   };
-  // Cuadrícula de datos (etiqueta pequeña + valor), primera columna sombreada como en el formato de referencia.
-  // Si un valor es largo, primero se reduce la letra y solo al final se recorta.
+  // Cuadrícula de datos (etiqueta pequeña + valor); una celda puede ocupar varias columnas ([etiqueta, valor, columnas]).
+  // Primera columna sombreada; si un valor es largo se achica la letra.
   const cuadricula = (items, cols, rh, colorValor) => {
-    const cw = ANCHO / cols, filas = Math.ceil(items.length / cols);
-    espacio(filas * rh + 10);
+    const cw = ANCHO / cols, pos = [];
+    let c = 0, r = 0;
+    for (const [k, v, n = 1] of items) { if (c + n > cols) { c = 0; r++; } pos.push({ k, v, c, r, n }); c += n; }
+    const filas = r + 1;
+    espacio(filas * rh + 6);
     caja(M, y - filas * rh, ANCHO, filas * rh, BLANCO, LINEA);
-    items.forEach(([k, v], i) => {
-      const c = i % cols, r = Math.floor(i / cols), x = M + c * cw, yy = y - r * rh;
-      if (c === 0) caja(x + 0.6, yy - rh + 0.6, cw - 0.6, rh - 1.2, SUAVE);
-      if (c > 0) linea(x, yy, x, yy - rh);
-      if (r > 0) linea(M, yy, W - M, yy);
-      texto(k, x + 10, yy - 11, { f: FB, size: 6, color: GRIS, espacio: 0.8 });
-      let size = 8.5;
-      while (size > 6.5 && !vacio(v) && ancho(v, FB, size) > cw - 18) size -= 0.5;
-      texto(vacio(v) ? '-' : v, x + 10, yy - 23, { f: FB, size, color: vacio(v) ? GRIS2 : colorValor, maxW: cw - 18 });
-    });
-    y -= filas * rh + 24;
+    for (const { k, v, c: cc, r: rr, n } of pos) {
+      const x = M + cc * cw, yy = y - rr * rh, w = cw * n;
+      if (cc === 0) caja(x + 0.5, yy - rh + 0.5, w - 0.5, rh - 1, SUAVE);
+      if (cc > 0) linea(x, yy, x, yy - rh);
+      if (rr > 0) linea(M, yy, W - M, yy);
+      texto(k, x + 7, yy - 8, { f: FB, size: 5, color: GRIS, espacio: 0.6 });
+      let size = 7.5;
+      while (size > 6 && !vacio(v) && ancho(v, FB, size) > w - 12) size -= 0.25;
+      texto(vacio(v) ? '-' : v, x + 7, yy - 17.5, { f: FB, size, color: vacio(v) ? GRIS2 : colorValor, maxW: w - 12 });
+    }
+    y -= filas * rh + 12;
   };
-  // Encabezado de tabla: fondo azul claro, letras azul marino y títulos centrados en su columna
+  // Encabezado de tabla: azul claro, títulos centrados en su columna
   const encTabla = (cols) => {
-    caja(M, y - 14, ANCHO, 20, ENC, ENC_BORDE);
-    for (const [t, x1, x2] of cols) texto(t, (x1 + x2) / 2, y - 7, { f: FB, size: 6.5, color: NAVY, align: 'center', espacio: 1 });
-    for (const [, x1] of cols.slice(1)) linea(x1, y + 6, x1, y - 14, ENC_BORDE);
-    y -= 14;
+    caja(M, y - 13, ANCHO, 13, ENC, ENC_BORDE);
+    for (const [t, x1, x2] of cols) texto(t, centro(x1, x2), y - 9, { f: FB, size: 6, color: NAVY, align: 'center', espacio: 0.8 });
+    for (const [, x1] of cols.slice(1)) linea(x1, y, x1, y - 13, ENC_BORDE);
+    y -= 13;
   };
-  const centro = (x1, x2) => (x1 + x2) / 2;
 
   encabezado(true);
 
   // ---------- 1. Detalles del embarque ----------
   titulo('DETALLES DEL EMBARQUE');
-  const proveedor = d.proveedor ?? (d.impuestos || {}).proveedor, buque = d.buque_eta ?? (d.impuestos || {}).buque_eta;
-  const contenedores = d.contenedores ?? (d.impuestos || {}).contenedores;
   cuadricula([
-    ['TIPO DE COTIZACIÓN', TIPOS[d.tipo]], ['TIPO DE OPERACIÓN', OPER[d.operacion]], ['TRÁFICO', d.trafico],
-    ['NAVIERA', d.naviera], ['MODALIDAD', d.modalidad], ['TIPO DE CONTENEDOR', d.contenedor ? `${d.contenedor}${CONT[d.contenedor] ? ` - ${CONT[d.contenedor]}` : ''}` : ''],
-    ['PROVEEDOR', proveedor], ['BUQUE / E.T.A.', buque], ['CONTENEDOR(ES)', contenedores],
-    ['FECHA', fechaTxt(d.fecha)], ['VÁLIDO HASTA', fechaTxt(d.valido_hasta)], ['TIPO DE CAMBIO', d.tc ? `$${d.tc} MXN por USD` : ''],
-  ], 3, 32, AZUL);
+    ['TIPO DE COTIZACIÓN', TIPOS[d.tipo]], ['TIPO DE OPERACIÓN', OPER[d.operacion]], ['TRÁFICO', d.trafico], ['NAVIERA', d.naviera],
+    ['MODALIDAD', d.modalidad], ['TIPO DE CONTENEDOR', d.contenedor ? `${d.contenedor}${CONT[d.contenedor] ? ` - ${CONT[d.contenedor]}` : ''}` : ''],
+    ['CONTENEDOR(ES)', d.contenedores], ['BUQUE / E.T.A.', d.buque_eta],
+    ['PROVEEDOR', d.proveedor, 2], ['FECHA', fechaTxt(d.fecha)], ['TIPO DE CAMBIO', d.tc ? `$${d.tc} MXN por USD` : ''],
+  ], 4, 23, AZUL);
 
   // ---------- 2. Desglose de cargos ----------
   titulo('DESGLOSE DE CARGOS');
-  const C1 = M, C2 = M + 190, C3 = W - M - 130, C4 = W - M;   // límites de columnas: concepto | descripción | costo
+  const C1 = M, C2 = M + 190, C3 = W - M - 110, C4 = W - M;   // concepto | descripción | costo
   const colsCargos = [['CONCEPTO', C1, C2], ['DESCRIPCIÓN', C2, C3], ['COSTO', C3, C4]];
-  espacio(70); encTabla(colsCargos);
+  espacio(50); encTabla(colsCargos);
   const grupos = [['USD', 'CARGOS EN DÓLARES (USD)'], ['MXN', 'CARGOS EN PESOS (MXN)']];
+  const LH = 8.5;
   for (const [mon, etiqueta] of grupos) {
     const items = calc.partidas.filter((p) => p.moneda === mon);
     if (!items.length) continue;
-    if (y - 45 < PIE) { encabezado(false); encTabla(colsCargos); }
-    caja(M, y - 15, ANCHO, 15, SUAVE2);
-    texto(etiqueta, centro(C1, C4), y - 10.5, { f: FB, size: 6.5, color: AZUL, align: 'center', espacio: 1.2 });
-    y -= 15;
+    if (y - 30 < PIE) { encabezado(false); encTabla(colsCargos); }
+    caja(M, y - 10, ANCHO, 10, SUAVE2);
+    texto(etiqueta, centro(C1, C4), y - 7.3, { f: FB, size: 5.5, color: AZUL, align: 'center', espacio: 1 });
+    y -= 10;
     for (const p of items) {
-      const ld = renglones(p.descripcion || '', C3 - C2 - 16, F, 8);
-      const lc = renglones(p.concepto || '-', C2 - C1 - 16, FB, 8.5);
-      const n = Math.max(ld.length, lc.length), h = 12 + n * 10.5;
+      const lc = renglones(p.concepto || '-', C2 - C1 - 12, FB, 7);
+      const ld = renglones(p.descripcion || '', C3 - C2 - 12, F, 6.8);
+      const n = Math.max(lc.length, ld.length), h = 6 + n * LH;
       if (y - h < PIE) { encabezado(false); encTabla(colsCargos); }
-      const arriba = (k) => y - 14 - ((n - k) * 10.5) / 2;   // centra verticalmente columnas con menos renglones
-      lc.forEach((l, i) => texto(l, centro(C1, C2), arriba(lc.length) - i * 10.5, { f: FB, size: 8.5, align: 'center' }));
-      ld.forEach((l, i) => texto(l, centro(C2, C3), arriba(ld.length) - i * 10.5, { size: 8, color: GRIS, align: 'center' }));
-      texto(`$ ${dinero(p.monto)}`, centro(C3, C4), arriba(1), { f: FB, size: 9, color: mon === 'USD' ? AZUL : VERDE, align: 'center' });
+      const base = (k) => y - 9 - ((n - k) * LH) / 2;   // centra verticalmente columnas con menos renglones
+      lc.forEach((l, i) => texto(l, centro(C1, C2), base(lc.length) - i * LH, { f: FB, size: 7, align: 'center' }));
+      ld.forEach((l, i) => texto(l, centro(C2, C3), base(ld.length) - i * LH, { size: 6.8, color: GRIS, align: 'center' }));
+      texto(`$ ${dinero(p.monto)}`, C4 - 8, base(1), { f: FB, size: 7.5, color: mon === 'USD' ? AZUL : VERDE, align: 'right' });
       linea(C2, y, C2, y - h); linea(C3, y, C3, y - h);
       y -= h;
       linea(M, y, W - M, y);
     }
   }
-  if (!calc.partidas.length) { texto('Sin cargos', centro(C1, C4), y - 14, { color: GRIS, align: 'center' }); y -= 22; }
+  if (!calc.partidas.length) { texto('Sin cargos', centro(C1, C4), y - 9, { color: GRIS, align: 'center' }); y -= 14; }
+  // Subtotales en una sola franja, alineados a la derecha
   const subs = grupos.filter(([m]) => calc.partidas.some((p) => p.moneda === m));
   if (subs.length) {
-    espacio(subs.length * 20 + 10);
-    y -= 8;
-    const xb = W - M - 230;
-    for (const [m] of subs) {
-      caja(xb, y - 18, 230, 18, SUAVE);
-      texto(`Subtotal ${m}`, xb + 10, y - 12, { size: 8, color: GRIS });
-      texto(`${m} $ ${dinero(calc.cargos[m])}`, W - M - 10, y - 12, { f: FB, size: 9, align: 'right' });
-      y -= 20;
-    }
+    espacio(16);
+    y -= 3;
+    const anchoSub = 150, x0 = W - M - anchoSub * subs.length - 4 * (subs.length - 1);
+    subs.forEach(([m], i) => {
+      const x = x0 + i * (anchoSub + 4);
+      caja(x, y - 12, anchoSub, 12, SUAVE);
+      texto(`Subtotal ${m}`, x + 7, y - 8.5, { size: 6.5, color: GRIS });
+      texto(`${m} $ ${dinero(calc.cargos[m])}`, x + anchoSub - 7, y - 8.5, { f: FB, size: 7.5, align: 'right' });
+    });
+    y -= 12;
   }
-  y -= 22;
+  y -= 14;
 
   // ---------- 3. Impuestos aduanales ----------
   const im = d.impuestos || {}, ci = calc.impuestos;
   const hayImp = ['factura', 'valor_usd', 'igi', 'dta', 'iva', 'valor_aduana'].some((k) => !vacio(im[k]));
   if (hayImp) {
-    espacio(250); // la sección completa va en la misma página
+    espacio(150); // la sección completa va junta
     titulo('IMPUESTOS ADUANALES');
     cuadricula([['FACTURA', im.factura], ['TIPO DE CAMBIO APROX.', ci.tc ? `$ ${ci.tc} MXN por USD` : ''],
-      ['MERCANCÍA', im.mercancia], ['RÉGIMEN / FRACCIÓN ARANCELARIA', im.regimen]], 2, 30, TINTA);
-    y += 10;
+      ['MERCANCÍA', im.mercancia], ['RÉGIMEN / FRACCIÓN ARANCELARIA', im.regimen]], 4, 23, TINTA);
+    y += 6;
     const izq = [
       ['Valor en dólares', ci.valorUsd ? `USD $ ${dinero(ci.valorUsd)}` : '-'],
       ['Incrementables', ci.incrementables ? `$ ${dinero(ci.incrementables)}` : '-'],
@@ -221,76 +223,74 @@ async function generarPDFCotizacion(reg, calc, folio) {
     ];
     const der = [['I.G.I. / Ad Valorem', ci.igi], ['D.T.A.', ci.dta], ['I.V.A.', ci.iva], ['Prevalidación', ci.prevalidacion], ['Contraprestación', ci.contraprestacion]]
       .map(([k, v]) => [k, `$ ${dinero(v)}`]);
-    const mitad = M + ANCHO / 2, q1 = M + ANCHO / 4, q3 = M + (3 * ANCHO) / 4, filasM = Math.max(izq.length, der.length), rh = 17;
-    espacio(20 + filasM * rh + 34);
+    const mitad = M + ANCHO / 2, q1 = M + ANCHO / 4, q3 = M + (3 * ANCHO) / 4, filasM = Math.max(izq.length, der.length), rh = 11;
     encTabla([['BASE GRAVABLE', M, q1], ['MONTO', q1, mitad], ['IMPUESTO', mitad, q3], ['COSTO (MXN)', q3, W - M]]);
     for (let i = 0; i < filasM; i++) {
       const yy = y - i * rh;
-      if (izq[i]) { texto(izq[i][0], centro(M, q1), yy - 12, { size: 8.5, color: GRIS, align: 'center' }); texto(izq[i][1], centro(q1, mitad), yy - 12, { f: FB, size: 8.5, align: 'center' }); }
-      if (der[i]) { texto(der[i][0], centro(mitad, q3), yy - 12, { size: 8.5, color: GRIS, align: 'center' }); texto(der[i][1], centro(q3, W - M), yy - 12, { f: FB, size: 8.5, align: 'center' }); }
+      if (izq[i]) { texto(izq[i][0], centro(M, q1), yy - 8, { size: 7, color: GRIS, align: 'center' }); texto(izq[i][1], mitad - 8, yy - 8, { f: FB, size: 7, align: 'right' }); }
+      if (der[i]) { texto(der[i][0], centro(mitad, q3), yy - 8, { size: 7, color: GRIS, align: 'center' }); texto(der[i][1], W - M - 8, yy - 8, { f: FB, size: 7, align: 'right' }); }
       linea(M, yy - rh, W - M, yy - rh);
     }
-    for (const x of [q1, mitad, q3]) linea(x, y, x, y - filasM * rh, x === mitad ? hex('#b9c6d8') : LINEA);
-    y -= filasM * rh + 6;
-    caja(mitad, y - 24, ANCHO / 2, 24, NAVY);
-    texto('TOTAL IMPUESTOS', mitad + 10, y - 15, { f: FB, size: 7, color: CLARO, espacio: 1.2 });
-    texto(`MXN $ ${dinero(ci.total)}`, W - M - 10, y - 16, { f: FB, size: 11, color: ORO, align: 'right' });
-    y -= 46;
+    for (const x of [q1, mitad, q3]) linea(x, y, x, y - filasM * rh, x === mitad ? ENC_BORDE : LINEA);
+    y -= filasM * rh;
+    caja(mitad, y - 15, ANCHO / 2, 15, NAVY);
+    texto('TOTAL IMPUESTOS ADUANALES', mitad + 8, y - 10, { f: FB, size: 6, color: CLARO, espacio: 1 });
+    texto(`MXN $ ${dinero(ci.total)}`, W - M - 8, y - 10.5, { f: FB, size: 9, color: ORO, align: 'right' });
+    y -= 29;
   }
 
-  // ---------- Total estimado ----------
+  // ---------- Notas (izquierda) y total estimado (derecha) ----------
   const resumen = [];
   if (calc.cargos.USD) resumen.push(['Desglose de cargos (USD)', `USD $ ${dinero(calc.cargos.USD)}`]);
   if (calc.cargos.MXN) resumen.push(['Desglose de cargos (MXN)', `MXN $ ${dinero(calc.cargos.MXN)}`]);
   if (hayImp) resumen.push(['Impuestos aduanales', `MXN $ ${dinero(ci.total)}`]);
   const totLin = [calc.totalUSD ? `USD $ ${dinero(calc.totalUSD)}` : '', calc.totalMXN ? `MXN $ ${dinero(calc.totalMXN)}` : ''].filter(Boolean);
-  if (resumen.length && totLin.length) {
-    const equiv = calc.granMXN !== null && calc.totalUSD && calc.totalMXN;
-    const hT = 18 + totLin.length * 19 + (equiv ? 14 : 0);
-    espacio(resumen.length * 18 + hT + 14);
-    const xb = W - M - 270;
-    for (const [k, v] of resumen) {
-      texto(k, xb + 10, y - 12, { size: 8.5, color: GRIS });
-      texto(v, W - M - 10, y - 12, { f: FB, size: 8.5, align: 'right' });
-      linea(xb, y - 18, W - M, y - 18);
-      y -= 18;
+  const equiv = calc.granMXN !== null && calc.totalUSD && calc.totalMXN;
+  const anchoTot = 230, xT = W - M - anchoTot;
+  const hTotal = totLin.length ? resumen.length * 11 + 4 + 12 + totLin.length * 14 + (equiv ? 10 : 0) + 4 : 0;
+  const notas = vacio(d.notas) ? [] : renglones(d.notas, xT - M - 40, F, 6.8).filter((l) => l.trim());
+  const hNotas = notas.length ? 18 + notas.length * 9 : 0;
+  const hBloque = Math.max(hTotal, hNotas);
+  if (hBloque) {
+    espacio(hBloque + 10);
+    titulo(notas.length ? 'NOTAS Y CONDICIONES' : 'TOTAL ESTIMADO');
+    const y0 = y;
+    if (notas.length) {
+      caja(M, y0 - hNotas, xT - M - 12, hNotas, AMBAR);
+      caja(M, y0 - hNotas, 2, hNotas, AMBAR2);
+      texto('IMPORTANTE', M + 10, y0 - 9, { f: FB, size: 5.5, color: hex('#b7791f'), espacio: 1 });
+      notas.forEach((l, i) => {
+        page.drawCircle({ x: M + 12, y: y0 - 18 - i * 9 + 2.2, size: 1, color: TINTA });
+        texto(l, M + 18, y0 - 18 - i * 9, { size: 6.8 });
+      });
     }
-    y -= 8;
-    caja(xb, y - hT, 270, hT, NAVY);
-    texto('TOTAL ESTIMADO', xb + 12, y - 20, { f: FB, size: 7, color: CLARO, espacio: 1.4 });
-    totLin.forEach((t, i) => texto(t, W - M - 12, y - 22 - i * 19, { f: FB, size: 14, color: ORO, align: 'right' }));
-    if (equiv) texto(`Equivalente (T.C. ${d.tc}): MXN $ ${dinero(calc.granMXN)}  |  USD $ ${dinero(calc.granUSD)}`, W - M - 12, y - hT + 8, { size: 6.5, color: hex('#c7d2e2'), align: 'right' });
-    y -= hT + 26;
-  }
-
-  // ---------- Notas y condiciones ----------
-  if (!vacio(d.notas)) {
-    const lineas = renglones(d.notas, ANCHO - 44, F, 8).filter((l) => l.trim());
-    espacio(Math.min(30 + lineas.length * 11, 130) + 16);
-    titulo('NOTAS Y CONDICIONES');
-    const hb = Math.min(28 + lineas.length * 11, y - PIE);
-    caja(M, y - hb + 6, ANCHO, hb, AMBAR);
-    caja(M, y - hb + 6, 2.5, hb, AMBAR2);
-    texto('IMPORTANTE', M + 14, y - 8, { f: FB, size: 6.5, color: hex('#b7791f'), espacio: 1.2 });
-    y -= 24;
-    for (const l of lineas) {
-      if (y - 11 < PIE) encabezado(false);
-      page.drawCircle({ x: M + 17, y: y + 2.6, size: 1.3, color: TINTA });
-      texto(l, M + 24, y, { size: 8 });
-      y -= 11;
+    if (totLin.length) {
+      let yy = y0;
+      for (const [k, v] of resumen) {
+        texto(k, xT + 8, yy - 8, { size: 6.8, color: GRIS });
+        texto(v, W - M - 8, yy - 8, { f: FB, size: 7, align: 'right' });
+        linea(xT, yy - 11, W - M, yy - 11);
+        yy -= 11;
+      }
+      yy -= 4;
+      const hT = 12 + totLin.length * 14 + (equiv ? 10 : 0);
+      caja(xT, yy - hT, anchoTot, hT, NAVY);
+      texto('TOTAL ESTIMADO', xT + 8, yy - 11, { f: FB, size: 6, color: CLARO, espacio: 1.2 });
+      totLin.forEach((t, i) => texto(t, W - M - 8, yy - 13 - i * 14, { f: FB, size: 11, color: ORO, align: 'right' }));
+      if (equiv) texto(`Equivalente (T.C. ${d.tc}): MXN $ ${dinero(calc.granMXN)} | USD $ ${dinero(calc.granUSD)}`, W - M - 8, yy - hT + 5, { size: 5.5, color: hex('#c7d2e2'), align: 'right' });
     }
+    y = y0 - hBloque - 8;
   }
 
   // ---------- Pie en todas las páginas ----------
   const pags = pdf.getPages();
   pags.forEach((p, i) => {
     page = p;
-    caja(0, 0, W, 44, NAVY);
-    caja(0, 44, W, 2.5, CIAN);
-    texto('Grupo Meja', M, 27, { f: FB, size: 9, color: BLANCO });
-    texto('A.A. Gonzalez Castillo & Medina S.C.  ·  Av. Reynosa #2047, Col. Guerrero, Nuevo Laredo, Tamps.  ·  Tel. (867) 715-45-38', M, 15, { size: 6.5, color: CLARO });
-    texto(folio, W - M, 27, { f: FB, size: 8, color: BLANCO, align: 'right' });
-    texto(`Página ${i + 1} de ${pags.length}`, W - M, 15, { size: 6.5, color: CLARO, align: 'right' });
+    caja(0, 0, W, 24, NAVY);
+    caja(0, 24, W, 1.5, CIAN);
+    texto('Grupo Meja', M, 9, { f: FB, size: 7, color: BLANCO });
+    texto('A.A. Gonzalez Castillo & Medina S.C.  ·  Av. Reynosa #2047, Col. Guerrero, Nuevo Laredo, Tamps.  ·  Tel. (867) 715-45-38', M + 50, 9, { size: 5.8, color: CLARO });
+    texto(`${folio}   ·   Página ${i + 1} de ${pags.length}`, W - M, 9, { f: FB, size: 6, color: BLANCO, align: 'right' });
   });
   return Buffer.from(await pdf.save());
 }
