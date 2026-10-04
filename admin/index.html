@@ -289,6 +289,7 @@ function indexaTerminadas(j) {
     if (!terminadas[k] || String(a.modificado) > String(terminadas[k].modificado)) terminadas[k] = a; // gana el escaneo más reciente
   }
   if (j.error) { $('aviso').style.display = 'block'; $('aviso').textContent = 'No se pudo leer la carpeta OC_TERMINADAS (' + j.error + '). Se muestran las órdenes sin estado de escaneo.'; }
+  else if (j.aviso) { $('aviso').style.display = 'block'; $('aviso').textContent = j.aviso; }
 }
 Promise.all([
   fetch('/api/admin/ordenes').then((r) => r.json()),

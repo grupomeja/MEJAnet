@@ -164,24 +164,40 @@ app.get('/nueva-orden', admin, (_req, res) => res.sendFile(path.join(__dirname, 
 app.get('/admin', (_req, res) => res.redirect('/orden-de-carga'));
 // Resultado de la revisión de OC_TERMINADAS (lo escribe la tarea de revisión en Drive; se lee vía Apps Script).
 let cacheTerm = { t: 0, data: null };
-app.get('/api/admin/terminadas', admin, async (_req, res) => {
-  if (cacheTerm.data && Date.now() - cacheTerm.t < 60000) return res.json(cacheTerm.data);
-  const url = process.env.DRIVE_WEBHOOK_URL, token = process.env.DRIVE_TOKEN;
-  if (!url || !token) return res.json({ archivos: [], error: 'Drive no configurado' });
+// Pide el resultado al Apps Script. Si Google contesta con una página de error (HTML) en vez de JSON, lanza error.
+async function leerTerminadas(url, token) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), 25000);
   try {
     const r = await fetch(`${url}?token=${encodeURIComponent(token)}`, { signal: ctrl.signal, redirect: 'follow' });
-    const j = await r.json();
+    const txt = await r.text();
+    let j;
+    try { j = JSON.parse(txt); }
+    catch { throw new Error(`Google respondió ${r.status} sin datos: ${txt.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 160)}`); }
     if (!j.ok) throw new Error(j.error || 'respuesta inválida');
-    cacheTerm = { t: Date.now(), data: { archivos: j.archivos || [], actualizado: j.actualizado } };
-    res.json(cacheTerm.data);
-  } catch (e) {
-    console.error('Error leyendo OC_TERMINADAS:', e.message);
-    res.json({ archivos: [], error: e.message });
+    return { archivos: j.archivos || [], actualizado: j.actualizado };
   } finally {
     clearTimeout(t);
   }
+}
+app.get('/api/admin/terminadas', admin, async (_req, res) => {
+  if (cacheTerm.data && Date.now() - cacheTerm.t < 60000) return res.json(cacheTerm.data);
+  const url = process.env.DRIVE_WEBHOOK_URL, token = process.env.DRIVE_TOKEN;
+  if (!url || !token) return res.json({ archivos: [], error: 'Drive no configurado' });
+  let ultimoError;
+  for (let intento = 1; intento <= 2; intento++) {
+    try {
+      cacheTerm = { t: Date.now(), data: await leerTerminadas(url, token) };
+      return res.json(cacheTerm.data);
+    } catch (e) {
+      ultimoError = e;
+      console.error(`Error leyendo OC_TERMINADAS (intento ${intento}):`, e.message);
+      if (intento === 1) await new Promise((r) => setTimeout(r, 1500));
+    }
+  }
+  // Si ya se había leído antes, se muestra lo último que se obtuvo bien
+  if (cacheTerm.data) return res.json({ ...cacheTerm.data, aviso: 'Se muestra el último estado de escaneo leído; Google no respondió en este momento.' });
+  res.json({ archivos: [], error: ultimoError.message.startsWith('Google respondió') ? 'Google no respondió en este momento, intenta recargar' : ultimoError.message });
 });
 
 // Cambiar a mano si un tráfico está separado / cargado (valor null = quitar el cambio manual)
