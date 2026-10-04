@@ -11,13 +11,15 @@
   body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
   main{max-width:1100px;margin:0 auto;padding:16px}
   h1{font-size:22px;margin:0}
-  .marca{display:flex;align-items:center;gap:14px}
-  .marca img{height:44px;width:auto;display:block}
-  @media (prefers-color-scheme:dark){.marca img{filter:invert(1)}}
-  @media (max-width:560px){.marca{flex-wrap:wrap;gap:6px}.marca img{height:30px}h1{font-size:19px}}
-  .top{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;margin:0 0 14px}
-  .acc{display:flex;gap:8px;flex-wrap:wrap}
-  .acc a{text-decoration:none;font-weight:700;border-radius:10px;padding:10px 14px;font-size:15px}
+  .logo img{height:26px;width:auto;display:block}
+  @media (prefers-color-scheme:dark){.logo img{filter:invert(1)}}
+  .top{display:grid;grid-template-columns:1fr auto 1fr;gap:10px 16px;align-items:center;margin:0 0 14px}
+  .top h1{text-align:center;font-size:20px}
+  .top .acc{justify-content:flex-end}
+  @media (max-width:760px){.top{grid-template-columns:1fr;justify-items:center}.top .acc{justify-content:center;flex-wrap:wrap}.top h1{font-size:19px}}
+  .acc{display:flex;gap:8px}
+  .acc a{white-space:nowrap}
+  .acc a{text-decoration:none;font-weight:700;border-radius:10px;padding:9px 12px;font-size:14px}
   .acc .nuevo{background:var(--accent);color:var(--accent-ink)}
   .acc .inicio{border:1px solid var(--line);color:var(--accent);background:var(--card)}
   .kpis{display:grid;gap:10px;grid-template-columns:repeat(4,1fr);margin-bottom:14px}
@@ -62,7 +64,8 @@
 <body>
 <main>
   <div class="top">
-    <div class="marca"><a href="/" aria-label="MEJAnet"><img src="/logo-negro.png" alt="Grupo Meja"></a><h1>TABLERO DE ORDENES DE CARGA</h1></div>
+    <a class="logo" href="/" aria-label="MEJAnet"><img src="/logo-negro.png" alt="Grupo Meja"></a>
+    <h1>TABLERO DE ORDENES DE CARGA</h1>
     <div class="acc"><a class="nuevo" href="/nueva-orden">+ Crear Nueva Orden de Carga</a><a class="inicio" href="/">MEJAnet</a></div>
   </div>
 
@@ -229,13 +232,21 @@ function kpis() {
   $('k4').textContent = es.filter((e) => e.car.v === true).length;
 }
 
+// Suma todas las cantidades escritas en BULTOS ("1 ATADO 2 CAJAS DE MADERA" -> 3). Sin números, se deja el texto.
+function totalBultos(txt) {
+  const nums = String(txt ?? '').match(/\d+(?:\.\d+)?/g);
+  if (!nums) return String(txt ?? '');
+  const s = nums.reduce((t, n) => t + Number(n), 0);
+  return String(Math.round(s * 100) / 100);
+}
+
 function csv() {
   const filas = filtrar().flatMap(({ o, filas }) => (filas.length ? filas : [{}]).map((f) => [
     oc4(o.oc), o.datos.cliente, o.datos.fecha || 'PENDIENTE', o.datos.caja, o.datos.sello,
-    f.trafico, f.bultos, f.pedimento, f.nota, textoEstado(o, f),
+    f.trafico, totalBultos(f.bultos), f.bultos, f.pedimento, f.nota, textoEstado(o, f),
     o.datos.capturista, new Date(o.creada).toLocaleString('es-MX')]));
   const enc = (v) => '"' + String(v ?? '').replace(/"/g, '""') + '"';
-  const txt = [['OC', 'Cliente', 'Fecha de cruce', 'Caja/Placas', 'Sello', 'Trafico', 'Bultos', 'Pedimento', 'Nota', 'Estado', 'Capturo', 'Recibida'], ...filas]
+  const txt = [['OC', 'Cliente', 'Fecha de cruce', 'Caja/Placas', 'Sello', 'Trafico', 'Bultos', 'Detalle de bultos', 'Pedimento', 'Nota', 'Estado', 'Capturo', 'Recibida'], ...filas]
     .map((r) => r.map(enc).join(',')).join('\r\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob(['﻿' + txt], { type: 'text/csv;charset=utf-8' }));
