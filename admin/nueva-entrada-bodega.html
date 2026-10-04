@@ -39,6 +39,16 @@
   .tipo span{opacity:.28;transition:opacity .15s}
   .tipo:hover span{opacity:.55}
   .tipo input:checked+span{opacity:1;border-color:var(--ok);color:var(--ok);background:color-mix(in srgb,var(--ok) 15%,transparent)}
+  .tipo.hz input:checked+span{border-color:var(--err);color:var(--err);background:color-mix(in srgb,var(--err) 13%,transparent)}
+  .refrow .tipo+.tipo{margin-left:-6px}
+  /* Recordatorio HAZMAT */
+  .aviso-fondo{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+  .aviso-caja{background:var(--card,#fff);color:var(--ink);border-radius:14px;max-width:440px;width:100%;padding:22px 22px 18px;border-top:6px solid var(--err);box-shadow:0 20px 50px rgba(0,0,0,.3);text-align:center}
+  .aviso-caja .tit{font-size:13px;font-weight:800;letter-spacing:.6px;color:var(--err);margin:0 0 8px}
+  .aviso-caja .ref{font-size:13px;color:var(--muted);margin:0 0 12px}
+  .aviso-caja .txt{font-size:18px;font-weight:800;line-height:1.35;margin:0 0 18px}
+  .aviso-caja button{background:var(--err);color:#fff;border:0;border-radius:10px;padding:11px 28px;font:inherit;font-weight:700;font-size:15px;cursor:pointer;width:auto}
+
   .peso{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:end}
   .peso .eq{padding-bottom:12px;color:var(--muted);font-weight:700}
   .ayuda{color:var(--muted);font-size:13px;margin:6px 0 0}
@@ -65,6 +75,7 @@
         <div class="refrow">
           <div class="ref"><span>MEJA</span><input type="text" id="referencia" placeholder="####/###" maxlength="8" required></div>
           <label class="tipo" title="Marca si la entrada es in-bond"><input type="checkbox" id="inbond"><span>in-bond</span></label>
+          <label class="tipo hz" title="Marca si la entrada es haz-mat (material peligroso)"><input type="checkbox" id="hazmat"><span>haz-mat</span></label>
         </div></div>
       <div><label for="fecha">Fecha arribo</label><input type="date" id="fecha"></div>
       <div><label for="cliente">Cliente</label><input type="text" id="cliente" list="lCli" maxlength="120"></div>
@@ -134,6 +145,7 @@ $('f').onsubmit = async (e) => {
   for (const k of CAMPOS) datos[k] = $(k).value.trim().toUpperCase();
   datos.fecha = $('fecha').value;
   datos.tipo = $('inbond').checked ? 'IN-BOND' : '';
+  datos.hazmat = $('hazmat').checked ? 'HAZ-MAT' : '';
   datos.notas = $('notas').value.trim();
   if (datos.descripcion === '__OTRO') datos.descripcion = $('descOtro').value.trim().toUpperCase();
   datos.referencia = $('referencia').value.trim();
@@ -147,6 +159,7 @@ $('f').onsubmit = async (e) => {
     const r = await fetch('/api/admin/entradas-bodega', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) });
     const j = await r.json().catch(() => ({}));
     if (!r.ok || !j.ok) throw new Error(j.error || 'Error');
+    if (datos.hazmat && datos.pedimento) await avisoHazmat(j.referencia);
     $('f').reset(); $('descOtro').hidden = true; $('fecha').value = hoy();
     msg.className = 'msg ok';
     msg.innerHTML = `Registro <b>${esc(j.referencia)}</b> guardado. <a href="/entradas-bodega">Ver en el tablero</a>`;
@@ -157,6 +170,19 @@ $('f').onsubmit = async (e) => {
     btn.disabled = false; btn.textContent = 'Guardar registro';
   }
 };
+
+// Recordatorio cuando un tráfico HAZMAT recibe su pedimento
+function avisoHazmat(referencia) {
+  return new Promise((ok) => {
+    const f = document.createElement('div');
+    f.className = 'aviso-fondo';
+    f.innerHTML = `<div class="aviso-caja" role="alertdialog" aria-modal="true"><p class="tit">⚠ HAZ-MAT</p><p class="ref">${esc(referencia)}</p>
+      <p class="txt">RECUERDA QUITAR EL REGISTRO DE HAZMAT EN LA PAGINA OFICIAL</p><button type="button">Entendido</button></div>`;
+    document.body.appendChild(f);
+    const b = f.querySelector('button'); b.focus();
+    b.onclick = () => { f.remove(); ok(); };
+  });
+}
 
 $('fecha').value = hoy();
 </script>

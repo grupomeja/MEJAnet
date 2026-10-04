@@ -59,6 +59,17 @@
   td.edit .chk{display:inline-flex;align-items:center;gap:4px;margin:0 0 0 8px;font-size:12px;font-weight:700;color:var(--ok);text-transform:none;letter-spacing:0;cursor:pointer}
   td.edit .chk input{width:auto;min-width:0;padding:0}
   .pill.inbond{background:color-mix(in srgb,var(--nar) 16%,transparent);color:var(--nar)}
+  .pill.hazmat{background:color-mix(in srgb,var(--err) 14%,transparent);color:var(--err)}
+  .pill+.pill{margin-left:3px}
+  td.edit .chk.hz{color:var(--err)}
+  /* Recordatorio HAZMAT */
+  .aviso-fondo{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+  .aviso-caja{background:var(--card,#fff);color:var(--ink);border-radius:14px;max-width:440px;width:100%;padding:22px 22px 18px;border-top:6px solid var(--err);box-shadow:0 20px 50px rgba(0,0,0,.3);text-align:center}
+  .aviso-caja .tit{font-size:13px;font-weight:800;letter-spacing:.6px;color:var(--err);margin:0 0 8px}
+  .aviso-caja .ref{font-size:13px;color:var(--muted);margin:0 0 12px}
+  .aviso-caja .txt{font-size:18px;font-weight:800;line-height:1.35;margin:0 0 18px}
+  .aviso-caja button{background:var(--err);color:#fff;border:0;border-radius:10px;padding:11px 28px;font:inherit;font-weight:700;font-size:15px;cursor:pointer;width:auto}
+
   td.ref{font-weight:800}
   td.ref.ped,td.ped{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
   td[data-c=pedimento].ped{font-weight:700}
@@ -165,7 +176,7 @@ const celda = (r, c) => {
   if (c === 'revisado') return r.revisado === 'REVISADO'
     ? `<td data-c="revisado" class="rev" title="Clic para quitar"><span class="revok">REVISADO</span></td>`
     : `<td data-c="revisado" class="rev"><input type="checkbox" class="revchk" aria-label="Marcar ${esc(r.referencia)} como revisado"></td>`;
-  if (c === 'referencia') return `<td data-c="referencia" class="ref${conPed(r) ? ' ped' : ''}">${esc(r.referencia)}${r.tipo === 'IN-BOND' ? ' <span class="pill inbond">in-bond</span>' : ''}</td>`;
+  if (c === 'referencia') return `<td data-c="referencia" class="ref${conPed(r) ? ' ped' : ''}">${esc(r.referencia)}${r.tipo === 'IN-BOND' ? ' <span class="pill inbond">in-bond</span>' : ''}${r.hazmat === 'HAZ-MAT' ? ' <span class="pill hazmat">haz-mat</span>' : ''}</td>`;
   const v = c === 'fecha' ? fechaTxt(r.fecha) : r[c];
   const cls = c === 'pedimento' && conPed(r) ? 'ped' : '';
   return `<td data-c="${c}"${cls ? ` class="${cls}"` : ''}>${esc(v)}</td>`;
@@ -199,7 +210,7 @@ function pinta() {
 // ---------- Edición en la celda ----------
 let editando = null;
 function editor(r, c) {
-  if (c === 'referencia') return `<span class="pref">MEJA</span><input class="refin" value="${esc(r.referencia.replace(/^MEJA\s*/i, ''))}" placeholder="####/###" maxlength="8"><label class="chk"><input type="checkbox" class="ib"${r.tipo === 'IN-BOND' ? ' checked' : ''}> in-bond</label>`;
+  if (c === 'referencia') return `<span class="pref">MEJA</span><input class="refin" value="${esc(r.referencia.replace(/^MEJA\s*/i, ''))}" placeholder="####/###" maxlength="8"><label class="chk"><input type="checkbox" class="ib"${r.tipo === 'IN-BOND' ? ' checked' : ''}> in-bond</label><label class="chk hz"><input type="checkbox" class="hzc"${r.hazmat === 'HAZ-MAT' ? ' checked' : ''}> haz-mat</label>`;
   if (c === 'fecha') return `<input type="date" value="${esc(r.fecha)}">`;
   if (c === 'notas') return `<textarea rows="3" maxlength="500" style="width:100%;min-width:180px;font:inherit;padding:5px;resize:vertical">${esc(r.notas)}</textarea>`;
   if (c === 'descripcion') {
@@ -224,8 +235,8 @@ function abre(td) {
     conecta(td.querySelector('input'));
   });
   conecta(campo);
-  const ib = td.querySelector('input.ib');
-  if (ib) ib.addEventListener('blur', () => setTimeout(() => { if (editando && !editando.td.contains(document.activeElement)) guarda(); }, 0));
+  for (const ch of td.querySelectorAll('input.ib,input.hzc'))
+    ch.addEventListener('blur', () => setTimeout(() => { if (editando && !editando.td.contains(document.activeElement)) guarda(); }, 0));
 }
 function conecta(campo) {
   campo.focus();
@@ -258,6 +269,8 @@ async function guarda() {
     const [n1, n2] = v.split('/');
     if (`MEJA ${n1.padStart(4, '0')}/${n2}` !== r.referencia) cambios.referencia = v;
     if (tipo !== (r.tipo || '')) cambios.tipo = tipo;
+    const hazmat = td.querySelector('input.hzc').checked ? 'HAZ-MAT' : '';
+    if (hazmat !== (r.hazmat || '')) cambios.hazmat = hazmat;
     if (!Object.keys(cambios).length) return cierra();
   } else {
     if (v === String(r[c] ?? '')) return cierra();
@@ -273,6 +286,8 @@ async function guarda() {
     if (!res.ok || !j.ok) throw new Error(j.error || 'No se pudo guardar');
     Object.assign(r, j.datos, { referencia: j.referencia });
     cierra(Object.keys(cambios));
+    // HAZMAT: al escribir el pedimento de un tráfico haz-mat se muestra el recordatorio
+    if (c === 'pedimento' && cambios.pedimento && r.hazmat === 'HAZ-MAT') avisoHazmat(r.referencia);
     kpis(filtrar());
     if (['cliente', 'proveedor', 'linea'].includes(c)) { llenaSelect('fCli', 'cliente'); llenaSelect('fPro', 'proveedor'); llenaSelect('fLin', 'linea'); }
   } catch (e) {
@@ -320,11 +335,24 @@ $('filas').addEventListener('click', async (e) => {
 
 function csv() {
   const enc = (v) => '"' + String(v ?? '').replace(/"/g, '""') + '"';
-  const cab = ['REFERENCIA', 'FECHA ARRIBO', 'CLIENTE', 'BULTOS', 'DESCRIPCION', 'PESO (Lbs)', 'PESO (KGS)', 'LINEA FLETERA', 'TRACKING #', 'P.O.', 'PROVEEDOR', 'PEDIMENTO', 'REVISADO', 'NOTAS', 'TIPO'];
-  const txt = [cab, ...filtrar().map((r) => [...COLS.map((c) => c === 'fecha' ? fechaTxt(r.fecha) : r[c]), r.tipo || ''])].map((f) => f.map(enc).join(',')).join('\r\n');
+  const cab = ['REFERENCIA', 'FECHA ARRIBO', 'CLIENTE', 'BULTOS', 'DESCRIPCION', 'PESO (Lbs)', 'PESO (KGS)', 'LINEA FLETERA', 'TRACKING #', 'P.O.', 'PROVEEDOR', 'PEDIMENTO', 'REVISADO', 'NOTAS', 'TIPO', 'HAZ-MAT'];
+  const txt = [cab, ...filtrar().map((r) => [...COLS.map((c) => c === 'fecha' ? fechaTxt(r.fecha) : r[c]), r.tipo || '', r.hazmat || ''])].map((f) => f.map(enc).join(',')).join('\r\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob(['﻿' + txt], { type: 'text/csv;charset=utf-8' }));
   a.download = 'entradas_bodega.csv'; a.click();
+}
+
+// Recordatorio cuando un tráfico HAZMAT recibe su pedimento
+function avisoHazmat(referencia) {
+  return new Promise((ok) => {
+    const f = document.createElement('div');
+    f.className = 'aviso-fondo';
+    f.innerHTML = `<div class="aviso-caja" role="alertdialog" aria-modal="true"><p class="tit">⚠ HAZ-MAT</p><p class="ref">${esc(referencia)}</p>
+      <p class="txt">RECUERDA QUITAR EL REGISTRO DE HAZMAT EN LA PAGINA OFICIAL</p><button type="button">Entendido</button></div>`;
+    document.body.appendChild(f);
+    const b = f.querySelector('button'); b.focus();
+    b.onclick = () => { f.remove(); ok(); };
+  });
 }
 
 const reinicia = () => { limite = POR_PAGINA; pinta(); };
