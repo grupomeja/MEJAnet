@@ -39,6 +39,7 @@
   td:hover{outline:1px dashed var(--accent);outline-offset:-3px}
   td[data-c=cliente],td[data-c=linea],td[data-c=po],td[data-c=proveedor],td[data-c=descripcion]{white-space:normal;min-width:70px}
   th{white-space:normal}
+  th[data-c=proveedor],td[data-c=proveedor]{width:150px;max-width:150px}
   td.ref{font-weight:800}
   td.ref.ped{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
   td.edit{padding:3px 4px;outline:2px solid var(--accent);outline-offset:-2px}
@@ -90,7 +91,7 @@
     <table>
       <thead><tr>
         <th>Referencia</th><th>Fecha arribo</th><th>Cliente</th><th>Bultos</th><th>Descripcion</th>
-        <th>Peso (Lbs)</th><th>Peso (Kgs)</th><th>Linea fletera</th><th>Tracking #</th><th>P.O.</th><th>Proveedor</th><th>Pedimento</th>
+        <th>Peso (Lbs)</th><th>Peso (Kgs)</th><th>Linea fletera</th><th>Tracking #</th><th>P.O.</th><th data-c="proveedor">Proveedor</th><th>Pedimento</th>
       </tr></thead>
       <tbody id="filas"><tr><td colspan="12" class="vacio">Cargando…</td></tr></tbody>
     </table>
