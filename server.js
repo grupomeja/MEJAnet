@@ -5,6 +5,7 @@ const db = require('./db');
 const { generarPDF } = require('./pdf');
 const { enviarOrden } = require('./mail');
 const { formatoOC } = require('./oc');
+const { guardarEnDrive, configurado: driveListo } = require('./drive');
 
 const app = express();
 app.use(express.json({ limit: '200kb' }));
@@ -53,12 +54,19 @@ app.post('/api/ordenes', async (req, res) => {
     // Se responde de inmediato; el PDF y el correo se procesan en segundo plano.
     res.json({ ok: true, oc: formatoOC(reg.oc) });
     (async () => {
-      try {
-        await enviarOrden(reg, await generarPDF(datos, reg.oc));
-        await db.marcarCorreo(reg.id, true);
-      } catch (e) {
-        console.error(`Error enviando correo de OC ${formatoOC(reg.oc)}:`, e.message);
-      }
+      let pdf;
+      try { pdf = await generarPDF(datos, reg.oc); }
+      catch (e) { console.error(`Error generando PDF de OC ${formatoOC(reg.oc)}:`, e.message); return; }
+      const oc = formatoOC(reg.oc);
+      await Promise.all([
+        enviarOrden(reg, pdf)
+          .then(() => db.marcarCorreo(reg.id, true))
+          .catch((e) => console.error(`Error enviando correo de OC ${oc}:`, e.message)),
+        driveListo()
+          ? guardarEnDrive(`ORDEN_DE_CARGA_${oc}.pdf`, pdf)
+              .catch((e) => console.error(`Error guardando OC ${oc} en Drive:`, e.message))
+          : null,
+      ]);
     })();
   } catch (e) {
     console.error(e);

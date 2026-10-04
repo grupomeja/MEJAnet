@@ -20,3 +20,10 @@ Al enviar, la orden se **guarda** y se **manda por correo en PDF**.
 | `SMTP_HOST` / `SMTP_PORT` | Opcionales. Por defecto `smtp.gmail.com` / `465` |
 
 Sin `DATABASE_URL` las órdenes se guardan en un archivo local, que se borra cuando Render reinicia el servicio gratis.
+
+## Guardar los PDF en Google Drive (opcional)
+
+1. Abre https://script.google.com con la cuenta dueña de la carpeta, crea un proyecto nuevo y pega el contenido de `apps-script/Code.gs`.
+2. Cambia `PON_AQUI_TU_CLAVE` por una clave inventada por ti.
+3. Implementar → Nueva implementación → tipo "Aplicación web". Ejecutar como: **Yo**. Quién tiene acceso: **Cualquier persona**. Autoriza los permisos y copia la URL que termina en `/exec`.
+4. En Render agrega `DRIVE_WEBHOOK_URL` (esa URL) y `DRIVE_TOKEN` (la misma clave del paso 2).
