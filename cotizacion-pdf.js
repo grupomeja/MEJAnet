@@ -112,15 +112,15 @@ async function generarPDFCotizacion(reg, calc, folio) {
       texto(OPER[d.operacion] || '-', W - M - 200, y - 23, { f: FB, size: 10, color: BLANCO });
       texto('VÁLIDA HASTA', W - M, y - 11, { f: FB, size: 5.5, color: CLARO, align: 'right', espacio: 1 });
       texto(fechaTxt(d.valido_hasta) || '-', W - M, y - 23, { f: FB, size: 10, color: BLANCO, align: 'right' });
-      y -= hB + 12;
-    } else y -= 12;
+      y -= hB + 22;
+    } else y -= 16;
   }
   const espacio = (h) => { if (y - h < PIE) encabezado(false); };
   const titulo = (t) => {
-    espacio(30);
-    texto(t, M, y, { f: FB, size: 6.5, color: AZUL, espacio: 1.4 });
-    linea(M + ancho(t, FB, 6.5, 1.4) + 8, y + 2.5, W - M, y + 2.5, LINEA, 0.7);
-    y -= 7;
+    espacio(36);
+    texto(t, M, y, { f: FB, size: 8.5, color: AZUL, espacio: 2 });
+    linea(M + ancho(t, FB, 8.5, 2) + 10, y + 3, W - M, y + 3, LINEA, 0.7);
+    y -= 9;
   };
   // Cuadrícula de datos (etiqueta pequeña + valor); una celda puede ocupar varias columnas ([etiqueta, valor, columnas]).
   // Primera columna sombreada; si un valor es largo se achica la letra.
@@ -141,7 +141,7 @@ async function generarPDFCotizacion(reg, calc, folio) {
       while (size > 6 && !vacio(v) && ancho(v, FB, size) > w - 12) size -= 0.25;
       texto(vacio(v) ? '-' : v, x + 7, yy - 17.5, { f: FB, size, color: vacio(v) ? GRIS2 : colorValor, maxW: w - 12 });
     }
-    y -= filas * rh + 12;
+    y -= filas * rh + 22;
   };
   // Encabezado de tabla: azul claro, títulos centrados en su columna
   const encTabla = (cols) => {
@@ -158,8 +158,8 @@ async function generarPDFCotizacion(reg, calc, folio) {
   cuadricula([
     ['TIPO DE COTIZACIÓN', TIPOS[d.tipo]], ['TIPO DE OPERACIÓN', OPER[d.operacion]], ['TRÁFICO', d.trafico], ['NAVIERA', d.naviera],
     ['MODALIDAD', d.modalidad], ['TIPO DE CONTENEDOR', d.contenedor ? `${d.contenedor}${CONT[d.contenedor] ? ` - ${CONT[d.contenedor]}` : ''}` : ''],
-    ['CONTENEDOR(ES)', d.contenedores], ['BUQUE / E.T.A.', d.buque_eta],
-    ['PROVEEDOR', d.proveedor, 2], ['FECHA', fechaTxt(d.fecha)], ['TIPO DE CAMBIO', d.tc ? `$${d.tc} MXN por USD` : ''],
+    ['BUQUE / E.T.A.', d.buque_eta], ['FECHA', fechaTxt(d.fecha)],
+    ['PROVEEDOR', d.proveedor, 3], ['TIPO DE CAMBIO', d.tc ? `$${d.tc} MXN por USD` : ''],
   ], 4, 23, AZUL);
 
   // ---------- 2. Desglose de cargos ----------
@@ -173,16 +173,16 @@ async function generarPDFCotizacion(reg, calc, folio) {
     const items = calc.partidas.filter((p) => p.moneda === mon);
     if (!items.length) continue;
     if (y - 30 < PIE) { encabezado(false); encTabla(colsCargos); }
-    caja(M, y - 10, ANCHO, 10, SUAVE2);
-    texto(etiqueta, centro(C1, C4), y - 7.3, { f: FB, size: 5.5, color: AZUL, align: 'center', espacio: 1 });
-    y -= 10;
+    caja(M, y - 14, ANCHO, 14, SUAVE2);
+    texto(etiqueta, centro(C1, C4), y - 10, { f: FB, size: 7.5, color: AZUL, align: 'center', espacio: 1.2 });
+    y -= 14;
     for (const p of items) {
-      const lc = renglones(p.concepto || '-', C2 - C1 - 12, FB, 7);
+      const lc = renglones(p.concepto || '-', C2 - C1 - 12, F, 7.2);
       const ld = renglones(p.descripcion || '', C3 - C2 - 12, F, 6.8);
       const n = Math.max(lc.length, ld.length), h = 6 + n * LH;
       if (y - h < PIE) { encabezado(false); encTabla(colsCargos); }
       const base = (k) => y - 9 - ((n - k) * LH) / 2;   // centra verticalmente columnas con menos renglones
-      lc.forEach((l, i) => texto(l, centro(C1, C2), base(lc.length) - i * LH, { f: FB, size: 7, align: 'center' }));
+      lc.forEach((l, i) => texto(l, centro(C1, C2), base(lc.length) - i * LH, { size: 7.2, align: 'center' }));
       ld.forEach((l, i) => texto(l, centro(C2, C3), base(ld.length) - i * LH, { size: 6.8, color: GRIS, align: 'center' }));
       texto(`$ ${dinero(p.monto)}`, C4 - 8, base(1), { f: FB, size: 7.5, color: mon === 'USD' ? AZUL : VERDE, align: 'right' });
       linea(C2, y, C2, y - h); linea(C3, y, C3, y - h);
@@ -205,7 +205,7 @@ async function generarPDFCotizacion(reg, calc, folio) {
     });
     y -= 12;
   }
-  y -= 14;
+  y -= 26;
 
   // ---------- 3. Impuestos aduanales ----------
   const im = d.impuestos || {}, ci = calc.impuestos;
@@ -236,7 +236,7 @@ async function generarPDFCotizacion(reg, calc, folio) {
     caja(mitad, y - 15, ANCHO / 2, 15, NAVY);
     texto('TOTAL IMPUESTOS ADUANALES', mitad + 8, y - 10, { f: FB, size: 6, color: CLARO, espacio: 1 });
     texto(`MXN $ ${dinero(ci.total)}`, W - M - 8, y - 10.5, { f: FB, size: 9, color: ORO, align: 'right' });
-    y -= 29;
+    y -= 40;
   }
 
   // ---------- Notas (izquierda) y total estimado (derecha) ----------

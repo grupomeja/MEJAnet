@@ -215,7 +215,6 @@ function limpiarCotizacion(b) {
     contenedor: t(b.contenedor, 20).toUpperCase(),
     proveedor: t(b.proveedor, 160).toUpperCase(),
     buque_eta: t(b.buque_eta, 120).toUpperCase(),
-    contenedores: t(b.contenedores, 120).toUpperCase(),
     tc: numTxt(b.tc),
     cargos,
     impuestos: {
