@@ -28,8 +28,10 @@
   .acc .nuevo{background:var(--accent);color:var(--accent-ink)}
   .acc .inicio{border:1px solid var(--line);color:var(--accent);background:var(--card)}
   @media (max-width:760px){.top{grid-template-columns:1fr;justify-items:center}.acc{justify-content:center;flex-wrap:wrap}.top h1{font-size:19px}.top h1.titulo{font-size:20px;white-space:normal}}
-  .kpis{display:grid;gap:10px;grid-template-columns:1fr 1.6fr 1fr 1fr 1fr;margin-bottom:14px}
-  .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-width:0}
+  .kpis{display:grid;gap:10px;grid-template-columns:1fr 1.5fr 1.5fr 1.5fr 1fr;margin-bottom:14px}
+  .kpi.par{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .kpi.par span{font-size:11px}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-width:0;text-align:center}
   .kpi b{display:block;font-size:26px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .kpi span{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.4px}
   .kpi small{font-size:14px;font-weight:600;color:var(--muted)}
@@ -48,7 +50,8 @@
   td{cursor:text;font-variant-numeric:tabular-nums}
   td:hover{outline:1px dashed var(--accent);outline-offset:-3px}
   td[data-c=cliente],td[data-c=linea],td[data-c=po],td[data-c=proveedor],td[data-c=descripcion]{white-space:normal;min-width:64px}
-  td[data-c=tracking],td[data-c=po],td[data-c=linea],td[data-c=cliente]{white-space:normal;overflow-wrap:anywhere;max-width:120px}
+  td[data-c=tracking],td[data-c=po],td[data-c=linea]{white-space:normal;overflow-wrap:anywhere;max-width:120px}
+  td[data-c=cliente]{white-space:normal;overflow-wrap:normal;max-width:130px}
   td[data-c=bultos],td[data-c=peso_lbs],td[data-c=peso_kgs],td[data-c=pedimento]{white-space:normal;overflow-wrap:anywhere}
   td[data-c=tracking]{min-width:96px}
   td[data-c=fecha]{min-width:74px}
@@ -93,7 +96,8 @@
   .mas{display:block;margin:12px auto 0}
   .nota{color:var(--muted);font-size:13px;margin:0 0 8px}
   @media (max-width:1000px){.filters{grid-template-columns:repeat(3,1fr)}.filters .q{grid-column:1/-1}}
-  @media (max-width:760px){.kpis{grid-template-columns:1fr 1fr}.kpis .cli{grid-column:1/-1}.filters{grid-template-columns:1fr 1fr}}
+  @media (max-width:1100px){.kpis{grid-template-columns:1fr 1fr 1fr}.kpis .cli{grid-column:span 2}}
+  @media (max-width:760px){.kpis{grid-template-columns:1fr 1fr}.kpis .cli,.kpis .par{grid-column:1/-1}.filters{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
@@ -107,13 +111,13 @@
   <section class="kpis">
     <div class="kpi"><b id="k1">–</b><span>Tráficos</span></div>
     <div class="kpi cli"><b id="k2">–</b><span>Cliente con más tráficos <small id="k2n"></small></span></div>
-    <div class="kpi"><b class="verde" id="k3">–</b><span>Con pedimento</span></div>
-    <div class="kpi"><b class="rojo" id="k4">–</b><span>Sin pedimento</span></div>
-    <div class="kpi"><b class="verde" id="k5">–</b><span>Cantidad de IN-BONDS</span></div>
+    <div class="kpi par"><div><b class="verde" id="k3">–</b><span>Con pedimento</span></div><div><b class="rojo" id="k4">–</b><span>Sin pedimento</span></div></div>
+    <div class="kpi par"><div><b class="verde" id="k6">–</b><span>Tráficos con revisión</span></div><div><b class="rojo" id="k7">–</b><span>Tráficos sin revisión</span></div></div>
+    <div class="kpi"><b class="naranja" id="k5">–</b><span>Cantidad de IN-BONDS</span></div>
   </section>
 
   <section class="filters">
-    <div class="q"><label for="q">Buscar</label><input id="q" type="search" placeholder="Referencia, tracking, P.O., pedimento, notas…"></div>
+    <div class="q"><label for="q">Buscar</label><input id="q" type="search" placeholder="Cliente(s) separados por coma, referencia, tracking…"></div>
     <div><label for="fCli">Cliente</label><select id="fCli"><option value="">Todos</option></select></div>
     <div><label for="fPro">Proveedor</label><select id="fPro"><option value="">Todos</option></select></div>
     <div><label for="fLin">Línea fletera</label><select id="fLin"><option value="">Todas</option></select></div>
@@ -165,7 +169,8 @@ function llenaSelect(id, campo) {
 }
 
 function filtrar() {
-  const q = $('q').value.trim().toLowerCase();
+  // Varios clientes (o cualquier dato) separados por coma: se muestra lo que coincida con cualquiera
+  const terminos = $('q').value.toLowerCase().split(',').map((x) => x.trim()).filter(Boolean);
   const cli = $('fCli').value, pro = $('fPro').value, lin = $('fLin').value, ped = $('fPed').value, tipo = $('fTipo').value;
   const d1 = $('d1').value, d2 = $('d2').value;
   return datos.filter((r) => {
@@ -177,7 +182,7 @@ function filtrar() {
     if (ped === 'con' && !conPed(r)) return false;
     if (ped === 'sin' && conPed(r)) return false;
     if ((d1 || d2) && (!r.fecha || (d1 && r.fecha < d1) || (d2 && r.fecha > d2))) return false;
-    if (q && !COLS.map((c) => c === 'fecha' ? fechaTxt(r.fecha) : r[c]).join(' ').toLowerCase().includes(q)) return false;
+    if (terminos.length) { const txt = COLS.map((c) => c === 'fecha' ? fechaTxt(r.fecha) : r[c]).join(' ').toLowerCase(); if (!terminos.some((t) => txt.includes(t))) return false; }
     return true;
   });
 }
@@ -207,6 +212,9 @@ function kpis(r) {
   $('k3').textContent = fmt(con);
   $('k4').textContent = fmt(r.length - con);
   $('k5').textContent = fmt(r.filter((x) => x.tipo === 'IN-BOND').length);
+  const rev = r.filter((x) => x.revisado === 'REVISADO').length;
+  $('k6').textContent = fmt(rev);
+  $('k7').textContent = fmt(r.length - rev);
 }
 
 function pinta() {
