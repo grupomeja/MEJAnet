@@ -23,6 +23,7 @@ async function init() {
       datos JSONB NOT NULL
     )`);
     await pool.query('ALTER TABLE ordenes ADD COLUMN IF NOT EXISTS oc INTEGER');
+    await pool.query('ALTER TABLE ordenes ADD COLUMN IF NOT EXISTS correo BOOLEAN NOT NULL DEFAULT false');
     await pool.query('UPDATE ordenes SET oc = id WHERE oc IS NULL');
     await pool.query('CREATE UNIQUE INDEX IF NOT EXISTS ordenes_oc_idx ON ordenes (oc)');
   } else {
@@ -60,9 +61,16 @@ async function guardar(datos) {
   return reg;
 }
 
+async function marcarCorreo(id, ok) {
+  if (pool) { await pool.query('UPDATE ordenes SET correo = $2 WHERE id = $1', [id, ok]); return; }
+  const lista = JSON.parse(fs.readFileSync(FILE, 'utf8'));
+  const o = lista.find((x) => x.id === id);
+  if (o) { o.correo = ok; fs.writeFileSync(FILE, JSON.stringify(lista)); }
+}
+
 async function listar() {
   if (pool) {
-    const r = await pool.query('SELECT id, oc, creada, datos FROM ordenes ORDER BY oc DESC LIMIT 500');
+    const r = await pool.query('SELECT id, oc, creada, correo, datos FROM ordenes ORDER BY oc DESC LIMIT 500');
     return r.rows;
   }
   return JSON.parse(fs.readFileSync(FILE, 'utf8')).reverse().slice(0, 500);
@@ -76,4 +84,4 @@ async function obtener(id) {
   return JSON.parse(fs.readFileSync(FILE, 'utf8')).find((o) => o.id === id) || null;
 }
 
-module.exports = { init, guardar, listar, obtener };
+module.exports = { init, guardar, marcarCorreo, listar, obtener };

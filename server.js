@@ -50,13 +50,16 @@ app.post('/api/ordenes', async (req, res) => {
     const hayDatos = datos.cliente || datos.filas.some((f) => f.trafico || f.bultos || f.pedimento || f.nota);
     if (!hayDatos) return res.status(400).json({ error: 'La orden está vacía.' });
     const reg = await db.guardar(datos); // aquí se asigna el número de OC consecutivo
-    let correo = false;
-    try {
-      correo = await enviarOrden(reg, await generarPDF(datos, reg.oc));
-    } catch (e) {
-      console.error('Error enviando correo:', e.message);
-    }
-    res.json({ ok: true, oc: formatoOC(reg.oc), correo });
+    // Se responde de inmediato; el PDF y el correo se procesan en segundo plano.
+    res.json({ ok: true, oc: formatoOC(reg.oc) });
+    (async () => {
+      try {
+        await enviarOrden(reg, await generarPDF(datos, reg.oc));
+        await db.marcarCorreo(reg.id, true);
+      } catch (e) {
+        console.error(`Error enviando correo de OC ${formatoOC(reg.oc)}:`, e.message);
+      }
+    })();
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'No se pudo guardar la orden.' });

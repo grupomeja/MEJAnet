@@ -34,7 +34,7 @@ function pinta(){
   lista.innerHTML = r.length ? r.map(o => {
     const d = o.datos, n = (d.filas||[]).filter(f=>f.trafico||f.bultos||f.pedimento||f.nota).length;
     return `<div class="item"><div><b>OC # ${String(o.oc).padStart(4,'0')} · ${esc(d.cliente)||'Sin cliente'}</b>
-      <small>${esc(d.fecha)} · Caja/Placas: ${esc(d.caja)} · Sello: ${esc(d.sello)} · ${n} renglón(es)${d.capturista?' · '+esc(d.capturista):''}<br>
+      <small>${esc(d.fecha)} · Caja/Placas: ${esc(d.caja)} · Sello: ${esc(d.sello)} · ${n} renglón(es)${d.capturista?' · '+esc(d.capturista):''}${o.correo?'':' · <b style="color:#b3261e;display:inline">correo no enviado</b>'}<br>
       Recibida: ${new Date(o.creada).toLocaleString('es-MX')}</small></div>
       <a class="btn" target="_blank" href="/api/admin/ordenes/${o.id}/pdf">Ver PDF</a></div>`;
   }).join('') : 'No hay órdenes.';
