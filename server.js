@@ -160,6 +160,7 @@ app.put('/api/admin/entradas-bodega/:id', admin, async (req, res) => {
 
 // --- Rutas del administrador ---
 app.get('/orden-de-carga', admin, (_req, res) => res.sendFile(path.join(__dirname, 'admin', 'index.html')));
+app.get('/ordenes-completadas', admin, (_req, res) => res.sendFile(path.join(__dirname, 'admin', 'index.html')));
 app.get('/nueva-orden', admin, (_req, res) => res.sendFile(path.join(__dirname, 'admin', 'nueva-orden.html')));
 app.get('/admin', (_req, res) => res.redirect('/orden-de-carga'));
 // Resultado de la revisión de OC_TERMINADAS (lo escribe la tarea de revisión en Drive; se lee vía Apps Script).

@@ -14,7 +14,7 @@
   .logo img{height:40px;width:auto;display:block}
   .top{display:grid;grid-template-columns:1fr auto 1fr;gap:10px 16px;align-items:center;margin:0 0 14px}
   .top h1{text-align:center;font-size:20px}
-  .top .acc{justify-content:flex-end}
+  .top .acc{grid-column:1/-1;justify-content:flex-end;flex-wrap:wrap}
   @media (max-width:760px){.top{grid-template-columns:1fr;justify-items:center}.top .acc{justify-content:center;flex-wrap:wrap}.top h1{font-size:19px}}
   .acc{display:flex;gap:8px}
   .acc a{white-space:nowrap}
@@ -64,8 +64,8 @@
 <main>
   <div class="top">
     <a class="logo" href="/" aria-label="MEJAnet"><img src="/logo.png" alt="Grupo Meja"></a>
-    <h1>TABLERO DE ORDENES DE CARGA</h1>
-    <div class="acc"><a class="nuevo" href="/nueva-orden">+ Crear Nueva Orden de Carga</a><a class="inicio" href="/">MEJAnet</a></div>
+    <h1 id="titulo">TABLERO DE ORDENES DE CARGA</h1>
+    <div class="acc" id="acc"></div>
   </div>
 
   <div class="aviso" id="aviso"></div>
@@ -99,7 +99,19 @@
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const oc4 = (n) => String(n).padStart(4, '0');
-let ordenes = [], vista = 'orden';
+const COMPLETADAS = location.pathname.startsWith('/ordenes-completadas');
+let todas = [], ordenes = [], vista = 'orden';
+{ // título, botones y nombre de la pestaña según el tablero que se está viendo
+  const acc = document.getElementById('acc');
+  if (COMPLETADAS) {
+    document.getElementById('titulo').textContent = 'ORDENES DE CARGA COMPLETADAS';
+    document.title = 'Ordenes de Carga Completadas';
+    acc.innerHTML = '<a class="inicio" href="/orden-de-carga">← Tablero de Ordenes de Carga</a><a class="inicio" href="/">MEJAnet</a>';
+  } else {
+    acc.innerHTML = '<a class="nuevo" href="/nueva-orden">+ Crear Nueva Orden de Carga</a><a class="inicio" href="/ordenes-completadas">Ordenes de Carga Completadas</a><a class="inicio" href="/">MEJAnet</a>';
+  }
+}
+const esHoy = (iso) => { const d = new Date(iso), h = new Date(); return d.getFullYear() === h.getFullYear() && d.getMonth() === h.getMonth() && d.getDate() === h.getDate(); };
 const abiertas = new Set();
 
 function fechaCruce(s) { // dd/mm/yyyy -> Date | null
@@ -294,7 +306,13 @@ function indexaTerminadas(j) {
 Promise.all([
   fetch('/api/admin/ordenes').then((r) => r.json()),
   fetch('/api/admin/terminadas').then((r) => r.json()).catch(() => ({ archivos: [], error: 'sin respuesta' })),
-]).then(([o, t]) => { ordenes = o; indexaTerminadas(t); kpis(); pinta(); })
+]).then(([o, t]) => {
+  todas = o; indexaTerminadas(t);
+  // Tablero principal: órdenes sin completar + las capturadas hoy. Completadas: las completas de días anteriores.
+  // La pertenencia se decide al cargar la página, para que una orden no desaparezca mientras se está editando.
+  ordenes = todas.filter((x) => COMPLETADAS ? (resumenOrden(x).completa && !esHoy(x.creada)) : (!resumenOrden(x).completa || esHoy(x.creada)));
+  kpis(); pinta();
+})
   .catch(() => { $('lista').innerHTML = '<div class="vacio">No se pudieron cargar las órdenes.</div>'; });
 </script>
 </body>
