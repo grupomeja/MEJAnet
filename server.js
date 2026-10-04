@@ -44,29 +44,12 @@ function admin(req, res, next) {
 }
 
 // --- Rutas para los trabajadores (sin contraseña) ---
-// Cada vez que alguien abre la página se le reserva un número de OC nuevo.
-app.get('/api/siguiente', async (_req, res) => {
-  try {
-    res.set('Cache-Control', 'no-store');
-    res.json({ oc: await db.reservarOC() });
-  } catch (e) { console.error(e); res.status(500).json({ error: 'No disponible' }); }
-});
-
 app.post('/api/ordenes', async (req, res) => {
   try {
     const datos = limpiar(req.body);
     const hayDatos = datos.cliente || datos.filas.some((f) => f.trafico || f.bultos || f.pedimento || f.nota);
     if (!hayDatos) return res.status(400).json({ error: 'La orden está vacía.' });
-    // Usa el número reservado al abrir la página; si falta, es inválido o ya se usó, se asigna uno nuevo.
-    let oc = Number.parseInt(req.body.oc, 10);
-    const valido = Number.isInteger(oc) && oc >= 1 && oc <= (await db.ultimoOCEmitido()) && !(await db.existeOC(oc));
-    if (!valido) oc = await db.reservarOC();
-    let reg;
-    try { reg = await db.guardar(datos, oc); }
-    catch (e) {
-      if (e.code !== '23505') throw e;           // OC repetida por una carrera: se asigna otra
-      reg = await db.guardar(datos, await db.reservarOC());
-    }
+    const reg = await db.guardar(datos); // aquí se asigna el número de OC consecutivo
     let correo = false;
     try {
       correo = await enviarOrden(reg, await generarPDF(datos, reg.oc));

@@ -48,6 +48,7 @@
   button{font:inherit;font-weight:700;border:0;border-radius:10px;padding:14px 20px;cursor:pointer}
   .oc{display:flex;align-items:baseline;gap:10px}
   .oc output{font-size:20px;font-weight:800;color:var(--accent);letter-spacing:1px;font-variant-numeric:tabular-nums}
+  .ocnota{color:var(--muted);font-size:13px}
   .primary{background:var(--accent);color:var(--accent-ink);width:100%;font-size:18px}
   .primary:disabled{opacity:.6}
   .ghost{background:transparent;color:var(--accent);border:1px dashed var(--accent);width:100%}
@@ -66,7 +67,7 @@
 
   <form id="f" autocomplete="off">
     <section class="card grid">
-      <div class="full oc"><label style="margin:0">OC #</label><output id="oc" aria-live="polite">----</output></div>
+      <div class="full oc"><label style="margin:0">OC #</label><output id="oc">----</output><small class="ocnota">Se asigna al enviar la orden</small></div>
       <div class="full"><label for="cliente">Cliente</label><input type="text" id="cliente" maxlength="200"></div>
       <div><label for="caja">Caja / Placas</label><input type="text" id="caja" maxlength="200"></div>
       <div><label for="sello">Sello</label><input type="text" id="sello" maxlength="200"></div>
@@ -108,19 +109,12 @@ function nuevaFila() {
   filas.appendChild(d);
   document.getElementById('mas').style.display = n >= MAX ? 'none' : '';
 }
-async function cargaSiguiente() {
-  try {
-    const r = await fetch('/api/siguiente'); const j = await r.json();
-    document.getElementById('oc').textContent = j.oc ? String(j.oc).padStart(4, '0') : '----';
-  } catch (_) { document.getElementById('oc').textContent = '----'; }
-}
 function limpiarForm() {
   document.getElementById('f').reset();
   filas.innerHTML = '';
   for (let i = 0; i < INICIAL; i++) nuevaFila();
   document.getElementById('mas').style.display = '';
   poneFechaHoy();
-  cargaSiguiente();
 }
 function poneFechaHoy() {
   const h = new Date(), p = (x) => String(x).padStart(2, '0');
@@ -134,7 +128,6 @@ document.getElementById('f').onsubmit = async (e) => {
   e.preventDefault();
   const btn = document.getElementById('enviar');
   const datos = {
-    oc: parseInt(document.getElementById('oc').textContent, 10) || null,
     cliente: cliente.value, caja: caja.value, sello: sello.value,
     fecha: fechaDDMMYYYY(fecha.value), capturista: capturista.value,
     filas: [...filas.children].map((r) => {

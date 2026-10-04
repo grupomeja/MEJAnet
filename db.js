@@ -14,7 +14,6 @@ if (process.env.DATABASE_URL) {
 
 const DIR = path.join(__dirname, 'data');
 const FILE = path.join(DIR, 'ordenes.json');
-const CONT = path.join(DIR, 'contador.json');
 
 async function init() {
   if (pool) {
@@ -26,50 +25,35 @@ async function init() {
     await pool.query('ALTER TABLE ordenes ADD COLUMN IF NOT EXISTS oc INTEGER');
     await pool.query('UPDATE ordenes SET oc = id WHERE oc IS NULL');
     await pool.query('CREATE UNIQUE INDEX IF NOT EXISTS ordenes_oc_idx ON ordenes (oc)');
-    await pool.query('CREATE SEQUENCE IF NOT EXISTS oc_seq');
-    // Que el contador nunca quede por debajo de la OC más alta ya guardada
-    const m = await pool.query('SELECT COALESCE(MAX(oc), 0) AS m FROM ordenes');
-    const s = await pool.query('SELECT last_value, is_called FROM oc_seq');
-    const actual = s.rows[0].is_called ? Number(s.rows[0].last_value) : 0;
-    if (Number(m.rows[0].m) > actual) await pool.query('SELECT setval(\'oc_seq\', $1, true)', [Number(m.rows[0].m)]);
   } else {
     fs.mkdirSync(DIR, { recursive: true });
     if (!fs.existsSync(FILE)) fs.writeFileSync(FILE, '[]');
-    if (!fs.existsSync(CONT)) {
-      const max = JSON.parse(fs.readFileSync(FILE, 'utf8')).reduce((a, o) => Math.max(a, o.oc || o.id || 0), 0);
-      fs.writeFileSync(CONT, String(max));
+  }
+}
+
+// El número de OC se asigna al guardar: siempre es el siguiente al más alto, sin huecos.
+async function guardar(datos) {
+  if (pool) {
+    const c = await pool.connect();
+    try {
+      await c.query('BEGIN');
+      await c.query('LOCK TABLE ordenes IN EXCLUSIVE MODE'); // una orden a la vez
+      const r = await c.query(
+        'INSERT INTO ordenes (oc, datos) SELECT COALESCE(MAX(oc), 0) + 1, $1 FROM ordenes RETURNING id, oc, creada',
+        [datos]
+      );
+      await c.query('COMMIT');
+      return { id: r.rows[0].id, oc: r.rows[0].oc, creada: r.rows[0].creada, datos };
+    } catch (e) {
+      await c.query('ROLLBACK').catch(() => {});
+      throw e;
+    } finally {
+      c.release();
     }
-  }
-}
-
-// Reserva y devuelve el siguiente número de OC (1, 2, 3, ...)
-async function reservarOC() {
-  if (pool) return Number((await pool.query("SELECT nextval('oc_seq') AS n")).rows[0].n);
-  const n = Number(fs.readFileSync(CONT, 'utf8')) + 1;
-  fs.writeFileSync(CONT, String(n));
-  return n;
-}
-
-async function ultimoOCEmitido() {
-  if (pool) {
-    const s = await pool.query('SELECT last_value, is_called FROM oc_seq');
-    return s.rows[0].is_called ? Number(s.rows[0].last_value) : 0;
-  }
-  return Number(fs.readFileSync(CONT, 'utf8'));
-}
-
-async function existeOC(oc) {
-  if (pool) return (await pool.query('SELECT 1 FROM ordenes WHERE oc = $1', [oc])).rowCount > 0;
-  return JSON.parse(fs.readFileSync(FILE, 'utf8')).some((o) => o.oc === oc);
-}
-
-async function guardar(datos, oc) {
-  if (pool) {
-    const r = await pool.query('INSERT INTO ordenes (oc, datos) VALUES ($1, $2) RETURNING id, oc, creada', [oc, datos]);
-    return { id: r.rows[0].id, oc: r.rows[0].oc, creada: r.rows[0].creada, datos };
   }
   const lista = JSON.parse(fs.readFileSync(FILE, 'utf8'));
   const id = (lista.at(-1)?.id || 0) + 1;
+  const oc = lista.reduce((m, o) => Math.max(m, o.oc || o.id || 0), 0) + 1;
   const reg = { id, oc, creada: new Date().toISOString(), datos };
   lista.push(reg);
   fs.writeFileSync(FILE, JSON.stringify(lista));
@@ -92,4 +76,4 @@ async function obtener(id) {
   return JSON.parse(fs.readFileSync(FILE, 'utf8')).find((o) => o.id === id) || null;
 }
 
-module.exports = { init, reservarOC, ultimoOCEmitido, existeOC, guardar, listar, obtener };
+module.exports = { init, guardar, listar, obtener };
