@@ -83,7 +83,7 @@ function filtradas() {
     if (d && x.fecha < d) return false;
     if (h && x.fecha > h) return false;
     if (q) {
-      const hay = [c.folio_txt, x.cliente, x.trafico, x.tipo, x.naviera, x.contenedor, (x.impuestos || {}).proveedor].join(' ').toLowerCase();
+      const hay = [c.folio_txt, x.cliente, x.trafico, x.tipo, x.naviera, x.contenedor, x.proveedor].join(' ').toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;

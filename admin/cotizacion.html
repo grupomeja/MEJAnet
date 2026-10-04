@@ -143,6 +143,9 @@
           <option value="LCL">LCL — Consolidado</option>
         </select></div>
       <div><label for="tc">Tipo de cambio</label><div class="con-unidad"><input id="tc" class="num" inputmode="decimal" placeholder="Ej. 17.02"><span>MXN / USD</span></div></div>
+      <div class="s2"><label for="proveedor">Proveedor</label><input id="proveedor" maxlength="160"></div>
+      <div><label for="buque_eta">Buque / E.T.A.</label><input id="buque_eta" maxlength="120"></div>
+      <div><label for="contenedores">Contenedor(es)</label><input id="contenedores" maxlength="120" placeholder="Ej. 1X20 ST"></div>
     </div>
   </section>
 
@@ -165,10 +168,7 @@
     <div class="imp">
       <div>
         <p class="col-t">DATOS DE LA MERCANCÍA</p>
-        <div class="fila"><label for="i_proveedor">Proveedor</label><input id="i_proveedor" maxlength="160"></div>
         <div class="fila"><label for="i_factura">Factura</label><input id="i_factura" maxlength="120"></div>
-        <div class="fila"><label for="i_buque_eta">Buque / E.T.A.</label><input id="i_buque_eta" maxlength="120"></div>
-        <div class="fila"><label for="i_contenedores">Contenedor(es)</label><input id="i_contenedores" maxlength="120" placeholder="Ej. 1X20 ST"></div>
         <div class="fila"><label for="i_mercancia">Mercancía</label><input id="i_mercancia" maxlength="200"></div>
         <div class="fila"><label for="i_regimen">Régimen / Fracción</label><input id="i_regimen" maxlength="120"></div>
         <div class="fila"><label for="i_valor_usd">Valor en dólares</label><div class="con-unidad"><input id="i_valor_usd" class="num" inputmode="decimal"><span>USD</span></div></div>
@@ -230,8 +230,8 @@ const mId = /\/cotizador\/editar\/(\d+)/.exec(location.pathname);
 let id = mId ? Number(mId[1]) : null;
 let conceptos = [], cargos = [], sucio = false, elaboro = '';
 
-const CAMPOS = ['cliente', 'trafico', 'fecha', 'valido_hasta', 'naviera', 'modalidad', 'contenedor', 'tc', 'notas', 'estado'];
-const IMP = ['proveedor', 'factura', 'buque_eta', 'contenedores', 'mercancia', 'regimen', 'valor_usd', 'tc', 'incrementables', 'valor_aduana', 'igi', 'dta', 'iva', 'prevalidacion', 'contraprestacion'];
+const CAMPOS = ['cliente', 'trafico', 'fecha', 'valido_hasta', 'naviera', 'modalidad', 'contenedor', 'proveedor', 'buque_eta', 'contenedores', 'tc', 'notas', 'estado'];
+const IMP = ['factura', 'mercancia', 'regimen', 'valor_usd', 'tc', 'incrementables', 'valor_aduana', 'igi', 'dta', 'iva', 'prevalidacion', 'contraprestacion'];
 const radio = (n) => (document.querySelector(`input[name=${n}]:checked`) || {}).value || '';
 const ponRadio = (n, v) => document.querySelectorAll(`input[name=${n}]`).forEach((r) => { r.checked = r.value === v; });
 

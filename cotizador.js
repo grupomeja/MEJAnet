@@ -186,11 +186,13 @@ function limpiarCotizacion(b) {
     naviera: t(b.naviera, 80).toUpperCase(),
     modalidad: unoDe(b.modalidad, MODALIDADES),
     contenedor: t(b.contenedor, 20).toUpperCase(),
+    proveedor: t(b.proveedor, 160).toUpperCase(),
+    buque_eta: t(b.buque_eta, 120).toUpperCase(),
+    contenedores: t(b.contenedores, 120).toUpperCase(),
     tc: numTxt(b.tc),
     cargos,
     impuestos: {
-      proveedor: t(im.proveedor, 160).toUpperCase(), factura: t(im.factura, 120).toUpperCase(),
-      buque_eta: t(im.buque_eta, 120).toUpperCase(), contenedores: t(im.contenedores, 120).toUpperCase(),
+      factura: t(im.factura, 120).toUpperCase(),
       valor_usd: numTxt(im.valor_usd), tc: numTxt(im.tc), incrementables: numTxt(im.incrementables), valor_aduana: numTxt(im.valor_aduana),
       mercancia: t(im.mercancia, 200).toUpperCase(), regimen: t(im.regimen, 120).toUpperCase(),
       igi: numTxt(im.igi), dta: numTxt(im.dta), iva: numTxt(im.iva), prevalidacion: numTxt(im.prevalidacion), contraprestacion: numTxt(im.contraprestacion),
@@ -202,7 +204,9 @@ function limpiarCotizacion(b) {
   return datos;
 }
 
-const folioTxt = (f) => `COT-${String(f).padStart(4, '0')}`;
+// Prefijo del folio según el tipo: CT terrestre, CM marítima (FFCC y sin tipo: COT por ahora)
+const PREFIJOS = { TERRESTRE: 'CT', MARITIMA: 'CM' };
+const folioTxt = (f, tipo) => `${PREFIJOS[tipo] || 'COT'}-${String(f).padStart(4, '0')}`;
 
 // ---------- Rutas ----------
 function rutas(admin) {
@@ -245,7 +249,7 @@ function rutas(admin) {
   // Cotizaciones
   const conTotales = (reg) => {
     const c = Formula.calcular(reg.datos);
-    return { ...reg, folio_txt: folioTxt(reg.folio), totalMXN: c.totalMXN, totalUSD: c.totalUSD, granMXN: c.granMXN, granUSD: c.granUSD };
+    return { ...reg, folio_txt: folioTxt(reg.folio, reg.datos.tipo), totalMXN: c.totalMXN, totalUSD: c.totalUSD, granMXN: c.granMXN, granUSD: c.granUSD };
   };
   r.get('/api/admin/cot/cotizaciones', admin, async (_req, res) => {
     try { res.json((await listarCotizaciones()).map(conTotales)); } catch (e) { err(res, e, 'No se pudieron leer las cotizaciones'); }
@@ -260,7 +264,7 @@ function rutas(admin) {
   r.post('/api/admin/cot/cotizaciones', admin, async (req, res) => {
     let datos;
     try { datos = limpiarCotizacion(req.body); } catch (e) { return res.status(400).json({ error: e.message }); }
-    try { const reg = await crearCotizacion(datos); res.json({ ok: true, id: reg.id, folio: folioTxt(reg.folio) }); }
+    try { const reg = await crearCotizacion(datos); res.json({ ok: true, id: reg.id, folio: folioTxt(reg.folio, datos.tipo) }); }
     catch (e) { err(res, e, 'No se pudo guardar la cotización'); }
   });
   r.put('/api/admin/cot/cotizaciones/:id', admin, async (req, res) => {
@@ -269,7 +273,7 @@ function rutas(admin) {
     try { datos = limpiarCotizacion(req.body); } catch (e) { return res.status(400).json({ error: e.message }); }
     try {
       const reg = await actualizarCotizacion(id, datos);
-      reg ? res.json({ ok: true, id: reg.id, folio: folioTxt(reg.folio) }) : res.status(404).json({ error: 'No encontrada' });
+      reg ? res.json({ ok: true, id: reg.id, folio: folioTxt(reg.folio, datos.tipo) }) : res.status(404).json({ error: 'No encontrada' });
     } catch (e) { err(res, e, 'No se pudo guardar la cotización'); }
   });
   // Cambiar solo el estado desde el tablero
@@ -292,8 +296,8 @@ function rutas(admin) {
     try {
       const reg = await obtenerCotizacion(id);
       if (!reg) return res.status(404).send('No encontrada');
-      const pdf = await generarPDFCotizacion(reg, Formula.calcular(reg.datos), folioTxt(reg.folio));
-      res.type('pdf').set('Content-Disposition', `inline; filename="COTIZACION_${folioTxt(reg.folio)}.pdf"`).send(pdf);
+      const pdf = await generarPDFCotizacion(reg, Formula.calcular(reg.datos), folioTxt(reg.folio, reg.datos.tipo));
+      res.type('pdf').set('Content-Disposition', `inline; filename="COTIZACION_${folioTxt(reg.folio, reg.datos.tipo)}.pdf"`).send(pdf);
     } catch (e) { console.error(e); res.status(500).send('No se pudo generar el PDF'); }
   });
   return r;
