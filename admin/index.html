@@ -3,44 +3,167 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Órdenes de carga - Administración</title>
+<title>Tablero de Órdenes de Carga</title>
 <style>
-  :root{--bg:#f4f5f7;--card:#fff;--ink:#15181d;--muted:#5d6672;--line:#d5d9df;--accent:#1f4e8c}
-  @media (prefers-color-scheme:dark){:root{--bg:#14171b;--card:#1d2127;--ink:#eef0f3;--muted:#a2abb7;--line:#363c45;--accent:#6aa3ec}}
-  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,sans-serif}
-  main{max-width:1000px;margin:0 auto;padding:16px}
-  h1{font-size:22px;margin:0 0 12px}
-  input{font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);width:100%;margin-bottom:12px}
-  .item{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;gap:12px;align-items:center}
-  .item b{display:block}
-  .item small{color:var(--muted)}
-  a.btn{background:var(--accent);color:#fff;text-decoration:none;padding:9px 14px;border-radius:8px;font-weight:600;white-space:nowrap}
-  @media (prefers-color-scheme:dark){a.btn{color:#0b1626}}
+  :root{--bg:#f4f5f7;--card:#fff;--ink:#15181d;--muted:#5d6672;--line:#d5d9df;--accent:#1f4e8c;--accent-ink:#fff;--ok:#17794a;--warn:#a15c00;--err:#b3261e;--soft:#eef2f8}
+  @media (prefers-color-scheme:dark){:root{--bg:#14171b;--card:#1d2127;--ink:#eef0f3;--muted:#a2abb7;--line:#363c45;--accent:#6aa3ec;--accent-ink:#0b1626;--ok:#52c28a;--warn:#f0b35a;--err:#ff8a80;--soft:#232a33}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  main{max-width:1100px;margin:0 auto;padding:16px}
+  h1{font-size:22px;margin:0 0 14px}
+  .kpis{display:grid;gap:10px;grid-template-columns:repeat(4,1fr);margin-bottom:14px}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+  .kpi b{display:block;font-size:26px;font-variant-numeric:tabular-nums}
+  .kpi span{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.4px}
+  .filters{display:grid;gap:8px;grid-template-columns:2fr 1fr 1fr 1fr auto;margin-bottom:12px;align-items:end}
+  label{display:block;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+  input,select{font:inherit;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);width:100%}
+  button{font:inherit;font-weight:600;border:0;border-radius:8px;padding:10px 14px;cursor:pointer;background:var(--accent);color:var(--accent-ink)}
+  button.sec{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+  .tabs{display:flex;gap:6px;margin-bottom:12px;align-items:center}
+  .tabs button{background:transparent;color:var(--muted);border:1px solid var(--line)}
+  .tabs button.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .tabs .sp{flex:1}
+  .count{color:var(--muted);font-size:13px;margin:0 0 8px}
+  details{background:var(--card);border:1px solid var(--line);border-radius:10px;margin-bottom:8px}
+  summary{cursor:pointer;padding:12px 14px;display:flex;gap:12px;justify-content:space-between;align-items:center;list-style:none}
+  summary::-webkit-details-marker{display:none}
+  .oc{font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums}
+  .meta{color:var(--muted);font-size:13px}
+  .pill{display:inline-block;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:700;background:var(--soft);white-space:nowrap}
+  .pill.ok{color:var(--ok)}.pill.warn{color:var(--warn)}.pill.err{color:var(--err)}
+  .tablewrap{overflow-x:auto;border-top:1px solid var(--line)}
+  table{border-collapse:collapse;width:100%;font-size:14px}
+  th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+  th{font-size:12px;text-transform:uppercase;color:var(--muted);letter-spacing:.4px;background:var(--soft)}
+  td.c,th.c{text-align:center}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  a.btn{color:var(--accent);font-weight:700;text-decoration:none;padding:0 14px 12px;display:inline-block}
+  .vacio{padding:30px;text-align:center;color:var(--muted)}
+  @media (max-width:760px){.kpis{grid-template-columns:repeat(2,1fr)}.filters{grid-template-columns:1fr 1fr}.filters .q{grid-column:1/-1}}
 </style>
 </head>
 <body>
 <main>
-  <h1>Órdenes de carga recibidas</h1>
-  <input id="q" type="search" placeholder="Buscar por cliente, pedimento, tráfico, placas…">
+  <h1>Tablero de Órdenes de Carga</h1>
+
+  <section class="kpis">
+    <div class="kpi"><b id="k1">–</b><span>Órdenes</span></div>
+    <div class="kpi"><b id="k2">–</b><span>Tráficos</span></div>
+    <div class="kpi"><b id="k3">–</b><span>Sin cargar</span></div>
+    <div class="kpi"><b id="k4">–</b><span>Correos con falla</span></div>
+  </section>
+
+  <section class="filters">
+    <div class="q"><label for="q">Buscar</label><input id="q" type="search" placeholder="OC, cliente, placas, sello, tráfico, pedimento, nota…"></div>
+    <div><label for="est">Estado</label>
+      <select id="est"><option value="">Todos</option><option value="nosep">Sin separar</option><option value="sep">Separado, sin cargar</option><option value="car">Cargado</option><option value="pend">Sin cargar (todos)</option></select></div>
+    <div><label for="d1">Cruce desde</label><input id="d1" type="date"></div>
+    <div><label for="d2">Cruce hasta</label><input id="d2" type="date"></div>
+    <button class="sec" id="limpia" type="button">Limpiar</button>
+  </section>
+
+  <div class="tabs">
+    <button id="tOrd" class="on" type="button">Por orden</button>
+    <button id="tTra" type="button">Por tráfico</button>
+    <span class="sp"></span>
+    <button id="csv" class="sec" type="button">Descargar Excel (CSV)</button>
+  </div>
+  <p class="count" id="count"></p>
   <div id="lista">Cargando…</div>
 </main>
+
 <script>
-let todas = [];
-const lista = document.getElementById('lista');
-function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
-function pinta(){
-  const q = document.getElementById('q').value.toLowerCase();
-  const r = todas.filter(o => !q || JSON.stringify(o.datos).toLowerCase().includes(q));
-  lista.innerHTML = r.length ? r.map(o => {
-    const d = o.datos, n = (d.filas||[]).filter(f=>f.trafico||f.bultos||f.pedimento||f.nota).length;
-    return `<div class="item"><div><b>OC # ${String(o.oc).padStart(4,'0')} · ${esc(d.cliente)||'Sin cliente'}</b>
-      <small>${esc(d.fecha)} · Caja/Placas: ${esc(d.caja)} · Sello: ${esc(d.sello)} · ${n} renglón(es)${d.capturista?' · '+esc(d.capturista):''}${o.correo?'':' · <b style="color:#b3261e;display:inline">correo no enviado</b>'}<br>
-      Recibida: ${new Date(o.creada).toLocaleString('es-MX')}</small></div>
-      <a class="btn" target="_blank" href="/api/admin/ordenes/${o.id}/pdf">Ver PDF</a></div>`;
-  }).join('') : 'No hay órdenes.';
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const oc4 = (n) => String(n).padStart(4, '0');
+let ordenes = [], vista = 'orden';
+
+function fechaCruce(s) { // dd/mm/yyyy -> Date | null
+  const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(s || '');
+  return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null;
 }
-fetch('/api/admin/ordenes').then(r=>r.json()).then(j=>{todas=j;pinta()});
-document.getElementById('q').oninput = pinta;
+const tieneDatos = (f) => f.trafico || f.bultos || f.pedimento || f.nota || f.separado || f.cargado;
+const estado = (f) => (f.cargado ? 'car' : f.separado ? 'sep' : 'nosep');
+const pillEstado = (f) => f.cargado ? '<span class="pill ok">Cargado</span>' : f.separado ? '<span class="pill warn">Separado</span>' : '<span class="pill">Sin separar</span>';
+
+// Filtro: devuelve órdenes con sus renglones ya filtrados
+function filtrar() {
+  const q = $('q').value.trim().toLowerCase(), est = $('est').value;
+  const d1 = $('d1').value ? new Date($('d1').value + 'T00:00:00') : null;
+  const d2 = $('d2').value ? new Date($('d2').value + 'T00:00:00') : null;
+  const out = [];
+  for (const o of ordenes) {
+    const d = o.datos, fc = fechaCruce(d.fecha);
+    if ((d1 || d2) && (!fc || (d1 && fc < d1) || (d2 && fc > d2))) continue;
+    const cab = [oc4(o.oc), d.cliente, d.caja, d.sello, d.fecha, d.capturista].join(' ').toLowerCase();
+    const cabOK = !q || cab.includes(q);
+    let filas = (d.filas || []).filter(tieneDatos);
+    if (est) filas = filas.filter((f) => est === 'pend' ? !f.cargado : estado(f) === est);
+    if (q && !cabOK) filas = filas.filter((f) => [f.trafico, f.bultos, f.pedimento, f.nota].join(' ').toLowerCase().includes(q));
+    if (est && !filas.length) continue;
+    if (q && !cabOK && !filas.length) continue;
+    out.push({ o, filas: est || (q && !cabOK) ? filas : (d.filas || []).filter(tieneDatos) });
+  }
+  return out;
+}
+
+function pinta() {
+  const r = filtrar();
+  const nTra = r.reduce((a, x) => a + x.filas.length, 0);
+  $('count').textContent = vista === 'orden' ? `${r.length} orden(es)` : `${nTra} tráfico(s) en ${r.length} orden(es)`;
+  if (!r.length) { $('lista').innerHTML = '<div class="vacio">No hay resultados.</div>'; return; }
+  if (vista === 'orden') {
+    $('lista').innerHTML = r.map(({ o, filas }) => {
+      const d = o.datos, nc = filas.filter((f) => !f.cargado).length;
+      return `<details><summary>
+        <div><span class="oc">OC # ${oc4(o.oc)}</span> · <b>${esc(d.cliente) || 'Sin cliente'}</b>
+          <div class="meta">Cruce: ${esc(d.fecha) || 'PENDIENTE'} · Caja/Placas: ${esc(d.caja)} · Sello: ${esc(d.sello)}${d.capturista ? ' · ' + esc(d.capturista) : ''}<br>Recibida: ${new Date(o.creada).toLocaleString('es-MX')}</div></div>
+        <div style="text-align:right"><span class="pill">${filas.length} tráfico(s)</span>
+          <span class="pill ${nc ? 'warn' : 'ok'}">${nc ? nc + ' sin cargar' : 'Todo cargado'}</span>
+          ${o.correo ? '' : '<span class="pill err">correo no enviado</span>'}</div></summary>
+        <div class="tablewrap"><table><thead><tr><th>Tráfico</th><th>Bultos</th><th>Pedimento</th><th>Nota</th><th class="c">Estado</th></tr></thead><tbody>
+        ${filas.map((f) => `<tr><td>${esc(f.trafico)}</td><td>${esc(f.bultos)}</td><td>${esc(f.pedimento)}</td><td>${esc(f.nota)}</td><td class="c">${pillEstado(f)}</td></tr>`).join('') || '<tr><td colspan="5" class="meta">Sin renglones</td></tr>'}
+        </tbody></table></div>
+        <a class="btn" target="_blank" href="/api/admin/ordenes/${o.id}/pdf">Ver PDF</a></details>`;
+    }).join('');
+  } else {
+    const filas = r.flatMap(({ o, filas }) => filas.map((f) => ({ o, f })));
+    $('lista').innerHTML = `<div class="card tablewrap" style="border-top:0"><table><thead><tr><th>OC #</th><th>Cliente</th><th>Cruce</th><th>Tráfico</th><th>Bultos</th><th>Pedimento</th><th>Nota</th><th class="c">Estado</th></tr></thead><tbody>
+      ${filas.map(({ o, f }) => `<tr><td><a class="oc" target="_blank" style="text-decoration:none" href="/api/admin/ordenes/${o.id}/pdf">${oc4(o.oc)}</a></td><td>${esc(o.datos.cliente)}</td><td>${esc(o.datos.fecha) || 'PENDIENTE'}</td><td>${esc(f.trafico)}</td><td>${esc(f.bultos)}</td><td>${esc(f.pedimento)}</td><td>${esc(f.nota)}</td><td class="c">${pillEstado(f)}</td></tr>`).join('')}
+      </tbody></table></div>`;
+  }
+}
+
+function kpis() {
+  const tr = ordenes.flatMap((o) => (o.datos.filas || []).filter(tieneDatos));
+  $('k1').textContent = ordenes.length;
+  $('k2').textContent = tr.length;
+  $('k3').textContent = tr.filter((f) => !f.cargado).length;
+  $('k4').textContent = ordenes.filter((o) => !o.correo).length;
+}
+
+function csv() {
+  const filas = filtrar().flatMap(({ o, filas }) => (filas.length ? filas : [{}]).map((f) => [
+    oc4(o.oc), o.datos.cliente, o.datos.fecha || 'PENDIENTE', o.datos.caja, o.datos.sello,
+    f.trafico, f.bultos, f.pedimento, f.nota, f.cargado ? 'CARGADO' : f.separado ? 'SEPARADO' : 'SIN SEPARAR',
+    o.datos.capturista, new Date(o.creada).toLocaleString('es-MX')]));
+  const enc = (v) => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+  const txt = [['OC', 'Cliente', 'Fecha de cruce', 'Caja/Placas', 'Sello', 'Trafico', 'Bultos', 'Pedimento', 'Nota', 'Estado', 'Capturo', 'Recibida'], ...filas]
+    .map((r) => r.map(enc).join(',')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['﻿' + txt], { type: 'text/csv;charset=utf-8' }));
+  a.download = 'ordenes_de_carga.csv'; a.click();
+}
+
+['q', 'est', 'd1', 'd2'].forEach((id) => $(id).addEventListener('input', pinta));
+$('limpia').onclick = () => { ['q', 'est', 'd1', 'd2'].forEach((id) => ($(id).value = '')); pinta(); };
+$('tOrd').onclick = () => { vista = 'orden'; $('tOrd').classList.add('on'); $('tTra').classList.remove('on'); pinta(); };
+$('tTra').onclick = () => { vista = 'trafico'; $('tTra').classList.add('on'); $('tOrd').classList.remove('on'); pinta(); };
+$('csv').onclick = csv;
+
+fetch('/api/admin/ordenes').then((r) => r.json()).then((j) => { ordenes = j; kpis(); pinta(); })
+  .catch(() => { $('lista').innerHTML = '<div class="vacio">No se pudieron cargar las órdenes.</div>'; });
 </script>
 </body>
 </html>
