@@ -18,7 +18,7 @@
   .acc .nuevo{background:var(--accent);color:var(--accent-ink)}
   .acc .inicio{border:1px solid var(--line);color:var(--accent);background:var(--card)}
   @media (max-width:760px){.top{grid-template-columns:1fr;justify-items:center}.acc{justify-content:center;flex-wrap:wrap}.top h1{font-size:19px}}
-  .kpis{display:grid;gap:10px;grid-template-columns:1fr 1.6fr 1fr 1fr;margin-bottom:14px}
+  .kpis{display:grid;gap:10px;grid-template-columns:1fr 1.6fr 1fr 1fr 1fr;margin-bottom:14px}
   .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-width:0}
   .kpi b{display:block;font-size:26px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .kpi span{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.4px}
@@ -42,8 +42,7 @@
   td[data-c=bultos],td[data-c=peso_lbs],td[data-c=peso_kgs],td[data-c=pedimento]{white-space:normal;overflow-wrap:anywhere}
   td[data-c=tracking]{min-width:96px}
   td[data-c=fecha]{min-width:74px}
-  th[data-c=notas],td[data-c=notas]{white-space:normal;text-align:left;min-width:140px;width:20%;overflow-wrap:anywhere}
-  td[data-c=tipo]{padding:3px}
+  th[data-c=notas],td[data-c=notas]{white-space:normal;text-align:center;min-width:140px;width:20%;overflow-wrap:anywhere}
   th{white-space:normal}
   th[data-c=proveedor],td[data-c=proveedor]{width:100px;max-width:110px}
   td.acc-borrar{cursor:default;padding:2px 4px}
@@ -51,12 +50,14 @@
   button.borrar{border:0;background:transparent;color:var(--err);padding:4px;border-radius:6px;line-height:0;cursor:pointer}
   button.borrar:hover{background:color-mix(in srgb,var(--err) 14%,transparent)}
   button.borrar:disabled{opacity:.4}
-  .pill{display:inline-block;border-radius:999px;padding:3px 7px;font-size:10.5px;font-weight:700;white-space:nowrap;letter-spacing:.2px}
+  .pill{display:inline-block;border-radius:999px;padding:2px 8px;font-size:10.5px;font-weight:700;white-space:nowrap;letter-spacing:.2px;margin-left:4px;vertical-align:1px}
+  td.ref{white-space:nowrap}
+  td.edit .chk{display:inline-flex;align-items:center;gap:4px;margin:0 0 0 8px;font-size:12px;font-weight:700;color:var(--ok);text-transform:none;letter-spacing:0;cursor:pointer}
+  td.edit .chk input{width:auto;min-width:0;padding:0}
   .pill.inbond{background:color-mix(in srgb,var(--ok) 15%,transparent);color:var(--ok)}
-  .pill.export{background:color-mix(in srgb,var(--azul) 15%,transparent);color:var(--azul)}
-  .pill.nada{color:var(--muted);font-weight:400}
   td.ref{font-weight:800}
-  td.ref.ped{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
+  td.ref.ped,td.ped{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
+  td[data-c=pedimento].ped{font-weight:700}
   td.edit{padding:3px 4px;outline:2px solid var(--accent);outline-offset:-2px}
   td.edit input,td.edit select{padding:5px 6px;font-size:14px;text-align:center;width:auto;min-width:90px}
   td.edit .pref{font-weight:800;margin-right:4px}
@@ -79,10 +80,11 @@
   </div>
 
   <section class="kpis">
-    <div class="kpi"><b id="k1">–</b><span>Registros</span></div>
+    <div class="kpi"><b id="k1">–</b><span>Tráficos</span></div>
     <div class="kpi cli"><b id="k2">–</b><span>Cliente con más tráficos <small id="k2n"></small></span></div>
     <div class="kpi"><b class="verde" id="k3">–</b><span>Con pedimento</span></div>
     <div class="kpi"><b class="rojo" id="k4">–</b><span>Sin pedimento</span></div>
+    <div class="kpi"><b class="verde" id="k5">–</b><span>Cantidad de IN-BONDS</span></div>
   </section>
 
   <section class="filters">
@@ -90,7 +92,7 @@
     <div><label for="fCli">Cliente</label><select id="fCli"><option value="">Todos</option></select></div>
     <div><label for="fPro">Proveedor</label><select id="fPro"><option value="">Todos</option></select></div>
     <div><label for="fLin">Línea fletera</label><select id="fLin"><option value="">Todas</option></select></div>
-    <div><label for="fTipo">Tipo</label><select id="fTipo"><option value="">Todos</option><option>IN-BOND</option><option>EXPORT LOT</option><option value="sin">Sin tipo</option></select></div>
+    <div><label for="fTipo">In-bond</label><select id="fTipo"><option value="">Todos</option><option value="IN-BOND">Solo in-bond</option><option value="sin">Sin in-bond</option></select></div>
     <div><label for="fPed">Pedimento</label><select id="fPed"><option value="">Todos</option><option value="con">Con pedimento</option><option value="sin">Sin pedimento</option></select></div>
     <div><label for="d1">Arribo desde</label><input id="d1" type="date"></div>
     <div><label for="d2">Arribo hasta</label><input id="d2" type="date"></div>
@@ -106,10 +108,10 @@
   <div class="tablewrap">
     <table>
       <thead><tr>
-        <th>Referencia</th><th>Tipo</th><th>Fecha arribo</th><th>Cliente</th><th>Bultos</th><th>Descripcion</th>
+        <th>Referencia</th><th>Fecha arribo</th><th>Cliente</th><th>Bultos</th><th>Descripcion</th>
         <th>Peso (Lbs)</th><th>Peso (Kgs)</th><th>Linea fletera</th><th>Tracking #</th><th>P.O.</th><th data-c="proveedor">Proveedor</th><th>Pedimento</th><th data-c="notas">Notas</th><th aria-label="Borrar"></th>
       </tr></thead>
-      <tbody id="filas"><tr><td colspan="15" class="vacio">Cargando…</td></tr></tbody>
+      <tbody id="filas"><tr><td colspan="14" class="vacio">Cargando…</td></tr></tbody>
     </table>
   </div>
   <button class="mas" id="mas" type="button" hidden>Mostrar más</button>
@@ -120,8 +122,7 @@ const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const POR_PAGINA = 200, LB_POR_KG = 2.20462;
 const DESCRIPCIONES = ['ATADO(S)', 'CARTON/ES', 'BULTOS', 'CAJA(S)', 'CAJA(S) DE MADERA', 'BOLSAS', 'SACOS'];
-const COLS = ['referencia', 'tipo', 'fecha', 'cliente', 'bultos', 'descripcion', 'peso_lbs', 'peso_kgs', 'linea', 'tracking', 'po', 'proveedor', 'pedimento', 'notas'];
-const TIPOS = ['IN-BOND', 'EXPORT LOT'];
+const COLS = ['referencia', 'fecha', 'cliente', 'bultos', 'descripcion', 'peso_lbs', 'peso_kgs', 'linea', 'tracking', 'po', 'proveedor', 'pedimento', 'notas'];
 let datos = [], limite = POR_PAGINA;
 
 const fechaTxt = (iso) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); return m ? `${m[3]}/${m[2]}/${m[1]}` : (iso || ''); };
@@ -156,11 +157,10 @@ function filtrar() {
   });
 }
 
-const pill = (t) => t === 'IN-BOND' ? '<span class="pill inbond">IN-BOND</span>' : t === 'EXPORT LOT' ? '<span class="pill export">EXPORT LOT</span>' : '<span class="pill nada">—</span>';
 const celda = (r, c) => {
-  if (c === 'tipo') return `<td data-c="tipo" title="Clic para cambiar">${pill(r.tipo)}</td>`;
+  if (c === 'referencia') return `<td data-c="referencia" class="ref${conPed(r) ? ' ped' : ''}">${esc(r.referencia)}${r.tipo === 'IN-BOND' ? ' <span class="pill inbond">in-bond</span>' : ''}</td>`;
   const v = c === 'fecha' ? fechaTxt(r.fecha) : r[c];
-  const cls = c === 'referencia' ? `ref${conPed(r) ? ' ped' : ''}` : '';
+  const cls = c === 'pedimento' && conPed(r) ? 'ped' : '';
   return `<td data-c="${c}"${cls ? ` class="${cls}"` : ''}>${esc(v)}</td>`;
 };
 const ICONO_BORRAR = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M9 3h6l1 2h4v2H4V5h4l1-2zm-3 6h12l-1 12H7L6 9zm4 2v8h1.5v-8H10zm3.5 0v8H15v-8h-1.5z"/></svg>';
@@ -169,14 +169,16 @@ const filaHTML = (r) => `<tr data-id="${r.id}">${COLS.map((c) => celda(r, c)).jo
 function kpis(r) {
   $('k1').textContent = fmt(r.length);
   const cuenta = {};
-  for (const x of r) { const c = (x.cliente || '').trim(); if (c) cuenta[c] = (cuenta[c] || 0) + 1; }
+  // Cliente con más tráficos: siempre sobre todos los registros (no cambia al buscar o filtrar)
+  for (const x of datos) { const c = (x.cliente || '').trim(); if (c) cuenta[c] = (cuenta[c] || 0) + 1; }
   const top = Object.entries(cuenta).sort((a, b) => b[1] - a[1])[0];
   $('k2').textContent = top ? top[0] : '—';
   $('k2').title = top ? top[0] : '';
-  $('k2n').textContent = top ? `(${fmt(top[1])} registros)` : '';
+  $('k2n').textContent = top ? `(${fmt(top[1])} tráficos)` : '';
   const con = r.filter(conPed).length;
   $('k3').textContent = fmt(con);
   $('k4').textContent = fmt(r.length - con);
+  $('k5').textContent = fmt(r.filter((x) => x.tipo === 'IN-BOND').length);
 }
 
 function pinta() {
@@ -184,15 +186,14 @@ function pinta() {
   kpis(r);
   $('count').textContent = r.length > limite ? `Mostrando ${fmt(limite)} de ${fmt(r.length)} registros` : `${fmt(r.length)} registro(s)`;
   $('mas').hidden = r.length <= limite;
-  $('filas').innerHTML = r.length ? r.slice(0, limite).map(filaHTML).join('') : '<tr><td colspan="15" class="vacio">No hay resultados.</td></tr>';
+  $('filas').innerHTML = r.length ? r.slice(0, limite).map(filaHTML).join('') : '<tr><td colspan="14" class="vacio">No hay resultados.</td></tr>';
 }
 
 // ---------- Edición en la celda ----------
 let editando = null;
 function editor(r, c) {
-  if (c === 'referencia') return `<span class="pref">MEJA</span><input class="refin" value="${esc(r.referencia.replace(/^MEJA\s*/i, ''))}" placeholder="####/##" maxlength="7">`;
+  if (c === 'referencia') return `<span class="pref">MEJA</span><input class="refin" value="${esc(r.referencia.replace(/^MEJA\s*/i, ''))}" placeholder="####/##" maxlength="7"><label class="chk"><input type="checkbox" class="ib"${r.tipo === 'IN-BOND' ? ' checked' : ''}> in-bond</label>`;
   if (c === 'fecha') return `<input type="date" value="${esc(r.fecha)}">`;
-  if (c === 'tipo') return `<select><option value=""${r.tipo ? '' : ' selected'}>— Sin tipo —</option>${TIPOS.map((o) => `<option${o === r.tipo ? ' selected' : ''}>${o}</option>`).join('')}</select>`;
   if (c === 'notas') return `<textarea rows="3" maxlength="500" style="width:100%;min-width:180px;font:inherit;padding:5px;resize:vertical">${esc(r.notas)}</textarea>`;
   if (c === 'descripcion') {
     const opts = [...DESCRIPCIONES];
@@ -216,6 +217,8 @@ function abre(td) {
     conecta(td.querySelector('input'));
   });
   conecta(campo);
+  const ib = td.querySelector('input.ib');
+  if (ib) ib.addEventListener('blur', () => setTimeout(() => { if (editando && !editando.td.contains(document.activeElement)) guarda(); }, 0));
 }
 function conecta(campo) {
   campo.focus();
@@ -244,8 +247,10 @@ async function guarda() {
   const cambios = {};
   if (c === 'referencia') {
     if (!/^\d{1,4}\/\d{2}$/.test(v)) { alert('La referencia debe tener el formato ####/## (por ejemplo 1628/26).'); campo.focus(); return; }
-    if ('MEJA ' + v.padStart(7, '0') === r.referencia) return cierra();
-    cambios.referencia = v;
+    const tipo = td.querySelector('input.ib').checked ? 'IN-BOND' : '';
+    if ('MEJA ' + v.padStart(7, '0') !== r.referencia) cambios.referencia = v;
+    if (tipo !== (r.tipo || '')) cambios.tipo = tipo;
+    if (!Object.keys(cambios).length) return cierra();
   } else {
     if (v === String(r[c] ?? '')) return cierra();
     cambios[c] = v;
@@ -290,8 +295,8 @@ $('filas').addEventListener('click', async (e) => {
 
 function csv() {
   const enc = (v) => '"' + String(v ?? '').replace(/"/g, '""') + '"';
-  const cab = ['REFERENCIA', 'TIPO', 'FECHA ARRIBO', 'CLIENTE', 'BULTOS', 'DESCRIPCION', 'PESO (Lbs)', 'PESO (KGS)', 'LINEA FLETERA', 'TRACKING #', 'P.O.', 'PROVEEDOR', 'PEDIMENTO', 'NOTAS'];
-  const txt = [cab, ...filtrar().map((r) => COLS.map((c) => c === 'fecha' ? fechaTxt(r.fecha) : r[c]))].map((f) => f.map(enc).join(',')).join('\r\n');
+  const cab = ['REFERENCIA', 'FECHA ARRIBO', 'CLIENTE', 'BULTOS', 'DESCRIPCION', 'PESO (Lbs)', 'PESO (KGS)', 'LINEA FLETERA', 'TRACKING #', 'P.O.', 'PROVEEDOR', 'PEDIMENTO', 'NOTAS', 'TIPO'];
+  const txt = [cab, ...filtrar().map((r) => [...COLS.map((c) => c === 'fecha' ? fechaTxt(r.fecha) : r[c]), r.tipo || ''])].map((f) => f.map(enc).join(',')).join('\r\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob(['﻿' + txt], { type: 'text/csv;charset=utf-8' }));
   a.download = 'entradas_bodega.csv'; a.click();
@@ -320,7 +325,7 @@ fetch('/api/admin/entradas-bodega').then((r) => { if (!r.ok) throw new Error(); 
     llenaSelect('fCli', 'cliente'); llenaSelect('fPro', 'proveedor'); llenaSelect('fLin', 'linea');
     pinta();
   })
-  .catch(() => { $('filas').innerHTML = '<tr><td colspan="15" class="vacio">No se pudieron cargar los registros.</td></tr>'; });
+  .catch(() => { $('filas').innerHTML = '<tr><td colspan="14" class="vacio">No se pudieron cargar los registros.</td></tr>'; });
 </script>
 </body>
 </html>

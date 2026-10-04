@@ -79,7 +79,7 @@ app.post('/api/ordenes', admin, async (req, res) => {
 
 // --- Entradas de bodega ---
 const CAMPOS_EB = ['fecha', 'cliente', 'bultos', 'descripcion', 'peso_lbs', 'peso_kgs', 'linea', 'tracking', 'po', 'proveedor', 'pedimento', 'tipo', 'notas'];
-const TIPOS_EB = ['', 'IN-BOND', 'EXPORT LOT'];
+const TIPOS_EB = ['', 'IN-BOND'];
 const maxEB = (k) => (k === 'notas' ? 500 : 120);
 app.get('/entradas-bodega', admin, (_req, res) => res.sendFile(path.join(__dirname, 'admin', 'entradas-bodega.html')));
 app.get('/entradas-bodega/nueva', admin, (_req, res) => res.sendFile(path.join(__dirname, 'admin', 'nueva-entrada-bodega.html')));
