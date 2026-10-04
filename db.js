@@ -26,6 +26,15 @@ async function init() {
   }
 }
 
+async function siguiente() {
+  if (pool) {
+    const r = await pool.query('SELECT COALESCE(MAX(id), 0) + 1 AS n FROM ordenes');
+    return Number(r.rows[0].n);
+  }
+  const lista = JSON.parse(fs.readFileSync(FILE, 'utf8'));
+  return (lista.at(-1)?.id || 0) + 1;
+}
+
 async function guardar(datos) {
   if (pool) {
     const r = await pool.query('INSERT INTO ordenes (datos) VALUES ($1) RETURNING id, creada', [datos]);
@@ -55,4 +64,4 @@ async function obtener(id) {
   return JSON.parse(fs.readFileSync(FILE, 'utf8')).find((o) => o.id === id) || null;
 }
 
-module.exports = { init, guardar, listar, obtener };
+module.exports = { init, siguiente, guardar, listar, obtener };

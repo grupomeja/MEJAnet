@@ -17,7 +17,7 @@
   main{max-width:960px;margin:0 auto;padding:16px}
   header{text-align:center;padding:8px 0 16px}
   header img{height:56px;max-width:80%;object-fit:contain;filter:contrast(1.4) brightness(.7)}
-  h1{margin:6px 0 0;font-size:clamp(26px,6vw,40px);letter-spacing:.5px;font-style:italic;text-decoration:underline;text-decoration-thickness:3px;text-underline-offset:6px}
+  h1{margin:6px 0 0;font-size:clamp(26px,6vw,40px);letter-spacing:.5px;font-weight:700}
   .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
   .grid{display:grid;gap:12px;grid-template-columns:1fr 1fr}
   .full{grid-column:1/-1}
@@ -46,6 +46,9 @@
     .check span{display:none}
   }
   button{font:inherit;font-weight:700;border:0;border-radius:10px;padding:14px 20px;cursor:pointer}
+  .nueva{background:transparent;color:var(--accent);border:2px solid var(--accent);display:block;margin:0 auto 16px}
+  .oc{display:flex;align-items:baseline;gap:10px}
+  .oc output{font-size:28px;font-weight:800;letter-spacing:1px;font-variant-numeric:tabular-nums}
   .primary{background:var(--accent);color:var(--accent-ink);width:100%;font-size:18px}
   .primary:disabled{opacity:.6}
   .ghost{background:transparent;color:var(--accent);border:1px dashed var(--accent);width:100%}
@@ -62,8 +65,11 @@
     <h1>ORDEN DE CARGA</h1>
   </header>
 
+  <button type="button" class="nueva" id="nueva">Nueva Orden de Carga</button>
+
   <form id="f" autocomplete="off">
     <section class="card grid">
+      <div class="full oc"><label style="margin:0">OC #</label><output id="oc" aria-live="polite">----</output></div>
       <div class="full"><label for="cliente">Cliente</label><input type="text" id="cliente" maxlength="200"></div>
       <div><label for="caja">Caja / Placas</label><input type="text" id="caja" maxlength="200"></div>
       <div><label for="sello">Sello</label><input type="text" id="sello" maxlength="200"></div>
@@ -105,12 +111,23 @@ function nuevaFila() {
   filas.appendChild(d);
   document.getElementById('mas').style.display = n >= MAX ? 'none' : '';
 }
+async function cargaSiguiente() {
+  try {
+    const r = await fetch('/api/siguiente'); const j = await r.json();
+    document.getElementById('oc').textContent = j.oc || '----';
+  } catch (_) { document.getElementById('oc').textContent = '----'; }
+}
+function hayDatos() {
+  return [...document.querySelectorAll('#f input[type=text]')].some((i) => i.value.trim()) ||
+         [...document.querySelectorAll('#f input[type=checkbox]')].some((i) => i.checked);
+}
 function limpiarForm() {
   document.getElementById('f').reset();
   filas.innerHTML = '';
   for (let i = 0; i < INICIAL; i++) nuevaFila();
   document.getElementById('mas').style.display = '';
   poneFechaHoy();
+  cargaSiguiente();
 }
 function poneFechaHoy() {
   const h = new Date(), p = (x) => String(x).padStart(2, '0');
@@ -119,6 +136,12 @@ function poneFechaHoy() {
 function fechaDDMMYYYY(iso) { const [y, m, d] = iso.split('-'); return y ? `${d}/${m}/${y}` : ''; }
 
 document.getElementById('mas').onclick = nuevaFila;
+document.getElementById('nueva').onclick = () => {
+  if (hayDatos() && !confirm('¿Empezar una nueva orden? Se borrará lo que has capturado y no se ha enviado.')) return;
+  msg.className = 'msg';
+  limpiarForm();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
 
 document.getElementById('f').onsubmit = async (e) => {
   e.preventDefault();
@@ -139,7 +162,7 @@ document.getElementById('f').onsubmit = async (e) => {
     if (!r.ok) throw new Error(j.error || 'Error');
     limpiarForm();
     msg.className = 'msg ok';
-    msg.textContent = `Orden #${j.id} enviada y guardada.` + (j.correo ? '' : ' (El aviso por correo no se pudo enviar.)');
+    msg.textContent = `Orden OC # ${j.oc} enviada y guardada.` + (j.correo ? '' : ' (El aviso por correo no se pudo enviar.)');
     window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
   } catch (err) {
     msg.className = 'msg err';

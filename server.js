@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const db = require('./db');
 const { generarPDF } = require('./pdf');
 const { enviarOrden } = require('./mail');
+const { formatoOC } = require('./oc');
 
 const app = express();
 app.use(express.json({ limit: '200kb' }));
@@ -43,6 +44,11 @@ function admin(req, res, next) {
 }
 
 // --- Rutas para los trabajadores (sin contraseña) ---
+app.get('/api/siguiente', async (_req, res) => {
+  try { res.json({ oc: formatoOC(await db.siguiente()) }); }
+  catch (e) { console.error(e); res.status(500).json({ error: 'No disponible' }); }
+});
+
 app.post('/api/ordenes', async (req, res) => {
   try {
     const datos = limpiar(req.body);
@@ -51,11 +57,11 @@ app.post('/api/ordenes', async (req, res) => {
     const reg = await db.guardar(datos);
     let correo = false;
     try {
-      correo = await enviarOrden(reg, await generarPDF(datos));
+      correo = await enviarOrden(reg, await generarPDF(datos, reg.id));
     } catch (e) {
       console.error('Error enviando correo:', e.message);
     }
-    res.json({ ok: true, id: reg.id, correo });
+    res.json({ ok: true, id: reg.id, oc: formatoOC(reg.id), correo });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'No se pudo guardar la orden.' });
@@ -68,8 +74,8 @@ app.get('/api/admin/ordenes', admin, async (_req, res) => res.json(await db.list
 app.get('/api/admin/ordenes/:id/pdf', admin, async (req, res) => {
   const reg = await db.obtener(Number(req.params.id));
   if (!reg) return res.status(404).send('No encontrada');
-  res.type('pdf').set('Content-Disposition', `inline; filename="ORDEN_DE_CARGA_${reg.id}.pdf"`)
-     .send(await generarPDF(reg.datos));
+  res.type('pdf').set('Content-Disposition', `inline; filename="ORDEN_DE_CARGA_${formatoOC(reg.id)}.pdf"`)
+     .send(await generarPDF(reg.datos, reg.id));
 });
 
 app.use(express.static(path.join(__dirname, 'public')));

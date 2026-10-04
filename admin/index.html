@@ -33,7 +33,7 @@ function pinta(){
   const r = todas.filter(o => !q || JSON.stringify(o.datos).toLowerCase().includes(q));
   lista.innerHTML = r.length ? r.map(o => {
     const d = o.datos, n = (d.filas||[]).filter(f=>f.trafico||f.bultos||f.pedimento||f.nota).length;
-    return `<div class="item"><div><b>#${o.id} · ${esc(d.cliente)||'Sin cliente'}</b>
+    return `<div class="item"><div><b>OC # ${String(o.id).padStart(4,'0')} · ${esc(d.cliente)||'Sin cliente'}</b>
       <small>${esc(d.fecha)} · Caja/Placas: ${esc(d.caja)} · Sello: ${esc(d.sello)} · ${n} renglón(es)${d.capturista?' · '+esc(d.capturista):''}<br>
       Recibida: ${new Date(o.creada).toLocaleString('es-MX')}</small></div>
       <a class="btn" target="_blank" href="/api/admin/ordenes/${o.id}/pdf">Ver PDF</a></div>`;

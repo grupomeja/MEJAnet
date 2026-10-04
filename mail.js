@@ -5,6 +5,8 @@ function configurado() {
   return process.env.SMTP_USER && process.env.SMTP_PASS && process.env.MAIL_TO;
 }
 
+const { formatoOC } = require('./oc');
+
 async function enviarOrden(reg, pdfBuffer) {
   if (!configurado()) {
     console.warn('Correo no configurado (faltan SMTP_USER, SMTP_PASS o MAIL_TO). No se envió.');
@@ -21,14 +23,14 @@ async function enviarOrden(reg, pdfBuffer) {
   await transporte.sendMail({
     from: `"Orden de Carga" <${process.env.SMTP_USER}>`,
     to: process.env.MAIL_TO,
-    subject: `Orden de carga #${reg.id} - ${d.cliente || 'Sin cliente'} - ${d.fecha || ''}`.trim(),
+    subject: `Orden de carga OC # ${formatoOC(reg.id)} - ${d.cliente || 'Sin cliente'} - ${d.fecha || ''}`.trim(),
     text:
-      `Se registró una nueva orden de carga.\n\n` +
+      `Se registró una nueva orden de carga.\n\nOC #: ${formatoOC(reg.id)}\n` +
       `Cliente: ${d.cliente || ''}\nCaja / Placas: ${d.caja || ''}\nSello: ${d.sello || ''}\n` +
       `Fecha de cruce: ${d.fecha || ''}\nRenglones: ${llenas}\n` +
       (d.capturista ? `Capturó: ${d.capturista}\n` : '') +
       `\nEl PDF va adjunto.`,
-    attachments: [{ filename: `ORDEN_DE_CARGA_${reg.id}.pdf`, content: pdfBuffer }],
+    attachments: [{ filename: `ORDEN_DE_CARGA_${formatoOC(reg.id)}.pdf`, content: pdfBuffer }],
   });
   return true;
 }
