@@ -44,6 +44,7 @@ async function init() {
     if (!fs.existsSync(FILE_EB)) fs.writeFileSync(FILE_EB, '[]');
   }
   await cargarSemillaEB();
+  return await migraciones();
 }
 
 // El número de OC se asigna al guardar: siempre es el siguiente al más alto, sin huecos.
@@ -250,6 +251,43 @@ async function listarEntradasEB() {
   }
   return JSON.parse(fs.readFileSync(FILE_EB, 'utf8')).sort((a, b) => b.anio - a.anio || b.num - a.num)
     .map(({ id, referencia, creada, datos }) => ({ id, referencia, creada, datos }));
+}
+
+// Cambios de datos que deben correr una sola vez. Devuelve los nombres de los que se aplicaron ahora.
+const FILE_MIG = path.join(DIR, 'migraciones.json');
+async function migraciones() {
+  const aplicadas = [];
+  const pasos = {
+    // 2026-10-04: los tráficos que ya tenían pedimento se marcan como REVISADO
+    'revisado-con-pedimento': async () => {
+      if (pool) {
+        const r = await pool.query(`UPDATE entradas_bodega SET datos = datos || '{"revisado":"REVISADO"}'::jsonb
+          WHERE btrim(coalesce(datos->>'pedimento','')) <> '' AND coalesce(datos->>'revisado','') <> 'REVISADO'`);
+        return r.rowCount;
+      }
+      const lista = JSON.parse(fs.readFileSync(FILE_EB, 'utf8'));
+      let n = 0;
+      for (const o of lista) if (String(o.datos.pedimento || '').trim() && o.datos.revisado !== 'REVISADO') { o.datos.revisado = 'REVISADO'; n++; }
+      fs.writeFileSync(FILE_EB, JSON.stringify(lista));
+      return n;
+    },
+  };
+  let hechas;
+  if (pool) {
+    await pool.query('CREATE TABLE IF NOT EXISTS migraciones (nombre TEXT PRIMARY KEY, aplicada TIMESTAMPTZ NOT NULL DEFAULT now())');
+    hechas = new Set((await pool.query('SELECT nombre FROM migraciones')).rows.map((r) => r.nombre));
+  } else {
+    hechas = new Set(fs.existsSync(FILE_MIG) ? JSON.parse(fs.readFileSync(FILE_MIG, 'utf8')) : []);
+  }
+  for (const [nombre, fn] of Object.entries(pasos)) {
+    if (hechas.has(nombre)) continue;
+    const n = await fn();
+    if (pool) await pool.query('INSERT INTO migraciones (nombre) VALUES ($1) ON CONFLICT DO NOTHING', [nombre]);
+    else { hechas.add(nombre); fs.writeFileSync(FILE_MIG, JSON.stringify([...hechas])); }
+    console.log(`Migración "${nombre}" aplicada: ${n} registro(s)`);
+    aplicadas.push(nombre);
+  }
+  return aplicadas;
 }
 
 module.exports = { init, guardar, marcarCorreo, cambiarManual, listar, obtener, guardarEntradaEB, actualizarEntradaEB, borrarEntradaEB, listarEntradasEB, RefRepetida };

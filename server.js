@@ -235,5 +235,11 @@ app.get('/api/admin/ordenes/:id/pdf', admin, async (req, res) => {
 app.use(express.static(path.join(__dirname, 'public')));
 
 const puerto = process.env.PORT || 3000;
-db.init().then(() => app.listen(puerto, () => console.log('Escuchando en puerto', puerto)))
+db.init().then((aplicadas) => {
+  app.listen(puerto, () => console.log('Escuchando en puerto', puerto));
+  // Si un cambio de datos se aplicó al arrancar, se actualiza la hoja de Google completa
+  if (Array.isArray(aplicadas) && aplicadas.length && driveListo())
+    hojaCompleta().then((r) => console.log(`Hoja de Google actualizada: ${r.filas} registros`))
+      .catch((e) => console.error('No se pudo actualizar la hoja tras la migración:', e.message));
+})
   .catch((e) => { console.error('No se pudo iniciar la base de datos:', e); process.exit(1); });
