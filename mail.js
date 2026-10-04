@@ -14,11 +14,11 @@ function contenido(reg) {
   const llenas = (d.filas || []).filter((f) => f.trafico || f.bultos || f.pedimento || f.nota).length;
   return {
     oc,
-    asunto: `Orden de carga OC # ${oc} - ${d.cliente || 'Sin cliente'} - ${d.fecha || ''}`.trim(),
+    asunto: `ORDEN DE CARGA #${oc} // ${d.cliente || 'SIN CLIENTE'} // FECHA DE CRUCE: ${d.fecha || 'PENDIENTE'}`,
     texto:
       `Se registró una nueva orden de carga.\n\nOC #: ${oc}\n` +
       `Cliente: ${d.cliente || ''}\nCaja / Placas: ${d.caja || ''}\nSello: ${d.sello || ''}\n` +
-      `Fecha de cruce: ${d.fecha || ''}\nRenglones: ${llenas}\n` +
+      `Fecha de cruce: ${d.fecha || ''}\nTraficos: ${llenas}\n` +
       (d.capturista ? `Capturó: ${d.capturista}\n` : '') +
       `\nEl PDF va adjunto.`,
     archivo: `ORDEN_DE_CARGA_${oc}.pdf`,
