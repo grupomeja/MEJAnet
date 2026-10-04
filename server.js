@@ -76,6 +76,28 @@ app.post('/api/ordenes', async (req, res) => {
 
 // --- Rutas del administrador ---
 app.get('/admin', admin, (_req, res) => res.sendFile(path.join(__dirname, 'admin', 'index.html')));
+// Resultado de la revisión de OC_TERMINADAS (lo escribe la tarea de revisión en Drive; se lee vía Apps Script).
+let cacheTerm = { t: 0, data: null };
+app.get('/api/admin/terminadas', admin, async (_req, res) => {
+  if (cacheTerm.data && Date.now() - cacheTerm.t < 60000) return res.json(cacheTerm.data);
+  const url = process.env.DRIVE_WEBHOOK_URL, token = process.env.DRIVE_TOKEN;
+  if (!url || !token) return res.json({ archivos: [], error: 'Drive no configurado' });
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 25000);
+  try {
+    const r = await fetch(`${url}?token=${encodeURIComponent(token)}`, { signal: ctrl.signal, redirect: 'follow' });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || 'respuesta inválida');
+    cacheTerm = { t: Date.now(), data: { archivos: j.archivos || [], actualizado: j.actualizado } };
+    res.json(cacheTerm.data);
+  } catch (e) {
+    console.error('Error leyendo OC_TERMINADAS:', e.message);
+    res.json({ archivos: [], error: e.message });
+  } finally {
+    clearTimeout(t);
+  }
+});
+
 app.get('/api/admin/ordenes', admin, async (_req, res) => res.json(await db.listar()));
 app.get('/api/admin/ordenes/:id/pdf', admin, async (req, res) => {
   const reg = await db.obtener(Number(req.params.id));
