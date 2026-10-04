@@ -78,7 +78,7 @@ app.post('/api/ordenes', admin, async (req, res) => {
 });
 
 // --- Entradas de bodega ---
-const CAMPOS_EB = ['fecha', 'cliente', 'bultos', 'descripcion', 'peso_lbs', 'peso_kgs', 'linea', 'tracking', 'po', 'proveedor', 'pedimento', 'tipo', 'notas'];
+const CAMPOS_EB = ['fecha', 'cliente', 'bultos', 'descripcion', 'peso_lbs', 'peso_kgs', 'linea', 'tracking', 'po', 'proveedor', 'pedimento', 'tipo', 'notas', 'revisado'];
 const TIPOS_EB = ['', 'IN-BOND'];
 const maxEB = (k) => (k === 'notas' ? 500 : 120);
 app.get('/entradas-bodega', admin, (_req, res) => res.sendFile(path.join(__dirname, 'admin', 'entradas-bodega.html')));
@@ -106,6 +106,7 @@ app.post('/api/admin/entradas-bodega', admin, async (req, res) => {
     const datos = {};
     for (const k of CAMPOS_EB) datos[k] = t(req.body[k], maxEB(k));
     if (!TIPOS_EB.includes(datos.tipo)) return res.status(400).json({ error: 'Tipo inválido' });
+    datos.revisado = '';
     if (datos.fecha && !/^\d{4}-\d{2}-\d{2}$/.test(datos.fecha)) return res.status(400).json({ error: 'Fecha inválida' });
     const reg = await db.guardarEntradaEB(referencia, datos);
     res.json({ ok: true, id: reg.id, referencia: reg.referencia });
@@ -145,6 +146,7 @@ app.put('/api/admin/entradas-bodega/:id', admin, async (req, res) => {
     const cambios = {};
     for (const k of CAMPOS_EB) if (k in req.body) cambios[k] = t(req.body[k], maxEB(k));
     if ('tipo' in cambios && !TIPOS_EB.includes(cambios.tipo)) return res.status(400).json({ error: 'Tipo inválido' });
+    if ('revisado' in cambios && !['', 'REVISADO'].includes(cambios.revisado)) return res.status(400).json({ error: 'Valor inválido' });
     if ('referencia' in req.body) {
       cambios.referencia = refEB(req.body.referencia);
       if (!cambios.referencia) return res.status(400).json({ error: 'La referencia debe tener el formato ####/##.' });
