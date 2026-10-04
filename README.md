@@ -39,11 +39,11 @@ Sin `DATABASE_URL` las órdenes se guardan en un archivo local, que se borra cua
 ## Cotizador
 
 - `/cotizador` → tablero de cotizaciones (pide contraseña): buscar, cambiar estado (BORRADOR / ENVIADA / ACEPTADA / RECHAZADA), ver PDF, duplicar y borrar.
-- `/cotizador/nueva` y `/cotizador/editar/:id` → formulario de cotización. Cada partida tiene su moneda (MXN o USD) y su IVA; con el tipo de cambio se muestra el total combinado. El folio es consecutivo (`COT-0001`).
-- `/cotizador/tarifas` → catálogo de conceptos. Cada concepto puede ser:
-  - **Precio fijo**: importe = cantidad × precio.
-  - **Precio manual**: el precio se escribe en cada cotización.
-  - **Fórmula**: el importe se calcula con los datos del embarque. Variables: `precio`, `cantidad`, `peso_kg`, `peso_lb`, `tarimas`, `bultos`, `dias`, `km`, `valor`, `tc`. Funciones: `min`, `max`, `redondear`, `techo`, `piso`, `abs`, `si(condición, sí, no)`. Ejemplo: `max(precio * km, 6500)`.
-- El PDF se genera en `/api/admin/cot/cotizaciones/:id/pdf`.
-- Archivos: `cotizador.js` (datos y rutas), `cotizacion-pdf.js` (PDF), `public/formula.js` (cálculo, se usa en el servidor y en el navegador), `admin/cotizador.html`, `admin/cotizacion.html`, `admin/cot-tarifas.html`.
-- Las tablas `cot_conceptos` y `cotizaciones` se crean solas al arrancar; la primera vez se carga un catálogo de ejemplo con precios "por definir".
+- `/cotizador/nueva` y `/cotizador/editar/:id` → formulario "Cotización de servicios", dividido en secciones:
+  1. **Detalles del embarque**: cliente, tipo (terrestre / marítima / FFCC), tráfico (se captura a mano), fecha, válido hasta, operación, naviera, modalidad (door to door / FCL / LTL), tipo de contenedor (20ST, 40HC…) y tipo de cambio.
+  2. **Desglose de cargos**: conceptos en USD o MXN. Una cotización nueva trae los conceptos marcados como *predeterminados* en el catálogo.
+  3. **Impuestos aduanales**: proveedor, factura, buque, contenedores, valor, tipo de cambio, IGI, DTA, IVA, prevalidación y contraprestación. Si se dejan vacíos, el valor aduana (valor USD × T.C. + incrementables) y el IVA (16% de valor aduana + IGI + DTA) se calculan solos.
+- `/cotizador/tarifas` → catálogo de conceptos (monto manual, monto fijo o fórmula). Variables de las fórmulas: `precio`, `tc`, `valor_usd`, `valor_mxn`, `valor_aduana`. Ejemplo: `max(valor_mxn * precio / 100, 5500)`.
+- El folio interno es consecutivo (`COT-0001`); el PDF se genera en `/api/admin/cot/cotizaciones/:id/pdf`.
+- Archivos: `cotizador.js` (datos y rutas), `cotizacion-pdf.js` (PDF), `public/formula.js` (cálculos, se usa en servidor y navegador), `admin/cotizador.html`, `admin/cotizacion.html`, `admin/cot-tarifas.html`.
+- Las tablas `cot_conceptos` y `cotizaciones` se crean solas al arrancar; la primera vez se cargan los 6 conceptos de ejemplo.

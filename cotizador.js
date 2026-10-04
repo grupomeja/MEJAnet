@@ -11,20 +11,21 @@ const pool = db.pool;
 const FILE_CON = path.join(db.DIR, 'cot_conceptos.json');
 const FILE_COT = path.join(db.DIR, 'cotizaciones.json');
 
-const CATEGORIAS = ['FLETE / TRANSPORTE', 'ALMACENAJE', 'MANIOBRAS', 'ADUANAL', 'OTROS'];
+const CATEGORIAS = ['DESGLOSE DE CARGOS'];
 const TIPOS = ['fijo', 'manual', 'formula'];
 const ESTADOS = ['BORRADOR', 'ENVIADA', 'ACEPTADA', 'RECHAZADA'];
+const TIPOS_COT = ['TERRESTRE', 'MARITIMA', 'FFCC'];
+const OPERACIONES = ['IMPORTACION', 'EXPORTACION'];
+const MODALIDADES = ['DOOR TO DOOR', 'FCL', 'LTL'];
 
-// Catálogo inicial de ejemplo. Precio 0 = "por definir" (se captura en la pantalla de Tarifas).
+// Conceptos iniciales (tomados de las cotizaciones de ejemplo). El monto 0 se captura en cada cotización.
 const SEMILLA = [
-  { categoria: 'FLETE / TRANSPORTE', nombre: 'Flete local', unidad: 'VIAJE', moneda: 'USD', tipo: 'manual', precio: 0, iva: 0, formula: '' },
-  { categoria: 'FLETE / TRANSPORTE', nombre: 'Flete por kilómetro', unidad: 'VIAJE', moneda: 'MXN', tipo: 'formula', precio: 0, iva: 16, formula: 'precio * km' },
-  { categoria: 'ALMACENAJE', nombre: 'Almacenaje por tarima por día', unidad: 'SERVICIO', moneda: 'USD', tipo: 'formula', precio: 0, iva: 0, formula: 'precio * tarimas * dias' },
-  { categoria: 'MANIOBRAS', nombre: 'Maniobra de descarga', unidad: 'SERVICIO', moneda: 'USD', tipo: 'fijo', precio: 0, iva: 0, formula: '' },
-  { categoria: 'MANIOBRAS', nombre: 'Maniobra de carga', unidad: 'SERVICIO', moneda: 'USD', tipo: 'fijo', precio: 0, iva: 0, formula: '' },
-  { categoria: 'ADUANAL', nombre: 'Honorarios agente aduanal', unidad: 'PEDIMENTO', moneda: 'MXN', tipo: 'manual', precio: 0, iva: 16, formula: '' },
-  { categoria: 'ADUANAL', nombre: 'Prevalidación', unidad: 'PEDIMENTO', moneda: 'MXN', tipo: 'fijo', precio: 0, iva: 16, formula: '' },
-  { categoria: 'OTROS', nombre: 'Seguro de mercancía (% del valor)', unidad: 'SERVICIO', moneda: 'USD', tipo: 'formula', precio: 0, iva: 0, formula: 'valor * precio / 100' },
+  { categoria: 'DESGLOSE DE CARGOS', nombre: 'EXW OCEAN FREIGHT SHENZEN - MZLO', descripcion: 'RECOLECCION EXW, FLETE MARITIMO, DEST. SURGCHARGE, HANDLING FEE, AMS FEE', moneda: 'USD', tipo: 'manual', precio: 0, formula: '', predeterminado: true },
+  { categoria: 'DESGLOSE DE CARGOS', nombre: 'INSURANCE D2D', descripcion: 'APROXIMATE', moneda: 'USD', tipo: 'manual', precio: 0, formula: '', predeterminado: true },
+  { categoria: 'DESGLOSE DE CARGOS', nombre: 'DRAYAGE FROM MZLO - GPE NUEVO LEON', descripcion: 'MZLO - MTY - MZO', moneda: 'USD', tipo: 'manual', precio: 0, formula: '', predeterminado: true },
+  { categoria: 'DESGLOSE DE CARGOS', nombre: 'SEGURO', descripcion: '', moneda: 'MXN', tipo: 'manual', precio: 0, formula: '', predeterminado: true },
+  { categoria: 'DESGLOSE DE CARGOS', nombre: 'PAQUETE ALL IN', descripcion: 'PREVIO, BUQUE A PISO, PISO A BLOQUE, PISO A SPF', moneda: 'MXN', tipo: 'manual', precio: 0, formula: '', predeterminado: true },
+  { categoria: 'DESGLOSE DE CARGOS', nombre: 'ENTREGA VACIO', descripcion: 'CAMION A PATIO', moneda: 'MXN', tipo: 'manual', precio: 0, formula: '', predeterminado: true },
 ];
 
 const leer = (f) => JSON.parse(fs.readFileSync(f, 'utf8'));
@@ -127,19 +128,19 @@ async function borrarCotizacion(id) {
 // ---------- Limpieza de datos ----------
 const t = (v, max = 200) => String(v ?? '').trim().slice(0, max);
 const n = (v) => { const x = parseFloat(String(v ?? '').replace(/,/g, '')); return Number.isFinite(x) ? x : 0; };
-const numTxt = (v) => { const s = t(v, 30).replace(/,/g, ''); return s === '' || !Number.isFinite(Number(s)) ? '' : s; };
+const numTxt = (v) => { const s = t(v, 30).replace(/[,$\s]/g, ''); return s === '' || !Number.isFinite(Number(s)) ? '' : s; };
 
 function limpiarConcepto(b) {
   const d = {
-    categoria: t(b.categoria, 60).toUpperCase() || 'OTROS',
-    nombre: t(b.nombre, 160),
-    unidad: t(b.unidad, 40).toUpperCase(),
+    categoria: t(b.categoria, 60).toUpperCase() || 'DESGLOSE DE CARGOS',
+    nombre: t(b.nombre, 160).toUpperCase(),
+    descripcion: t(b.descripcion, 300).toUpperCase(),
     moneda: b.moneda === 'USD' ? 'USD' : 'MXN',
     tipo: TIPOS.includes(b.tipo) ? b.tipo : 'fijo',
     precio: n(b.precio),
-    iva: n(b.iva),
     formula: t(b.formula, 400),
     nota: t(b.nota, 300),
+    predeterminado: !!b.predeterminado,
     activo: b.activo !== false,
   };
   if (!d.nombre) throw new Error('Escribe el nombre del concepto.');
@@ -155,44 +156,49 @@ function validarFormula(f) {
   for (const v of Formula.variablesDe(arbol)) if (!validas.has(v)) throw new Error(`La fórmula usa "${v}", que no es una variable conocida.`);
 }
 
+const fecha = (v) => (/^\d{4}-\d{2}-\d{2}$/.test(v || '') ? v : '');
+const unoDe = (v, lista) => (lista.includes(v) ? v : '');
 function limpiarCotizacion(b) {
-  const e = b.embarque || {};
-  const partidas = (Array.isArray(b.partidas) ? b.partidas : []).slice(0, 80).map((p) => {
-    const tipo = TIPOS.includes(p.tipo) ? p.tipo : 'fijo';
+  const im = b.impuestos || {};
+  const cargos = (Array.isArray(b.cargos) ? b.cargos : []).slice(0, 80).map((p) => {
+    const tipo = p.tipo === 'formula' ? 'formula' : 'manual';
     const formula = tipo === 'formula' ? t(p.formula, 400) : '';
     if (formula) validarFormula(formula);
     return {
       concepto_id: Number.isInteger(p.concepto_id) ? p.concepto_id : null,
-      categoria: t(p.categoria, 60).toUpperCase(),
-      descripcion: t(p.descripcion, 300),
-      unidad: t(p.unidad, 40).toUpperCase(),
-      tipo, formula,
-      cantidad: n(p.cantidad), precio: n(p.precio),
+      concepto: t(p.concepto, 160).toUpperCase(),
+      descripcion: t(p.descripcion, 300).toUpperCase(),
       moneda: p.moneda === 'USD' ? 'USD' : 'MXN',
-      iva: n(p.iva),
+      tipo, formula,
+      precio: numTxt(p.precio),
+      monto: numTxt(p.monto),
     };
-  }).filter((p) => p.descripcion || p.precio || p.cantidad);
+  }).filter((p) => p.concepto || p.descripcion || p.monto || p.formula);
   const datos = {
+    version: 2,
     estado: ESTADOS.includes(b.estado) ? b.estado : 'BORRADOR',
     cliente: t(b.cliente, 160).toUpperCase(),
-    atencion: t(b.atencion, 120),
-    correo: t(b.correo, 160),
-    telefono: t(b.telefono, 60),
-    fecha: /^\d{4}-\d{2}-\d{2}$/.test(b.fecha || '') ? b.fecha : new Date().toISOString().slice(0, 10),
-    vigencia: Math.max(0, Math.min(365, Math.round(n(b.vigencia)) || 15)),
+    tipo: unoDe(b.tipo, TIPOS_COT),
+    trafico: t(b.trafico, 40).toUpperCase(),
+    fecha: fecha(b.fecha) || new Date().toISOString().slice(0, 10),
+    valido_hasta: fecha(b.valido_hasta),
+    operacion: unoDe(b.operacion, OPERACIONES),
+    naviera: t(b.naviera, 80).toUpperCase(),
+    modalidad: unoDe(b.modalidad, MODALIDADES),
+    contenedor: t(b.contenedor, 20).toUpperCase(),
     tc: numTxt(b.tc),
-    elaboro: t(b.elaboro, 80),
-    embarque: {
-      servicio: t(e.servicio, 80).toUpperCase(), origen: t(e.origen, 120).toUpperCase(), destino: t(e.destino, 120).toUpperCase(),
-      unidad: t(e.unidad, 80).toUpperCase(), mercancia: t(e.mercancia, 200),
-      peso_kg: numTxt(e.peso_kg), tarimas: numTxt(e.tarimas), bultos: numTxt(e.bultos),
-      dias: numTxt(e.dias), km: numTxt(e.km), valor: numTxt(e.valor), valor_moneda: e.valor_moneda === 'MXN' ? 'MXN' : 'USD',
+    cargos,
+    impuestos: {
+      proveedor: t(im.proveedor, 160).toUpperCase(), factura: t(im.factura, 120).toUpperCase(),
+      buque_eta: t(im.buque_eta, 120).toUpperCase(), contenedores: t(im.contenedores, 120).toUpperCase(),
+      valor_usd: numTxt(im.valor_usd), tc: numTxt(im.tc), incrementables: numTxt(im.incrementables), valor_aduana: numTxt(im.valor_aduana),
+      mercancia: t(im.mercancia, 200).toUpperCase(), regimen: t(im.regimen, 120).toUpperCase(),
+      igi: numTxt(im.igi), dta: numTxt(im.dta), iva: numTxt(im.iva), prevalidacion: numTxt(im.prevalidacion), contraprestacion: numTxt(im.contraprestacion),
     },
-    partidas,
     notas: t(b.notas, 3000),
+    elaboro: t(b.elaboro, 80),
   };
-  const hay = datos.cliente || partidas.length;
-  if (!hay) throw new Error('La cotización está vacía.');
+  if (!datos.cliente && !cargos.length) throw new Error('La cotización está vacía.');
   return datos;
 }
 
@@ -239,7 +245,7 @@ function rutas(admin) {
   // Cotizaciones
   const conTotales = (reg) => {
     const c = Formula.calcular(reg.datos);
-    return { ...reg, folio_txt: folioTxt(reg.folio), totales: c.totales, granMXN: c.granMXN, granUSD: c.granUSD };
+    return { ...reg, folio_txt: folioTxt(reg.folio), totalMXN: c.totalMXN, totalUSD: c.totalUSD, granMXN: c.granMXN, granUSD: c.granUSD };
   };
   r.get('/api/admin/cot/cotizaciones', admin, async (_req, res) => {
     try { res.json((await listarCotizaciones()).map(conTotales)); } catch (e) { err(res, e, 'No se pudieron leer las cotizaciones'); }

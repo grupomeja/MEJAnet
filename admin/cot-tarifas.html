@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tarifas del cotizador</title>
+<title>Catálogo de conceptos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600&display=swap" rel="stylesheet">
@@ -22,16 +22,17 @@
   tr.fila:hover td{background:color-mix(in srgb,var(--cot) 5%,transparent)}
   tr.inactivo td{opacity:.5}
   td.n{font-weight:700}
+  td.d{color:var(--muted);font-size:12.5px}
   td.precio{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
-  .pordef{color:var(--nar);font-weight:700;font-size:12px}
   td code{white-space:nowrap}
+  .pill.pre{background:var(--cot-claro);color:var(--cot)}
 
   dialog{border:0;border-radius:14px;padding:0;width:min(640px,calc(100vw - 24px));background:var(--card);color:var(--ink);box-shadow:0 24px 60px rgba(0,0,0,.35)}
   dialog::backdrop{background:rgba(0,0,0,.45)}
   .dlg-in{padding:18px}
   .dlg-in h2{margin:0 0 14px;font-size:18px}
-  .grid{display:grid;gap:12px;grid-template-columns:1fr 1fr 1fr}
-  .s2{grid-column:span 2}.full{grid-column:1/-1}
+  .grid{display:grid;gap:12px;grid-template-columns:1fr 1fr}
+  .full{grid-column:1/-1}
   .tipos{display:flex;gap:6px;flex-wrap:wrap}
   .tipos label{margin:0;cursor:pointer;text-transform:none;letter-spacing:0}
   .tipos input{position:absolute;opacity:0;width:1px;height:1px}
@@ -44,41 +45,41 @@
   .chips button{font:inherit;font-size:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:3px 9px;cursor:pointer;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
   .chips button:hover{border-color:var(--cot);color:var(--cot)}
   .prueba{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--soft);font-size:13px}
-  .prueba .vals{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:6px 0 8px}
+  .prueba .vals{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:6px 0 8px}
   .prueba .vals label{font-size:10px;margin-bottom:1px}
   .prueba .vals input{padding:4px 6px;font-size:13px}
   .prueba b{font-size:15px}
   .prueba .mal{color:var(--err);font-weight:700}
-  .pie-dlg{display:flex;gap:8px;align-items:center;margin-top:16px;flex-wrap:wrap}
+  .pie-dlg{display:flex;gap:12px;align-items:center;margin-top:16px;flex-wrap:wrap}
   .pie-dlg .sp{flex:1}
   .chk{display:inline-flex;align-items:center;gap:6px;text-transform:none;letter-spacing:0;font-size:14px;color:var(--ink);margin:0}
   .chk input{width:auto}
   .ayuda-card summary{cursor:pointer;font-weight:700;color:var(--cot)}
   .ayuda-card ul{margin:8px 0 0;padding-left:18px}
   .ayuda-card li{margin:3px 0}
-  @media (max-width:640px){.grid{grid-template-columns:1fr 1fr}.prueba .vals{grid-template-columns:repeat(3,1fr)}}
+  @media (max-width:640px){.grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <main>
   <div class="top">
     <a class="logo" href="/" aria-label="MEJAnet"><img src="/logo.png" alt="Grupo Meja"></a>
-    <h1 class="titulo"><span class="ico" aria-hidden="true"><svg viewBox="0 0 64 64"><rect x="12" y="4" width="40" height="56" rx="5" fill="currentColor"/><rect x="17" y="10" width="30" height="14" rx="2" fill="#fff"/><text x="42" y="21.5" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="11" fill="currentColor">$</text><g fill="#fff"><rect x="17" y="29" width="8" height="6" rx="1"/><rect x="28" y="29" width="8" height="6" rx="1"/><rect x="39" y="29" width="8" height="6" rx="1"/><rect x="17" y="38.5" width="8" height="6" rx="1"/><rect x="28" y="38.5" width="8" height="6" rx="1"/><rect x="39" y="38.5" width="8" height="15.5" rx="1"/><rect x="17" y="48" width="8" height="6" rx="1"/><rect x="28" y="48" width="8" height="6" rx="1"/></g></svg></span>TARIFAS</h1>
+    <h1 class="titulo"><span class="ico" aria-hidden="true"><svg viewBox="0 0 64 64"><rect x="12" y="4" width="40" height="56" rx="5" fill="currentColor"/><rect x="17" y="10" width="30" height="14" rx="2" fill="#fff"/><text x="42" y="21.5" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="11" fill="currentColor">$</text><g fill="#fff"><rect x="17" y="29" width="8" height="6" rx="1"/><rect x="28" y="29" width="8" height="6" rx="1"/><rect x="39" y="29" width="8" height="6" rx="1"/><rect x="17" y="38.5" width="8" height="6" rx="1"/><rect x="28" y="38.5" width="8" height="6" rx="1"/><rect x="39" y="38.5" width="8" height="15.5" rx="1"/><rect x="17" y="48" width="8" height="6" rx="1"/><rect x="28" y="48" width="8" height="6" rx="1"/></g></svg></span>CONCEPTOS</h1>
     <div class="acc"><a href="/cotizador">← Cotizaciones</a></div>
   </div>
 
   <details class="card ayuda-card">
-    <summary>¿Cómo funcionan los tipos de concepto?</summary>
+    <summary>¿Cómo funciona el catálogo?</summary>
     <ul>
-      <li><b>Precio fijo:</b> importe = cantidad × precio. El precio de aquí se propone en cada cotización (se puede cambiar).</li>
-      <li><b>Precio manual:</b> el precio se escribe en cada cotización (por ejemplo, fletes que cambian siempre).</li>
-      <li><b>Fórmula:</b> el importe se calcula con los datos del embarque. Ejemplos:
-        <code>precio * tarimas * dias</code> · <code>max(precio * km, 3500)</code> · <code>si(peso_kg &gt; 10000, 9500, 7800)</code> · <code>valor * precio / 100</code></li>
+      <li><b>Predeterminado:</b> el concepto aparece solo en cada cotización nueva (se puede quitar).</li>
+      <li><b>Monto manual:</b> el costo se escribe en cada cotización.</li>
+      <li><b>Monto fijo:</b> el costo de aquí se propone en cada cotización (se puede cambiar).</li>
+      <li><b>Fórmula:</b> el costo se calcula. Ejemplos: <code>max(valor_mxn * precio / 100, 5500)</code> (honorarios 0.45% con mínimo) · <code>precio * tc</code></li>
     </ul>
   </details>
 
   <div class="barra">
-    <div class="q"><label for="q">Buscar</label><input id="q" type="search" placeholder="Concepto o categoría"></div>
+    <div class="q"><label for="q">Buscar</label><input id="q" type="search" placeholder="Concepto o descripción"></div>
     <button class="btn prim" type="button" id="nuevo">+ Nuevo concepto</button>
   </div>
   <div id="lista"><p class="vacio">Cargando…</p></div>
@@ -89,23 +90,21 @@
     <h2 id="dTit">Nuevo concepto</h2>
     <div class="grid">
       <div class="full"><label for="fNombre">Concepto</label><input id="fNombre" maxlength="160" required></div>
-      <div><label for="fCategoria">Categoría</label><input id="fCategoria" list="lCat" maxlength="60" required></div>
-      <div><label for="fUnidad">Unidad</label><input id="fUnidad" list="lUni" maxlength="40" placeholder="VIAJE, TARIMA…"></div>
-      <div><label for="fMoneda">Moneda</label><select id="fMoneda"><option>MXN</option><option>USD</option></select></div>
-      <div class="full"><label>Cómo se calcula</label>
+      <div class="full"><label for="fDesc">Descripción</label><input id="fDesc" maxlength="300"></div>
+      <div><label for="fCategoria">Sección</label><input id="fCategoria" list="lCat" maxlength="60" required></div>
+      <div><label for="fMoneda">Moneda</label><select id="fMoneda"><option>USD</option><option>MXN</option></select></div>
+      <div class="full"><label>Cómo se obtiene el costo</label>
         <div class="tipos">
-          <label><input type="radio" name="tipo" value="fijo" checked><span>Precio fijo</span></label>
-          <label><input type="radio" name="tipo" value="manual"><span>Precio manual</span></label>
+          <label><input type="radio" name="tipo" value="manual" checked><span>Monto manual</span></label>
+          <label><input type="radio" name="tipo" value="fijo"><span>Monto fijo</span></label>
           <label><input type="radio" name="tipo" value="formula"><span>Fórmula</span></label>
         </div>
         <p class="exp" id="tipoExp"></p>
       </div>
-      <div><label for="fPrecio" id="lPrecio">Precio</label><input id="fPrecio" class="num" inputmode="decimal" placeholder="0.00"></div>
-      <div><label for="fIva">IVA</label><select id="fIva"><option value="0">0%</option><option value="8">8%</option><option value="16">16%</option></select></div>
-      <div></div>
+      <div id="bPrecio"><label for="fPrecio" id="lPrecio">Monto</label><input id="fPrecio" class="num" inputmode="decimal" placeholder="0.00"></div>
       <div class="full" id="bFormula" hidden>
-        <label for="fFormula">Fórmula del importe</label>
-        <input id="fFormula" maxlength="400" spellcheck="false" placeholder="precio * tarimas * dias">
+        <label for="fFormula">Fórmula</label>
+        <input id="fFormula" maxlength="400" spellcheck="false" placeholder="max(valor_mxn * precio / 100, 5500)">
         <div class="chips" id="chips"></div>
         <div class="prueba">
           <span class="muted">Prueba con estos datos:</span>
@@ -113,9 +112,10 @@
           <span id="resPrueba"></span>
         </div>
       </div>
-      <div class="full"><label for="fNota">Nota interna</label><input id="fNota" maxlength="300" placeholder="Opcional: de dónde sale el precio, a quién aplica…"></div>
+      <div class="full"><label for="fNota">Nota interna</label><input id="fNota" maxlength="300" placeholder="Opcional"></div>
     </div>
     <div class="pie-dlg">
+      <label class="chk"><input type="checkbox" id="fPre"> Predeterminado</label>
       <label class="chk"><input type="checkbox" id="fActivo" checked> Activo</label>
       <span class="sp"></span>
       <button class="btn peligro" type="button" id="borrar">Borrar</button>
@@ -126,51 +126,44 @@
   </form>
 </dialog>
 <datalist id="lCat"></datalist>
-<datalist id="lUni"><option>VIAJE</option><option>SERVICIO</option><option>TARIMA</option><option>PEDIMENTO</option><option>KG</option><option>DÍA</option><option>HORA</option><option>BULTO</option><option>CONTENEDOR</option></datalist>
 
 <script src="/formula.js"></script>
 <script>
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const dinero = (x) => (Number(x) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
-const TIPO_TXT = { fijo: 'Precio fijo', manual: 'Precio manual', formula: 'Fórmula' };
+const TIPO_TXT = { fijo: 'Monto fijo', manual: 'Monto manual', formula: 'Fórmula' };
 const EXP = {
-  fijo: 'Importe = cantidad × precio. El precio se propone automáticamente en la cotización.',
-  manual: 'El precio se escribe en cada cotización. Si pones un precio aquí, se usa como sugerencia.',
-  formula: 'El importe se calcula con la fórmula y los datos del embarque. "precio" es el valor de abajo.',
+  manual: 'El costo se escribe en cada cotización.',
+  fijo: 'Este monto se propone automáticamente en cada cotización.',
+  formula: 'El costo se calcula con la fórmula. "precio" es la tarifa de abajo.',
 };
-const PRUEBA = { precio: 0, cantidad: 1, peso_kg: 12000, tarimas: 10, bultos: 40, dias: 5, km: 250, valor: 50000, tc: 18.5 };
+const PRUEBA = { tc: 17.02, valor_usd: 53250, valor_aduana: 906000 };
 let conceptos = [], categorias = [], variables = [], editando = null;
 
 async function cargar() {
-  const r = await fetch('/api/admin/cot/conceptos');
-  const j = await r.json();
+  const j = await (await fetch('/api/admin/cot/conceptos')).json();
   conceptos = j.conceptos; categorias = j.categorias; variables = j.variables;
   $('lCat').innerHTML = [...new Set([...categorias, ...conceptos.map((c) => c.datos.categoria)])].map((c) => `<option value="${esc(c)}">`).join('');
   $('chips').innerHTML = variables.map(([v, d]) => `<button type="button" title="${esc(d)}" data-v="${v}">${v}</button>`).join('') +
     ['max( , )', 'min( , )', 'si( , , )', 'redondear( )'].map((f) => `<button type="button" data-v="${f.split('(')[0]}(" title="Función">${f}</button>`).join('');
-  $('vals').innerHTML = Object.keys(PRUEBA).filter((k) => k !== 'precio').map((k) => `<div><label for="p_${k}">${k}</label><input id="p_${k}" class="num" value="${PRUEBA[k]}" inputmode="decimal"></div>`).join('');
+  $('vals').innerHTML = Object.keys(PRUEBA).map((k) => `<div><label for="p_${k}">${k}</label><input id="p_${k}" class="num" value="${PRUEBA[k]}" inputmode="decimal"></div>`).join('');
   pintar();
 }
 
 function pintar() {
   const q = $('q').value.trim().toLowerCase();
-  const lista = conceptos.filter((c) => !q || `${c.datos.nombre} ${c.datos.categoria} ${c.datos.formula}`.toLowerCase().includes(q));
-  const cats = [...new Set([...categorias, ...lista.map((c) => c.datos.categoria)])];
-  const html = cats.map((cat) => {
-    const items = lista.filter((c) => c.datos.categoria === cat).sort((a, b) => a.datos.nombre.localeCompare(b.datos.nombre, 'es'));
-    if (!items.length) return '';
-    return `<div class="grupo"><h3>${esc(cat)}</h3><div class="tablewrap"><table>
-      <thead><tr><th>Concepto</th><th>Unidad</th><th>Cálculo</th><th style="text-align:right">Precio</th><th>IVA</th></tr></thead><tbody>
-      ${items.map((c) => { const d = c.datos; return `<tr class="fila${d.activo === false ? ' inactivo' : ''}" data-id="${c.id}" tabindex="0">
-        <td class="n">${esc(d.nombre)}${d.activo === false ? ' <span class="muted">(inactivo)</span>' : ''}</td>
-        <td>${esc(d.unidad)}</td>
+  const lista = conceptos.filter((c) => !q || `${c.datos.nombre} ${c.datos.descripcion} ${c.datos.categoria}`.toLowerCase().includes(q));
+  const cats = [...new Set(lista.map((c) => c.datos.categoria))];
+  $('lista').innerHTML = cats.map((cat) => `<div class="grupo"><h3>${esc(cat)}</h3><div class="tablewrap"><table>
+      <thead><tr><th>Concepto</th><th>Descripción</th><th>Costo</th><th style="text-align:right">Monto</th><th>Moneda</th></tr></thead><tbody>
+      ${lista.filter((c) => c.datos.categoria === cat).map((c) => { const d = c.datos; return `<tr class="fila${d.activo === false ? ' inactivo' : ''}" data-id="${c.id}" tabindex="0">
+        <td class="n">${esc(d.nombre)} ${d.predeterminado ? '<span class="pill pre">PREDETERMINADO</span>' : ''}${d.activo === false ? ' <span class="muted">(inactivo)</span>' : ''}</td>
+        <td class="d">${esc(d.descripcion)}</td>
         <td><span class="pill ${d.tipo}">${TIPO_TXT[d.tipo]}</span>${d.formula ? ` <code>${esc(d.formula)}</code>` : ''}</td>
-        <td class="precio">${d.precio ? `$${dinero(d.precio)} ${d.moneda}` : d.tipo === 'manual' ? `<span class="muted">En cada cotización · ${d.moneda}</span>` : `<span class="pordef">Por definir</span> <span class="muted">${d.moneda}</span>`}</td>
-        <td>${d.iva}%</td></tr>`; }).join('')}
-      </tbody></table></div></div>`;
-  }).join('');
-  $('lista').innerHTML = html || '<p class="vacio">No hay conceptos que coincidan.</p>';
+        <td class="precio">${d.tipo === 'manual' ? '<span class="muted">En cada cotización</span>' : `$${dinero(d.precio)}`}</td>
+        <td>${d.moneda}</td></tr>`; }).join('')}
+      </tbody></table></div></div>`).join('') || '<p class="vacio">No hay conceptos que coincidan.</p>';
 }
 
 // ---------- Formulario ----------
@@ -178,8 +171,9 @@ const tipoSel = () => document.querySelector('input[name=tipo]:checked').value;
 function cambiarTipo() {
   const t = tipoSel();
   $('bFormula').hidden = t !== 'formula';
+  $('bPrecio').hidden = t === 'manual';
   $('tipoExp').textContent = EXP[t];
-  $('lPrecio').textContent = t === 'manual' ? 'Precio sugerido (opcional)' : t === 'formula' ? 'Valor de "precio"' : 'Precio';
+  $('lPrecio').textContent = t === 'formula' ? 'Tarifa ("precio")' : 'Monto';
   probar();
 }
 function probar() {
@@ -191,8 +185,8 @@ function probar() {
     const validas = new Set(variables.map((v) => v[0]));
     for (const v of Formula.variablesDe(arbol)) if (!validas.has(v)) throw new Error(`"${v}" no es una variable conocida`);
     const vars = { precio: parseFloat($('fPrecio').value) || 0 };
-    for (const k of Object.keys(PRUEBA)) if (k !== 'precio') vars[k] = parseFloat($(`p_${k}`).value) || 0;
-    vars.peso_lb = vars.peso_kg * 2.20462;
+    for (const k of Object.keys(PRUEBA)) vars[k] = parseFloat($(`p_${k}`).value) || 0;
+    vars.valor_mxn = vars.valor_usd * vars.tc;
     out.innerHTML = `Resultado: <b>$${dinero(Formula.evaluar(arbol, vars))} ${$('fMoneda').value}</b>`;
   } catch (e) { out.innerHTML = `<span class="mal">${esc(e.message)}</span>`; }
 }
@@ -204,20 +198,17 @@ $('chips').addEventListener('click', (e) => {
   inp.focus(); inp.selectionStart = inp.selectionEnd = a + pega.length; probar();
 });
 for (const el of document.querySelectorAll('input[name=tipo]')) el.addEventListener('change', cambiarTipo);
-$('fFormula').addEventListener('input', probar);
-$('fPrecio').addEventListener('input', probar);
-$('fMoneda').addEventListener('change', () => { if (!editando) $('fIva').value = $('fMoneda').value === 'USD' ? '0' : '16'; probar(); });
-$('vals').addEventListener('input', probar);
+for (const id of ['fFormula', 'fPrecio', 'vals']) $(id).addEventListener('input', probar);
+$('fMoneda').addEventListener('change', probar);
 
 function abrir(c) {
   editando = c ? c.id : null;
-  const d = c ? c.datos : { categoria: '', nombre: '', unidad: 'SERVICIO', moneda: 'MXN', tipo: 'fijo', precio: '', iva: 16, formula: '', nota: '', activo: true };
+  const d = c ? c.datos : { categoria: 'DESGLOSE DE CARGOS', nombre: '', descripcion: '', moneda: 'USD', tipo: 'manual', precio: '', formula: '', nota: '', predeterminado: false, activo: true };
   $('dTit').textContent = c ? 'Editar concepto' : 'Nuevo concepto';
-  $('fNombre').value = d.nombre; $('fCategoria').value = d.categoria; $('fUnidad').value = d.unidad; $('fMoneda').value = d.moneda;
+  $('fNombre').value = d.nombre; $('fDesc').value = d.descripcion || ''; $('fCategoria').value = d.categoria; $('fMoneda').value = d.moneda;
   document.querySelector(`input[name=tipo][value=${d.tipo}]`).checked = true;
   $('fPrecio').value = d.precio || ''; $('fFormula').value = d.formula || ''; $('fNota').value = d.nota || '';
-  if (![...$('fIva').options].some((o) => Number(o.value) === Number(d.iva))) $('fIva').add(new Option(`${d.iva}%`, d.iva));
-  $('fIva').value = String(d.iva); $('fActivo').checked = d.activo !== false;
+  $('fPre').checked = !!d.predeterminado; $('fActivo').checked = d.activo !== false;
   $('borrar').hidden = !c; $('msg').className = 'msg';
   cambiarTipo();
   $('dlg').showModal(); $('fNombre').focus();
@@ -232,8 +223,9 @@ $('f').addEventListener('submit', async (e) => {
   e.preventDefault();
   const msg = $('msg'), btn = $('gBtn');
   const body = {
-    nombre: $('fNombre').value, categoria: $('fCategoria').value, unidad: $('fUnidad').value, moneda: $('fMoneda').value,
-    tipo: tipoSel(), precio: $('fPrecio').value, iva: $('fIva').value, formula: $('fFormula').value, nota: $('fNota').value, activo: $('fActivo').checked,
+    nombre: $('fNombre').value, descripcion: $('fDesc').value, categoria: $('fCategoria').value, moneda: $('fMoneda').value,
+    tipo: tipoSel(), precio: $('fPrecio').value, formula: $('fFormula').value, nota: $('fNota').value,
+    predeterminado: $('fPre').checked, activo: $('fActivo').checked,
   };
   btn.disabled = true; msg.className = 'msg';
   try {

@@ -35,13 +35,13 @@
   <div class="top">
     <a class="logo" href="/" aria-label="MEJAnet"><img src="/logo.png" alt="Grupo Meja"></a>
     <h1 class="titulo"><span class="ico" aria-hidden="true"><svg viewBox="0 0 64 64"><rect x="12" y="4" width="40" height="56" rx="5" fill="currentColor"/><rect x="17" y="10" width="30" height="14" rx="2" fill="#fff"/><text x="42" y="21.5" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="11" fill="currentColor">$</text><g fill="#fff"><rect x="17" y="29" width="8" height="6" rx="1"/><rect x="28" y="29" width="8" height="6" rx="1"/><rect x="39" y="29" width="8" height="6" rx="1"/><rect x="17" y="38.5" width="8" height="6" rx="1"/><rect x="28" y="38.5" width="8" height="6" rx="1"/><rect x="39" y="38.5" width="8" height="15.5" rx="1"/><rect x="17" y="48" width="8" height="6" rx="1"/><rect x="28" y="48" width="8" height="6" rx="1"/></g></svg></span>COTIZADOR</h1>
-    <div class="acc"><a class="nuevo" href="/cotizador/nueva">+ Nueva Cotización</a><a href="/cotizador/tarifas">Tarifas</a><a href="/">MEJAnet</a></div>
+    <div class="acc"><a class="nuevo" href="/cotizador/nueva">+ Nueva Cotización</a><a href="/cotizador/tarifas">Conceptos</a><a href="/">MEJAnet</a></div>
   </div>
 
   <div class="kpis" id="kpis"></div>
 
   <div class="filtros">
-    <div class="q"><label for="q">Buscar</label><input id="q" type="search" placeholder="Folio, cliente, origen, destino…"></div>
+    <div class="q"><label for="q">Buscar</label><input id="q" type="search" placeholder="Folio, cliente, tráfico, naviera…"></div>
     <div><label for="fEstado">Estado</label><select id="fEstado"><option value="">Todos</option><option>BORRADOR</option><option>ENVIADA</option><option>ACEPTADA</option><option>RECHAZADA</option></select></div>
     <div><label for="fDesde">Desde</label><input id="fDesde" type="date"></div>
     <div><label for="fHasta">Hasta</label><input id="fHasta" type="date"></div>
@@ -49,8 +49,8 @@
 
   <div class="tablewrap">
     <table>
-      <thead><tr><th>Folio</th><th>Fecha</th><th>Cliente</th><th>Servicio / ruta</th><th style="text-align:right">Total MXN</th><th style="text-align:right">Total USD</th><th>Estado</th><th></th></tr></thead>
-      <tbody id="lista"><tr><td colspan="8" class="vacio">Cargando…</td></tr></tbody>
+      <thead><tr><th>Folio</th><th>Fecha</th><th>Cliente</th><th>Tipo</th><th>Tráfico</th><th style="text-align:right">Total USD</th><th style="text-align:right">Total MXN</th><th>Estado</th><th></th></tr></thead>
+      <tbody id="lista"><tr><td colspan="9" class="vacio">Cargando…</td></tr></tbody>
     </table>
   </div>
 </main>
@@ -72,18 +72,18 @@ async function cargar() {
     if (!r.ok) throw new Error();
     todas = await r.json();
     pintar();
-  } catch { $('lista').innerHTML = '<tr><td colspan="8" class="vacio">No se pudieron cargar las cotizaciones.</td></tr>'; }
+  } catch { $('lista').innerHTML = '<tr><td colspan="9" class="vacio">No se pudieron cargar las cotizaciones.</td></tr>'; }
 }
 
 function filtradas() {
   const q = $('q').value.trim().toLowerCase(), est = $('fEstado').value, d = $('fDesde').value, h = $('fHasta').value;
   return todas.filter((c) => {
-    const x = c.datos, e = x.embarque || {};
+    const x = c.datos;
     if (est && x.estado !== est) return false;
     if (d && x.fecha < d) return false;
     if (h && x.fecha > h) return false;
     if (q) {
-      const hay = [c.folio_txt, x.cliente, x.atencion, e.servicio, e.origen, e.destino, e.mercancia].join(' ').toLowerCase();
+      const hay = [c.folio_txt, x.cliente, x.trafico, x.tipo, x.naviera, x.contenedor, (x.impuestos || {}).proveedor].join(' ').toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
@@ -96,20 +96,22 @@ function pintar() {
   $('kpis').innerHTML = `<div class="kpi"><b>${todas.length}</b><span>Cotizaciones</span></div>` +
     ['ENVIADA', 'ACEPTADA', 'RECHAZADA'].map((e) => `<div class="kpi"><b class="${e}">${cuenta(e)}</b><span>${e === 'ENVIADA' ? 'Enviadas' : e === 'ACEPTADA' ? 'Aceptadas' : 'Rechazadas'}</span></div>`).join('');
   if (!lista.length) {
-    $('lista').innerHTML = `<tr><td colspan="8" class="vacio">${todas.length ? 'Ninguna cotización coincide con el filtro.' : 'Todavía no hay cotizaciones. <a href="/cotizador/nueva">Crea la primera</a>.'}</td></tr>`;
+    $('lista').innerHTML = `<tr><td colspan="9" class="vacio">${todas.length ? 'Ninguna cotización coincide con el filtro.' : 'Todavía no hay cotizaciones. <a href="/cotizador/nueva">Crea la primera</a>.'}</td></tr>`;
     return;
   }
   $('lista').innerHTML = lista.map((c) => {
-    const x = c.datos, e = x.embarque || {}, t = c.totales;
-    const ruta = [e.origen, e.destino].filter(Boolean).join(' → ');
-    const monto = (m) => t[m].total ? `$${dinero(t[m].total)}<small>${m}</small>` : '<span class="muted">—</span>';
+    const x = c.datos;
+    const monto = (v, m) => v ? `$${dinero(v)}<small>${m}</small>` : '<span class="muted">—</span>';
+    const tipo = { TERRESTRE: 'Terrestre', MARITIMA: 'Marítima', FFCC: 'FFCC' }[x.tipo] || '';
+    const det = [x.operacion === 'IMPORTACION' ? 'Importación' : x.operacion === 'EXPORTACION' ? 'Exportación' : '', x.contenedor, x.modalidad].filter(Boolean).join(' · ');
     return `<tr data-id="${c.id}">
       <td class="folio"><a href="/cotizador/editar/${c.id}">${esc(c.folio_txt)}</a></td>
       <td>${fecha(x.fecha)}</td>
-      <td class="cli"><b>${esc(x.cliente) || '<span class="muted">Sin cliente</span>'}</b>${x.atencion ? `<small>At'n ${esc(x.atencion)}</small>` : ''}</td>
-      <td>${esc(e.servicio)}${e.servicio && ruta ? '<br>' : ''}<small class="muted">${esc(ruta)}</small></td>
-      <td class="monto">${monto('MXN')}</td>
-      <td class="monto">${monto('USD')}</td>
+      <td class="cli"><b>${esc(x.cliente) || '<span class="muted">Sin cliente</span>'}</b>${x.naviera ? `<small>${esc(x.naviera)}</small>` : ''}</td>
+      <td>${tipo}${det ? `<br><small class="muted">${esc(det)}</small>` : ''}</td>
+      <td>${esc(x.trafico) || '<span class="muted">—</span>'}</td>
+      <td class="monto">${monto(c.totalUSD, 'USD')}</td>
+      <td class="monto">${monto(c.totalMXN, 'MXN')}</td>
       <td><select class="estado pill ${x.estado}" aria-label="Estado">${ESTADOS.map((s) => `<option${s === x.estado ? ' selected' : ''}>${s}</option>`).join('')}</select></td>
       <td class="acciones">
         <a class="ico-btn" title="Ver PDF" target="_blank" href="/api/admin/cot/cotizaciones/${c.id}/pdf">${ICO_PDF}</a>

@@ -3,74 +3,98 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cotización</title>
+<title>Cotización de servicios</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/cotizador.css">
 <style>
   main{padding-bottom:110px}
+  .card h2{font-size:13px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+  .card h2 .n{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--cot);color:#fff;font-size:12px}
+  @media (prefers-color-scheme:dark){.card h2 .n{color:#08241d}}
   .grid{display:grid;gap:12px;grid-template-columns:repeat(4,1fr)}
-  .s2{grid-column:span 2}.s3{grid-column:span 3}.full{grid-column:1/-1}
+  .s2{grid-column:span 2}.full{grid-column:1/-1}
   .con-unidad{display:flex;align-items:center;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
   .con-unidad:focus-within{outline:2px solid var(--cot);outline-offset:1px}
   .con-unidad input{border:0;background:transparent;outline:0}
-  .con-unidad span,.con-unidad select{padding:0 10px;color:var(--muted);font-size:13px;font-weight:700;white-space:nowrap}
-  .con-unidad select{border:0;border-left:1px solid var(--line);border-radius:0 8px 8px 0;width:auto;min-width:72px;background:transparent;padding:9px 8px}
-  .ayuda{color:var(--muted);font-size:12.5px;margin:4px 0 0}
-  .estado-sel{width:auto;font-weight:700}
+  .con-unidad span{padding:0 10px;color:var(--muted);font-size:12.5px;font-weight:700;white-space:nowrap}
+  /* Botones de opción (tipo de cotización / operación) */
+  .opciones{display:flex;gap:6px;flex-wrap:wrap}
+  .opciones label{margin:0;cursor:pointer;text-transform:none;letter-spacing:0}
+  .opciones input{position:absolute;opacity:0;width:1px;height:1px}
+  .opciones span{display:inline-flex;align-items:center;gap:6px;border:2px solid var(--line);border-radius:999px;padding:7px 14px;font-weight:700;font-size:13px;color:var(--muted);background:var(--bg);transition:all .12s}
+  .opciones span svg{width:16px;height:16px}
+  .opciones label:hover span{border-color:color-mix(in srgb,var(--cot) 50%,var(--line))}
+  .opciones input:checked+span{border-color:var(--cot);color:var(--cot);background:var(--cot-claro)}
+  .opciones input:focus-visible+span{outline:2px solid var(--cot);outline-offset:2px}
 
-  /* Partidas */
+  /* Desglose de cargos */
   .barra{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
   .barra select{flex:1;min-width:220px}
-  .part-enc,.part{display:grid;grid-template-columns:minmax(200px,1fr) 80px 96px 110px 76px 70px 120px 34px;gap:6px;align-items:start}
-  .part-enc{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:600;padding:0 0 6px;border-bottom:1px solid var(--line)}
-  .part-enc .r{text-align:right}
-  .part{padding:8px 0;border-bottom:1px solid var(--line)}
-  .part input,.part select{padding:7px 8px;font-size:14px}
-  .part .cat{font-size:10.5px;font-weight:700;color:var(--cot);letter-spacing:.4px;margin:0 0 3px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-  .part .fx{margin-top:4px;font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center}
-  .part .fx span{white-space:nowrap}
-  .part .fx input{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;padding:4px 7px}
-  .part .fx.err input{border-color:var(--err);color:var(--err)}
-  .part .fx-err{color:var(--err);font-size:12px;margin-top:2px}
-  .part .imp{text-align:right;font-weight:800;font-variant-numeric:tabular-nums;padding-top:7px;white-space:nowrap}
-  .part .imp small{display:block;font-weight:500;color:var(--muted);font-size:11px}
-  .part input:disabled{opacity:.45}
+  .c-enc,.cargo{display:grid;grid-template-columns:minmax(180px,1.1fr) minmax(200px,1.5fr) 82px 150px 34px;gap:6px;align-items:start}
+  .c-enc{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:600;padding:0 0 6px;border-bottom:1px solid var(--line)}
+  .c-enc .r{text-align:right}
+  .cargo{padding:7px 0;border-bottom:1px solid var(--line)}
+  .cargo input,.cargo select{padding:7px 8px;font-size:14px}
+  .cargo [data-k=concepto]{font-weight:700}
+  .cargo .fx{margin-top:4px;font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center}
+  .cargo .fx span{white-space:nowrap}
+  .cargo .fx input{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;padding:4px 7px}
+  .cargo .fx input.tar{width:90px;font-family:inherit;text-align:right}
+  .cargo .fx-err{color:var(--err);font-size:12px;margin-top:2px}
+  .cargo .monto-calc{padding:8px;text-align:right;font-weight:800;font-variant-numeric:tabular-nums}
+  .cargo.usd [data-k=monto],.cargo.usd .monto-calc{color:var(--accent)}
   .m-lbl{display:none}
-  @media (max-width:900px){
-    .part-enc{display:none}
-    .part{grid-template-columns:1fr 1fr 1fr;gap:8px}
-    .part .d{grid-column:1/-1}
-    .part .imp{grid-column:1/3;text-align:left}
-    .part .del{justify-self:end}
-    .m-lbl{display:block;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}
-    .grid{grid-template-columns:1fr 1fr}.s3{grid-column:1/-1}
-  }
-  .sin-part{padding:22px;text-align:center;color:var(--muted)}
+  .sub{display:flex;justify-content:flex-end;gap:28px;padding:12px 44px 0 0;font-variant-numeric:tabular-nums}
+  .sub div{text-align:right}
+  .sub span{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+  .sub b{font-size:17px}
+  .sin{padding:20px;text-align:center;color:var(--muted)}
 
-  /* Totales */
-  .pie{display:grid;grid-template-columns:1.3fr 1fr;gap:14px;align-items:start}
-  .tot{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
-  .tot th{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);text-align:right;padding:4px 8px}
-  .tot th:first-child{text-align:left}
-  .tot td{padding:5px 8px;text-align:right}
-  .tot td:first-child{text-align:left;color:var(--muted)}
-  .tot tr.total td{font-weight:800;font-size:17px;color:var(--cot);border-top:2px solid var(--line);padding-top:8px}
-  .tot tr.total td:first-child{color:var(--ink)}
-  .gran{margin-top:12px;padding:10px 12px;border-radius:10px;background:var(--cot-claro);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:baseline}
+  /* Impuestos aduanales */
+  .imp{display:grid;grid-template-columns:1fr 1fr;gap:0 28px}
+  .fila{display:grid;grid-template-columns:170px 1fr;gap:10px;align-items:center;padding:5px 0;border-bottom:1px dashed var(--line)}
+  .fila>label{margin:0;font-size:12px}
+  .fila input{padding:7px 9px}
+  .fila .auto{font-size:11px;color:var(--cot);font-weight:700;margin-left:4px;text-transform:none;letter-spacing:0}
+  .fila.total{border-bottom:0;border-top:2px solid var(--line);margin-top:4px;padding-top:10px}
+  .fila.total label{color:var(--ink);font-size:13px}
+  .fila.total b{font-size:18px;color:var(--cot);text-align:right;font-variant-numeric:tabular-nums;padding-right:9px}
+  .col-t{font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.5px;margin:0 0 4px}
+
+  /* Resumen */
+  .pie{display:grid;grid-template-columns:1.2fr 1fr;gap:14px;align-items:start}
+  .res{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+  .res td{padding:6px 4px;border-bottom:1px solid var(--line)}
+  .res td:last-child{text-align:right;font-weight:700}
+  .res tr.t td{font-size:17px;color:var(--cot);font-weight:800;border-bottom:0;padding-top:10px}
+  .gran{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--cot-claro);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:baseline}
   .gran span{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
-  .gran b{font-size:16px;font-variant-numeric:tabular-nums}
-  @media (max-width:760px){.pie{grid-template-columns:1fr}}
+  .gran b{font-size:15px;font-variant-numeric:tabular-nums}
 
   .acciones{position:fixed;left:0;right:0;bottom:0;background:color-mix(in srgb,var(--card) 92%,transparent);backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:10px 16px;z-index:5}
   .acciones .in{max-width:1180px;margin:0 auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   .acciones .sp{flex:1}
   .acciones .msg{margin:0;padding:8px 12px}
   .acciones .btn{padding:11px 18px}
-  @media (max-width:600px){main{padding-bottom:110px}#folio,#verPdf{display:none}.acciones{padding:8px 10px}.acciones .in{gap:6px}.acciones .sp{display:none}
-    .acciones .btn{padding:9px 10px;font-size:14px}.estado-sel{padding:8px 6px;font-size:13px}.acciones .msg{flex-basis:100%;order:-1}}
+  .estado-sel{width:auto;font-weight:700}
   #folio{font-family:"Oswald","Arial Narrow",system-ui,sans-serif;font-size:20px;color:var(--cot);letter-spacing:.8px}
+
+  @media (max-width:900px){
+    .grid{grid-template-columns:1fr 1fr}
+    .c-enc{display:none}
+    .cargo{grid-template-columns:1fr 1fr 34px;gap:6px}
+    .cargo .c1,.cargo .c2{grid-column:1/-1}
+    .m-lbl{display:block;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}
+    .cargo .del{padding-top:18px}
+    .imp{grid-template-columns:1fr}
+    .sub{padding-right:0}
+    .pie{grid-template-columns:1fr}
+  }
+  @media (max-width:600px){#folio,#verPdf{display:none}.acciones{padding:8px 10px}.acciones .in{gap:6px}.acciones .sp{display:none}
+    .acciones .btn{padding:9px 10px;font-size:14px}.estado-sel{padding:8px 6px;font-size:13px}.acciones .msg{flex-basis:100%;order:-1}
+    .grid .s2{grid-column:1/-1}.fila{grid-template-columns:130px 1fr}}
 </style>
 </head>
 <body>
@@ -81,45 +105,87 @@
     <div class="acc"><a href="/cotizador">← Cotizaciones</a></div>
   </div>
 
+  <!-- 1. DETALLES DEL EMBARQUE -->
   <section class="card">
-    <h2>Cliente</h2>
+    <h2><span class="n">1</span>Detalles del embarque</h2>
     <div class="grid">
       <div class="s2"><label for="cliente">Cliente</label><input id="cliente" list="lCli" maxlength="160"></div>
-      <div><label for="atencion">Atención</label><input id="atencion" maxlength="120"></div>
-      <div><label for="elaboro">Elaboró</label><input id="elaboro" maxlength="80"></div>
-      <div><label for="correo">Correo</label><input id="correo" type="email" maxlength="160"></div>
-      <div><label for="telefono">Teléfono</label><input id="telefono" maxlength="60"></div>
+      <div class="s2"><label>Tipo de cotización</label>
+        <div class="opciones">
+          <label><input type="radio" name="tipo" value="TERRESTRE"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 6h13v10H1zM14 10h4l3 3v3h-7z"/><circle cx="5.5" cy="17.5" r="1.8"/><circle cx="17.5" cy="17.5" r="1.8"/></svg>Terrestre</span></label>
+          <label><input type="radio" name="tipo" value="MARITIMA"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15l2 5h14l2-5zM6 15V8h12v7M9 8V4h6v4"/></svg>Marítima</span></label>
+          <label><input type="radio" name="tipo" value="FFCC"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="13" rx="2"/><path d="M5 10h14M9 20l-2 2M15 20l2 2"/><circle cx="9" cy="13" r=".8"/><circle cx="15" cy="13" r=".8"/></svg>FFCC</span></label>
+        </div></div>
+      <div><label for="trafico">Tráfico</label><input id="trafico" maxlength="40" placeholder="Ej. MA098/26"></div>
       <div><label for="fecha">Fecha</label><input id="fecha" type="date"></div>
-      <div><label for="vigencia">Vigencia</label><div class="con-unidad"><input id="vigencia" class="num" inputmode="numeric" value="15"><span>días</span></div></div>
+      <div><label for="valido_hasta">Válido hasta</label><input id="valido_hasta" type="date"></div>
+      <div><label>Tipo de operación</label>
+        <div class="opciones">
+          <label><input type="radio" name="operacion" value="IMPORTACION"><span>Importación</span></label>
+          <label><input type="radio" name="operacion" value="EXPORTACION"><span>Exportación</span></label>
+        </div></div>
+      <div><label for="naviera">Naviera</label><input id="naviera" list="lNav" maxlength="80"></div>
+      <div><label for="modalidad">Modalidad</label><select id="modalidad"><option value="">Selecciona…</option><option>DOOR TO DOOR</option><option>FCL</option><option>LTL</option></select></div>
+      <div><label for="contenedor">Tipo de contenedor</label>
+        <select id="contenedor">
+          <option value="">Selecciona…</option>
+          <option value="20ST">20ST — 20' Estándar (Dry)</option>
+          <option value="40ST">40ST — 40' Estándar (Dry)</option>
+          <option value="40HC">40HC — 40' High Cube</option>
+          <option value="45HC">45HC — 45' High Cube</option>
+          <option value="20RF">20RF — 20' Refrigerado</option>
+          <option value="40RH">40RH — 40' Refrigerado High Cube</option>
+          <option value="20OT">20OT — 20' Open Top</option>
+          <option value="40OT">40OT — 40' Open Top</option>
+          <option value="20FR">20FR — 20' Flat Rack</option>
+          <option value="40FR">40FR — 40' Flat Rack</option>
+          <option value="20TK">20TK — 20' Tanque (ISO Tank)</option>
+          <option value="LCL">LCL — Consolidado</option>
+        </select></div>
+      <div><label for="tc">Tipo de cambio</label><div class="con-unidad"><input id="tc" class="num" inputmode="decimal" placeholder="Ej. 17.02"><span>MXN / USD</span></div></div>
     </div>
   </section>
 
+  <!-- 2. DESGLOSE DE CARGOS -->
   <section class="card">
-    <h2>Datos del embarque <small>— estos datos los usan las fórmulas</small></h2>
-    <div class="grid">
-      <div><label for="servicio">Servicio</label><input id="servicio" list="lServ" maxlength="80"></div>
-      <div><label for="origen">Origen</label><input id="origen" maxlength="120"></div>
-      <div><label for="destino">Destino</label><input id="destino" maxlength="120"></div>
-      <div><label for="unidad">Tipo de unidad</label><input id="unidad" list="lUni" maxlength="80"></div>
-      <div class="s2"><label for="mercancia">Mercancía</label><input id="mercancia" maxlength="200"></div>
-      <div><label for="peso_kg">Peso</label><div class="con-unidad"><input id="peso_kg" class="num v" inputmode="decimal"><span>kg</span></div><p class="ayuda" id="pesoLb">&nbsp;</p></div>
-      <div><label for="valor">Valor mercancía</label><div class="con-unidad"><input id="valor" class="num v" inputmode="decimal"><select id="valor_moneda" aria-label="Moneda del valor"><option>USD</option><option>MXN</option></select></div></div>
-      <div><label for="tarimas">Tarimas</label><input id="tarimas" class="num v" inputmode="decimal"></div>
-      <div><label for="bultos">Bultos</label><input id="bultos" class="num v" inputmode="decimal"></div>
-      <div><label for="dias">Días</label><input id="dias" class="num v" inputmode="decimal"></div>
-      <div><label for="km">Kilómetros</label><input id="km" class="num v" inputmode="decimal"></div>
-    </div>
-  </section>
-
-  <section class="card">
-    <h2>Partidas</h2>
+    <h2><span class="n">2</span>Desglose de cargos</h2>
     <div class="barra">
-      <select id="agregar" aria-label="Agregar concepto del catálogo"><option value="">+ Agregar concepto de tarifas…</option></select>
-      <button class="btn" type="button" id="libre">+ Partida libre</button>
-      <a class="btn" href="/cotizador/tarifas" target="_blank">Editar tarifas</a>
+      <select id="agregar" aria-label="Agregar concepto del catálogo"><option value="">+ Agregar concepto del catálogo…</option></select>
+      <button class="btn" type="button" id="libre">+ Concepto libre</button>
+      <a class="btn" href="/cotizador/tarifas" target="_blank">Catálogo de conceptos</a>
     </div>
-    <div class="part-enc"><span>Concepto</span><span class="r">Cant.</span><span>Unidad</span><span class="r">Precio unit.</span><span>Moneda</span><span>IVA</span><span class="r">Importe</span><span></span></div>
-    <div id="partidas"></div>
+    <div class="c-enc"><span>Concepto</span><span>Descripción</span><span>Moneda</span><span class="r">Costo</span><span></span></div>
+    <div id="cargos"></div>
+    <div class="sub" id="subCargos"></div>
+  </section>
+
+  <!-- 3. IMPUESTOS ADUANALES -->
+  <section class="card">
+    <h2><span class="n">3</span>Impuestos aduanales <small>— Valor aduana e IVA se calculan solos si los dejas vacíos</small></h2>
+    <div class="imp">
+      <div>
+        <p class="col-t">DATOS DE LA MERCANCÍA</p>
+        <div class="fila"><label for="i_proveedor">Proveedor</label><input id="i_proveedor" maxlength="160"></div>
+        <div class="fila"><label for="i_factura">Factura</label><input id="i_factura" maxlength="120"></div>
+        <div class="fila"><label for="i_buque_eta">Buque / E.T.A.</label><input id="i_buque_eta" maxlength="120"></div>
+        <div class="fila"><label for="i_contenedores">Contenedor(es)</label><input id="i_contenedores" maxlength="120" placeholder="Ej. 1X20 ST"></div>
+        <div class="fila"><label for="i_mercancia">Mercancía</label><input id="i_mercancia" maxlength="200"></div>
+        <div class="fila"><label for="i_regimen">Régimen / Fracción</label><input id="i_regimen" maxlength="120"></div>
+        <div class="fila"><label for="i_valor_usd">Valor en dólares</label><div class="con-unidad"><input id="i_valor_usd" class="num" inputmode="decimal"><span>USD</span></div></div>
+        <div class="fila"><label for="i_tc">Tipo de cambio aprox.</label><div class="con-unidad"><input id="i_tc" class="num" inputmode="decimal"><span>MXN</span></div></div>
+      </div>
+      <div>
+        <p class="col-t">IMPUESTOS (MXN)</p>
+        <div class="fila"><label for="i_incrementables">Incrementables</label><input id="i_incrementables" class="num" inputmode="decimal"></div>
+        <div class="fila"><label for="i_valor_aduana">Valor aduana <span class="auto" id="aVA"></span></label><input id="i_valor_aduana" class="num" inputmode="decimal"></div>
+        <div class="fila"><label for="i_igi">I.G.I. / Ad Valorem</label><input id="i_igi" class="num" inputmode="decimal"></div>
+        <div class="fila"><label for="i_dta">D.T.A.</label><input id="i_dta" class="num" inputmode="decimal"></div>
+        <div class="fila"><label for="i_iva">I.V.A. <span class="auto" id="aIVA"></span></label><input id="i_iva" class="num" inputmode="decimal"></div>
+        <div class="fila"><label for="i_prevalidacion">Prevalidación</label><input id="i_prevalidacion" class="num" inputmode="decimal"></div>
+        <div class="fila"><label for="i_contraprestacion">Contraprestación</label><input id="i_contraprestacion" class="num" inputmode="decimal"></div>
+        <div class="fila total"><label>Total impuestos aduanales</label><b id="totImp">$0.00</b></div>
+      </div>
+    </div>
   </section>
 
   <section class="pie">
@@ -128,9 +194,8 @@
       <textarea id="notas" rows="6" maxlength="3000"></textarea>
     </div>
     <div class="card">
-      <h2>Totales</h2>
-      <div style="margin-bottom:12px"><label for="tc">Tipo de cambio</label><div class="con-unidad"><input id="tc" class="num" inputmode="decimal" placeholder="Ej. 18.50"><span>MXN por USD</span></div></div>
-      <table class="tot" id="totales"></table>
+      <h2>Resumen</h2>
+      <table class="res" id="resumen"></table>
       <div class="gran" id="gran" hidden></div>
     </div>
   </section>
@@ -147,139 +212,130 @@
 </div></div>
 
 <datalist id="lCli"></datalist>
-<datalist id="lServ"><option>IMPORTACIÓN</option><option>EXPORTACIÓN</option><option>TRANSFER</option><option>FLETE NACIONAL</option><option>ALMACENAJE</option><option>CRUCE</option></datalist>
-<datalist id="lUni"><option>CAJA SECA 53'</option><option>CAJA SECA 48'</option><option>PLATAFORMA</option><option>TORTON</option><option>RABÓN</option><option>CAMIONETA 3.5 TON</option><option>CONTENEDOR 40'</option><option>CONTENEDOR 20'</option><option>LTL / CONSOLIDADO</option></datalist>
+<datalist id="lNav"><option>MAERSK</option><option>MSC</option><option>CMA CGM</option><option>COSCO</option><option>HAPAG-LLOYD</option><option>ONE</option><option>EVERGREEN</option><option>HMM</option><option>ZIM</option><option>YANG MING</option><option>ZIM / HMM</option></datalist>
 
 <script src="/formula.js"></script>
 <script>
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const dinero = (x) => (Number(x) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const hoy = () => { const h = new Date(), p = (x) => String(x).padStart(2, '0'); return `${h.getFullYear()}-${p(h.getMonth() + 1)}-${p(h.getDate())}`; };
-const NOTAS_DEF = 'Precios sujetos a cambio sin previo aviso.\nLos importes en USD y en MXN se cobran en la moneda indicada en cada partida.';
+const p2 = (x) => String(x).padStart(2, '0');
+const iso = (d) => `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`;
+const hoy = () => iso(new Date());
+const masDias = (f, n) => { const d = new Date(`${f}T12:00:00`); d.setDate(d.getDate() + n); return iso(d); };
+const NOTAS_DEF = 'Precios sujetos a cambio sin previo aviso.\nTipo de cambio aproximado; se aplicará el del día de pago.';
 const ICO_BORRAR = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>';
-const TIPO_TXT = { fijo: 'PRECIO FIJO', manual: 'PRECIO MANUAL', formula: 'FÓRMULA' };
 
 const mId = /\/cotizador\/editar\/(\d+)/.exec(location.pathname);
 let id = mId ? Number(mId[1]) : null;
-let conceptos = [];
-let partidas = [];
-let sucio = false;
+let conceptos = [], cargos = [], sucio = false, elaboro = '';
 
-const CAMPOS = ['cliente', 'atencion', 'correo', 'telefono', 'fecha', 'vigencia', 'elaboro', 'tc', 'notas', 'estado'];
-const EMB = ['servicio', 'origen', 'destino', 'unidad', 'mercancia', 'peso_kg', 'tarimas', 'bultos', 'dias', 'km', 'valor', 'valor_moneda'];
+const CAMPOS = ['cliente', 'trafico', 'fecha', 'valido_hasta', 'naviera', 'modalidad', 'contenedor', 'tc', 'notas', 'estado'];
+const IMP = ['proveedor', 'factura', 'buque_eta', 'contenedores', 'mercancia', 'regimen', 'valor_usd', 'tc', 'incrementables', 'valor_aduana', 'igi', 'dta', 'iva', 'prevalidacion', 'contraprestacion'];
+const radio = (n) => (document.querySelector(`input[name=${n}]:checked`) || {}).value || '';
+const ponRadio = (n, v) => document.querySelectorAll(`input[name=${n}]`).forEach((r) => { r.checked = r.value === v; });
 
 function datos() {
   const d = {};
   for (const k of CAMPOS) d[k] = $(k).value.trim();
-  d.embarque = {};
-  for (const k of EMB) d.embarque[k] = $(k).value.trim();
-  d.partidas = partidas;
+  d.tipo = radio('tipo'); d.operacion = radio('operacion');
+  d.cargos = cargos;
+  d.impuestos = {};
+  for (const k of IMP) d.impuestos[k] = $(`i_${k}`).value.trim();
+  d.elaboro = elaboro;
   return d;
 }
 function llenar(d) {
   for (const k of CAMPOS) if (d[k] !== undefined) $(k).value = d[k];
-  for (const k of EMB) if (d.embarque && d.embarque[k] !== undefined) $(k).value = d.embarque[k];
-  partidas = (d.partidas || []).map((p) => ({ ...p }));
+  ponRadio('tipo', d.tipo); ponRadio('operacion', d.operacion);
+  for (const k of IMP) $(`i_${k}`).value = (d.impuestos || {})[k] ?? '';
+  cargos = (d.cargos || []).map((p) => ({ ...p }));
+  elaboro = d.elaboro || '';
 }
 
-// ---------- Partidas ----------
-function nuevaPartida(c) {
-  if (!c) return { concepto_id: null, categoria: '', descripcion: '', unidad: 'SERVICIO', tipo: 'manual', formula: '', cantidad: 1, precio: '', moneda: 'MXN', iva: 16 };
-  return { concepto_id: c.id, categoria: c.datos.categoria, descripcion: c.datos.nombre, unidad: c.datos.unidad, tipo: c.datos.tipo,
-    formula: c.datos.formula || '', cantidad: 1, precio: c.datos.tipo === 'manual' && !c.datos.precio ? '' : c.datos.precio, moneda: c.datos.moneda, iva: c.datos.iva };
-}
+// ---------- Desglose de cargos ----------
+const deCatalogo = (c) => ({ concepto_id: c.id, concepto: c.datos.nombre, descripcion: c.datos.descripcion || '', moneda: c.datos.moneda,
+  tipo: c.datos.tipo === 'formula' ? 'formula' : 'manual', formula: c.datos.formula || '', precio: c.datos.tipo === 'formula' ? String(c.datos.precio || '') : '',
+  monto: c.datos.tipo === 'fijo' && c.datos.precio ? String(c.datos.precio) : '' });
+const libre = () => ({ concepto_id: null, concepto: '', descripcion: '', moneda: 'MXN', tipo: 'manual', formula: '', precio: '', monto: '' });
 
-function pintarPartidas() {
-  const cont = $('partidas');
-  if (!partidas.length) { cont.innerHTML = '<div class="sin-part">Agrega conceptos desde tus tarifas o una partida libre.</div>'; recalcular(); return; }
-  cont.innerHTML = partidas.map((p, i) => {
-    const ivaOpts = [0, 8, 16].includes(Number(p.iva)) ? [0, 8, 16] : [0, 8, 16, Number(p.iva)];
-    return `<div class="part" data-i="${i}">
-      <div class="d">
-        <div class="cat">${p.categoria ? esc(p.categoria) : 'PARTIDA LIBRE'} <span class="pill ${p.tipo}">${TIPO_TXT[p.tipo] || ''}</span></div>
-        <input data-k="descripcion" value="${esc(p.descripcion)}" placeholder="Descripción del concepto" maxlength="300">
-        ${p.tipo === 'formula' ? `<div class="fx"><span>ƒ =</span><input data-k="formula" value="${esc(p.formula)}" spellcheck="false" title="Puedes ajustar la fórmula solo para esta cotización"></div><div class="fx-err" hidden></div>` : ''}
-      </div>
-      <div><span class="m-lbl">Cant.</span><input data-k="cantidad" class="num" inputmode="decimal" value="${esc(p.cantidad)}"${p.tipo === 'formula' && !/\bcantidad\b/i.test(p.formula) ? ' disabled title="La fórmula no usa la cantidad"' : ''}></div>
-      <div><span class="m-lbl">Unidad</span><input data-k="unidad" value="${esc(p.unidad)}" maxlength="40"></div>
-      <div><span class="m-lbl">Precio unit.</span><input data-k="precio" class="num" inputmode="decimal" value="${esc(p.precio)}" placeholder="0.00"${p.tipo === 'formula' && !/\bprecio\b/i.test(p.formula) ? ' disabled title="La fórmula no usa el precio"' : ''}></div>
-      <div><span class="m-lbl">Moneda</span><select data-k="moneda"><option${p.moneda === 'MXN' ? ' selected' : ''}>MXN</option><option${p.moneda === 'USD' ? ' selected' : ''}>USD</option></select></div>
-      <div><span class="m-lbl">IVA</span><select data-k="iva">${ivaOpts.map((v) => `<option value="${v}"${Number(p.iva) === v ? ' selected' : ''}>${v}%</option>`).join('')}</select></div>
-      <div class="imp"><span class="v">$0.00</span><small></small></div>
-      <div class="del"><button class="ico-btn borrar" type="button" title="Quitar partida">${ICO_BORRAR}</button></div>
-    </div>`;
-  }).join('');
+function pintarCargos() {
+  const cont = $('cargos');
+  if (!cargos.length) { cont.innerHTML = '<div class="sin">Agrega conceptos del catálogo o un concepto libre.</div>'; recalcular(); return; }
+  cont.innerHTML = cargos.map((p, i) => `<div class="cargo ${p.moneda === 'USD' ? 'usd' : ''}" data-i="${i}">
+      <div class="c1"><span class="m-lbl">Concepto</span><input data-k="concepto" value="${esc(p.concepto)}" maxlength="160" placeholder="Concepto"></div>
+      <div class="c2"><span class="m-lbl">Descripción</span><input data-k="descripcion" value="${esc(p.descripcion)}" maxlength="300" placeholder="Descripción">
+        ${p.tipo === 'formula' ? `<div class="fx"><span>ƒ =</span><input data-k="formula" value="${esc(p.formula)}" spellcheck="false"><span>tarifa</span><input data-k="precio" class="tar" value="${esc(p.precio)}" inputmode="decimal"></div><div class="fx-err" hidden></div>` : ''}</div>
+      <div><span class="m-lbl">Moneda</span><select data-k="moneda"><option${p.moneda === 'USD' ? ' selected' : ''}>USD</option><option${p.moneda === 'MXN' ? ' selected' : ''}>MXN</option></select></div>
+      <div><span class="m-lbl">Costo</span>${p.tipo === 'formula' ? '<div class="monto-calc">$0.00</div>' : `<input data-k="monto" class="num" inputmode="decimal" value="${esc(p.monto)}" placeholder="0.00">`}</div>
+      <div class="del"><button class="ico-btn borrar" type="button" title="Quitar">${ICO_BORRAR}</button></div>
+    </div>`).join('');
   recalcular();
 }
 
 function recalcular() {
-  const c = Formula.calcular(datos());
+  const d = datos(), c = Formula.calcular(d), im = c.impuestos;
   c.partidas.forEach((p, i) => {
-    const fila = $('partidas').querySelector(`.part[data-i="${i}"]`); if (!fila) return;
-    fila.querySelector('.imp .v').textContent = `$${dinero(p.importe)}`;
-    fila.querySelector('.imp small').textContent = p.iva_monto ? `+ IVA $${dinero(p.iva_monto)} ${p.moneda}` : p.moneda;
-    const fx = fila.querySelector('.fx'), fe = fila.querySelector('.fx-err');
-    if (fx) { fx.classList.toggle('err', !!p.error); fe.hidden = !p.error; fe.textContent = p.error; }
+    const f = $('cargos').querySelector(`.cargo[data-i="${i}"]`); if (!f) return;
+    const mc = f.querySelector('.monto-calc'); if (mc) mc.textContent = `$${dinero(p.monto)}`;
+    const fe = f.querySelector('.fx-err'); if (fe) { fe.hidden = !p.error; fe.textContent = p.error; }
   });
-  const t = c.totales;
-  const usadas = ['MXN', 'USD'].filter((m) => partidas.some((p) => (p.moneda || 'MXN') === m));
-  const cols = usadas.length ? usadas : ['MXN'];
-  $('totales').innerHTML = `<tr><th></th>${cols.map((m) => `<th>${m}</th>`).join('')}</tr>
-    <tr><td>Subtotal</td>${cols.map((m) => `<td>$${dinero(t[m].subtotal)}</td>`).join('')}</tr>
-    <tr><td>IVA</td>${cols.map((m) => `<td>$${dinero(t[m].iva)}</td>`).join('')}</tr>
-    <tr class="total"><td>Total</td>${cols.map((m) => `<td>$${dinero(t[m].total)}</td>`).join('')}</tr>`;
+  const usa = (m) => cargos.some((p) => p.moneda === m);
+  $('subCargos').innerHTML = (usa('USD') ? `<div><span>Subtotal USD</span><b>$${dinero(c.cargos.USD)}</b></div>` : '') +
+    (usa('MXN') ? `<div><span>Subtotal MXN</span><b>$${dinero(c.cargos.MXN)}</b></div>` : '');
+  // Impuestos: lo calculado se muestra como sugerencia dentro del campo
+  $('i_tc').placeholder = d.tc ? `${d.tc} (general)` : '';
+  $('i_valor_aduana').placeholder = im.vaAuto ? dinero(im.vaAuto) : '';
+  $('i_iva').placeholder = im.ivaAuto ? dinero(im.ivaAuto) : '';
+  $('aVA').textContent = d.impuestos.valor_aduana === '' && im.vaAuto ? '· calculado' : '';
+  $('aIVA').textContent = d.impuestos.iva === '' && im.ivaAuto ? '· calculado' : '';
+  $('totImp').textContent = `$${dinero(im.total)}`;
+  // Resumen
+  const filas = [];
+  if (usa('USD')) filas.push(['Desglose de cargos (USD)', `$${dinero(c.cargos.USD)} USD`]);
+  if (usa('MXN')) filas.push(['Desglose de cargos (MXN)', `$${dinero(c.cargos.MXN)} MXN`]);
+  filas.push(['Impuestos aduanales', `$${dinero(im.total)} MXN`]);
+  $('resumen').innerHTML = filas.map(([a, b]) => `<tr><td>${a}</td><td>${b}</td></tr>`).join('') +
+    `<tr class="t"><td>Total</td><td>${c.totalUSD ? `$${dinero(c.totalUSD)} USD<br>` : ''}$${dinero(c.totalMXN)} MXN</td></tr>`;
   const g = $('gran');
-  if (c.granMXN !== null && usadas.length > 1) {
+  if (c.totalUSD && c.totalMXN) {
     g.hidden = false;
-    g.innerHTML = `<span>Total equivalente</span><b>$${dinero(c.granMXN)} MXN</b><b>$${dinero(c.granUSD)} USD</b>`;
-  } else if (usadas.length > 1) {
-    g.hidden = false; g.innerHTML = '<span>Escribe el tipo de cambio para ver el total combinado</span>';
+    g.innerHTML = c.granMXN !== null ? `<span>Total equivalente</span><b>$${dinero(c.granMXN)} MXN</b><b>$${dinero(c.granUSD)} USD</b>` : '<span>Escribe el tipo de cambio para ver el total combinado</span>';
   } else g.hidden = true;
-  const kg = parseFloat(String($('peso_kg').value).replace(/,/g, ''));
-  $('pesoLb').innerHTML = Number.isFinite(kg) && kg > 0 ? `= ${(kg * 2.20462).toLocaleString('en-US', { maximumFractionDigits: 1 })} lb` : '&nbsp;';
 }
 
-$('partidas').addEventListener('input', (e) => {
+$('cargos').addEventListener('input', (e) => {
   const el = e.target.closest('[data-k]'); if (!el) return;
-  const i = Number(el.closest('.part').dataset.i), k = el.dataset.k;
-  partidas[i][k] = el.value;
-  if (k === 'moneda') { // al cambiar de moneda se sugiere el IVA habitual
-    const iva = el.value === 'USD' ? 0 : 16;
-    partidas[i].iva = iva; el.closest('.part').querySelector('[data-k=iva]').value = iva;
-  }
-  if (k === 'formula') { // habilita cantidad / precio según lo que use la fórmula
-    const f = el.closest('.part');
-    f.querySelector('[data-k=cantidad]').disabled = !/\bcantidad\b/i.test(el.value);
-    f.querySelector('[data-k=precio]').disabled = !/\bprecio\b/i.test(el.value);
-  }
+  const fila = el.closest('.cargo'), i = Number(fila.dataset.i);
+  cargos[i][el.dataset.k] = el.value;
+  if (el.dataset.k === 'moneda') fila.classList.toggle('usd', el.value === 'USD');
   sucio = true; recalcular();
 });
-$('partidas').addEventListener('click', (e) => {
+$('cargos').addEventListener('click', (e) => {
   if (!e.target.closest('button.borrar')) return;
-  partidas.splice(Number(e.target.closest('.part').dataset.i), 1);
-  sucio = true; pintarPartidas();
+  cargos.splice(Number(e.target.closest('.cargo').dataset.i), 1); sucio = true; pintarCargos();
 });
 function agregar(p) {
-  partidas.push(p); sucio = true; pintarPartidas();
-  const filas = $('partidas').querySelectorAll('.part'), f = filas[filas.length - 1];
-  const foco = f.querySelector('[data-k=precio]:not(:disabled)') && (p.precio === '' || p.precio === 0) ? f.querySelector('[data-k=precio]') : f.querySelector('[data-k=descripcion]');
-  foco.focus(); f.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  cargos.push(p); sucio = true; pintarCargos();
+  const fs = $('cargos').querySelectorAll('.cargo'), f = fs[fs.length - 1];
+  (p.concepto ? (f.querySelector('[data-k=monto]') || f.querySelector('[data-k=precio]')) : f.querySelector('[data-k=concepto]')).focus();
 }
 $('agregar').addEventListener('change', () => {
-  const c = conceptos.find((x) => x.id === Number($('agregar').value));
-  $('agregar').value = '';
-  if (c) agregar(nuevaPartida(c));
+  const c = conceptos.find((x) => x.id === Number($('agregar').value)); $('agregar').value = '';
+  if (c) agregar(deCatalogo(c));
 });
-$('libre').onclick = () => agregar(nuevaPartida(null));
-document.querySelectorAll('main > section:not(:nth-of-type(3)) input, main > section select, #notas, #estado').forEach((el) => el.addEventListener('input', () => { sucio = true; recalcular(); }));
+$('libre').onclick = () => agregar(libre());
+document.querySelectorAll('main input, main select, main textarea, #estado').forEach((el) => {
+  if (el.id === 'agregar') return;
+  el.addEventListener('input', () => { sucio = true; recalcular(); });
+});
+$('fecha').addEventListener('change', () => { if ($('fecha').value) $('valido_hasta').value = masDias($('fecha').value, 15); });
 
 // ---------- Guardar ----------
 async function guardar(abrirPdf) {
   const msg = $('msg'), b1 = $('guardar'), b2 = $('guardarPdf');
-  const errores = Formula.calcular(datos()).partidas.filter((p) => p.error);
-  if (errores.length) { msg.className = 'msg err'; msg.textContent = 'Hay una fórmula con error. Corrígela antes de guardar.'; return; }
-  const ventana = abrirPdf ? window.open('', '_blank') : null; // se abre ya, para que el navegador no la bloquee
+  if (Formula.calcular(datos()).partidas.some((p) => p.error)) { msg.className = 'msg err'; msg.textContent = 'Hay una fórmula con error. Corrígela antes de guardar.'; return; }
+  const ventana = abrirPdf ? window.open('', '_blank') : null; // se abre ya para que el navegador no la bloquee
   b1.disabled = b2.disabled = true; msg.className = 'msg';
   try {
     const r = await fetch(id ? `/api/admin/cot/cotizaciones/${id}` : '/api/admin/cot/cotizaciones', {
@@ -287,8 +343,7 @@ async function guardar(abrirPdf) {
     });
     const j = await r.json().catch(() => ({}));
     if (!r.ok || !j.ok) throw new Error(j.error || 'Error');
-    const nueva = !id;
-    id = j.id; sucio = false;
+    const nueva = !id; id = j.id; sucio = false;
     if (nueva) history.replaceState(null, '', `/cotizador/editar/${id}`);
     mostrarFolio(j.folio);
     msg.className = 'msg ok'; msg.textContent = nueva ? `Cotización ${j.folio} creada` : 'Cambios guardados';
@@ -300,8 +355,7 @@ async function guardar(abrirPdf) {
   } finally { b1.disabled = b2.disabled = false; }
 }
 function mostrarFolio(folio) {
-  $('folio').textContent = folio; $('titulo').textContent = `COTIZACIÓN ${folio}`;
-  document.title = `Cotización ${folio}`;
+  $('folio').textContent = folio; $('titulo').textContent = `COTIZACIÓN ${folio}`; document.title = `Cotización ${folio}`;
   $('verPdf').hidden = false; $('verPdf').href = `/api/admin/cot/cotizaciones/${id}/pdf`;
 }
 $('guardar').onclick = () => guardar(false);
@@ -312,12 +366,9 @@ window.addEventListener('beforeunload', (e) => { if (sucio) { e.preventDefault()
 (async () => {
   const [rc, rl] = await Promise.all([fetch('/api/admin/cot/conceptos').then((r) => r.json()), fetch('/api/admin/cot/cotizaciones').then((r) => r.json()).catch(() => [])]);
   conceptos = rc.conceptos.filter((c) => c.datos.activo !== false);
-  const cats = [...new Set([...rc.categorias, ...conceptos.map((c) => c.datos.categoria)])];
-  $('agregar').innerHTML = '<option value="">+ Agregar concepto de tarifas…</option>' + cats.map((cat) => {
-    const items = conceptos.filter((c) => c.datos.categoria === cat).sort((a, b) => a.datos.nombre.localeCompare(b.datos.nombre, 'es'));
-    return items.length ? `<optgroup label="${esc(cat)}">${items.map((c) => `<option value="${c.id}">${esc(c.datos.nombre)}${c.datos.unidad ? ' — ' + esc(c.datos.unidad) : ''}</option>`).join('')}</optgroup>` : '';
-  }).join('');
-  // Sugerencias de clientes ya cotizados
+  const cats = [...new Set(conceptos.map((c) => c.datos.categoria))];
+  $('agregar').innerHTML = '<option value="">+ Agregar concepto del catálogo…</option>' + cats.map((cat) =>
+    `<optgroup label="${esc(cat)}">${conceptos.filter((c) => c.datos.categoria === cat).map((c) => `<option value="${c.id}">${esc(c.datos.nombre)} (${c.datos.moneda})</option>`).join('')}</optgroup>`).join('');
   $('lCli').innerHTML = [...new Set(rl.map((c) => c.datos.cliente).filter(Boolean))].sort().map((c) => `<option value="${esc(c)}">`).join('');
 
   const copia = Number(new URLSearchParams(location.search).get('copia'));
@@ -327,13 +378,16 @@ window.addEventListener('beforeunload', (e) => { if (sucio) { e.preventDefault()
     const c = await r.json();
     llenar(c.datos);
     if (id) mostrarFolio(c.folio_txt);
-    else { $('fecha').value = hoy(); $('estado').value = 'BORRADOR'; $('titulo').textContent = `COPIA DE ${c.folio_txt}`; sucio = true; }
+    else { $('fecha').value = hoy(); $('valido_hasta').value = masDias(hoy(), 15); $('estado').value = 'BORRADOR'; $('trafico').value = ''; $('titulo').textContent = `COPIA DE ${c.folio_txt}`; sucio = true; }
   } else {
-    $('fecha').value = hoy(); $('notas').value = NOTAS_DEF;
-    // Se propone el tipo de cambio y quién elaboró de la cotización más reciente
-    if (rl[0]) { $('tc').value = rl[0].datos.tc || ''; $('elaboro').value = rl[0].datos.elaboro || ''; }
+    // Cotización nueva: conceptos predeterminados (primero los de dólares) y valores habituales
+    $('fecha').value = hoy(); $('valido_hasta').value = masDias(hoy(), 15); $('notas').value = NOTAS_DEF;
+    cargos = conceptos.filter((c) => c.datos.predeterminado)
+      .sort((a, b) => (a.datos.moneda === 'USD' ? 0 : 1) - (b.datos.moneda === 'USD' ? 0 : 1) || a.id - b.id).map(deCatalogo);
+    $('i_prevalidacion').value = '330'; $('i_contraprestacion').value = '53';
+    if (rl[0]) { $('tc').value = rl[0].datos.tc || ''; elaboro = rl[0].datos.elaboro || ''; }
   }
-  pintarPartidas();
+  pintarCargos();
 })();
 </script>
 </body>

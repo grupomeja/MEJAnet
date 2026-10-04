@@ -118,53 +118,56 @@
     return Number.isFinite(r) ? r : 0;
   }
 
-  // Variables que cualquier fórmula puede usar (datos del embarque + la partida)
+  // Variables que cualquier fórmula puede usar
   const VARIABLES = [
-    ['precio', 'Precio unitario de la partida'],
-    ['cantidad', 'Cantidad de la partida'],
-    ['peso_kg', 'Peso en kilogramos'],
-    ['peso_lb', 'Peso en libras'],
-    ['tarimas', 'Número de tarimas'],
-    ['bultos', 'Número de bultos'],
-    ['dias', 'Días (almacenaje)'],
-    ['km', 'Kilómetros'],
-    ['valor', 'Valor de la mercancía'],
+    ['precio', 'Tarifa del concepto'],
     ['tc', 'Tipo de cambio (MXN por USD)'],
+    ['valor_usd', 'Valor de la mercancía en dólares'],
+    ['valor_mxn', 'Valor de la mercancía en pesos (valor_usd × tipo de cambio)'],
+    ['valor_aduana', 'Valor en aduana (MXN)'],
   ];
 
   const r2 = (x) => Math.round((Number(x) || 0) * 100) / 100;
+  const num = (x) => { const n = parseFloat(String(x ?? '').replace(/[,$\s]/g, '')); return Number.isFinite(n) ? n : 0; };
+  const vacio = (x) => String(x ?? '').trim() === '';
 
-  // Calcula importes, IVA y totales de una cotización.
-  function calcular(cot) {
-    const e = cot.embarque || {};
-    const num = (x) => { const n = parseFloat(String(x ?? '').replace(/,/g, '')); return Number.isFinite(n) ? n : 0; };
-    const tc = num(cot.tc);
-    const base = {
-      peso_kg: num(e.peso_kg), peso_lb: r2(num(e.peso_kg) * 2.20462), tarimas: num(e.tarimas), bultos: num(e.bultos),
-      dias: num(e.dias), km: num(e.km), valor: num(e.valor), tc,
-    };
-    const tot = { MXN: { subtotal: 0, iva: 0, total: 0 }, USD: { subtotal: 0, iva: 0, total: 0 } };
-    const partidas = (cot.partidas || []).map((p) => {
-      const cantidad = num(p.cantidad), precio = num(p.precio), iva = num(p.iva);
-      const moneda = p.moneda === 'USD' ? 'USD' : 'MXN';
-      let importe = 0, error = '';
-      if (p.tipo === 'formula' && String(p.formula || '').trim()) {
-        try { importe = evaluar(compilar(p.formula), { ...base, precio, cantidad }); }
-        catch (err) { error = err.message; }
-      } else importe = cantidad * precio;
-      importe = r2(importe);
-      const ivaMonto = r2(importe * iva / 100);
-      tot[moneda].subtotal += importe; tot[moneda].iva += ivaMonto;
-      return { ...p, moneda, importe, iva_monto: ivaMonto, error };
-    });
-    for (const m of ['MXN', 'USD']) {
-      tot[m].subtotal = r2(tot[m].subtotal); tot[m].iva = r2(tot[m].iva);
-      tot[m].total = r2(tot[m].subtotal + tot[m].iva);
-    }
-    const granMXN = tc > 0 ? r2(tot.MXN.total + tot.USD.total * tc) : null;
-    const granUSD = tc > 0 ? r2(tot.USD.total + tot.MXN.total / tc) : null;
-    return { partidas, totales: tot, granMXN, granUSD, vars: base };
+  // Calcula la sección de impuestos aduanales. Valor aduana e IVA se calculan solos si se dejan vacíos.
+  function calcularImpuestos(imp = {}, tcGeneral = 0) {
+    const tc = vacio(imp.tc) ? tcGeneral : num(imp.tc);
+    const valorUsd = num(imp.valor_usd), incr = num(imp.incrementables);
+    const vaAuto = Math.round(valorUsd * tc + incr);
+    const valorAduana = vacio(imp.valor_aduana) ? vaAuto : num(imp.valor_aduana);
+    const igi = num(imp.igi), dta = num(imp.dta);
+    const ivaAuto = Math.round((valorAduana + igi + dta) * 0.16);
+    const iva = vacio(imp.iva) ? ivaAuto : num(imp.iva);
+    const prev = num(imp.prevalidacion), contra = num(imp.contraprestacion);
+    return { tc, valorUsd, incrementables: incr, vaAuto, valorAduana, igi, dta, ivaAuto, iva, prevalidacion: prev, contraprestacion: contra,
+      total: r2(igi + dta + iva + prev + contra) };
   }
 
-  return { compilar, evaluar, variablesDe, calcular, VARIABLES, FUNCIONES: Object.keys(FUNCIONES) };
+  // Calcula montos y totales de una cotización.
+  function calcular(cot) {
+    const tc = num(cot.tc);
+    const imp = calcularImpuestos(cot.impuestos || {}, tc);
+    const vars = { tc, valor_usd: imp.valorUsd, valor_mxn: r2(imp.valorUsd * imp.tc), valor_aduana: imp.valorAduana };
+    const cargos = { USD: 0, MXN: 0 };
+    const partidas = (cot.cargos || []).map((p) => {
+      const moneda = p.moneda === 'USD' ? 'USD' : 'MXN';
+      let monto = 0, error = '';
+      if (p.tipo === 'formula' && String(p.formula || '').trim()) {
+        try { monto = evaluar(compilar(p.formula), { ...vars, precio: num(p.precio) }); }
+        catch (err) { error = err.message; }
+      } else monto = num(p.monto);
+      monto = r2(monto);
+      cargos[moneda] += monto;
+      return { ...p, moneda, monto, error };
+    });
+    cargos.USD = r2(cargos.USD); cargos.MXN = r2(cargos.MXN);
+    const totalMXN = r2(cargos.MXN + imp.total);           // todo lo que se cobra en pesos
+    const granMXN = tc > 0 ? r2(totalMXN + cargos.USD * tc) : null;
+    const granUSD = tc > 0 ? r2(cargos.USD + totalMXN / tc) : null;
+    return { partidas, cargos, impuestos: imp, totalMXN, totalUSD: cargos.USD, granMXN, granUSD, vars };
+  }
+
+  return { compilar, evaluar, variablesDe, calcular, calcularImpuestos, VARIABLES, FUNCIONES: Object.keys(FUNCIONES) };
 });
