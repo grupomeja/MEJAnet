@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tablero de Órdenes de Carga</title>
+<title>TABLERO DE ORDENES DE CARGA</title>
 <style>
   :root{--bg:#f4f5f7;--card:#fff;--ink:#15181d;--muted:#5d6672;--line:#d5d9df;--accent:#1f4e8c;--accent-ink:#fff;--ok:#17794a;--warn:#a15c00;--err:#b3261e;--soft:#eef2f8}
   @media (prefers-color-scheme:dark){:root{--bg:#14171b;--card:#1d2127;--ink:#eef0f3;--muted:#a2abb7;--line:#363c45;--accent:#6aa3ec;--accent-ink:#0b1626;--ok:#52c28a;--warn:#f0b35a;--err:#ff8a80;--soft:#232a33}}
@@ -45,13 +45,13 @@
 </head>
 <body>
 <main>
-  <h1>Tablero de Órdenes de Carga</h1>
+  <h1>TABLERO DE ORDENES DE CARGA</h1>
 
   <section class="kpis">
     <div class="kpi"><b id="k1">–</b><span>Órdenes</span></div>
     <div class="kpi"><b id="k2">–</b><span>Tráficos</span></div>
     <div class="kpi"><b id="k3">–</b><span>Sin cargar</span></div>
-    <div class="kpi"><b id="k4">–</b><span>Correos con falla</span></div>
+    <div class="kpi"><b id="k4">–</b><span>Traficos Cargados</span></div>
   </section>
 
   <section class="filters">
@@ -120,8 +120,7 @@ function pinta() {
         <div><span class="oc">OC # ${oc4(o.oc)}</span> · <b>${esc(d.cliente) || 'Sin cliente'}</b>
           <div class="meta">Cruce: ${esc(d.fecha) || 'PENDIENTE'} · Caja/Placas: ${esc(d.caja)} · Sello: ${esc(d.sello)}${d.capturista ? ' · ' + esc(d.capturista) : ''}<br>Recibida: ${new Date(o.creada).toLocaleString('es-MX')}</div></div>
         <div style="text-align:right"><span class="pill">${filas.length} tráfico(s)</span>
-          <span class="pill ${nc ? 'warn' : 'ok'}">${nc ? nc + ' sin cargar' : 'Todo cargado'}</span>
-          ${o.correo ? '' : '<span class="pill err">correo no enviado</span>'}</div></summary>
+          <span class="pill ${nc ? 'warn' : 'ok'}">${nc ? nc + ' sin cargar' : 'Todo cargado'}</span></div></summary>
         <div class="tablewrap"><table><thead><tr><th>Tráfico</th><th>Bultos</th><th>Pedimento</th><th>Nota</th><th class="c">Estado</th></tr></thead><tbody>
         ${filas.map((f) => `<tr><td>${esc(f.trafico)}</td><td>${esc(f.bultos)}</td><td>${esc(f.pedimento)}</td><td>${esc(f.nota)}</td><td class="c">${pillEstado(f)}</td></tr>`).join('') || '<tr><td colspan="5" class="meta">Sin renglones</td></tr>'}
         </tbody></table></div>
@@ -140,7 +139,7 @@ function kpis() {
   $('k1').textContent = ordenes.length;
   $('k2').textContent = tr.length;
   $('k3').textContent = tr.filter((f) => !f.cargado).length;
-  $('k4').textContent = ordenes.filter((o) => !o.correo).length;
+  $('k4').textContent = tr.filter((f) => f.cargado).length;
 }
 
 function csv() {
