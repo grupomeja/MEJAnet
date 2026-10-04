@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Agregar Entrada Bodega</title>
 <style>
-  :root{--bg:#f4f5f7;--card:#fff;--ink:#15181d;--muted:#5d6672;--line:#d5d9df;--accent:#1f4e8c;--accent-ink:#fff;--ok:#17794a;--err:#b3261e;--azul:#1a64c8}
-  @media (prefers-color-scheme:dark){:root{--bg:#14171b;--card:#1d2127;--ink:#eef0f3;--muted:#a2abb7;--line:#363c45;--accent:#6aa3ec;--accent-ink:#0b1626;--ok:#52c28a;--err:#ff8a80;--azul:#6aa3ec}}
+  :root{--bg:#f4f5f7;--card:#fff;--ink:#15181d;--muted:#5d6672;--line:#d5d9df;--accent:#1f4e8c;--accent-ink:#fff;--ok:#17794a;--err:#b3261e;--azul:#1a64c8;--nar:#d95a00}
+  @media (prefers-color-scheme:dark){:root{--bg:#14171b;--card:#1d2127;--ink:#eef0f3;--muted:#a2abb7;--line:#363c45;--accent:#6aa3ec;--accent-ink:#0b1626;--ok:#52c28a;--err:#ff8a80;--azul:#6aa3ec;--nar:#ff9a4d}}
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
   main{max-width:820px;margin:0 auto;padding:16px}
@@ -25,13 +25,13 @@
   .ref{display:flex;align-items:center;border:1px solid var(--line);border-radius:8px;background:var(--bg);max-width:260px}
   .ref:focus-within{outline:2px solid var(--accent);outline-offset:1px}
   .ref span{padding:0 4px 0 12px;font-weight:800;color:var(--accent)}
-  .ref input{border:0;outline:0;background:transparent;font-weight:800;padding-left:4px}
+  .ref input{border:0;outline:0;background:transparent;font-weight:800;padding-left:4px;text-transform:uppercase}
   select{width:100%;font:inherit;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
   #descOtro{margin-top:8px}
   textarea{width:100%;font:inherit;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);resize:vertical;min-height:90px}
   textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
   .refrow{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-  .refrow .ref{width:165px}
+  .refrow .ref{width:180px}
   .tipo{display:inline-flex;margin:0;cursor:pointer;text-transform:none;letter-spacing:0}
   .tipo input{position:absolute;opacity:0;width:1px;height:1px}
   .tipo span{display:inline-block;border:2px solid var(--line);border-radius:999px;padding:5px 14px;font-weight:700;font-size:13px;color:var(--muted);background:var(--bg)}
@@ -63,7 +63,7 @@
     <section class="card grid">
       <div class="full"><label for="referencia">Referencia</label>
         <div class="refrow">
-          <div class="ref"><span>MEJA</span><input type="text" id="referencia" placeholder="####/##" maxlength="7" inputmode="numeric" required></div>
+          <div class="ref"><span>MEJA</span><input type="text" id="referencia" placeholder="####/###" maxlength="8" required></div>
           <label class="tipo" title="Marca si la entrada es in-bond"><input type="checkbox" id="inbond"><span>in-bond</span></label>
         </div></div>
       <div><label for="fecha">Fecha arribo</label><input type="date" id="fecha"></div>
@@ -137,8 +137,9 @@ $('f').onsubmit = async (e) => {
   datos.notas = $('notas').value.trim();
   if (datos.descripcion === '__OTRO') datos.descripcion = $('descOtro').value.trim().toUpperCase();
   datos.referencia = $('referencia').value.trim();
-  if (!/^\d{1,4}\/\d{2}$/.test(datos.referencia)) {
-    msg.className = 'msg err'; msg.textContent = 'Escribe la referencia con el formato ####/## (por ejemplo 1628/26).';
+  datos.referencia = datos.referencia.toUpperCase();
+  if (!/^\d{1,4}\/\d{2}[A-Z0-9]?$/.test(datos.referencia)) {
+    msg.className = 'msg err'; msg.textContent = 'Escribe la referencia con el formato ####/### (por ejemplo 1628/26 o 1628/26A).';
     $('referencia').focus(); return;
   }
   btn.disabled = true; btn.textContent = 'Guardando…'; msg.className = 'msg';

@@ -96,13 +96,14 @@ function copiarAHoja(buscar, referencia, datos) {
 
 // Referencia: el usuario escribe ####/## y se guarda como "MEJA ####/##"
 function refEB(v) {
-  const m = /^\s*(?:MEJA\s*)?(\d{1,4})\s*\/\s*(\d{2})\s*$/i.exec(String(v ?? ''));
-  return m ? `MEJA ${m[1].padStart(4, '0')}/${m[2]}` : null;
+  // ####/### : número, año de 2 dígitos y, si aplica, una letra o dígito extra (p. ej. 0212/26A)
+  const m = /^\s*(?:MEJA\s*)?(\d{1,4})\s*\/\s*(\d{2}[A-Z0-9]?)\s*$/i.exec(String(v ?? ''));
+  return m ? `MEJA ${m[1].padStart(4, '0')}/${m[2].toUpperCase()}` : null;
 }
 app.post('/api/admin/entradas-bodega', admin, async (req, res) => {
   try {
     const referencia = refEB(req.body.referencia);
-    if (!referencia) return res.status(400).json({ error: 'Escribe la referencia con el formato ####/## (por ejemplo 1628/26).' });
+    if (!referencia) return res.status(400).json({ error: 'Escribe la referencia con el formato ####/### (por ejemplo 1628/26 o 1628/26A).' });
     const datos = {};
     for (const k of CAMPOS_EB) datos[k] = t(req.body[k], maxEB(k));
     if (!TIPOS_EB.includes(datos.tipo)) return res.status(400).json({ error: 'Tipo inválido' });
@@ -149,7 +150,7 @@ app.put('/api/admin/entradas-bodega/:id', admin, async (req, res) => {
     if ('revisado' in cambios && !['', 'REVISADO'].includes(cambios.revisado)) return res.status(400).json({ error: 'Valor inválido' });
     if ('referencia' in req.body) {
       cambios.referencia = refEB(req.body.referencia);
-      if (!cambios.referencia) return res.status(400).json({ error: 'La referencia debe tener el formato ####/##.' });
+      if (!cambios.referencia) return res.status(400).json({ error: 'La referencia debe tener el formato ####/###.' });
     }
     if (cambios.fecha && !/^\d{4}-\d{2}-\d{2}$/.test(cambios.fecha)) return res.status(400).json({ error: 'Fecha inválida' });
     if (!Object.keys(cambios).length) return res.status(400).json({ error: 'Sin cambios' });

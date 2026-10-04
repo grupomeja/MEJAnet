@@ -131,7 +131,7 @@ async function obtener(id) {
 // --- Entradas de bodega ---
 // Referencia: "MEJA 0001/26" -> num 1, anio 26
 function partesRef(ref) {
-  const m = /(\d+)\s*\/\s*(\d{2})\s*$/.exec(ref || '');
+  const m = /(\d+)\s*\/\s*(\d{2})[A-Z0-9]?\s*$/i.exec(ref || '');
   return m ? { num: Number(m[1]), anio: Number(m[2]) } : { num: 0, anio: 0 };
 }
 

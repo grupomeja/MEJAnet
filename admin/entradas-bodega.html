@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TABLERO DE ENTRADAS BODEGA</title>
 <style>
-  :root{--bg:#f4f5f7;--card:#fff;--ink:#15181d;--muted:#5d6672;--line:#d5d9df;--accent:#1f4e8c;--accent-ink:#fff;--soft:#eef2f8;--ok:#17794a;--err:#b3261e;--azul:#1a64c8}
-  @media (prefers-color-scheme:dark){:root{--bg:#14171b;--card:#1d2127;--ink:#eef0f3;--muted:#a2abb7;--line:#363c45;--accent:#6aa3ec;--accent-ink:#0b1626;--soft:#232a33;--ok:#52c28a;--err:#ff8a80;--azul:#6aa3ec}}
+  :root{--bg:#f4f5f7;--card:#fff;--ink:#15181d;--muted:#5d6672;--line:#d5d9df;--accent:#1f4e8c;--accent-ink:#fff;--soft:#eef2f8;--ok:#17794a;--err:#b3261e;--azul:#1a64c8;--nar:#d95a00}
+  @media (prefers-color-scheme:dark){:root{--bg:#14171b;--card:#1d2127;--ink:#eef0f3;--muted:#a2abb7;--line:#363c45;--accent:#6aa3ec;--accent-ink:#0b1626;--soft:#232a33;--ok:#52c28a;--err:#ff8a80;--azul:#6aa3ec;--nar:#ff9a4d}}
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
   main{max-width:none;margin:0 auto;padding:16px 20px}
@@ -23,7 +23,7 @@
   .kpi b{display:block;font-size:26px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .kpi span{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.4px}
   .kpi small{font-size:14px;font-weight:600;color:var(--muted)}
-  .kpi .verde{color:var(--ok)} .kpi .rojo{color:var(--err)}
+  .kpi .verde{color:var(--ok)} .kpi .rojo{color:var(--err)} .kpi .naranja{color:var(--nar)}
   .filters{display:grid;gap:8px;grid-template-columns:2fr repeat(5,1fr) .9fr .9fr;margin-bottom:12px;align-items:end}
   label{display:block;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
   input,select{font:inherit;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);width:100%;min-width:0}
@@ -58,14 +58,14 @@
   .revok{color:var(--ok);font-weight:800;font-size:11.5px;letter-spacing:.3px}
   td.edit .chk{display:inline-flex;align-items:center;gap:4px;margin:0 0 0 8px;font-size:12px;font-weight:700;color:var(--ok);text-transform:none;letter-spacing:0;cursor:pointer}
   td.edit .chk input{width:auto;min-width:0;padding:0}
-  .pill.inbond{background:color-mix(in srgb,var(--ok) 15%,transparent);color:var(--ok)}
+  .pill.inbond{background:color-mix(in srgb,var(--nar) 16%,transparent);color:var(--nar)}
   td.ref{font-weight:800}
   td.ref.ped,td.ped{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
   td[data-c=pedimento].ped{font-weight:700}
   td.edit{padding:3px 4px;outline:2px solid var(--accent);outline-offset:-2px}
   td.edit input,td.edit select{padding:5px 6px;font-size:14px;text-align:center;width:auto;min-width:90px}
   td.edit .pref{font-weight:800;margin-right:4px}
-  td.edit .refin{width:80px;min-width:80px;font-weight:800}
+  td.edit .refin{width:88px;min-width:88px;font-weight:800;text-transform:uppercase}
   td.ok{animation:ok 1.2s}
   @keyframes ok{from{background:color-mix(in srgb,var(--ok) 35%,transparent)}}
   .vacio{padding:30px;text-align:center;color:var(--muted)}
@@ -199,7 +199,7 @@ function pinta() {
 // ---------- Edición en la celda ----------
 let editando = null;
 function editor(r, c) {
-  if (c === 'referencia') return `<span class="pref">MEJA</span><input class="refin" value="${esc(r.referencia.replace(/^MEJA\s*/i, ''))}" placeholder="####/##" maxlength="7"><label class="chk"><input type="checkbox" class="ib"${r.tipo === 'IN-BOND' ? ' checked' : ''}> in-bond</label>`;
+  if (c === 'referencia') return `<span class="pref">MEJA</span><input class="refin" value="${esc(r.referencia.replace(/^MEJA\s*/i, ''))}" placeholder="####/###" maxlength="8"><label class="chk"><input type="checkbox" class="ib"${r.tipo === 'IN-BOND' ? ' checked' : ''}> in-bond</label>`;
   if (c === 'fecha') return `<input type="date" value="${esc(r.fecha)}">`;
   if (c === 'notas') return `<textarea rows="3" maxlength="500" style="width:100%;min-width:180px;font:inherit;padding:5px;resize:vertical">${esc(r.notas)}</textarea>`;
   if (c === 'descripcion') {
@@ -253,9 +253,10 @@ async function guarda() {
   if (c !== 'fecha' && c !== 'notas') v = v.toUpperCase();
   const cambios = {};
   if (c === 'referencia') {
-    if (!/^\d{1,4}\/\d{2}$/.test(v)) { alert('La referencia debe tener el formato ####/## (por ejemplo 1628/26).'); campo.focus(); return; }
+    if (!/^\d{1,4}\/\d{2}[A-Z0-9]?$/.test(v)) { alert('La referencia debe tener el formato ####/### (por ejemplo 1628/26 o 1628/26A).'); campo.focus(); return; }
     const tipo = td.querySelector('input.ib').checked ? 'IN-BOND' : '';
-    if ('MEJA ' + v.padStart(7, '0') !== r.referencia) cambios.referencia = v;
+    const [n1, n2] = v.split('/');
+    if (`MEJA ${n1.padStart(4, '0')}/${n2}` !== r.referencia) cambios.referencia = v;
     if (tipo !== (r.tipo || '')) cambios.tipo = tipo;
     if (!Object.keys(cambios).length) return cierra();
   } else {
