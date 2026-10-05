@@ -6,6 +6,7 @@ const { generarPDF } = require('./pdf');
 const { enviarOrden } = require('./mail');
 const { formatoOC } = require('./oc');
 const { guardarEnDrive, enviarHojaEB, configurado: driveListo } = require('./drive');
+const cotizador = require('./cotizador');
 
 const app = express();
 app.use(express.json({ limit: '200kb' }));
@@ -232,10 +233,14 @@ app.get('/api/admin/ordenes/:id/pdf', admin, async (req, res) => {
      .send(await generarPDF(reg.datos, reg.oc));
 });
 
+// --- Cotizador ---
+app.use(cotizador.rutas(admin));
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 const puerto = process.env.PORT || 3000;
-db.init().then((aplicadas) => {
+db.init().then(async (aplicadas) => {
+  await cotizador.init();
   app.listen(puerto, () => console.log('Escuchando en puerto', puerto));
   // Si un cambio de datos se aplicó al arrancar, se actualiza la hoja de Google completa
   if (Array.isArray(aplicadas) && aplicadas.length && driveListo())
