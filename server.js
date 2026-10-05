@@ -91,7 +91,11 @@ app.get('/api/admin/entradas-bodega', admin, async (_req, res) => {
 const filaHoja = (referencia, d) => [referencia, ...CAMPOS_EB.map((k) => d[k] ?? '')];
 // Clientes que además se copian a la hoja "FEVISA 2026"
 const CLIENTES_FEVISA = ['FABRICA', 'MAQUINARIA', 'FEVISA'];
-const esFevisa = (d) => !!d && CLIENTES_FEVISA.includes(String(d.cliente || '').trim().toUpperCase());
+// Basta con que el nombre del cliente contenga alguno de los tres (p. ej. "FABRICA A3").
+const esFevisa = (d) => {
+  const c = String((d && d.cliente) || '').toUpperCase();
+  return CLIENTES_FEVISA.some((n) => c.includes(n));
+};
 async function hojaCompletaFevisa() {
   const lista = (await db.listarEntradasEB()).filter((x) => esFevisa(x.datos)).sort((a, b) => a.referencia.localeCompare(b.referencia));
   return enviarHojaEB({ accion: 'eb_todo', hoja: 'fevisa', filas: lista.map((x) => filaHoja(x.referencia, x.datos)) });
