@@ -90,6 +90,9 @@
   td.edit input,td.edit select{padding:5px 6px;font-size:14px;text-align:center;width:auto;min-width:90px}
   td.edit .pref{font-weight:800;margin-right:4px}
   td.edit .refin{width:88px;min-width:88px;font-weight:800;text-transform:uppercase}
+  /* Fila bajo el cursor: morado tenue como el título (las celdas verdes de pedimento se quedan verdes) */
+  #filas tr[data-id]:hover td:not(.ped){background:#efe4ef}
+  @media (prefers-color-scheme:dark){#filas tr[data-id]:hover td:not(.ped){background:#3a2c3a}}
   td.ok{animation:ok 1.2s}
   @keyframes ok{from{background:color-mix(in srgb,var(--ok) 35%,transparent)}}
   .vacio{padding:30px;text-align:center;color:var(--muted)}
