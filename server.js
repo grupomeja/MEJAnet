@@ -208,6 +208,7 @@ app.post('/api/admin/entradas-bodega', admin, async (req, res) => {
     datos.revisado = '';
     if (!['', 'HAZ-MAT'].includes(datos.hazmat)) return res.status(400).json({ error: 'Valor inválido' });
     if (datos.fecha && !/^\d{4}-\d{2}-\d{2}$/.test(datos.fecha)) return res.status(400).json({ error: 'Fecha inválida' });
+    db.reglaA3F4(datos); // clientes A3 / F4: REVISADO y pedimento N/A
     const reg = await db.guardarEntradaEB(referencia, datos);
     res.json({ ok: true, id: reg.id, referencia: reg.referencia });
     copiarAHoja(reg.referencia, reg.referencia, reg.datos);
@@ -265,6 +266,12 @@ app.put('/api/admin/entradas-bodega/:id', admin, async (req, res) => {
     if (cambios.fecha && !/^\d{4}-\d{2}-\d{2}$/.test(cambios.fecha)) return res.status(400).json({ error: 'Fecha inválida' });
     if (!Object.keys(cambios).length) return res.status(400).json({ error: 'Sin cambios' });
     const antes = (await db.listarEntradasEB()).find((x) => x.id === id);
+    // Clientes A3 / F4: siempre REVISADO y, si no hay pedimento, N/A
+    if (antes) {
+      const { referencia: _r, ...soloDatos } = cambios;
+      const final = db.reglaA3F4({ ...antes.datos, ...soloDatos });
+      for (const k of ['revisado', 'pedimento']) if (k in cambios || final[k] !== (antes.datos[k] ?? '')) cambios[k] = final[k];
+    }
     const reg = await db.actualizarEntradaEB(id, cambios);
     if (!reg) return res.status(404).json({ error: 'No encontrado' });
     res.json({ ok: true, ...reg });
@@ -351,8 +358,11 @@ db.init().then(async (aplicadas) => {
   await cotizador.init();
   app.listen(puerto, () => console.log('Escuchando en puerto', puerto));
   // Si un cambio de datos se aplicó al arrancar, se actualiza la hoja de Google completa
-  if (Array.isArray(aplicadas) && aplicadas.length && driveListo())
+  if (Array.isArray(aplicadas) && aplicadas.length && driveListo()) {
     hojaCompleta().then((r) => console.log(`Hoja de Google actualizada: ${r.filas} registros`))
       .catch((e) => console.error('No se pudo actualizar la hoja tras la migración:', e.message));
+    hojaCompletaFevisa().then((r) => console.log(`Hoja FEVISA actualizada: ${r.filas} registros`))
+      .catch((e) => console.error('No se pudo actualizar la hoja FEVISA tras la migración:', e.message));
+  }
 })
   .catch((e) => { console.error('No se pudo iniciar la base de datos:', e); process.exit(1); });

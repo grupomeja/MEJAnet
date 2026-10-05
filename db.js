@@ -253,6 +253,15 @@ async function listarEntradasEB() {
     .map(({ id, referencia, creada, datos }) => ({ id, referencia, creada, datos }));
 }
 
+// Clientes con "A3" o "F4" en el nombre: se marcan REVISADO y, si no tienen pedimento, se les pone N/A.
+const esA3F4 = (cliente) => /A3|F4/i.test(String(cliente || ''));
+function reglaA3F4(d) {
+  if (!d || !esA3F4(d.cliente)) return d;
+  d.revisado = 'REVISADO';
+  if (!String(d.pedimento || '').trim()) d.pedimento = 'N/A';
+  return d;
+}
+
 // Cambios de datos que deben correr una sola vez. Devuelve los nombres de los que se aplicaron ahora.
 const FILE_MIG = path.join(DIR, 'migraciones.json');
 async function migraciones() {
@@ -268,6 +277,25 @@ async function migraciones() {
       const lista = JSON.parse(fs.readFileSync(FILE_EB, 'utf8'));
       let n = 0;
       for (const o of lista) if (String(o.datos.pedimento || '').trim() && o.datos.revisado !== 'REVISADO') { o.datos.revisado = 'REVISADO'; n++; }
+      fs.writeFileSync(FILE_EB, JSON.stringify(lista));
+      return n;
+    },
+    // 2026-10-05: clientes con "A3" o "F4" en el nombre quedan REVISADO y, si no tienen pedimento, con N/A
+    'clientes-a3-f4': async () => {
+      if (pool) {
+        const r = await pool.query(`UPDATE entradas_bodega SET datos = datos || jsonb_build_object('revisado', 'REVISADO',
+            'pedimento', CASE WHEN btrim(coalesce(datos->>'pedimento','')) = '' THEN 'N/A' ELSE datos->>'pedimento' END)
+          WHERE upper(coalesce(datos->>'cliente','')) ~ '(A3|F4)'
+            AND (coalesce(datos->>'revisado','') <> 'REVISADO' OR btrim(coalesce(datos->>'pedimento','')) = '')`);
+        return r.rowCount;
+      }
+      const lista = JSON.parse(fs.readFileSync(FILE_EB, 'utf8'));
+      let n = 0;
+      for (const o of lista) {
+        const antes = JSON.stringify(o.datos);
+        reglaA3F4(o.datos);
+        if (JSON.stringify(o.datos) !== antes) n++;
+      }
       fs.writeFileSync(FILE_EB, JSON.stringify(lista));
       return n;
     },
@@ -290,4 +318,4 @@ async function migraciones() {
   return aplicadas;
 }
 
-module.exports = { pool, DIR, init, guardar, marcarCorreo, cambiarManual, listar, obtener, guardarEntradaEB, actualizarEntradaEB, borrarEntradaEB, listarEntradasEB, RefRepetida };
+module.exports = { pool, DIR, init, guardar, marcarCorreo, cambiarManual, listar, obtener, guardarEntradaEB, actualizarEntradaEB, borrarEntradaEB, listarEntradasEB, RefRepetida, reglaA3F4 };
