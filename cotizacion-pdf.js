@@ -21,6 +21,7 @@ const BLANCO = rgb(1, 1, 1);
 const CLARO = hex('#9fb0c8');
 const ORO = hex('#ffc861');
 const AMBAR = hex('#fdf6e7');
+const NARANJA = hex('#f26a0f');   // títulos de sección (naranja MEJAnet)
 const AMBAR2 = hex('#e8a33d');
 
 const TIPOS = { TERRESTRE: 'TERRESTRE', MARITIMA: 'MARÍTIMA', FFCC: 'FFCC (FERROCARRIL)' };
@@ -120,7 +121,7 @@ async function generarPDFCotizacion(reg, calc, folio) {
   const espacio = (h) => { if (y - h < PIE) encabezado(false); };
   const titulo = (t) => {
     espacio(36);
-    texto(t, M, y, { f: FB, size: 8.5, color: AZUL, espacio: 2.6 });
+    texto(t, M, y, { f: FB, size: 8.5, color: NARANJA, espacio: 2.6 });
     linea(M + ancho(t, FB, 8.5, 2.6) + 12, y + 3, W - M, y + 3, LINEA, 0.7);
     y -= 9;
   };
