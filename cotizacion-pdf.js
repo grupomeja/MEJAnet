@@ -121,8 +121,8 @@ async function generarPDFCotizacion(reg, calc, folio) {
   const espacio = (h) => { if (y - h < PIE) encabezado(false); };
   const titulo = (t) => {
     espacio(36);
-    texto(t, M, y, { f: FB, size: 8.5, color: NARANJA, espacio: 2.6 });
-    linea(M + ancho(t, FB, 8.5, 2.6) + 12, y + 3, W - M, y + 3, LINEA, 0.7);
+    texto(t, M, y, { f: FB, size: 7.5, color: NARANJA, espacio: 2.3 });
+    linea(M + ancho(t, FB, 7.5, 2.3) + 12, y + 3, W - M, y + 3, LINEA, 0.7);
     y -= 9;
   };
   // Cuadrícula de datos (etiqueta pequeña + valor); una celda puede ocupar varias columnas ([etiqueta, valor, columnas]).
@@ -171,22 +171,22 @@ async function generarPDFCotizacion(reg, calc, folio) {
   const colsCargos = [['CONCEPTO', C1, C2], ['DESCRIPCIÓN', C2, C3], ['COSTO', C3, C4]];
   espacio(50); encTabla(colsCargos);
   const grupos = [['USD', 'CARGOS EN DÓLARES (USD)'], ['MXN', 'CARGOS EN PESOS (MXN)']];
-  const LH = 8.5;
+  const LH = 8;
   for (const [mon, etiqueta] of grupos) {
     const items = calc.partidas.filter((p) => p.moneda === mon);
     if (!items.length) continue;
     if (y - 30 < PIE) { encabezado(false); encTabla(colsCargos); }
-    caja(M, y - 14, ANCHO, 14, SUAVE2);
-    texto(etiqueta, centro(C1, C4), y - 10, { f: FB, size: 7.5, color: AZUL, align: 'center', espacio: 1.2 });
-    y -= 14;
+    caja(M, y - 12, ANCHO, 12, SUAVE2);
+    texto(etiqueta, centro(C1, C4), y - 8.6, { f: FB, size: 6.5, color: AZUL, align: 'center', espacio: 1.1 });
+    y -= 12;
     for (const p of items) {
-      const lc = renglones(p.concepto || '-', C2 - C1 - 12, F, 7.2);
-      const ld = renglones(p.descripcion || '', C3 - C2 - 12, F, 6.8);
+      const lc = renglones(p.concepto || '-', C2 - C1 - 12, F, 6.5);
+      const ld = renglones(p.descripcion || '', C3 - C2 - 12, F, 6.3);
       const n = Math.max(lc.length, ld.length), h = 6 + n * LH;
       if (y - h < PIE) { encabezado(false); encTabla(colsCargos); }
       const base = (k) => y - 9 - ((n - k) * LH) / 2;   // centra verticalmente columnas con menos renglones
-      lc.forEach((l, i) => texto(l, centro(C1, C2), base(lc.length) - i * LH, { size: 7.2, align: 'center' }));
-      ld.forEach((l, i) => texto(l, centro(C2, C3), base(ld.length) - i * LH, { size: 6.8, color: GRIS, align: 'center' }));
+      lc.forEach((l, i) => texto(l, centro(C1, C2), base(lc.length) - i * LH, { size: 6.5, color: GRIS, align: 'center' }));
+      ld.forEach((l, i) => texto(l, centro(C2, C3), base(ld.length) - i * LH, { size: 6.3, color: GRIS, align: 'center' }));
       texto(`$ ${dinero(p.monto)}`, C4 - 8, base(1), { f: FB, size: 7.5, color: mon === 'USD' ? AZUL : VERDE, align: 'right' });
       linea(C2, y, C2, y - h); linea(C3, y, C3, y - h);
       y -= h;
