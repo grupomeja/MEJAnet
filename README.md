@@ -3,9 +3,10 @@
 Formulario web para que los trabajadores llenen la ORDEN DE CARGA desde el celular o la computadora, sin contraseña.
 Al enviar, la orden se **guarda** y se **manda por correo en PDF**.
 
-- `/` → página principal MEJAnet (logo y botones). Si no hay sesión, manda a `/login`.
-- `/login` → pantalla de inicio de sesión (logo, "MEJAnet v1.0", usuario y contraseña). Al entrar se guarda una cookie que dura 1 año y se renueva en cada visita, así que no se vuelve a pedir en ese navegador. Cambiar `ADMIN_PASSWORD` (o `SESSION_SECRET`) cierra todas las sesiones.
-- `/logout` → cierra la sesión en ese navegador.
+- `/` → página principal: inicio de sesión (logo, "MEJAnet v1.0", usuario y contraseña). Si ya hay sesión, pasa directo a `/modulos`.
+- `/modulos` → Módulos (logo y botones: Orden de Carga, Entradas Bodega, Cotizador) y botón "Cerrar sesión".
+- Al entrar se guarda una cookie que dura 1 año y se renueva en cada visita, así que no se vuelve a pedir en ese navegador. Cambiar `ADMIN_PASSWORD` (o `SESSION_SECRET`) cierra todas las sesiones.
+- `/logout` → cierra la sesión en ese navegador y regresa a `/`.
 - Todas las demás secciones (Orden de Carga, Entradas Bodega, Cotizador) usan la misma sesión.
 
 ## Variables de entorno (en Render → Environment)

@@ -35,7 +35,7 @@
 <main>
   <img src="/mejanet-logo.png" alt="Grupo Meja">
   <h1>MEJA<span>net</span><small>v1.0</small></h1>
-  <form id="f" method="post" action="/login" autocomplete="on">
+  <form id="f" method="post" action="/api/login" autocomplete="on">
     <label>Usuario
       <input name="usuario" id="usuario" autocomplete="username" autocapitalize="none" spellcheck="false" required>
     </label>
@@ -49,8 +49,8 @@
 <script>
   const f = document.getElementById('f'), err = document.getElementById('error'), btn = document.getElementById('entrar');
   const destino = (() => {
-    const n = new URLSearchParams(location.search).get('next') || '/';
-    return /^\/(?!\/)/.test(n) ? n : '/';
+    const n = new URLSearchParams(location.search).get('next') || '/modulos';
+    return /^\/(?!\/)/.test(n) ? n : '/modulos';
   })();
   document.getElementById('usuario').focus();
   f.addEventListener('submit', async (e) => {

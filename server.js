@@ -33,7 +33,7 @@ function limpiar(body) {
   };
 }
 
-// --- Inicio de sesión (página /login) y protección de todas las secciones ---
+// --- Inicio de sesión (página principal /) y protección de todas las secciones ---
 // Al entrar con usuario y contraseña se guarda una cookie firmada que dura 1 año
 // (se renueva sola en cada visita), así que el navegador ya no vuelve a pedir credenciales.
 // Si se cambia ADMIN_PASSWORD (o SESSION_SECRET) en Render, todas las sesiones se cierran.
@@ -63,32 +63,26 @@ function sesionValida(req) {
   if (!u || !vence || !f || !(Number(vence) > Date.now())) return false;
   return igual(f, firma(`${u}.${vence}`)) && Buffer.from(u, 'base64url').toString() === usuarioAdmin();
 }
-function credencialesBasic(req) {
-  const [tipo, cred] = (req.headers.authorization || '').split(' ');
-  if (tipo !== 'Basic' || !cred) return false;
-  const texto = Buffer.from(cred, 'base64').toString();
-  const i = texto.indexOf(':');
-  return i >= 0 && igual(texto.slice(0, i), usuarioAdmin()) && igual(texto.slice(i + 1), process.env.ADMIN_PASSWORD);
-}
 function admin(req, res, next) {
   if (!process.env.ADMIN_PASSWORD) return res.status(503).send('Falta definir ADMIN_PASSWORD en el servidor.');
   if (sesionValida(req)) {
     crearSesion(res, usuarioAdmin()); // renueva el año de vigencia
     return next();
   }
-  if (credencialesBasic(req)) return next(); // compatibilidad con accesos anteriores
   // Páginas: se manda a la pantalla de inicio de sesión; API: error 401
   if (req.method === 'GET' && !req.path.startsWith('/api/')) {
-    const next_ = req.originalUrl === '/' ? '' : `?next=${encodeURIComponent(req.originalUrl)}`;
-    return res.redirect(`/login${next_}`);
+    const next_ = req.originalUrl === '/modulos' ? '' : `?next=${encodeURIComponent(req.originalUrl)}`;
+    return res.redirect(`/${next_}`);
   }
   res.status(401).json({ error: 'Tu sesión terminó. Vuelve a iniciar sesión.' });
 }
 
-app.get('/login', (req, res) => {
-  if (process.env.ADMIN_PASSWORD && sesionValida(req)) return res.redirect('/');
-  res.sendFile(path.join(__dirname, 'admin', 'login.html'));
+// Página principal (mejanet.onrender.com): inicio de sesión. Con sesión activa pasa directo a Módulos.
+app.get(['/', '/index.html'], (req, res) => {
+  if (process.env.ADMIN_PASSWORD && sesionValida(req)) return res.redirect('/modulos');
+  res.set('Cache-Control', 'no-store').sendFile(path.join(__dirname, 'admin', 'login.html'));
 });
+app.get('/login', (req, res) => res.redirect('/' + (req.query.next ? `?next=${encodeURIComponent(req.query.next)}` : '')));
 const intentos = new Map(); // freno sencillo contra adivinar la contraseña: 10 intentos fallidos por IP cada 15 min
 app.post('/api/login', (req, res) => {
   if (!process.env.ADMIN_PASSWORD) return res.status(503).json({ error: 'Falta definir ADMIN_PASSWORD en el servidor.' });
@@ -108,11 +102,11 @@ app.post('/api/login', (req, res) => {
 });
 app.get('/logout', (_req, res) => {
   res.clearCookie(COOKIE, { path: '/' });
-  res.redirect('/login');
+  res.redirect('/');
 });
 
-// Página principal (botones): primera página al abrir mejanet.onrender.com
-app.get(['/', '/index.html'], admin, (_req, res) => res.sendFile(path.join(__dirname, 'admin', 'inicio.html')));
+// Módulos (logo y botones), después de iniciar sesión
+app.get('/modulos', admin, (_req, res) => res.set('Cache-Control', 'no-store').sendFile(path.join(__dirname, 'admin', 'modulos.html')));
 
 // --- Crear órdenes (requiere usuario y contraseña) ---
 app.post('/api/ordenes', admin, async (req, res) => {

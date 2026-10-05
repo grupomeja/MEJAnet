@@ -64,7 +64,7 @@
 <body>
 <main>
   <div class="top">
-    <a class="logo" href="/" aria-label="MEJAnet"><img src="/logo.png" alt="Grupo Meja"></a>
+    <a class="logo" href="/modulos" aria-label="MEJAnet"><img src="/logo.png" alt="Grupo Meja"></a>
     <h1 id="titulo">TABLERO DE ORDENES DE CARGA</h1>
     <div class="acc" id="acc"></div>
   </div>
@@ -107,9 +107,9 @@ let todas = [], ordenes = [], vista = 'orden';
   if (COMPLETADAS) {
     document.getElementById('titulo').textContent = 'ORDENES DE CARGA COMPLETADAS';
     document.title = 'Ordenes de Carga Completadas';
-    acc.innerHTML = '<a class="inicio" href="/orden-de-carga">← Tablero de Ordenes de Carga</a><a class="inicio" href="/">MEJAnet</a>';
+    acc.innerHTML = '<a class="inicio" href="/orden-de-carga">← Tablero de Ordenes de Carga</a><a class="inicio" href="/modulos">MEJAnet</a>';
   } else {
-    acc.innerHTML = '<a class="nuevo" href="/nueva-orden">+ Crear Nueva Orden de Carga</a><a class="inicio" href="/ordenes-completadas">Ordenes de Carga Completadas</a><a class="inicio" href="/">MEJAnet</a>';
+    acc.innerHTML = '<a class="nuevo" href="/nueva-orden">+ Crear Nueva Orden de Carga</a><a class="inicio" href="/ordenes-completadas">Ordenes de Carga Completadas</a><a class="inicio" href="/modulos">MEJAnet</a>';
   }
 }
 const esHoy = (iso) => { const d = new Date(iso), h = new Date(); return d.getFullYear() === h.getFullYear() && d.getMonth() === h.getMonth() && d.getDate() === h.getDate(); };
