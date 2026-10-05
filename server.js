@@ -9,6 +9,7 @@ const { guardarEnDrive, enviarHojaEB, configurado: driveListo } = require('./dri
 const cotizador = require('./cotizador');
 
 const app = express();
+app.set('trust proxy', 1); // Render pasa por un proxy; así req.ip es la IP real del visitante
 app.use(express.json({ limit: '200kb' }));
 
 // --- Limpieza de datos que llegan del formulario ---
@@ -32,21 +33,86 @@ function limpiar(body) {
   };
 }
 
-// --- Protección sencilla del panel de administración ---
-function admin(req, res, next) {
-  const clave = process.env.ADMIN_PASSWORD;
-  if (!clave) return res.status(503).send('Falta definir ADMIN_PASSWORD en el servidor.');
-  const [tipo, cred] = (req.headers.authorization || '').split(' ');
-  if (tipo === 'Basic' && cred) {
-    const texto = Buffer.from(cred, 'base64').toString();
-    const i = texto.indexOf(':');
-    const user = texto.slice(0, i), pass = texto.slice(i + 1);
-    const igual = (x, y) => { const a = Buffer.from(x), b = Buffer.from(y); return a.length === b.length && crypto.timingSafeEqual(a, b); };
-    const usuario = process.env.ADMIN_USER || 'amedina';
-    if (i >= 0 && igual(user, usuario) && igual(pass, clave)) return next();
-  }
-  res.set('WWW-Authenticate', 'Basic realm="MEJAnet"').status(401).send('Acceso restringido');
+// --- Inicio de sesión (página /login) y protección de todas las secciones ---
+// Al entrar con usuario y contraseña se guarda una cookie firmada que dura 1 año
+// (se renueva sola en cada visita), así que el navegador ya no vuelve a pedir credenciales.
+// Si se cambia ADMIN_PASSWORD (o SESSION_SECRET) en Render, todas las sesiones se cierran.
+const COOKIE = 'mejanet_sesion';
+const DURACION_SESION = 365 * 24 * 60 * 60 * 1000; // 1 año
+const usuarioAdmin = () => process.env.ADMIN_USER || 'amedina';
+const igual = (x, y) => { const a = Buffer.from(String(x)), b = Buffer.from(String(y)); return a.length === b.length && crypto.timingSafeEqual(a, b); };
+const firma = (texto) => crypto.createHmac('sha256', `${process.env.SESSION_SECRET || ''}|${process.env.ADMIN_PASSWORD}|${usuarioAdmin()}`)
+  .update(texto).digest('base64url');
+function crearSesion(res, usuario) {
+  const vence = Date.now() + DURACION_SESION;
+  const datos = `${Buffer.from(usuario).toString('base64url')}.${vence}`;
+  res.cookie(COOKIE, `${datos}.${firma(datos)}`, {
+    httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' || !!process.env.RENDER,
+    maxAge: DURACION_SESION, path: '/',
+  });
 }
+function leerCookie(req) {
+  for (const parte of (req.headers.cookie || '').split(';')) {
+    const i = parte.indexOf('=');
+    if (i > 0 && parte.slice(0, i).trim() === COOKIE) return decodeURIComponent(parte.slice(i + 1).trim());
+  }
+  return '';
+}
+function sesionValida(req) {
+  const [u, vence, f] = leerCookie(req).split('.');
+  if (!u || !vence || !f || !(Number(vence) > Date.now())) return false;
+  return igual(f, firma(`${u}.${vence}`)) && Buffer.from(u, 'base64url').toString() === usuarioAdmin();
+}
+function credencialesBasic(req) {
+  const [tipo, cred] = (req.headers.authorization || '').split(' ');
+  if (tipo !== 'Basic' || !cred) return false;
+  const texto = Buffer.from(cred, 'base64').toString();
+  const i = texto.indexOf(':');
+  return i >= 0 && igual(texto.slice(0, i), usuarioAdmin()) && igual(texto.slice(i + 1), process.env.ADMIN_PASSWORD);
+}
+function admin(req, res, next) {
+  if (!process.env.ADMIN_PASSWORD) return res.status(503).send('Falta definir ADMIN_PASSWORD en el servidor.');
+  if (sesionValida(req)) {
+    crearSesion(res, usuarioAdmin()); // renueva el año de vigencia
+    return next();
+  }
+  if (credencialesBasic(req)) return next(); // compatibilidad con accesos anteriores
+  // Páginas: se manda a la pantalla de inicio de sesión; API: error 401
+  if (req.method === 'GET' && !req.path.startsWith('/api/')) {
+    const next_ = req.originalUrl === '/' ? '' : `?next=${encodeURIComponent(req.originalUrl)}`;
+    return res.redirect(`/login${next_}`);
+  }
+  res.status(401).json({ error: 'Tu sesión terminó. Vuelve a iniciar sesión.' });
+}
+
+app.get('/login', (req, res) => {
+  if (process.env.ADMIN_PASSWORD && sesionValida(req)) return res.redirect('/');
+  res.sendFile(path.join(__dirname, 'admin', 'login.html'));
+});
+const intentos = new Map(); // freno sencillo contra adivinar la contraseña: 10 intentos fallidos por IP cada 15 min
+app.post('/api/login', (req, res) => {
+  if (!process.env.ADMIN_PASSWORD) return res.status(503).json({ error: 'Falta definir ADMIN_PASSWORD en el servidor.' });
+  const ip = req.ip, ahora = Date.now();
+  const reg = intentos.get(ip);
+  if (reg && ahora - reg.desde < 15 * 60 * 1000 && reg.n >= 10)
+    return res.status(429).json({ error: 'Demasiados intentos. Espera unos minutos e intenta de nuevo.' });
+  const usuario = t(req.body && req.body.usuario, 100), clave = String((req.body && req.body.clave) ?? '').slice(0, 200);
+  if (igual(usuario, usuarioAdmin()) && igual(clave, process.env.ADMIN_PASSWORD)) {
+    intentos.delete(ip);
+    crearSesion(res, usuario);
+    return res.json({ ok: true });
+  }
+  if (!reg || ahora - reg.desde >= 15 * 60 * 1000) intentos.set(ip, { desde: ahora, n: 1 });
+  else reg.n++;
+  res.status(401).json({ error: 'Usuario o contraseña incorrectos.' });
+});
+app.get('/logout', (_req, res) => {
+  res.clearCookie(COOKIE, { path: '/' });
+  res.redirect('/login');
+});
+
+// Página principal (botones): primera página al abrir mejanet.onrender.com
+app.get(['/', '/index.html'], admin, (_req, res) => res.sendFile(path.join(__dirname, 'admin', 'inicio.html')));
 
 // --- Crear órdenes (requiere usuario y contraseña) ---
 app.post('/api/ordenes', admin, async (req, res) => {
