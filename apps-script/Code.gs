@@ -1,17 +1,22 @@
 // Google Apps Script: (1) recibe el PDF de cada orden y lo guarda en la carpeta "Ordenes de Carga" de Drive,
 // (2) entrega al tablero el resultado de la revisión de OC_TERMINADAS (archivo _tablero_resultados.json),
-// (3) copia las Entradas Bodega de MEJAnet a la hoja de Google "Entradas Bodega".
+// (3) copia las Entradas Bodega de MEJAnet a la hoja de Google "Entradas Bodega" (y a "FEVISA 2026" los clientes de FEVISA).
 // Cambia TOKEN por la misma clave que pongas en Render como DRIVE_TOKEN.
 const TOKEN = 'A9S8D7F6G5H4';
 const CARPETA_ID = '1mvLs_ZEfAYozwmjxtbegqPbziONLOxRZ'; // carpeta "Ordenes de Carga"
 const HOJA_EB_ID = '18gdfi8oqDxVnrdcj4yWxjHaR2OEC-kr5V6QnQ0Evw2E'; // hoja de Google "Entradas Bodega"
+// Hojas a las que MEJAnet puede escribir (el servidor manda el nombre en d.hoja)
+const HOJAS_EB = {
+  principal: HOJA_EB_ID,
+  fevisa: '1poOSVRZ08AOwQtuEgLosqYn5ospBl9JeniX6P0fVANM', // "FEVISA 2026": clientes FABRICA, MAQUINARIA y FEVISA
+};
 
 function doPost(e) {
   try {
     const d = JSON.parse(e.postData.contents);
     if (d.token !== TOKEN) return salida({ ok: false, error: 'token incorrecto' });
-    if (d.accion === 'eb_fila') return salida(entradaBodegaFila(d.buscar, d.fila));
-    if (d.accion === 'eb_todo') return salida(entradaBodegaTodo(d.filas));
+    if (d.accion === 'eb_fila') return salida(entradaBodegaFila(d.buscar, d.fila, d.hoja));
+    if (d.accion === 'eb_todo') return salida(entradaBodegaTodo(d.filas, d.hoja));
     const carpeta = DriveApp.getFolderById(CARPETA_ID);
     // Si ya existe un archivo con ese nombre, no se duplica
     const existentes = carpeta.getFilesByName(d.nombre);
@@ -45,8 +50,10 @@ function salida(obj, sinOk) {
 //           LINEA FLETERA, TRACKING #, P.O., PROVEEDOR, PEDIMENTO, TIPO, NOTAS
 const NUMERICAS_EB = [3, 5, 6]; // BULTOS, PESO (Lbs), PESO (KGS)
 
-function hojaEB() {
-  return SpreadsheetApp.openById(HOJA_EB_ID).getSheets()[0];
+function hojaEB(nombre) {
+  const id = HOJAS_EB[nombre || 'principal'];
+  if (!id) throw new Error('Hoja desconocida: ' + nombre);
+  return SpreadsheetApp.openById(id).getSheets()[0];
 }
 
 // Zona horaria de la hoja: la fecha se arma en esa zona para que no se recorra un día
@@ -69,11 +76,11 @@ function celdasEB(fila, zona) {
 }
 
 // Agrega un registro o corrige el que tenga la referencia `buscar` (la anterior, si cambió)
-function entradaBodegaFila(buscar, fila) {
+function entradaBodegaFila(buscar, fila, nombre) {
   const lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {
-    const hoja = hojaEB();
+    const hoja = hojaEB(nombre);
     const celdas = [celdasEB(fila, zonaEB(hoja))];
     if (hoja.getMaxColumns() < celdas[0].length) hoja.insertColumnsAfter(hoja.getMaxColumns(), celdas[0].length - hoja.getMaxColumns());
     const ultima = hoja.getLastRow();
@@ -94,11 +101,11 @@ function entradaBodegaFila(buscar, fila) {
 }
 
 // Reescribe toda la hoja con los registros de MEJAnet
-function entradaBodegaTodo(filas) {
+function entradaBodegaTodo(filas, nombre) {
   const lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {
-    const hoja = hojaEB();
+    const hoja = hojaEB(nombre);
     const total = filas.length + 1;
     if (hoja.getMaxRows() < total) hoja.insertRowsAfter(hoja.getMaxRows(), total - hoja.getMaxRows() + 200);
     const ancho = filas.length ? filas[0].length : hoja.getLastColumn();

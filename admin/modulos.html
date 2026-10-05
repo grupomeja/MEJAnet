@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>MEJAnet v1.0</title>
+<title>Módulos · MEJAnet v1.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600&display=swap" rel="stylesheet">
@@ -33,6 +33,12 @@
   a.boton.carga{--c:#ff6100;--c-osc:#c24a00}
   a.boton.bodega{--c:#875a86;--c-osc:#5f3f5e}
   a.boton.cotizador{--c:#1a64c8;--c-osc:#114a99}
+  /* Cerrar sesión: botón secundario, discreto debajo de los módulos */
+  a.salir{display:inline-flex;align-items:center;gap:8px;margin-top:40px;padding:10px 22px;border:1.5px solid #c9d4e0;border-radius:999px;
+    background:#fff;color:#5d6672;text-decoration:none;font-weight:700;font-size:15px;letter-spacing:.3px;transition:color .15s,border-color .15s,background .15s}
+  a.salir svg{width:18px;height:18px}
+  a.salir:hover{color:#c0262d;border-color:#c0262d;background:#fff5f5}
+  a.salir:focus-visible{outline:3px solid #4fc9ee;outline-offset:3px}
 </style>
 </head>
 <body>
@@ -91,6 +97,12 @@
       <span class="txt">Cotizador</span>
     </a>
   </div>
+  <a class="salir" href="/logout">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 17l-5-5 5-5"/><path d="M5 12h11"/>
+    </svg>
+    Cerrar sesión
+  </a>
 </main>
 </body>
 </html>

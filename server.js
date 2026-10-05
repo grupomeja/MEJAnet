@@ -9,6 +9,7 @@ const { guardarEnDrive, enviarHojaEB, configurado: driveListo } = require('./dri
 const cotizador = require('./cotizador');
 
 const app = express();
+app.set('trust proxy', 1); // Render pasa por un proxy; así req.ip es la IP real del visitante
 app.use(express.json({ limit: '200kb' }));
 
 // --- Limpieza de datos que llegan del formulario ---
@@ -32,21 +33,98 @@ function limpiar(body) {
   };
 }
 
-// --- Protección sencilla del panel de administración ---
-function admin(req, res, next) {
-  const clave = process.env.ADMIN_PASSWORD;
-  if (!clave) return res.status(503).send('Falta definir ADMIN_PASSWORD en el servidor.');
-  const [tipo, cred] = (req.headers.authorization || '').split(' ');
-  if (tipo === 'Basic' && cred) {
-    const texto = Buffer.from(cred, 'base64').toString();
-    const i = texto.indexOf(':');
-    const user = texto.slice(0, i), pass = texto.slice(i + 1);
-    const igual = (x, y) => { const a = Buffer.from(x), b = Buffer.from(y); return a.length === b.length && crypto.timingSafeEqual(a, b); };
-    const usuario = process.env.ADMIN_USER || 'amedina';
-    if (i >= 0 && igual(user, usuario) && igual(pass, clave)) return next();
+// --- Inicio de sesión (página principal /) y protección de todas las secciones ---
+// Al entrar con usuario y contraseña se guarda una cookie firmada que dura 1 año
+// (se renueva sola en cada visita), así que el navegador ya no vuelve a pedir credenciales.
+// Usuarios: ADMIN_USER / ADMIN_PASSWORD, más los de la variable USUARIOS en Render,
+// con el formato  usuario:contraseña,usuario2:contraseña2  (el usuario distingue mayúsculas).
+// Si se cambia la contraseña de un usuario, sus sesiones abiertas se cierran; SESSION_SECRET las cierra todas.
+const COOKIE = 'mejanet_sesion';
+const DURACION_SESION = 365 * 24 * 60 * 60 * 1000; // 1 año
+function usuarios() {
+  const lista = new Map();
+  for (const par of String(process.env.USUARIOS || '').split(/[,\n]/)) {
+    const i = par.indexOf(':');
+    const u = par.slice(0, i).trim(), c = par.slice(i + 1).trim();
+    if (i > 0 && u && c) lista.set(u, c);
   }
-  res.set('WWW-Authenticate', 'Basic realm="MEJAnet"').status(401).send('Acceso restringido');
+  if (process.env.ADMIN_PASSWORD) lista.set(process.env.ADMIN_USER || 'amedina', process.env.ADMIN_PASSWORD);
+  return lista;
 }
+const igual = (x, y) => { const a = Buffer.from(String(x)), b = Buffer.from(String(y)); return a.length === b.length && crypto.timingSafeEqual(a, b); };
+const firma = (usuario, clave, texto) => crypto.createHmac('sha256', `${process.env.SESSION_SECRET || ''}|${clave}|${usuario}`)
+  .update(texto).digest('base64url');
+function crearSesion(res, usuario, clave) {
+  const vence = Date.now() + DURACION_SESION;
+  const datos = `${Buffer.from(usuario).toString('base64url')}.${vence}`;
+  res.cookie(COOKIE, `${datos}.${firma(usuario, clave, datos)}`, {
+    httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' || !!process.env.RENDER,
+    maxAge: DURACION_SESION, path: '/',
+  });
+}
+function leerCookie(req) {
+  for (const parte of (req.headers.cookie || '').split(';')) {
+    const i = parte.indexOf('=');
+    if (i > 0 && parte.slice(0, i).trim() === COOKIE) return decodeURIComponent(parte.slice(i + 1).trim());
+  }
+  return '';
+}
+// Devuelve el usuario de la sesión, o null si no hay sesión válida
+function sesionValida(req) {
+  const [u, vence, f] = leerCookie(req).split('.');
+  if (!u || !vence || !f || !(Number(vence) > Date.now())) return null;
+  const usuario = Buffer.from(u, 'base64url').toString();
+  const clave = usuarios().get(usuario);
+  return clave && igual(f, firma(usuario, clave, `${u}.${vence}`)) ? usuario : null;
+}
+function admin(req, res, next) {
+  if (!usuarios().size) return res.status(503).send('Falta definir ADMIN_PASSWORD en el servidor.');
+  const usuario = sesionValida(req);
+  if (usuario) {
+    req.usuario = usuario;
+    crearSesion(res, usuario, usuarios().get(usuario)); // renueva el año de vigencia
+    return next();
+  }
+  // Páginas: se manda a la pantalla de inicio de sesión; API: error 401
+  if (req.method === 'GET' && !req.path.startsWith('/api/')) {
+    const next_ = req.originalUrl === '/modulos' ? '' : `?next=${encodeURIComponent(req.originalUrl)}`;
+    return res.redirect(`/${next_}`);
+  }
+  res.status(401).json({ error: 'Tu sesión terminó. Vuelve a iniciar sesión.' });
+}
+
+// Página principal (mejanet.onrender.com): inicio de sesión. Con sesión activa pasa directo a Módulos.
+app.get(['/', '/index.html'], (req, res) => {
+  if (sesionValida(req)) return res.redirect('/modulos');
+  res.set('Cache-Control', 'no-store').sendFile(path.join(__dirname, 'admin', 'login.html'));
+});
+app.get('/login', (req, res) => res.redirect('/' + (req.query.next ? `?next=${encodeURIComponent(req.query.next)}` : '')));
+const intentos = new Map(); // freno sencillo contra adivinar la contraseña: 10 intentos fallidos por IP cada 15 min
+app.post('/api/login', (req, res) => {
+  const lista = usuarios();
+  if (!lista.size) return res.status(503).json({ error: 'Falta definir ADMIN_PASSWORD en el servidor.' });
+  const ip = req.ip, ahora = Date.now();
+  const reg = intentos.get(ip);
+  if (reg && ahora - reg.desde < 15 * 60 * 1000 && reg.n >= 10)
+    return res.status(429).json({ error: 'Demasiados intentos. Espera unos minutos e intenta de nuevo.' });
+  const usuario = t(req.body && req.body.usuario, 100), clave = String((req.body && req.body.clave) ?? '').slice(0, 200);
+  const correcta = lista.get(usuario);
+  if (correcta && igual(clave, correcta)) {
+    intentos.delete(ip);
+    crearSesion(res, usuario, correcta);
+    return res.json({ ok: true });
+  }
+  if (!reg || ahora - reg.desde >= 15 * 60 * 1000) intentos.set(ip, { desde: ahora, n: 1 });
+  else reg.n++;
+  res.status(401).json({ error: 'Usuario o contraseña incorrectos.' });
+});
+app.get('/logout', (_req, res) => {
+  res.clearCookie(COOKIE, { path: '/' });
+  res.redirect('/');
+});
+
+// Módulos (logo y botones), después de iniciar sesión
+app.get('/modulos', admin, (_req, res) => res.set('Cache-Control', 'no-store').sendFile(path.join(__dirname, 'admin', 'modulos.html')));
 
 // --- Crear órdenes (requiere usuario y contraseña) ---
 app.post('/api/ordenes', admin, async (req, res) => {
@@ -89,6 +167,25 @@ app.get('/api/admin/entradas-bodega', admin, async (_req, res) => {
 });
 // Copia a la hoja de Google "Entradas Bodega" (en segundo plano; si falla solo se anota en el log)
 const filaHoja = (referencia, d) => [referencia, ...CAMPOS_EB.map((k) => d[k] ?? '')];
+// Clientes que además se copian a la hoja "FEVISA 2026"
+const CLIENTES_FEVISA = ['FABRICA', 'MAQUINARIA', 'FEVISA'];
+// Basta con que el nombre del cliente contenga alguno de los tres (p. ej. "FABRICA A3").
+const esFevisa = (d) => {
+  const c = String((d && d.cliente) || '').toUpperCase();
+  return CLIENTES_FEVISA.some((n) => c.includes(n));
+};
+async function hojaCompletaFevisa() {
+  const lista = (await db.listarEntradasEB()).filter((x) => esFevisa(x.datos)).sort((a, b) => a.referencia.localeCompare(b.referencia));
+  return enviarHojaEB({ accion: 'eb_todo', hoja: 'fevisa', filas: lista.map((x) => filaHoja(x.referencia, x.datos)) });
+}
+// Mantiene al día la hoja FEVISA según el registro antes y después del cambio (null si no existía / se borró)
+function copiarAFevisa(antes, despues) {
+  if (!driveListo() || !(esFevisa(antes && antes.datos) || esFevisa(despues && despues.datos))) return;
+  const p = (esFevisa(antes && antes.datos) || !antes) && despues && esFevisa(despues.datos)
+    ? enviarHojaEB({ accion: 'eb_fila', hoja: 'fevisa', buscar: antes ? antes.referencia : despues.referencia, fila: filaHoja(despues.referencia, despues.datos) })
+    : hojaCompletaFevisa(); // entró o salió de la lista (cambio de cliente o borrado): se reescribe la hoja
+  p.catch((e) => console.error('No se pudo actualizar la hoja FEVISA:', e.message));
+}
 function copiarAHoja(buscar, referencia, datos) {
   if (!driveListo()) return;
   enviarHojaEB({ accion: 'eb_fila', buscar, fila: filaHoja(referencia, datos) })
@@ -111,9 +208,11 @@ app.post('/api/admin/entradas-bodega', admin, async (req, res) => {
     datos.revisado = '';
     if (!['', 'HAZ-MAT'].includes(datos.hazmat)) return res.status(400).json({ error: 'Valor inválido' });
     if (datos.fecha && !/^\d{4}-\d{2}-\d{2}$/.test(datos.fecha)) return res.status(400).json({ error: 'Fecha inválida' });
+    db.reglaA3F4(datos); // clientes A3 / F4: REVISADO y pedimento N/A
     const reg = await db.guardarEntradaEB(referencia, datos);
     res.json({ ok: true, id: reg.id, referencia: reg.referencia });
     copiarAHoja(reg.referencia, reg.referencia, reg.datos);
+    copiarAFevisa(null, reg);
   } catch (e) {
     if (e instanceof db.RefRepetida) return res.status(409).json({ error: 'Esa referencia ya existe.' });
     console.error(e); res.status(500).json({ error: 'No se pudo guardar el registro.' });
@@ -124,6 +223,13 @@ async function hojaCompleta() {
   const lista = (await db.listarEntradasEB()).sort((a, b) => a.referencia.localeCompare(b.referencia));
   return enviarHojaEB({ accion: 'eb_todo', filas: lista.map((x) => filaHoja(x.referencia, x.datos)) });
 }
+app.post('/api/admin/entradas-bodega/hoja-fevisa', admin, async (_req, res) => {
+  try {
+    if (!driveListo()) return res.status(503).json({ error: 'Falta configurar DRIVE_WEBHOOK_URL y DRIVE_TOKEN en Render.' });
+    const r = await hojaCompletaFevisa();
+    res.json({ ok: true, filas: r.filas });
+  } catch (e) { console.error(e); res.status(502).json({ error: e.message }); }
+});
 app.post('/api/admin/entradas-bodega/hoja', admin, async (_req, res) => {
   try {
     if (!driveListo()) return res.status(503).json({ error: 'Falta configurar DRIVE_WEBHOOK_URL y DRIVE_TOKEN en Render.' });
@@ -136,10 +242,12 @@ app.delete('/api/admin/entradas-bodega/:id', admin, async (req, res) => {
   try {
     const id = Number(req.params.id);
     if (!Number.isInteger(id)) return res.status(400).json({ error: 'Datos inválidos' });
+    const antes = (await db.listarEntradasEB()).find((x) => x.id === id);
     const referencia = await db.borrarEntradaEB(id);
     if (!referencia) return res.status(404).json({ error: 'No encontrado' });
     res.json({ ok: true, referencia });
     if (driveListo()) hojaCompleta().catch((e) => console.error(`No se pudo quitar ${referencia} de la hoja:`, e.message));
+    copiarAFevisa(antes, null);
   } catch (e) { console.error(e); res.status(500).json({ error: 'No se pudo borrar el registro.' }); }
 });
 app.put('/api/admin/entradas-bodega/:id', admin, async (req, res) => {
@@ -158,10 +266,17 @@ app.put('/api/admin/entradas-bodega/:id', admin, async (req, res) => {
     if (cambios.fecha && !/^\d{4}-\d{2}-\d{2}$/.test(cambios.fecha)) return res.status(400).json({ error: 'Fecha inválida' });
     if (!Object.keys(cambios).length) return res.status(400).json({ error: 'Sin cambios' });
     const antes = (await db.listarEntradasEB()).find((x) => x.id === id);
+    // Clientes A3 / F4: siempre REVISADO y, si no hay pedimento, N/A
+    if (antes) {
+      const { referencia: _r, ...soloDatos } = cambios;
+      const final = db.reglaA3F4({ ...antes.datos, ...soloDatos });
+      for (const k of ['revisado', 'pedimento']) if (k in cambios || final[k] !== (antes.datos[k] ?? '')) cambios[k] = final[k];
+    }
     const reg = await db.actualizarEntradaEB(id, cambios);
     if (!reg) return res.status(404).json({ error: 'No encontrado' });
     res.json({ ok: true, ...reg });
     copiarAHoja(antes ? antes.referencia : reg.referencia, reg.referencia, reg.datos);
+    copiarAFevisa(antes || reg, reg);
   } catch (e) {
     if (e instanceof db.RefRepetida) return res.status(409).json({ error: 'Esa referencia ya existe.' });
     console.error(e); res.status(500).json({ error: 'No se pudo guardar el cambio.' });
@@ -243,8 +358,11 @@ db.init().then(async (aplicadas) => {
   await cotizador.init();
   app.listen(puerto, () => console.log('Escuchando en puerto', puerto));
   // Si un cambio de datos se aplicó al arrancar, se actualiza la hoja de Google completa
-  if (Array.isArray(aplicadas) && aplicadas.length && driveListo())
+  if (Array.isArray(aplicadas) && aplicadas.length && driveListo()) {
     hojaCompleta().then((r) => console.log(`Hoja de Google actualizada: ${r.filas} registros`))
       .catch((e) => console.error('No se pudo actualizar la hoja tras la migración:', e.message));
+    hojaCompletaFevisa().then((r) => console.log(`Hoja FEVISA actualizada: ${r.filas} registros`))
+      .catch((e) => console.error('No se pudo actualizar la hoja FEVISA tras la migración:', e.message));
+  }
 })
   .catch((e) => { console.error('No se pudo iniciar la base de datos:', e); process.exit(1); });

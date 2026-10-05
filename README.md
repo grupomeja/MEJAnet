@@ -3,16 +3,21 @@
 Formulario web para que los trabajadores llenen la ORDEN DE CARGA desde el celular o la computadora, sin contraseña.
 Al enviar, la orden se **guarda** y se **manda por correo en PDF**.
 
-- `/`  → formulario para los trabajadores
-- `/admin` → lista de órdenes recibidas y PDF de cada una (pide contraseña; el usuario puede ser cualquiera)
+- `/` → página principal: inicio de sesión (logo, "MEJAnet v1.0", usuario y contraseña). Si ya hay sesión, pasa directo a `/modulos`.
+- `/modulos` → Módulos (logo y botones: Orden de Carga, Entradas Bodega, Cotizador) y botón "Cerrar sesión".
+- Al entrar se guarda una cookie que dura 1 año y se renueva en cada visita, así que no se vuelve a pedir en ese navegador. Cambiar la contraseña de un usuario cierra sus sesiones; cambiar `SESSION_SECRET` cierra todas.
+- `/logout` → cierra la sesión en ese navegador y regresa a `/`.
+- Todas las demás secciones (Orden de Carga, Entradas Bodega, Cotizador) usan la misma sesión.
 
 ## Variables de entorno (en Render → Environment)
 
 | Variable | Para qué sirve |
 |---|---|
 | `DATABASE_URL` | Base de datos Postgres donde se guardan las órdenes (el `render.yaml` la crea y conecta sola) |
-| `ADMIN_USER` | Usuario para entrar al tablero (por defecto `amedina`) |
-| `ADMIN_PASSWORD` | Contraseña para entrar al tablero y crear órdenes |
+| `ADMIN_USER` | Usuario principal (por defecto `amedina`) |
+| `USUARIOS` | Otros usuarios con el mismo acceso, formato `usuario:contraseña,usuario2:contraseña2`. El usuario distingue mayúsculas. Cambiar la contraseña de alguien cierra sus sesiones abiertas |
+| `ADMIN_PASSWORD` | Contraseña para entrar a MEJAnet |
+| `SESSION_SECRET` | Opcional. Texto secreto extra para firmar la cookie de sesión; cambiarlo cierra todas las sesiones |
 | `RESEND_API_KEY` | Clave de Resend (https://resend.com) para enviar el correo por HTTPS. Necesaria en el plan gratis de Render, que bloquea SMTP |
 | `MAIL_FROM` | Opcional. Remitente; por defecto `Orden de Carga <onboarding@resend.dev>` |
 | `SMTP_USER` | Solo si no usas Resend (SMTP; no funciona en el plan gratis de Render) |

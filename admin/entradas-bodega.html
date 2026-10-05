@@ -90,6 +90,9 @@
   td.edit input,td.edit select{padding:5px 6px;font-size:14px;text-align:center;width:auto;min-width:90px}
   td.edit .pref{font-weight:800;margin-right:4px}
   td.edit .refin{width:88px;min-width:88px;font-weight:800;text-transform:uppercase}
+  /* Fila bajo el cursor: morado tenue como el título (las celdas verdes de pedimento se quedan verdes) */
+  #filas tr[data-id]:hover td:not(.ped){background:#efe4ef}
+  @media (prefers-color-scheme:dark){#filas tr[data-id]:hover td:not(.ped){background:#3a2c3a}}
   td.ok{animation:ok 1.2s}
   @keyframes ok{from{background:color-mix(in srgb,var(--ok) 35%,transparent)}}
   .vacio{padding:30px;text-align:center;color:var(--muted)}
@@ -103,9 +106,9 @@
 <body>
 <main>
   <div class="top">
-    <a class="logo" href="/" aria-label="MEJAnet"><img src="/logo.png" alt="Grupo Meja"></a>
+    <a class="logo" href="/modulos" aria-label="MEJAnet"><img src="/logo.png" alt="Grupo Meja"></a>
     <h1 class="titulo"><span class="ico" aria-hidden="true"><svg viewBox="0 0 64 64"> <path d="M2 30 L20 22 H62 V52 H2 Z" fill="currentColor"/> <rect x="24" y="16" width="36" height="11" rx="1" fill="#fff"/> <rect x="25.5" y="17.5" width="33" height="8" fill="currentColor"/> <text x="42" y="24" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="7" fill="#fff" letter-spacing=".3">BODEGA</text> <rect x="20" y="24" width="1.6" height="28" fill="#fff"/> <rect x="7" y="38" width="7" height="14" fill="#fff"/> <rect x="31" y="35" width="22" height="13" fill="#fff"/> <g fill="currentColor"><rect x="31" y="37.5" width="22" height="1.2"/><rect x="31" y="40.5" width="22" height="1.2"/><rect x="31" y="43.5" width="22" height="1.2"/></g> <path d="M29 48h26v4H29z" fill="#fff"/><path d="M30.5 49.5h23v2.5h-23z" fill="currentColor"/> <rect x="1" y="52" width="62" height="2.5" fill="currentColor"/> </svg></span>TABLERO DE ENTRADAS BODEGA</h1>
-    <div class="acc"><a class="nuevo" href="/entradas-bodega/nueva">+ Agregar Nuevo</a><a class="inicio" href="/">MEJAnet</a></div>
+    <div class="acc"><a class="nuevo" href="/entradas-bodega/nueva">+ Agregar Nuevo</a><a class="inicio" href="/modulos">MEJAnet</a></div>
   </div>
 
   <section class="kpis">
@@ -120,9 +123,9 @@
     <div class="q"><label for="q">Buscar</label><input id="q" type="search" placeholder="Cliente(s) separados por coma, referencia, tracking…"></div>
     <div><label for="fCli">Cliente</label><select id="fCli"><option value="">Todos</option></select></div>
     <div><label for="fPro">Proveedor</label><select id="fPro"><option value="">Todos</option></select></div>
-    <div><label for="fLin">Línea fletera</label><select id="fLin"><option value="">Todas</option></select></div>
     <div><label for="fTipo">In-bond</label><select id="fTipo"><option value="">Todos</option><option value="IN-BOND">Solo in-bond</option><option value="sin">Sin in-bond</option></select></div>
     <div><label for="fPed">Pedimento</label><select id="fPed"><option value="">Todos</option><option value="con">Con pedimento</option><option value="sin">Sin pedimento</option></select></div>
+    <div><label for="fRev">Revisado</label><select id="fRev"><option value="">Todos</option><option value="si">Revisado</option><option value="no">Sin revisar</option></select></div>
     <div><label for="d1">Arribo desde</label><input id="d1" type="date"></div>
     <div><label for="d2">Arribo hasta</label><input id="d2" type="date"></div>
   </section>
@@ -132,6 +135,7 @@
     <button id="limpia" type="button">Limpiar filtros</button>
     <button id="csv" type="button">Descargar Excel (CSV)</button>
     <button id="hoja" type="button" title="Copia todos los registros a la hoja de Google Entradas Bodega">Actualizar Google Sheet</button>
+    <button id="hojaFev" type="button" title="Copia los registros de FABRICA, MAQUINARIA y FEVISA a la hoja FEVISA 2026">Actualizar Google Sheet FEVISA</button>
   </div>
   <p class="nota">Haz clic en cualquier celda para editarla. Enter o clic afuera guarda; Esc cancela.</p>
   <div class="tablewrap">
@@ -171,12 +175,13 @@ function llenaSelect(id, campo) {
 function filtrar() {
   // Varios clientes (o cualquier dato) separados por coma: se muestra lo que coincida con cualquiera
   const terminos = $('q').value.toLowerCase().split(',').map((x) => x.trim()).filter(Boolean);
-  const cli = $('fCli').value, pro = $('fPro').value, lin = $('fLin').value, ped = $('fPed').value, tipo = $('fTipo').value;
+  const cli = $('fCli').value, pro = $('fPro').value, rev = $('fRev').value, ped = $('fPed').value, tipo = $('fTipo').value;
   const d1 = $('d1').value, d2 = $('d2').value;
   return datos.filter((r) => {
     if (cli && (r.cliente || '').trim() !== cli) return false;
     if (pro && (r.proveedor || '').trim() !== pro) return false;
-    if (lin && (r.linea || '').trim() !== lin) return false;
+    if (rev === 'si' && r.revisado !== 'REVISADO') return false;
+    if (rev === 'no' && r.revisado === 'REVISADO') return false;
     if (tipo === 'sin' && r.tipo) return false;
     if (tipo && tipo !== 'sin' && r.tipo !== tipo) return false;
     if (ped === 'con' && !conPed(r)) return false;
@@ -307,7 +312,7 @@ async function guarda() {
     // HAZMAT: al escribir el pedimento de un tráfico haz-mat se muestra el recordatorio
     if (c === 'pedimento' && cambios.pedimento && r.hazmat === 'HAZ-MAT') avisoHazmat(r.referencia);
     kpis(filtrar());
-    if (['cliente', 'proveedor', 'linea'].includes(c)) { llenaSelect('fCli', 'cliente'); llenaSelect('fPro', 'proveedor'); llenaSelect('fLin', 'linea'); }
+    if (['cliente', 'proveedor', 'linea'].includes(c)) { llenaSelect('fCli', 'cliente'); llenaSelect('fPro', 'proveedor'); }
   } catch (e) {
     alert('No se pudo guardar el cambio: ' + e.message);
     campo.disabled = false; campo.focus();
@@ -325,7 +330,7 @@ $('filas').addEventListener('click', async (e) => {
       const j = await res.json().catch(() => ({}));
       if (!res.ok || !j.ok) throw new Error(j.error || 'No se pudo borrar');
       datos = datos.filter((x) => x.id !== id);
-      llenaSelect('fCli', 'cliente'); llenaSelect('fPro', 'proveedor'); llenaSelect('fLin', 'linea');
+      llenaSelect('fCli', 'cliente'); llenaSelect('fPro', 'proveedor');
       pinta();
     } catch (err) { bb.disabled = false; alert('No se pudo borrar: ' + err.message); }
     return;
@@ -374,8 +379,8 @@ function avisoHazmat(referencia) {
 }
 
 const reinicia = () => { limite = POR_PAGINA; pinta(); };
-['q', 'fCli', 'fPro', 'fLin', 'fTipo', 'fPed', 'd1', 'd2'].forEach((id) => $(id).addEventListener('input', reinicia));
-$('limpia').onclick = () => { ['q', 'fCli', 'fPro', 'fLin', 'fTipo', 'fPed', 'd1', 'd2'].forEach((id) => ($(id).value = '')); reinicia(); };
+['q', 'fCli', 'fPro', 'fTipo', 'fPed', 'fRev', 'd1', 'd2'].forEach((id) => $(id).addEventListener('input', reinicia));
+$('limpia').onclick = () => { ['q', 'fCli', 'fPro', 'fTipo', 'fPed', 'fRev', 'd1', 'd2'].forEach((id) => ($(id).value = '')); reinicia(); };
 $('mas').onclick = () => { limite += POR_PAGINA; pinta(); };
 $('csv').onclick = csv;
 $('hoja').onclick = async () => {
@@ -389,11 +394,22 @@ $('hoja').onclick = async () => {
   } catch (e) { alert('No se pudo actualizar la hoja: ' + e.message); }
   finally { b.disabled = false; b.textContent = 'Actualizar Google Sheet'; }
 };
+$('hojaFev').onclick = async () => {
+  if (!confirm('Se va a reemplazar el contenido de la hoja de Google "FEVISA 2026" con los registros de FABRICA, MAQUINARIA y FEVISA. ¿Continuar?')) return;
+  const b = $('hojaFev'); b.disabled = true; b.textContent = 'Enviando…';
+  try {
+    const r = await fetch('/api/admin/entradas-bodega/hoja-fevisa', { method: 'POST' });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.ok) throw new Error(j.error || 'Error');
+    alert(`Listo: ${j.filas} registros copiados a la hoja FEVISA 2026.`);
+  } catch (e) { alert('No se pudo actualizar la hoja FEVISA: ' + e.message); }
+  finally { b.disabled = false; b.textContent = 'Actualizar Google Sheet FEVISA'; }
+};
 
 fetch('/api/admin/entradas-bodega').then((r) => { if (!r.ok) throw new Error(); return r.json(); })
   .then((lista) => {
     datos = lista.map((e) => ({ id: e.id, referencia: e.referencia, ...e.datos }));
-    llenaSelect('fCli', 'cliente'); llenaSelect('fPro', 'proveedor'); llenaSelect('fLin', 'linea');
+    llenaSelect('fCli', 'cliente'); llenaSelect('fPro', 'proveedor');
     pinta();
   })
   .catch(() => { $('filas').innerHTML = '<tr><td colspan="15" class="vacio">No se pudieron cargar los registros.</td></tr>'; });
