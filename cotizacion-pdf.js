@@ -47,7 +47,7 @@ async function generarPDFCotizacion(reg, calc, folio) {
   const F = await pdf.embedFont(StandardFonts.Helvetica);
   const FB = await pdf.embedFont(StandardFonts.HelveticaBold);
   let logo = null;
-  try { logo = await pdf.embedPng(fs.readFileSync(path.join(__dirname, 'public', 'logo.png'))); } catch (_) {}
+  try { logo = await pdf.embedPng(fs.readFileSync(path.join(__dirname, 'public', 'logo-color.png'))); } catch (_) {}
 
   const W = 612, H = 792, M = 22, ANCHO = W - 2 * M, PIE = 34;
   let page, y;
@@ -61,7 +61,9 @@ async function generarPDFCotizacion(reg, calc, folio) {
     }
     const w = f.widthOfTextAtSize(t, size) + espacio * Math.max(t.length - 1, 0);
     const xx = align === 'right' ? x - w : align === 'center' ? x - w / 2 : x;
-    page.drawText(t, { x: xx, y: yy, size, font: f, color, ...(espacio ? { characterSpacing: espacio } : {}) });
+    if (!espacio) { page.drawText(t, { x: xx, y: yy, size, font: f, color }); return; }
+    let cx = xx;
+    for (const ch of t) { page.drawText(ch, { x: cx, y: yy, size, font: f, color }); cx += f.widthOfTextAtSize(ch, size) + espacio; }
   };
   const caja = (x, yy, w, h, color, borde) => page.drawRectangle({ x, y: yy, width: w, height: h, color, ...(borde ? { borderColor: borde, borderWidth: 0.5 } : {}) });
   const linea = (x1, y1, x2, y2, color = LINEA, grosor = 0.5) => page.drawLine({ start: { x: x1, y: y1 }, end: { x: x2, y: y2 }, thickness: grosor, color });
@@ -95,7 +97,7 @@ async function generarPDFCotizacion(reg, calc, folio) {
       if (subt) {
         const tw = ancho(subt, FB, 6.5, 0.7) + 16;
         caja(W - M - tw, y - 29, tw, 12, AZUL);
-        texto(subt, W - M - 8, y - 25, { f: FB, size: 6.5, color: BLANCO, align: 'right', espacio: 0.7 });
+        texto(subt, W - M - tw / 2, y - 25.3, { f: FB, size: 6.5, color: BLANCO, align: 'center', espacio: 0.7 });
         xr = W - M - tw - 10;
       }
       texto(ref, xr, y - 25, { size: 6.5, color: GRIS, align: 'right' });
@@ -118,8 +120,8 @@ async function generarPDFCotizacion(reg, calc, folio) {
   const espacio = (h) => { if (y - h < PIE) encabezado(false); };
   const titulo = (t) => {
     espacio(36);
-    texto(t, M, y, { f: FB, size: 8.5, color: AZUL, espacio: 2 });
-    linea(M + ancho(t, FB, 8.5, 2) + 10, y + 3, W - M, y + 3, LINEA, 0.7);
+    texto(t, M, y, { f: FB, size: 8.5, color: AZUL, espacio: 2.6 });
+    linea(M + ancho(t, FB, 8.5, 2.6) + 12, y + 3, W - M, y + 3, LINEA, 0.7);
     y -= 9;
   };
   // Cuadrícula de datos (etiqueta pequeña + valor); una celda puede ocupar varias columnas ([etiqueta, valor, columnas]).
