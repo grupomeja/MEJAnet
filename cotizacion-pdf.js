@@ -34,7 +34,7 @@ const CONT = {
 const MESES = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
 
 // Las fuentes estándar solo traen caracteres latinos; lo demás se cambia por "?"
-const limpio = (s) => String(s ?? '').replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/[–—]/g, '-')
+const limpio = (s) => String(s ?? '').toUpperCase().replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/[–—]/g, '-')
   .replace(/→/g, '->').replace(/[^\x20-\x7E\xA0-\xFF\n]/g, '?');
 const dinero = (x) => (Number(x) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fechaTxt = (iso) => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || ''); return m ? `${m[3]} ${MESES[Number(m[2]) - 1]} ${m[1]}` : ''; };
@@ -121,8 +121,8 @@ async function generarPDFCotizacion(reg, calc, folio) {
   const espacio = (h) => { if (y - h < PIE) encabezado(false); };
   const titulo = (t) => {
     espacio(36);
-    texto(t, M, y, { f: FB, size: 7.5, color: NARANJA, espacio: 2.3 });
-    linea(M + ancho(t, FB, 7.5, 2.3) + 12, y + 3, W - M, y + 3, LINEA, 0.7);
+    texto(t, M, y, { f: FB, size: 8, color: NARANJA, espacio: 2.4 });
+    linea(M + ancho(t, FB, 8, 2.4) + 12, y + 3, W - M, y + 3, LINEA, 0.7);
     y -= 9;
   };
   // Cuadrícula de datos (etiqueta pequeña + valor); una celda puede ocupar varias columnas ([etiqueta, valor, columnas]).
@@ -139,19 +139,19 @@ async function generarPDFCotizacion(reg, calc, folio) {
       if (cc === 0) caja(x + 0.5, yy - rh + 0.5, w - 0.5, rh - 1, SUAVE);
       if (cc > 0) linea(x, yy, x, yy - rh);
       if (rr > 0) linea(M, yy, W - M, yy);
-      texto(k, x + 7, yy - 8, { f: FB, size: 5, color: GRIS, espacio: 0.6 });
-      let size = 7.5;
-      while (size > 6 && !vacio(v) && ancho(v, FB, size) > w - 12) size -= 0.25;
-      texto(vacio(v) ? '-' : v, x + 7, yy - 17.5, { f: FB, size, color: vacio(v) ? GRIS2 : colorValor, maxW: w - 12 });
+      texto(k, x + 7, yy - 9, { f: FB, size: 5.8, color: GRIS, espacio: 0.6 });
+      let size = 8.5;
+      while (size > 6.5 && !vacio(v) && ancho(v, FB, size) > w - 12) size -= 0.25;
+      texto(vacio(v) ? '-' : v, x + 7, yy - 20, { f: FB, size, color: vacio(v) ? GRIS2 : colorValor, maxW: w - 12 });
     }
     y -= filas * rh + 22;
   };
   // Encabezado de tabla: azul claro, títulos centrados en su columna
   const encTabla = (cols) => {
-    caja(M, y - 13, ANCHO, 13, ENC, ENC_BORDE);
-    for (const [t, x1, x2] of cols) texto(t, centro(x1, x2), y - 9, { f: FB, size: 6, color: NAVY, align: 'center', espacio: 0.8 });
-    for (const [, x1] of cols.slice(1)) linea(x1, y, x1, y - 13, ENC_BORDE);
-    y -= 13;
+    caja(M, y - 15, ANCHO, 15, ENC, ENC_BORDE);
+    for (const [t, x1, x2] of cols) texto(t, centro(x1, x2), y - 10.3, { f: FB, size: 6.8, color: NAVY, align: 'center', espacio: 0.9 });
+    for (const [, x1] of cols.slice(1)) linea(x1, y, x1, y - 15, ENC_BORDE);
+    y -= 15;
   };
 
   encabezado(true);
@@ -163,7 +163,7 @@ async function generarPDFCotizacion(reg, calc, folio) {
     ['MODALIDAD', d.modalidad], ['TIPO DE CONTENEDOR', d.contenedor ? `${d.contenedor}${CONT[d.contenedor] ? ` - ${CONT[d.contenedor]}` : ''}` : ''],
     ['BUQUE / E.T.A.', d.buque_eta], ['FECHA', fechaTxt(d.fecha)],
     ['PROVEEDOR', d.proveedor, 3], ['TIPO DE CAMBIO', d.tc ? `$${d.tc} MXN por USD` : ''],
-  ], 4, 23, AZUL);
+  ], 4, 26, AZUL);
 
   // ---------- 2. Desglose de cargos ----------
   titulo('DESGLOSE DE CARGOS');
@@ -171,23 +171,23 @@ async function generarPDFCotizacion(reg, calc, folio) {
   const colsCargos = [['CONCEPTO', C1, C2], ['DESCRIPCIÓN', C2, C3], ['COSTO', C3, C4]];
   espacio(50); encTabla(colsCargos);
   const grupos = [['USD', 'CARGOS EN DÓLARES (USD)'], ['MXN', 'CARGOS EN PESOS (MXN)']];
-  const LH = 8;
+  const LH = 9;
   for (const [mon, etiqueta] of grupos) {
     const items = calc.partidas.filter((p) => p.moneda === mon);
     if (!items.length) continue;
     if (y - 30 < PIE) { encabezado(false); encTabla(colsCargos); }
-    caja(M, y - 12, ANCHO, 12, SUAVE2);
-    texto(etiqueta, centro(C1, C4), y - 8.6, { f: FB, size: 6.5, color: AZUL, align: 'center', espacio: 1.1 });
-    y -= 12;
+    caja(M, y - 13, ANCHO, 13, SUAVE2);
+    texto(etiqueta, centro(C2, C3), y - 9.3, { f: FB, size: 7, color: AZUL, align: 'center', espacio: 1.1 });
+    y -= 13;
     for (const p of items) {
-      const lc = renglones(p.concepto || '-', C2 - C1 - 12, F, 6.5);
-      const ld = renglones(p.descripcion || '', C3 - C2 - 12, F, 6.3);
-      const n = Math.max(lc.length, ld.length), h = 6 + n * LH;
+      const lc = renglones(p.concepto || '-', C2 - C1 - 12, F, 7.3);
+      const ld = renglones(p.descripcion || '', C3 - C2 - 12, F, 7);
+      const n = Math.max(lc.length, ld.length), h = 7 + n * LH;
       if (y - h < PIE) { encabezado(false); encTabla(colsCargos); }
-      const base = (k) => y - 9 - ((n - k) * LH) / 2;   // centra verticalmente columnas con menos renglones
-      lc.forEach((l, i) => texto(l, centro(C1, C2), base(lc.length) - i * LH, { size: 6.5, color: GRIS, align: 'center' }));
-      ld.forEach((l, i) => texto(l, centro(C2, C3), base(ld.length) - i * LH, { size: 6.3, color: GRIS, align: 'center' }));
-      texto(`$ ${dinero(p.monto)}`, C4 - 8, base(1), { f: FB, size: 7.5, color: mon === 'USD' ? AZUL : VERDE, align: 'right' });
+      const base = (k) => y - 10.2 - ((n - k) * LH) / 2;   // centra verticalmente columnas con menos renglones
+      lc.forEach((l, i) => texto(l, centro(C1, C2), base(lc.length) - i * LH, { size: 7.3, color: GRIS, align: 'center' }));
+      ld.forEach((l, i) => texto(l, centro(C2, C3), base(ld.length) - i * LH, { size: 7, color: GRIS, align: 'center' }));
+      texto(`$ ${dinero(p.monto)}`, C4 - 8, base(1), { f: FB, size: 8.3, color: mon === 'USD' ? AZUL : VERDE, align: 'right' });
       linea(C2, y, C2, y - h); linea(C3, y, C3, y - h);
       y -= h;
       linea(M, y, W - M, y);
@@ -199,14 +199,14 @@ async function generarPDFCotizacion(reg, calc, folio) {
   if (subs.length) {
     espacio(16);
     y -= 3;
-    const anchoSub = 150, x0 = W - M - anchoSub * subs.length - 4 * (subs.length - 1);
+    const anchoSub = 165, x0 = W - M - anchoSub * subs.length - 4 * (subs.length - 1);
     subs.forEach(([m], i) => {
       const x = x0 + i * (anchoSub + 4);
-      caja(x, y - 12, anchoSub, 12, SUAVE);
-      texto(`Subtotal ${m}`, x + 7, y - 8.5, { size: 6.5, color: GRIS });
-      texto(`${m} $ ${dinero(calc.cargos[m])}`, x + anchoSub - 7, y - 8.5, { f: FB, size: 7.5, align: 'right' });
+      caja(x, y - 14, anchoSub, 14, SUAVE);
+      texto(`Subtotal ${m}`, x + 7, y - 9.8, { size: 7.2, color: GRIS });
+      texto(`${m} $ ${dinero(calc.cargos[m])}`, x + anchoSub - 7, y - 9.8, { f: FB, size: 8.3, align: 'right' });
     });
-    y -= 12;
+    y -= 14;
   }
   y -= 26;
 
@@ -217,7 +217,7 @@ async function generarPDFCotizacion(reg, calc, folio) {
     espacio(150); // la sección completa va junta
     titulo('IMPUESTOS ADUANALES');
     cuadricula([['FACTURA', im.factura], ['TIPO DE CAMBIO APROX.', ci.tc ? `$ ${ci.tc} MXN por USD` : ''],
-      ['MERCANCÍA', im.mercancia], ['RÉGIMEN / FRACCIÓN ARANCELARIA', im.regimen]], 4, 23, TINTA);
+      ['MERCANCÍA', im.mercancia], ['RÉGIMEN / FRACCIÓN ARANCELARIA', im.regimen]], 4, 26, TINTA);
     y += 6;
     const izq = [
       ['Valor en dólares', ci.valorUsd ? `USD $ ${dinero(ci.valorUsd)}` : '-'],
@@ -226,19 +226,19 @@ async function generarPDFCotizacion(reg, calc, folio) {
     ];
     const der = [['I.G.I. / Ad Valorem', ci.igi], ['D.T.A.', ci.dta], ['I.V.A.', ci.iva], ['Prevalidación', ci.prevalidacion], ['Contraprestación', ci.contraprestacion]]
       .map(([k, v]) => [k, `$ ${dinero(v)}`]);
-    const mitad = M + ANCHO / 2, q1 = M + ANCHO / 4, q3 = M + (3 * ANCHO) / 4, filasM = Math.max(izq.length, der.length), rh = 11;
+    const mitad = M + ANCHO / 2, q1 = M + ANCHO / 4, q3 = M + (3 * ANCHO) / 4, filasM = Math.max(izq.length, der.length), rh = 13;
     encTabla([['BASE GRAVABLE', M, q1], ['MONTO', q1, mitad], ['IMPUESTO', mitad, q3], ['COSTO (MXN)', q3, W - M]]);
     for (let i = 0; i < filasM; i++) {
       const yy = y - i * rh;
-      if (izq[i]) { texto(izq[i][0], centro(M, q1), yy - 8, { size: 7, color: GRIS, align: 'center' }); texto(izq[i][1], mitad - 8, yy - 8, { f: FB, size: 7, align: 'right' }); }
-      if (der[i]) { texto(der[i][0], centro(mitad, q3), yy - 8, { size: 7, color: GRIS, align: 'center' }); texto(der[i][1], W - M - 8, yy - 8, { f: FB, size: 7, align: 'right' }); }
+      if (izq[i]) { texto(izq[i][0], centro(M, q1), yy - 9.4, { size: 7.8, color: GRIS, align: 'center' }); texto(izq[i][1], mitad - 8, yy - 9.4, { f: FB, size: 7.8, align: 'right' }); }
+      if (der[i]) { texto(der[i][0], centro(mitad, q3), yy - 9.4, { size: 7.8, color: GRIS, align: 'center' }); texto(der[i][1], W - M - 8, yy - 9.4, { f: FB, size: 7.8, align: 'right' }); }
       linea(M, yy - rh, W - M, yy - rh);
     }
     for (const x of [q1, mitad, q3]) linea(x, y, x, y - filasM * rh, x === mitad ? ENC_BORDE : LINEA);
     y -= filasM * rh;
-    caja(mitad, y - 15, ANCHO / 2, 15, NAVY);
-    texto('TOTAL IMPUESTOS ADUANALES', mitad + 8, y - 10, { f: FB, size: 6, color: CLARO, espacio: 1 });
-    texto(`MXN $ ${dinero(ci.total)}`, W - M - 8, y - 10.5, { f: FB, size: 9, color: ORO, align: 'right' });
+    caja(mitad, y - 17, ANCHO / 2, 17, NAVY);
+    texto('TOTAL IMPUESTOS ADUANALES', mitad + 8, y - 11.3, { f: FB, size: 6.6, color: CLARO, espacio: 1 });
+    texto(`MXN $ ${dinero(ci.total)}`, W - M - 8, y - 12, { f: FB, size: 10, color: ORO, align: 'right' });
     y -= 40;
   }
 
@@ -249,10 +249,10 @@ async function generarPDFCotizacion(reg, calc, folio) {
   if (hayImp) resumen.push(['Impuestos aduanales', `MXN $ ${dinero(ci.total)}`]);
   const totLin = [calc.totalUSD ? `USD $ ${dinero(calc.totalUSD)}` : '', calc.totalMXN ? `MXN $ ${dinero(calc.totalMXN)}` : ''].filter(Boolean);
   const equiv = calc.granMXN !== null && calc.totalUSD && calc.totalMXN;
-  const anchoTot = 230, xT = W - M - anchoTot;
-  const hTotal = totLin.length ? resumen.length * 11 + 4 + 12 + totLin.length * 14 + (equiv ? 10 : 0) + 4 : 0;
-  const notas = vacio(d.notas) ? [] : renglones(d.notas, xT - M - 40, F, 6.8).filter((l) => l.trim());
-  const hNotas = notas.length ? 18 + notas.length * 9 : 0;
+  const anchoTot = 250, xT = W - M - anchoTot;
+  const hTotal = totLin.length ? resumen.length * 13 + 4 + 14 + totLin.length * 16 + (equiv ? 11 : 0) + 4 : 0;
+  const notas = vacio(d.notas) ? [] : renglones(d.notas, xT - M - 40, F, 7.5).filter((l) => l.trim());
+  const hNotas = notas.length ? 20 + notas.length * 10.5 : 0;
   const hBloque = Math.max(hTotal, hNotas);
   if (hBloque) {
     espacio(hBloque + 10);
@@ -261,26 +261,26 @@ async function generarPDFCotizacion(reg, calc, folio) {
     if (notas.length) {
       caja(M, y0 - hNotas, xT - M - 12, hNotas, AMBAR);
       caja(M, y0 - hNotas, 2, hNotas, AMBAR2);
-      texto('IMPORTANTE', M + 10, y0 - 9, { f: FB, size: 5.5, color: hex('#b7791f'), espacio: 1 });
+      texto('IMPORTANTE', M + 10, y0 - 10, { f: FB, size: 6.3, color: hex('#b7791f'), espacio: 1 });
       notas.forEach((l, i) => {
-        page.drawCircle({ x: M + 12, y: y0 - 18 - i * 9 + 2.2, size: 1, color: TINTA });
-        texto(l, M + 18, y0 - 18 - i * 9, { size: 6.8 });
+        page.drawCircle({ x: M + 12, y: y0 - 20 - i * 10.5 + 2.5, size: 1.1, color: TINTA });
+        texto(l, M + 18, y0 - 20 - i * 10.5, { size: 7.5 });
       });
     }
     if (totLin.length) {
       let yy = y0;
       for (const [k, v] of resumen) {
-        texto(k, xT + 8, yy - 8, { size: 6.8, color: GRIS });
-        texto(v, W - M - 8, yy - 8, { f: FB, size: 7, align: 'right' });
-        linea(xT, yy - 11, W - M, yy - 11);
-        yy -= 11;
+        texto(k, xT + 8, yy - 9.5, { size: 7.5, color: GRIS });
+        texto(v, W - M - 8, yy - 9.5, { f: FB, size: 7.8, align: 'right' });
+        linea(xT, yy - 13, W - M, yy - 13);
+        yy -= 13;
       }
       yy -= 4;
-      const hT = 12 + totLin.length * 14 + (equiv ? 10 : 0);
+      const hT = 14 + totLin.length * 16 + (equiv ? 11 : 0);
       caja(xT, yy - hT, anchoTot, hT, NAVY);
-      texto('TOTAL ESTIMADO', xT + 8, yy - 11, { f: FB, size: 6, color: CLARO, espacio: 1.2 });
-      totLin.forEach((t, i) => texto(t, W - M - 8, yy - 13 - i * 14, { f: FB, size: 11, color: ORO, align: 'right' }));
-      if (equiv) texto(`Equivalente (T.C. ${d.tc}): MXN $ ${dinero(calc.granMXN)} | USD $ ${dinero(calc.granUSD)}`, W - M - 8, yy - hT + 5, { size: 5.5, color: hex('#c7d2e2'), align: 'right' });
+      texto('TOTAL ESTIMADO', xT + 8, yy - 12, { f: FB, size: 6.6, color: CLARO, espacio: 1.2 });
+      totLin.forEach((t, i) => texto(t, W - M - 8, yy - 15 - i * 16, { f: FB, size: 12.5, color: ORO, align: 'right' }));
+      if (equiv) texto(`Equivalente (T.C. ${d.tc}): MXN $ ${dinero(calc.granMXN)} | USD $ ${dinero(calc.granUSD)}`, W - M - 8, yy - hT + 5, { size: 6, color: hex('#c7d2e2'), align: 'right' });
     }
     y = y0 - hBloque - 8;
   }
@@ -292,7 +292,7 @@ async function generarPDFCotizacion(reg, calc, folio) {
     caja(0, 0, W, 24, NAVY);
     caja(0, 24, W, 1.5, CIAN);
     texto('Grupo Meja', M, 9, { f: FB, size: 7, color: BLANCO });
-    texto('A.A. Gonzalez Castillo & Medina S.C.  ·  Av. Reynosa #2047, Col. Guerrero, Nuevo Laredo, Tamps.  ·  Tel. (867) 715-45-38', M + 50, 9, { size: 5.8, color: CLARO });
+    texto('A.A. Gonzalez Castillo & Medina S.C.  ·  Av. Reynosa #2047, Col. Guerrero, Nuevo Laredo, Tamps.  ·  Tel. (867) 715-45-38', M + ancho('Grupo Meja', FB, 7) + 14, 9, { size: 5.8, color: CLARO });
     texto(`${folio}   ·   Página ${i + 1} de ${pags.length}`, W - M, 9, { f: FB, size: 6, color: BLANCO, align: 'right' });
   });
   return Buffer.from(await pdf.save());
