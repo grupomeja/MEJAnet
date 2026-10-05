@@ -27,6 +27,8 @@
 
   /* Hoja */
   .hoja{max-width:900px;margin:16px auto 40px;background:#fff;box-shadow:0 6px 24px rgba(13,31,60,.12)}
+  /* Vista en pantalla más grande: --z lo calcula el script según el ancho de la ventana */
+  @media screen{.hoja{zoom:var(--z,1)}.barra .in{max-width:calc(900px * var(--z,1))}}
   .pad{padding:0 30px}
 
   /* Campos editables: se ven como texto dentro de la celda */
@@ -282,6 +284,15 @@ document.addEventListener('focusout', (e) => {
   if (e.target.classList?.contains('dinero')) formatea(e.target);
   if (['valor_aduana', 'iva'].includes(e.target.dataset?.i)) setTimeout(recalcular);
 });
+
+// ---------- Tamaño de la vista en pantalla ----------
+// La hoja mide 900px; en monitores grandes se amplía para usar el ancho disponible (hasta 1.6 veces).
+function ajustaVista() {
+  const w = window.innerWidth, z = w > 980 ? Math.min((w - 80) / 900, 1.6) : 1;
+  document.documentElement.style.setProperty('--z', z.toFixed(3));
+}
+ajustaVista();
+window.addEventListener('resize', ajustaVista);
 
 // ---------- Leer / llenar ----------
 const valor = (el) => (el.classList.contains('dinero') ? limpiaNum(el.value) : el.value.trim());
