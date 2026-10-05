@@ -36,17 +36,28 @@ function limpiar(body) {
 // --- Inicio de sesión (página principal /) y protección de todas las secciones ---
 // Al entrar con usuario y contraseña se guarda una cookie firmada que dura 1 año
 // (se renueva sola en cada visita), así que el navegador ya no vuelve a pedir credenciales.
-// Si se cambia ADMIN_PASSWORD (o SESSION_SECRET) en Render, todas las sesiones se cierran.
+// Usuarios: ADMIN_USER / ADMIN_PASSWORD, más los de la variable USUARIOS en Render,
+// con el formato  usuario:contraseña,usuario2:contraseña2  (el usuario distingue mayúsculas).
+// Si se cambia la contraseña de un usuario, sus sesiones abiertas se cierran; SESSION_SECRET las cierra todas.
 const COOKIE = 'mejanet_sesion';
 const DURACION_SESION = 365 * 24 * 60 * 60 * 1000; // 1 año
-const usuarioAdmin = () => process.env.ADMIN_USER || 'amedina';
+function usuarios() {
+  const lista = new Map();
+  for (const par of String(process.env.USUARIOS || '').split(/[,\n]/)) {
+    const i = par.indexOf(':');
+    const u = par.slice(0, i).trim(), c = par.slice(i + 1).trim();
+    if (i > 0 && u && c) lista.set(u, c);
+  }
+  if (process.env.ADMIN_PASSWORD) lista.set(process.env.ADMIN_USER || 'amedina', process.env.ADMIN_PASSWORD);
+  return lista;
+}
 const igual = (x, y) => { const a = Buffer.from(String(x)), b = Buffer.from(String(y)); return a.length === b.length && crypto.timingSafeEqual(a, b); };
-const firma = (texto) => crypto.createHmac('sha256', `${process.env.SESSION_SECRET || ''}|${process.env.ADMIN_PASSWORD}|${usuarioAdmin()}`)
+const firma = (usuario, clave, texto) => crypto.createHmac('sha256', `${process.env.SESSION_SECRET || ''}|${clave}|${usuario}`)
   .update(texto).digest('base64url');
-function crearSesion(res, usuario) {
+function crearSesion(res, usuario, clave) {
   const vence = Date.now() + DURACION_SESION;
   const datos = `${Buffer.from(usuario).toString('base64url')}.${vence}`;
-  res.cookie(COOKIE, `${datos}.${firma(datos)}`, {
+  res.cookie(COOKIE, `${datos}.${firma(usuario, clave, datos)}`, {
     httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production' || !!process.env.RENDER,
     maxAge: DURACION_SESION, path: '/',
   });
@@ -58,15 +69,20 @@ function leerCookie(req) {
   }
   return '';
 }
+// Devuelve el usuario de la sesión, o null si no hay sesión válida
 function sesionValida(req) {
   const [u, vence, f] = leerCookie(req).split('.');
-  if (!u || !vence || !f || !(Number(vence) > Date.now())) return false;
-  return igual(f, firma(`${u}.${vence}`)) && Buffer.from(u, 'base64url').toString() === usuarioAdmin();
+  if (!u || !vence || !f || !(Number(vence) > Date.now())) return null;
+  const usuario = Buffer.from(u, 'base64url').toString();
+  const clave = usuarios().get(usuario);
+  return clave && igual(f, firma(usuario, clave, `${u}.${vence}`)) ? usuario : null;
 }
 function admin(req, res, next) {
-  if (!process.env.ADMIN_PASSWORD) return res.status(503).send('Falta definir ADMIN_PASSWORD en el servidor.');
-  if (sesionValida(req)) {
-    crearSesion(res, usuarioAdmin()); // renueva el año de vigencia
+  if (!usuarios().size) return res.status(503).send('Falta definir ADMIN_PASSWORD en el servidor.');
+  const usuario = sesionValida(req);
+  if (usuario) {
+    req.usuario = usuario;
+    crearSesion(res, usuario, usuarios().get(usuario)); // renueva el año de vigencia
     return next();
   }
   // Páginas: se manda a la pantalla de inicio de sesión; API: error 401
@@ -79,21 +95,23 @@ function admin(req, res, next) {
 
 // Página principal (mejanet.onrender.com): inicio de sesión. Con sesión activa pasa directo a Módulos.
 app.get(['/', '/index.html'], (req, res) => {
-  if (process.env.ADMIN_PASSWORD && sesionValida(req)) return res.redirect('/modulos');
+  if (sesionValida(req)) return res.redirect('/modulos');
   res.set('Cache-Control', 'no-store').sendFile(path.join(__dirname, 'admin', 'login.html'));
 });
 app.get('/login', (req, res) => res.redirect('/' + (req.query.next ? `?next=${encodeURIComponent(req.query.next)}` : '')));
 const intentos = new Map(); // freno sencillo contra adivinar la contraseña: 10 intentos fallidos por IP cada 15 min
 app.post('/api/login', (req, res) => {
-  if (!process.env.ADMIN_PASSWORD) return res.status(503).json({ error: 'Falta definir ADMIN_PASSWORD en el servidor.' });
+  const lista = usuarios();
+  if (!lista.size) return res.status(503).json({ error: 'Falta definir ADMIN_PASSWORD en el servidor.' });
   const ip = req.ip, ahora = Date.now();
   const reg = intentos.get(ip);
   if (reg && ahora - reg.desde < 15 * 60 * 1000 && reg.n >= 10)
     return res.status(429).json({ error: 'Demasiados intentos. Espera unos minutos e intenta de nuevo.' });
   const usuario = t(req.body && req.body.usuario, 100), clave = String((req.body && req.body.clave) ?? '').slice(0, 200);
-  if (igual(usuario, usuarioAdmin()) && igual(clave, process.env.ADMIN_PASSWORD)) {
+  const correcta = lista.get(usuario);
+  if (correcta && igual(clave, correcta)) {
     intentos.delete(ip);
-    crearSesion(res, usuario);
+    crearSesion(res, usuario, correcta);
     return res.json({ ok: true });
   }
   if (!reg || ahora - reg.desde >= 15 * 60 * 1000) intentos.set(ip, { desde: ahora, n: 1 });
