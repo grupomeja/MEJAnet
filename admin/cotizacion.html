@@ -278,26 +278,37 @@ function formatea(el) {
   el.value = v === '' ? '' : (el.dataset.pre || '$ ') + (el.dataset.c === 'tc' || el.dataset.i === 'tc' ? v : dinero(v));
 }
 document.addEventListener('focusin', (e) => { if (e.target.classList?.contains('dinero')) { e.target.value = limpiaNum(e.target.value); e.target.select(); } });
-document.addEventListener('focusout', (e) => { if (e.target.classList?.contains('dinero')) formatea(e.target); });
+document.addEventListener('focusout', (e) => {
+  if (e.target.classList?.contains('dinero')) formatea(e.target);
+  if (['valor_aduana', 'iva'].includes(e.target.dataset?.i)) setTimeout(recalcular);
+});
 
 // ---------- Leer / llenar ----------
 const valor = (el) => (el.classList.contains('dinero') ? limpiaNum(el.value) : el.value.trim());
+// Valor aduana e IVA se calculan solos mientras no se escriba un monto a mano
+const AUTO = ['valor_aduana', 'iva'];
+const esAuto = (el) => AUTO.includes(el.dataset.i) && !el.dataset.manual;
 function datos() {
   const d = { estado: $('estado').value, elaboro, cargos: cargos.map((p) => ({ ...p })) };
   for (const el of $$('[data-c]')) d[el.dataset.c] = valor(el);
   d.impuestos = {};
-  for (const el of $$('[data-i]')) d.impuestos[el.dataset.i] = valor(el);
+  for (const el of $$('[data-i]')) d.impuestos[el.dataset.i] = esAuto(el) ? '' : valor(el);
   return d;
 }
 function llenar(d) {
   for (const el of $$('[data-c]')) { el.value = d[el.dataset.c] ?? ''; if (el.classList.contains('dinero')) formatea(el); }
-  for (const el of $$('[data-i]')) { el.value = (d.impuestos || {})[el.dataset.i] ?? ''; if (el.classList.contains('dinero')) formatea(el); }
+  for (const el of $$('[data-i]')) {
+    el.value = (d.impuestos || {})[el.dataset.i] ?? '';
+    if (AUTO.includes(el.dataset.i)) el.dataset.manual = el.value !== '' ? '1' : '';
+    if (el.classList.contains('dinero')) formatea(el);
+  }
   $('estado').value = d.estado || 'BORRADOR';
   cargos = (d.cargos || []).map((p) => ({ ...p }));
   elaboro = d.elaboro || '';
 }
 // Campos que aparecen dos veces (tráfico, fecha, operación) se mantienen iguales
 document.addEventListener('input', (e) => {
+  if (AUTO.includes(e.target.dataset?.i)) e.target.dataset.manual = limpiaNum(e.target.value) !== '' ? '1' : '';
   const c = e.target.dataset?.c;
   if (c) for (const el of $$(`[data-c="${c}"]`)) if (el !== e.target) el.value = e.target.value;
   if (e.target.closest('.hoja') || e.target.id === 'estado') { sucio = true; recalcular(); }
@@ -353,9 +364,12 @@ function recalcular() {
   $('subs').innerHTML = subs.map((m) => `<div>SUBTOTAL ${m} <b>${m} $ ${dinero(c.cargos[m])}</b></div>`).join('');
   // impuestos: valor aduana e IVA se calculan si están vacíos
   const vaInp = document.querySelector('[data-i=valor_aduana]'), ivaInp = document.querySelector('[data-i=iva]');
-  vaInp.placeholder = `$ ${dinero(im.vaAuto)}`; ivaInp.placeholder = `$ ${dinero(im.ivaAuto)}`;
-  $('aVA').textContent = d.impuestos.valor_aduana === '' && im.vaAuto ? 'CALCULADO' : '';
-  $('aIVA').textContent = d.impuestos.iva === '' && im.ivaAuto ? 'CALCULADO' : '';
+  for (const [el, v] of [[vaInp, im.vaAuto], [ivaInp, im.ivaAuto]]) {
+    el.placeholder = '$ 0.00';
+    if (!el.dataset.manual && el !== document.activeElement) el.value = `$ ${dinero(v)}`;
+  }
+  $('aVA').textContent = !vaInp.dataset.manual ? 'CALCULADO' : '';
+  $('aIVA').textContent = !ivaInp.dataset.manual ? 'CALCULADO' : '';
   document.querySelector('[data-i=tc]').placeholder = d.tc ? `$ ${d.tc}` : '0.00';
   $('totImp').textContent = `MXN $ ${dinero(im.total)}`;
   // resumen y total
@@ -420,7 +434,8 @@ window.addEventListener('beforeunload', (e) => { if (sucio) { e.preventDefault()
       .sort((a, b) => (a.datos.moneda === 'USD' ? 0 : 1) - (b.datos.moneda === 'USD' ? 0 : 1) || a.id - b.id)
       .map((c) => ({ concepto_id: c.id, concepto: c.datos.nombre, descripcion: c.datos.descripcion || '', moneda: c.datos.moneda,
         tipo: c.datos.tipo === 'formula' ? 'formula' : 'manual', formula: c.datos.formula || '', precio: c.datos.tipo === 'formula' ? String(c.datos.precio || '') : '', monto: '0' }));
-    for (const el of $$('.imp [data-i]')) { if (!['valor_aduana', 'iva'].includes(el.dataset.i)) { el.value = '0'; formatea(el); } }
+    const FIJOS = { prevalidacion: '330', contraprestacion: '53' };
+    for (const el of $$('.imp [data-i]')) { if (!AUTO.includes(el.dataset.i)) { el.value = FIJOS[el.dataset.i] || '0'; formatea(el); } }
   }
   pintarCargos();
 })();
