@@ -39,11 +39,11 @@ Sin `DATABASE_URL` las órdenes se guardan en un archivo local, que se borra cua
 ## Cotizador
 
 - `/cotizador` → tablero de cotizaciones (pide contraseña): buscar, cambiar estado (BORRADOR / ENVIADA / ACEPTADA / RECHAZADA), ver PDF, duplicar y borrar.
-- `/cotizador/nueva` y `/cotizador/editar/:id` → formulario "Cotización de servicios", dividido en secciones:
+- `/cotizador/nueva` y `/cotizador/editar/:id` → formulario "Cotización de servicios" con el mismo formato del PDF: todo lo que está dentro de celdas se edita (incluida la franja de cliente / operación / válida hasta); títulos fijos. Se puede imprimir desde el navegador en una hoja. Secciones:
   1. **Detalles del embarque**: cliente, tipo (terrestre / marítima / FFCC), tráfico (se captura a mano), fecha, válido hasta, operación, naviera, modalidad (door to door / FCL / LTL), tipo de contenedor (20ST, 40HC…) y tipo de cambio.
   2. **Desglose de cargos**: conceptos en USD o MXN. Una cotización nueva trae los conceptos marcados como *predeterminados* en el catálogo.
   3. **Impuestos aduanales**: proveedor, factura, buque, contenedores, valor, tipo de cambio, IGI, DTA, IVA, prevalidación y contraprestación. Si se dejan vacíos, el valor aduana (valor USD × T.C. + incrementables) y el IVA (16% de valor aduana + IGI + DTA) se calculan solos.
 - `/cotizador/tarifas` → catálogo de conceptos (monto manual, monto fijo o fórmula). Variables de las fórmulas: `precio`, `tc`, `valor_usd`, `valor_mxn`, `valor_aduana`. Ejemplo: `max(valor_mxn * precio / 100, 5500)`.
-- El folio interno es consecutivo (`COT-0001`); el PDF se genera en `/api/admin/cot/cotizaciones/:id/pdf`.
+- Folio por tipo, con numeración propia y asignado al guardar: `CT-0001` terrestre, `CM-0001` marítima, `CF-0001` ferrocarril; el PDF se genera en `/api/admin/cot/cotizaciones/:id/pdf`.
 - Archivos: `cotizador.js` (datos y rutas), `cotizacion-pdf.js` (PDF), `public/formula.js` (cálculos, se usa en servidor y navegador), `admin/cotizador.html`, `admin/cotizacion.html`, `admin/cot-tarifas.html`.
 - Las tablas `cot_conceptos` y `cotizaciones` se crean solas al arrancar; la primera vez se cargan los 6 conceptos de ejemplo.
