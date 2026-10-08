@@ -293,7 +293,7 @@ async function generarPDFCotizacion(reg, calc, folio) {
     caja(0, 0, W, 24, NAVY);
     caja(0, 24, W, 1.5, CIAN);
     texto('Grupo Meja', M, 9, { f: FB, size: 7, color: BLANCO });
-    texto('A.A. Gonzalez Castillo & Medina S.C.  ·  Av. Reynosa #2047, Col. Guerrero, Nuevo Laredo, Tamps.  ·  Tel. (867) 715-45-38', M + ancho('Grupo Meja', FB, 7) + 14, 9, { size: 5.8, color: CLARO });
+    texto('A.A. Gonzalez Castillo & Medina S.C.  ·  Av. Reynosa #2047, Col. Guerrero, Nuevo Laredo, Tamps.  ·  Tel. (867) 715-45-38', W / 2, 9.3, { size: 5.8, color: CLARO, align: 'center' });
     texto(`${folio}   ·   Página ${i + 1} de ${pags.length}`, W - M, 9, { f: FB, size: 6, color: BLANCO, align: 'right' });
   });
   return Buffer.from(await pdf.save());
