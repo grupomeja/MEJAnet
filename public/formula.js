@@ -132,7 +132,7 @@
   const vacio = (x) => String(x ?? '').trim() === '';
 
   // Calcula la sección de impuestos aduanales. Valor aduana e IVA se calculan solos si se dejan vacíos.
-  // `informativo`: en cotizaciones terrestres los incrementables solo se muestran (no suman al valor aduana).
+  // `informativo`: los incrementables solo se muestran (no suman al valor aduana). Hoy aplica a todos los tipos.
   function calcularImpuestos(imp = {}, tcGeneral = 0, informativo = false) {
     const tc = vacio(imp.tc) ? tcGeneral : num(imp.tc);
     const valorUsd = num(imp.valor_usd), incr = informativo ? 0 : num(imp.incrementables);
@@ -149,7 +149,7 @@
   // Calcula montos y totales de una cotización.
   function calcular(cot) {
     const tc = num(cot.tc);
-    const terrestre = ['TERRESTRE', 'PIPA'].includes(cot.tipo);   // por carretera: incrementables solo informativos
+    const terrestre = true;   // en todos los tipos de cotización los incrementables son solo informativos
     const imp = calcularImpuestos(cot.impuestos || {}, tc, terrestre);
     const vars = { tc, valor_usd: imp.valorUsd, valor_mxn: r2(imp.valorUsd * imp.tc), valor_aduana: imp.valorAduana };
     const cargos = { USD: 0, MXN: 0 };

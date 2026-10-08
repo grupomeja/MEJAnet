@@ -372,10 +372,10 @@ function opcionesContenedor(tipo, valor, conservar = true) {
 }
 // Naviera y Buque se desactivan en terrestre
 function camposPorTipo(tipo) {
-  const ter = ['TERRESTRE', 'PIPA'].includes(tipo);   // incrementables informativos
+  // Incrementables: en todos los tipos es solo informativo (desglose de cargos en pesos); no entra en ningún cálculo
   const inc = document.querySelector('[data-i=incrementables]');
-  if (inc.readOnly !== ter) { inc.readOnly = ter; if (!ter) { inc.value = '$ 0.00'; } }
-  inc.title = ter ? 'Solo informativo: suma del desglose de cargos en pesos. No entra en ningún cálculo.' : '';
+  inc.readOnly = true;
+  inc.title = 'Solo informativo: suma del desglose de cargos en pesos. No entra en ningún cálculo.';
   const carretera = POR_CARRETERA.includes(tipo), pipa = tipo === 'PIPA';
   for (const k of NO_TERRESTRE) for (const el of $$(`[data-c="${k}"]`)) {
     const off = carretera && !(pipa && k === 'buque_eta');
