@@ -81,7 +81,7 @@
   .cuad .s4{grid-column:span 4}
   .cuad label{display:block;font-size:7.8px;font-weight:700;letter-spacing:.9px;color:var(--gris);margin-bottom:3px}
   .cuad input,.cuad select{font-size:11.5px;font-weight:700;color:var(--azul)}
-  .cuad.oscuro input{color:var(--tinta)}
+  .cuad.oscuro input,.cuad.oscuro select{color:var(--tinta)}
 
   /* Tablas */
   table{width:100%;border-collapse:collapse}
@@ -224,7 +224,7 @@
       <div class="c1 f1"><label>FACTURA</label><input data-i="factura" maxlength="120" placeholder="—"></div>
       <div class="f1"><label>TIPO DE CAMBIO APROX.</label><input data-i="tc" class="dinero" inputmode="decimal" placeholder="0.00"></div>
       <div class="f1 s2"><label>MERCANCÍA</label><input data-i="mercancia" maxlength="200" placeholder="—"></div>
-      <div class="c1 s4"><label>RÉGIMEN / FRACCIÓN ARANCELARIA</label><input data-i="regimen" list="lReg" maxlength="120" placeholder="ELIGE UN RÉGIMEN DE LA LISTA O ESCRIBE LA FRACCIÓN ARANCELARIA"></div>
+      <div class="c1 s4"><label>RÉGIMEN ADUANERO</label><select data-i="regimen"><option value="">—</option><option>IMPORTACIÓN DEFINITIVA</option><option>EXPORTACIÓN DEFINITIVA</option><option>IMPORTACIÓN TEMPORAL</option><option>EXPORTACIÓN TEMPORAL</option><option>DEPÓSITO FISCAL</option><option>TRÁNSITO INTERNO</option><option>TRÁNSITO INTERNACIONAL</option><option>ELABORACIÓN, TRANSFORMACIÓN O REPARACIÓN EN RECINTO FISCALIZADO</option><option>RECINTO FISCALIZADO ESTRATÉGICO</option></select></div>
     </div>
     <table class="imp" style="margin-top:12px">
       <thead><tr><th style="width:25%">BASE GRAVABLE</th><th style="width:25%">MONTO</th><th style="width:25%">IMPUESTO</th><th>COSTO (MXN)</th></tr></thead>
@@ -259,8 +259,6 @@
 </div>
 
 <datalist id="lCli"></datalist>
-<!-- Régimen: se elige de la lista o se escribe a mano (p. ej. una fracción arancelaria) -->
-<datalist id="lReg"><option>IMPORTACIÓN DEFINITIVA</option><option>EXPORTACIÓN DEFINITIVA</option><option>IMPORTACIÓN TEMPORAL</option><option>EXPORTACIÓN TEMPORAL</option><option>DEPÓSITO FISCAL</option><option>TRÁNSITO INTERNO</option><option>TRÁNSITO INTERNACIONAL</option><option>ELABORACIÓN, TRANSFORMACIÓN O REPARACIÓN EN RECINTO FISCALIZADO</option><option>RECINTO FISCALIZADO ESTRATÉGICO</option></datalist>
 <datalist id="lNav"><option>MAERSK</option><option>MSC</option><option>CMA CGM</option><option>COSCO</option><option>HAPAG-LLOYD</option><option>ONE</option><option>EVERGREEN</option><option>HMM</option><option>ZIM</option><option>YANG MING</option><option>ZIM / HMM</option></datalist>
 
 <script src="/formula.js"></script>
@@ -392,7 +390,9 @@ function llenar(d) {
   opcionesContenedor(d.tipo, d.contenedor);
   for (const el of $$('[data-c]')) { el.value = d[el.dataset.c] ?? ''; if (el.classList.contains('dinero')) formatea(el); }
   for (const el of $$('[data-i]')) {
-    el.value = (d.impuestos || {})[el.dataset.i] ?? '';
+    const v = (d.impuestos || {})[el.dataset.i] ?? '';
+    if (el.tagName === 'SELECT' && v && ![...el.options].some((o) => o.value === v)) el.add(new Option(v, v));
+    el.value = v;
     if (AUTO.includes(el.dataset.i)) el.dataset.manual = el.value !== '' ? '1' : '';
     if (el.classList.contains('dinero')) formatea(el);
   }
