@@ -158,10 +158,11 @@ async function generarPDFCotizacion(reg, calc, folio) {
 
   // ---------- 1. Detalles del embarque ----------
   titulo('DETALLES DEL EMBARQUE');
+  const ter = d.tipo === 'TERRESTRE';   // naviera y buque no aplican
   cuadricula([
-    ['TIPO DE COTIZACIÓN', TIPOS[d.tipo]], ['TIPO DE OPERACIÓN', OPER[d.operacion]], ['TRÁFICO', d.trafico], ['NAVIERA', d.naviera],
+    ['TIPO DE COTIZACIÓN', TIPOS[d.tipo]], ['TIPO DE OPERACIÓN', OPER[d.operacion]], ['TRÁFICO', d.trafico], ['NAVIERA', ter ? 'N/A' : d.naviera],
     ['MODALIDAD', d.modalidad], ['TIPO DE CONTENEDOR', d.contenedor ? `${d.contenedor}${CONT[d.contenedor] ? ` - ${CONT[d.contenedor]}` : ''}` : ''],
-    ['BUQUE / E.T.A.', d.buque_eta], ['FECHA', fechaTxt(d.fecha)],
+    ['BUQUE / E.T.A.', ter ? 'N/A' : d.buque_eta], ['FECHA', fechaTxt(d.fecha)],
     ['PROVEEDOR', d.proveedor, 3], ['TIPO DE CAMBIO', d.tc ? `$${d.tc} MXN por USD` : ''],
   ], 4, 26, AZUL);
 

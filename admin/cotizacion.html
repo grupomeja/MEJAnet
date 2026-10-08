@@ -39,6 +39,9 @@
   select{appearance:none;-webkit-appearance:none;cursor:pointer}
   input::placeholder,textarea::placeholder{color:#b4bcc6}
   .num{text-align:right;font-variant-numeric:tabular-nums}
+  input:disabled{cursor:not-allowed;color:var(--gris2)!important}
+  input:disabled::placeholder{color:var(--gris2)}
+  .cuad>div.na{background:repeating-linear-gradient(135deg,#fff 0 6px,#f6f7f9 6px 12px)}
 
   /* Encabezado */
   .enc{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;padding:18px 30px 12px}
@@ -193,12 +196,7 @@
       <div class="f1"><label>NAVIERA</label><input data-c="naviera" list="lNav" maxlength="80" placeholder="—"></div>
       <div class="c1"><label>MODALIDAD</label><select data-c="modalidad"><option value="">—</option><option>DOOR TO DOOR</option><option>FCL</option><option>LTL</option></select></div>
       <div><label>TIPO DE CONTENEDOR</label>
-        <select data-c="contenedor"><option value="">—</option>
-          <option value="20ST">20ST - 20' ESTÁNDAR</option><option value="40ST">40ST - 40' ESTÁNDAR</option><option value="40HC">40HC - 40' HIGH CUBE</option>
-          <option value="45HC">45HC - 45' HIGH CUBE</option><option value="20RF">20RF - 20' REFRIGERADO</option><option value="40RH">40RH - 40' REFRIGERADO HC</option>
-          <option value="20OT">20OT - 20' OPEN TOP</option><option value="40OT">40OT - 40' OPEN TOP</option><option value="20FR">20FR - 20' FLAT RACK</option>
-          <option value="40FR">40FR - 40' FLAT RACK</option><option value="20TK">20TK - 20' TANQUE</option><option value="LCL">LCL - CONSOLIDADO</option>
-        </select></div>
+        <select data-c="contenedor"></select></div>
       <div><label>BUQUE / E.T.A.</label><input data-c="buque_eta" maxlength="120" placeholder="—"></div>
       <div><label>FECHA</label><input type="date" data-c="fecha"></div>
       <div class="c1 s3"><label>PROVEEDOR</label><input data-c="proveedor" maxlength="160" placeholder="—"></div>
@@ -294,6 +292,58 @@ function ajustaVista() {
 ajustaVista();
 window.addEventListener('resize', ajustaVista);
 
+// ---------- Opciones según el tipo de cotización ----------
+const CONT_MAR = [['20ST', "20ST - 20' ESTÁNDAR"], ['40ST', "40ST - 40' ESTÁNDAR"], ['40HC', "40HC - 40' HIGH CUBE"], ['45HC', "45HC - 45' HIGH CUBE"],
+  ['20RF', "20RF - 20' REFRIGERADO"], ['40RH', "40RH - 40' REFRIGERADO HC"], ['20OT', "20OT - 20' OPEN TOP"], ['40OT', "40OT - 40' OPEN TOP"],
+  ['20FR', "20FR - 20' FLAT RACK"], ['40FR', "40FR - 40' FLAT RACK"], ['20TK', "20TK - 20' TANQUE"], ['LCL', 'LCL - CONSOLIDADO']];
+const CONT_TER = ["CAJA SECA 53'", "CAJA SECA 48'", "CAJA SECA 40'", "CAJA SECA 28'", "PLATAFORMA 53'", "PLATAFORMA 48'", "PLATAFORMA 40'", "PLATAFORMA 20'"].map((x) => [x, x]);
+const NO_TERRESTRE = ['naviera', 'buque_eta'];   // no aplican en cotizaciones terrestres
+let conceptos = [];
+
+// Llena la lista de contenedor / caja según el tipo, conservando el valor si existe en la lista nueva
+function opcionesContenedor(tipo, valor, conservar = true) {
+  const sel = document.querySelector('select[data-c=contenedor]');
+  const lista = tipo === 'TERRESTRE' ? CONT_TER : CONT_MAR;
+  sel.innerHTML = '<option value="">—</option>' + lista.map(([v, t]) => `<option value="${esc(v)}">${esc(t)}</option>`).join('');
+  if (valor && !lista.some(([v]) => v === valor)) { if (!conservar) valor = ''; else sel.insertAdjacentHTML('beforeend', `<option value="${esc(valor)}">${esc(valor)}</option>`); }
+  sel.value = valor || '';
+}
+// Naviera y Buque se desactivan en terrestre
+function camposPorTipo(tipo) {
+  const ter = tipo === 'TERRESTRE';
+  for (const k of NO_TERRESTRE) for (const el of $$(`[data-c="${k}"]`)) {
+    el.disabled = ter; if (ter) el.value = '';
+    el.placeholder = ter ? 'N/A' : '—';
+    el.closest('div').classList.toggle('na', ter);
+  }
+}
+// Conceptos que aparecen solos en el desglose para cada tipo (sin tipo: los de marítima)
+const predeterminados = (tipo) => conceptos
+  .filter((c) => c.datos.activo !== false && (c.datos.tipos || (c.datos.predeterminado ? ['MARITIMA', 'FFCC'] : [])).includes(tipo || 'MARITIMA'))
+  .sort((a, b) => (a.datos.moneda === 'USD' ? 0 : 1) - (b.datos.moneda === 'USD' ? 0 : 1) || a.id - b.id)
+  .map((c) => ({ concepto_id: c.id, concepto: c.datos.nombre, descripcion: c.datos.descripcion || '', moneda: c.datos.moneda,
+    tipo: c.datos.tipo === 'formula' ? 'formula' : 'manual', formula: c.datos.formula || '', precio: c.datos.tipo === 'formula' ? String(c.datos.precio || '') : '',
+    monto: c.datos.tipo === 'fijo' && c.datos.precio ? String(c.datos.precio) : '0' }));
+// ¿El desglose sigue como venía (mismos conceptos y sin montos capturados)?
+const sinCapturar = (tipoAnterior) => {
+  const base = predeterminados(tipoAnterior).map((p) => p.concepto).join('|');
+  return !cargos.length || (cargos.map((p) => p.concepto).join('|') === base && cargos.every((p) => !(Number(limpiaNum(p.monto)) > 0)));
+};
+let tipoActual = '';
+function cambiarTipo(tipo) {
+  if (tipo === tipoActual) return;
+  const anterior = tipoActual; tipoActual = tipo;
+  opcionesContenedor(tipo, document.querySelector('select[data-c=contenedor]').value, false);
+  camposPorTipo(tipo);
+  const nuevos = predeterminados(tipo);
+  const mismo = nuevos.map((p) => p.concepto).join('|') === predeterminados(anterior).map((p) => p.concepto).join('|');
+  if (!mismo && (sinCapturar(anterior) || confirm(`¿Cambiar los conceptos del desglose de cargos por los de ${TIPOS[tipo] || tipo}?\nSe quitarán los conceptos y montos capturados.`))) {
+    cargos = nuevos; pintarCargos();
+  }
+  sucio = true; recalcular();
+}
+document.addEventListener('change', (e) => { if (e.target.matches('select[data-c=tipo]')) cambiarTipo(e.target.value); });
+
 // ---------- Leer / llenar ----------
 const valor = (el) => (el.classList.contains('dinero') ? limpiaNum(el.value) : el.value.trim());
 // Valor aduana e IVA se calculan solos mientras no se escriba un monto a mano
@@ -307,6 +357,7 @@ function datos() {
   return d;
 }
 function llenar(d) {
+  opcionesContenedor(d.tipo, d.contenedor);
   for (const el of $$('[data-c]')) { el.value = d[el.dataset.c] ?? ''; if (el.classList.contains('dinero')) formatea(el); }
   for (const el of $$('[data-i]')) {
     el.value = (d.impuestos || {})[el.dataset.i] ?? '';
@@ -316,6 +367,8 @@ function llenar(d) {
   $('estado').value = d.estado || 'BORRADOR';
   cargos = (d.cargos || []).map((p) => ({ ...p }));
   elaboro = d.elaboro || '';
+  tipoActual = d.tipo || '';
+  camposPorTipo(tipoActual);
 }
 // Campos que aparecen dos veces (tráfico, fecha, operación) se mantienen iguales
 document.addEventListener('input', (e) => {
@@ -428,6 +481,7 @@ window.addEventListener('beforeunload', (e) => { if (sucio) { e.preventDefault()
 // ---------- Inicio ----------
 (async () => {
   const [rc, rl] = await Promise.all([fetch('/api/admin/cot/conceptos').then((r) => r.json()), fetch('/api/admin/cot/cotizaciones').then((r) => r.json()).catch(() => [])]);
+  conceptos = rc.conceptos;
   $('lCli').innerHTML = [...new Set(rl.map((c) => c.datos.cliente).filter(Boolean))].sort().map((c) => `<option value="${esc(c)}">`).join('');
   const copia = Number(new URLSearchParams(location.search).get('copia'));
   if (id || copia) {
@@ -441,10 +495,7 @@ window.addEventListener('beforeunload', (e) => { if (sucio) { e.preventDefault()
   } else {
     // Cotización nueva: conceptos predeterminados en $0 (primero dólares) y todas las cifras en $0
     llenar({ fecha: hoy(), valido_hasta: masDias(hoy(), 15), notas: NOTAS_DEF, impuestos: {} });
-    cargos = rc.conceptos.filter((c) => c.datos.activo !== false && c.datos.predeterminado)
-      .sort((a, b) => (a.datos.moneda === 'USD' ? 0 : 1) - (b.datos.moneda === 'USD' ? 0 : 1) || a.id - b.id)
-      .map((c) => ({ concepto_id: c.id, concepto: c.datos.nombre, descripcion: c.datos.descripcion || '', moneda: c.datos.moneda,
-        tipo: c.datos.tipo === 'formula' ? 'formula' : 'manual', formula: c.datos.formula || '', precio: c.datos.tipo === 'formula' ? String(c.datos.precio || '') : '', monto: '0' }));
+    cargos = predeterminados('');
     const FIJOS = { prevalidacion: '330', contraprestacion: '53' };
     for (const el of $$('.imp [data-i]')) { if (!AUTO.includes(el.dataset.i)) { el.value = FIJOS[el.dataset.i] || '0'; formatea(el); } }
   }

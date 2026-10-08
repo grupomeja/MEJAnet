@@ -18,15 +18,27 @@ const TIPOS_COT = ['TERRESTRE', 'MARITIMA', 'FFCC'];
 const OPERACIONES = ['IMPORTACION', 'EXPORTACION'];
 const MODALIDADES = ['DOOR TO DOOR', 'FCL', 'LTL'];
 
-// Conceptos iniciales (tomados de las cotizaciones de ejemplo). El monto 0 se captura en cada cotización.
+// Conceptos iniciales. "tipos" = tipos de cotización donde el concepto aparece solo (predeterminado).
+// El monto se captura en cada cotización.
+const MAR = ['MARITIMA', 'FFCC'];
 const SEMILLA = [
-  { categoria: 'DESGLOSE DE CARGOS', nombre: 'EXW OCEAN FREIGHT SHENZEN - MZLO', descripcion: 'RECOLECCION EXW, FLETE MARITIMO, DEST. SURGCHARGE, HANDLING FEE, AMS FEE', moneda: 'USD', tipo: 'manual', precio: 0, formula: '', predeterminado: true },
-  { categoria: 'DESGLOSE DE CARGOS', nombre: 'INSURANCE D2D', descripcion: 'APROXIMATE', moneda: 'USD', tipo: 'manual', precio: 0, formula: '', predeterminado: true },
-  { categoria: 'DESGLOSE DE CARGOS', nombre: 'DRAYAGE FROM MZLO - GPE NUEVO LEON', descripcion: 'MZLO - MTY - MZO', moneda: 'USD', tipo: 'manual', precio: 0, formula: '', predeterminado: true },
-  { categoria: 'DESGLOSE DE CARGOS', nombre: 'SEGURO', descripcion: '', moneda: 'MXN', tipo: 'manual', precio: 0, formula: '', predeterminado: true },
-  { categoria: 'DESGLOSE DE CARGOS', nombre: 'PAQUETE ALL IN', descripcion: 'PREVIO, BUQUE A PISO, PISO A BLOQUE, PISO A SPF', moneda: 'MXN', tipo: 'manual', precio: 0, formula: '', predeterminado: true },
-  { categoria: 'DESGLOSE DE CARGOS', nombre: 'ENTREGA VACIO', descripcion: 'CAMION A PATIO', moneda: 'MXN', tipo: 'manual', precio: 0, formula: '', predeterminado: true },
-];
+  { categoria: 'DESGLOSE DE CARGOS', nombre: 'EXW OCEAN FREIGHT SHENZEN - MZLO', descripcion: 'RECOLECCION EXW, FLETE MARITIMO, DEST. SURGCHARGE, HANDLING FEE, AMS FEE', moneda: 'USD', tipo: 'manual', precio: 0, formula: '', tipos: MAR },
+  { categoria: 'DESGLOSE DE CARGOS', nombre: 'INSURANCE D2D', descripcion: 'APROXIMATE', moneda: 'USD', tipo: 'manual', precio: 0, formula: '', tipos: MAR },
+  { categoria: 'DESGLOSE DE CARGOS', nombre: 'DRAYAGE FROM MZLO - GPE NUEVO LEON', descripcion: 'MZLO - MTY - MZO', moneda: 'USD', tipo: 'manual', precio: 0, formula: '', tipos: MAR },
+  { categoria: 'DESGLOSE DE CARGOS', nombre: 'SEGURO', descripcion: '', moneda: 'MXN', tipo: 'manual', precio: 0, formula: '', tipos: MAR },
+  { categoria: 'DESGLOSE DE CARGOS', nombre: 'PAQUETE ALL IN', descripcion: 'PREVIO, BUQUE A PISO, PISO A BLOQUE, PISO A SPF', moneda: 'MXN', tipo: 'manual', precio: 0, formula: '', tipos: MAR },
+  { categoria: 'DESGLOSE DE CARGOS', nombre: 'ENTREGA VACIO', descripcion: 'CAMION A PATIO', moneda: 'MXN', tipo: 'manual', precio: 0, formula: '', tipos: MAR },
+  ...SEMILLA_TERRESTRE(),
+].map((c) => ({ ...c, predeterminado: true }));
+// Conceptos de las cotizaciones terrestres (maniobras de bodega, en dólares)
+function SEMILLA_TERRESTRE() {
+  return [
+    ['MANIOBRAS BODEGA', 'DESCARGA, CARGA, REVISION, MOVIMIENTOS Y SEPARACION'],
+    ['CRUCE DE FRONTERA', 'CRUCE'],
+    ['SHIPPER EXTRA', 'SHIPPER EXTRA'],
+    ['PALLET EXTRA', 'PALLETS EXTRA'],
+  ].map(([nombre, descripcion]) => ({ categoria: 'DESGLOSE DE CARGOS', nombre, descripcion, moneda: 'USD', tipo: 'manual', precio: 0, formula: '', tipos: ['TERRESTRE'], predeterminado: true }));
+}
 
 const leer = (f) => JSON.parse(fs.readFileSync(f, 'utf8'));
 const escribir = (f, x) => fs.writeFileSync(f, JSON.stringify(x));
@@ -48,11 +60,23 @@ async function init() {
       UNIQUE (serie, folio)
     )`);
     if (!rows[0].hay) for (const c of SEMILLA) await pool.query('INSERT INTO cot_conceptos (datos) VALUES ($1)', [c]);
-    return;
+  } else {
+    fs.mkdirSync(db.DIR, { recursive: true });
+    if (!fs.existsSync(FILE_CON)) escribir(FILE_CON, SEMILLA.map((d, i) => ({ id: i + 1, datos: d })));
+    if (!fs.existsSync(FILE_COT)) escribir(FILE_COT, []);
   }
-  fs.mkdirSync(db.DIR, { recursive: true });
-  if (!fs.existsSync(FILE_CON)) escribir(FILE_CON, SEMILLA.map((d, i) => ({ id: i + 1, datos: d })));
-  if (!fs.existsSync(FILE_COT)) escribir(FILE_COT, []);
+  await migrarTipos();
+}
+
+// Catálogos creados antes de existir "tipos": los predeterminados de entonces quedan para Marítima y FFCC,
+// y se agregan los conceptos de Terrestre. Corre una sola vez (cuando ningún concepto tiene "tipos").
+async function migrarTipos() {
+  const lista = await listarConceptos();
+  if (lista.some((c) => Array.isArray(c.datos.tipos))) return;
+  for (const c of lista) await guardarConcepto(c.id, { ...c.datos, tipos: c.datos.predeterminado ? MAR : [] });
+  const nombres = new Set(lista.map((c) => c.datos.nombre));
+  for (const c of SEMILLA_TERRESTRE()) if (!nombres.has(c.nombre)) await guardarConcepto(null, c);
+  console.log('Cotizador: conceptos por tipo de cotización listos');
 }
 
 // ---------- Catálogo de conceptos ----------
@@ -167,9 +191,10 @@ function limpiarConcepto(b) {
     precio: n(b.precio),
     formula: t(b.formula, 400),
     nota: t(b.nota, 300),
-    predeterminado: !!b.predeterminado,
+    tipos: (Array.isArray(b.tipos) ? b.tipos : []).filter((x) => TIPOS_COT.includes(x)),
     activo: b.activo !== false,
   };
+  d.predeterminado = d.tipos.length > 0;
   if (!d.nombre) throw new Error('Escribe el nombre del concepto.');
   if (d.tipo === 'formula') {
     if (!d.formula) throw new Error('Escribe la fórmula.');
@@ -227,6 +252,7 @@ function limpiarCotizacion(b) {
     elaboro: t(b.elaboro, 80),
   };
   if (!datos.tipo) throw new Error('Elige el tipo de cotización (Terrestre, Marítima o FFCC).');
+  if (datos.tipo === 'TERRESTRE') { datos.naviera = ''; datos.buque_eta = ''; } // no aplican en terrestre
   if (!datos.cliente && !cargos.length) throw new Error('La cotización está vacía.');
   return datos;
 }
