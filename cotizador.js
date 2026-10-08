@@ -293,7 +293,9 @@ function limpiarCotizacion(b) {
     elaboro: t(b.elaboro, 80),
   };
   if (!datos.tipo) throw new Error('Elige el tipo de cotización (Terrestre, Marítima o FFCC).');
-  if (['TERRESTRE', 'PIPA'].includes(datos.tipo)) { datos.naviera = ''; datos.buque_eta = ''; } // no aplican por carretera
+  // Naviera no aplica por carretera; en PIPA el campo buque_eta guarda el NO. DE PIPA
+  if (['TERRESTRE', 'PIPA'].includes(datos.tipo)) datos.naviera = '';
+  if (datos.tipo === 'TERRESTRE') datos.buque_eta = '';
   if (datos.tipo === 'PIPA') { datos.contenedor = 'PIPA'; if (!datos.operacion) datos.operacion = 'IMPORTACION'; }
   if (!datos.cliente && !cargos.length) throw new Error('La cotización está vacía.');
   return datos;

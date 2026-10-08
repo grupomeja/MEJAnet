@@ -205,7 +205,7 @@
         <select data-c="contenedor"></select></div>
       <div><label>BUQUE / E.T.A.</label><input data-c="buque_eta" maxlength="120" placeholder="—"></div>
       <div><label>FECHA</label><input type="date" data-c="fecha"></div>
-      <div class="c1 s3"><label>PROVEEDOR</label><input data-c="proveedor" list="lProv" maxlength="160" placeholder="—"></div>
+      <div class="c1 s3"><label>PROVEEDOR</label><input data-c="proveedor" maxlength="160" placeholder="—"></div>
       <div><label>TIPO DE CAMBIO (MXN POR USD)</label><input data-c="tc" class="dinero" inputmode="decimal" placeholder="0.00"></div>
     </div>
 
@@ -259,7 +259,6 @@
 </div>
 
 <datalist id="lCli"></datalist>
-<datalist id="lProv"></datalist>
 <datalist id="lNav"><option>MAERSK</option><option>MSC</option><option>CMA CGM</option><option>COSCO</option><option>HAPAG-LLOYD</option><option>ONE</option><option>EVERGREEN</option><option>HMM</option><option>ZIM</option><option>YANG MING</option><option>ZIM / HMM</option></datalist>
 
 <script src="/formula.js"></script>
@@ -328,10 +327,33 @@ const CONT_PIPA = [['PIPA', 'PIPA']];
 const PIPA_CLIENTES = ['CO2 LIQUID', 'EXEL AIR', 'CARBON XEO'];
 const PIPA_PROVEEDORES = ['MESSER LLC', 'SYOXSA INC', 'AOC'];
 let clientesAnteriores = '';
+// En PIPA el campo se cambia por una lista desplegable (select); en los demás tipos es texto libre.
+function campoLista(k, opciones) {
+  const el = document.querySelector(`[data-c="${k}"]`);
+  const quiere = opciones ? 'SELECT' : 'INPUT';
+  if (el.tagName === quiere) return;
+  const v = el.value;
+  let nuevo;
+  if (opciones) {
+    nuevo = document.createElement('select');
+    nuevo.innerHTML = '<option value="">SELECCIONA…</option>' + opciones.map((x) => `<option>${esc(x)}</option>`).join('');
+    if (v && !opciones.includes(v.toUpperCase())) nuevo.add(new Option(v, v));   // valor guardado que no está en la lista
+    nuevo.value = opciones.includes(v.toUpperCase()) ? v.toUpperCase() : v;
+  } else {
+    nuevo = document.createElement('input');
+    for (const a of ['list', 'maxlength', 'placeholder']) if (el.dataset['orig' + a]) nuevo.setAttribute(a, el.dataset['orig' + a]);
+    nuevo.value = v;
+  }
+  nuevo.dataset.c = k;
+  // se guardan los atributos del campo de texto para poder regresarlo
+  for (const a of ['list', 'maxlength', 'placeholder']) { const x = el.getAttribute(a) || el.dataset['orig' + a]; if (x) nuevo.dataset['orig' + a] = x; }
+  el.replaceWith(nuevo);
+}
 function listasPorTipo(tipo) {
-  const pipa = tipo === 'PIPA', opc = (l) => l.map((x) => `<option value="${esc(x)}">`).join('');
-  $('lCli').innerHTML = pipa ? opc(PIPA_CLIENTES) : clientesAnteriores;
-  $('lProv').innerHTML = pipa ? opc(PIPA_PROVEEDORES) : '';
+  const pipa = tipo === 'PIPA';
+  $('lCli').innerHTML = clientesAnteriores;
+  campoLista('cliente', pipa ? PIPA_CLIENTES : null);
+  campoLista('proveedor', pipa ? PIPA_PROVEEDORES : null);
 }
 let conceptos = [];
 
@@ -354,11 +376,13 @@ function camposPorTipo(tipo) {
   const inc = document.querySelector('[data-i=incrementables]');
   if (inc.readOnly !== ter) { inc.readOnly = ter; if (!ter) { inc.value = '$ 0.00'; } }
   inc.title = ter ? 'Solo informativo: suma del desglose de cargos en pesos. No entra en ningún cálculo.' : '';
-  const carretera = POR_CARRETERA.includes(tipo);
+  const carretera = POR_CARRETERA.includes(tipo), pipa = tipo === 'PIPA';
   for (const k of NO_TERRESTRE) for (const el of $$(`[data-c="${k}"]`)) {
-    el.disabled = carretera; if (carretera) el.value = '';
-    el.placeholder = carretera ? 'N/A' : '—';
-    el.closest('div').classList.toggle('na', carretera);
+    const off = carretera && !(pipa && k === 'buque_eta');
+    el.disabled = off; if (off) el.value = '';
+    el.placeholder = off ? 'N/A' : '—';
+    el.closest('div').classList.toggle('na', off);
+    if (k === 'buque_eta') el.closest('div').querySelector('label').textContent = pipa ? 'NO. DE PIPA' : 'BUQUE / E.T.A.';
   }
   listasPorTipo(tipo);
 }
@@ -377,6 +401,7 @@ function cambiarTipo(tipo) {
   if (tipo === tipoActual) return;
   const anterior = tipoActual; tipoActual = tipo;
   opcionesContenedor(tipo, document.querySelector('select[data-c=contenedor]').value, false);
+  if (anterior === 'PIPA' || tipo === 'PIPA') $$('[data-c=buque_eta]').forEach((el) => { el.value = ''; });
   camposPorTipo(tipo);
   if (tipo === 'PIPA') $$('[data-c=operacion]').forEach((el) => { el.value = 'IMPORTACION'; });   // pipa: importación por defecto
   const nuevos = predeterminados(tipo);
