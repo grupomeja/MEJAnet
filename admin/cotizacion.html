@@ -40,6 +40,8 @@
   input::placeholder,textarea::placeholder{color:#b4bcc6}
   .num{text-align:right;font-variant-numeric:tabular-nums}
   input:disabled{cursor:not-allowed;color:var(--gris2)!important}
+  input[readonly]{cursor:default}
+  input[readonly]:hover,input[readonly]:focus{border-color:transparent;background:transparent;box-shadow:none}
   input:disabled::placeholder{color:var(--gris2)}
   .cuad>div.na{background:repeating-linear-gradient(135deg,#fff 0 6px,#f6f7f9 6px 12px)}
 
@@ -225,7 +227,7 @@
       <tbody>
         <tr><td class="et">VALOR EN DÓLARES</td><td class="v"><input data-i="valor_usd" class="dinero" data-pre="USD $ " inputmode="decimal"></td>
             <td class="et">I.G.I. / AD VALOREM</td><td class="v"><input data-i="igi" class="dinero" inputmode="decimal"></td></tr>
-        <tr><td class="et">INCREMENTABLES</td><td class="v"><input data-i="incrementables" class="dinero" inputmode="decimal"></td>
+        <tr><td class="et">INCREMENTABLES<span class="auto" id="aINC"></span></td><td class="v"><input data-i="incrementables" class="dinero" inputmode="decimal"></td>
             <td class="et">D.T.A.</td><td class="v"><input data-i="dta" class="dinero" inputmode="decimal"></td></tr>
         <tr><td class="et">VALOR ADUANA<span class="auto" id="aVA"></span></td><td class="v"><input data-i="valor_aduana" class="dinero" inputmode="decimal"></td>
             <td class="et">I.V.A.<span class="auto" id="aIVA"></span></td><td class="v"><input data-i="iva" class="dinero" inputmode="decimal"></td></tr>
@@ -296,7 +298,23 @@ window.addEventListener('resize', ajustaVista);
 const CONT_MAR = [['20ST', "20ST - 20' ESTÁNDAR"], ['40ST', "40ST - 40' ESTÁNDAR"], ['40HC', "40HC - 40' HIGH CUBE"], ['45HC', "45HC - 45' HIGH CUBE"],
   ['20RF', "20RF - 20' REFRIGERADO"], ['40RH', "40RH - 40' REFRIGERADO HC"], ['20OT', "20OT - 20' OPEN TOP"], ['40OT', "40OT - 40' OPEN TOP"],
   ['20FR', "20FR - 20' FLAT RACK"], ['40FR', "40FR - 40' FLAT RACK"], ['20TK', "20TK - 20' TANQUE"], ['LCL', 'LCL - CONSOLIDADO']];
-const CONT_TER = ["CAJA SECA 53'", "CAJA SECA 48'", "CAJA SECA 40'", "CAJA SECA 28'", "PLATAFORMA 53'", "PLATAFORMA 48'", "PLATAFORMA 40'", "PLATAFORMA 20'"].map((x) => [x, x]);
+// Terrestre: [valor, texto, grupo]
+const CONT_TER = [
+  ...["CAJA SECA 53'", "CAJA SECA 48'", "CAJA SECA 40'", "CAJA SECA 28'"].map((x) => [x, x, 'CAJA SECA']),
+  ...[
+    ["PLATAFORMA FLATBED 53'", "FLATBED 53' (PLATAFORMA PLANA)"],
+    ["PLATAFORMA FLATBED 48'", "FLATBED 48' (PLATAFORMA PLANA)"],
+    ["PLATAFORMA FLATBED 40'", "FLATBED 40' (PLATAFORMA PLANA)"],
+    ["PLATAFORMA FLATBED 20'", "FLATBED 20' (PLATAFORMA PLANA)"],
+    ['PLATAFORMA STEP DECK', 'STEP DECK (CAMA BAJA ESCALONADA)'],
+    ['PLATAFORMA DOUBLE DROP', 'DOUBLE DROP (CAMA BAJA DE DOBLE CAÍDA)'],
+    ['PLATAFORMA LOWBOY', 'LOWBOY (CAMA BAJA)'],
+    ['PLATAFORMA RGN', 'RGN (CUELLO DE GANSO DESMONTABLE)'],
+    ['PLATAFORMA CONESTOGA', 'CONESTOGA (CON LONA CORREDIZA)'],
+    ['PLATAFORMA EXTENDIBLE', 'EXTENDIBLE (STRETCH)'],
+    ['PLATAFORMA CON REDILAS', 'CON REDILAS'],
+  ].map(([v, t]) => [v, t, 'PLATAFORMA']),
+];
 const NO_TERRESTRE = ['naviera', 'buque_eta'];   // no aplican en cotizaciones terrestres
 let conceptos = [];
 
@@ -304,13 +322,20 @@ let conceptos = [];
 function opcionesContenedor(tipo, valor, conservar = true) {
   const sel = document.querySelector('select[data-c=contenedor]');
   const lista = tipo === 'TERRESTRE' ? CONT_TER : CONT_MAR;
-  sel.innerHTML = '<option value="">—</option>' + lista.map(([v, t]) => `<option value="${esc(v)}">${esc(t)}</option>`).join('');
+  const opcion = ([v, t]) => `<option value="${esc(v)}">${esc(t)}</option>`;
+  const grupos = [...new Set(lista.map((x) => x[2]).filter(Boolean))];
+  sel.innerHTML = '<option value="">—</option>' + (grupos.length
+    ? grupos.map((g) => `<optgroup label="${esc(g)}">${lista.filter((x) => x[2] === g).map(opcion).join('')}</optgroup>`).join('')
+    : lista.map(opcion).join(''));
   if (valor && !lista.some(([v]) => v === valor)) { if (!conservar) valor = ''; else sel.insertAdjacentHTML('beforeend', `<option value="${esc(valor)}">${esc(valor)}</option>`); }
   sel.value = valor || '';
 }
 // Naviera y Buque se desactivan en terrestre
 function camposPorTipo(tipo) {
   const ter = tipo === 'TERRESTRE';
+  const inc = document.querySelector('[data-i=incrementables]');
+  if (inc.readOnly !== ter) { inc.readOnly = ter; if (!ter) { inc.value = '$ 0.00'; } }
+  inc.title = ter ? 'Solo informativo: suma del desglose de cargos en pesos. No entra en ningún cálculo.' : '';
   for (const k of NO_TERRESTRE) for (const el of $$(`[data-c="${k}"]`)) {
     el.disabled = ter; if (ter) el.value = '';
     el.placeholder = ter ? 'N/A' : '—';
@@ -433,6 +458,10 @@ function recalcular() {
     if (!el.dataset.manual && el !== document.activeElement) el.value = `$ ${dinero(v)}`;
   }
   $('aVA').textContent = !vaInp.dataset.manual ? 'CALCULADO' : '';
+  // Terrestre: incrementables = desglose de cargos en pesos, solo informativo
+  const incInp = document.querySelector('[data-i=incrementables]');
+  if (im.incrInformativo) incInp.value = `$ ${dinero(im.incrementables)}`;
+  $('aINC').textContent = im.incrInformativo ? 'INFORMATIVO' : '';
   $('aIVA').textContent = !ivaInp.dataset.manual ? 'CALCULADO' : '';
   document.querySelector('[data-i=tc]').placeholder = d.tc ? `$ ${d.tc}` : '0.00';
   $('totImp').textContent = `MXN $ ${dinero(im.total)}`;

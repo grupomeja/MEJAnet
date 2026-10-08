@@ -132,9 +132,10 @@
   const vacio = (x) => String(x ?? '').trim() === '';
 
   // Calcula la sección de impuestos aduanales. Valor aduana e IVA se calculan solos si se dejan vacíos.
-  function calcularImpuestos(imp = {}, tcGeneral = 0) {
+  // `informativo`: en cotizaciones terrestres los incrementables solo se muestran (no suman al valor aduana).
+  function calcularImpuestos(imp = {}, tcGeneral = 0, informativo = false) {
     const tc = vacio(imp.tc) ? tcGeneral : num(imp.tc);
-    const valorUsd = num(imp.valor_usd), incr = num(imp.incrementables);
+    const valorUsd = num(imp.valor_usd), incr = informativo ? 0 : num(imp.incrementables);
     const vaAuto = Math.round(valorUsd * tc + incr);
     const valorAduana = vacio(imp.valor_aduana) ? vaAuto : num(imp.valor_aduana);
     const igi = num(imp.igi), dta = num(imp.dta);
@@ -148,7 +149,8 @@
   // Calcula montos y totales de una cotización.
   function calcular(cot) {
     const tc = num(cot.tc);
-    const imp = calcularImpuestos(cot.impuestos || {}, tc);
+    const terrestre = cot.tipo === 'TERRESTRE';
+    const imp = calcularImpuestos(cot.impuestos || {}, tc, terrestre);
     const vars = { tc, valor_usd: imp.valorUsd, valor_mxn: r2(imp.valorUsd * imp.tc), valor_aduana: imp.valorAduana };
     const cargos = { USD: 0, MXN: 0 };
     const partidas = (cot.cargos || []).map((p) => {
@@ -163,6 +165,9 @@
       return { ...p, moneda, monto, error };
     });
     cargos.USD = r2(cargos.USD); cargos.MXN = r2(cargos.MXN);
+    // Terrestre: los incrementables son el desglose de cargos convertido a pesos. Solo informativo:
+    // no entran al valor aduana, al IVA ni a ningún total (el desglose ya se suma por su lado).
+    if (terrestre) { imp.incrementables = r2(cargos.USD * imp.tc + cargos.MXN); imp.incrInformativo = true; }
     const totalMXN = r2(cargos.MXN + imp.total);           // todo lo que se cobra en pesos
     const granMXN = tc > 0 ? r2(totalMXN + cargos.USD * tc) : null;
     const granUSD = tc > 0 ? r2(cargos.USD + totalMXN / tc) : null;

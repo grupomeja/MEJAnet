@@ -222,7 +222,7 @@ async function generarPDFCotizacion(reg, calc, folio) {
     y += 6;
     const izq = [
       ['Valor en dólares', ci.valorUsd ? `USD $ ${dinero(ci.valorUsd)}` : '-'],
-      ['Incrementables', ci.incrementables ? `$ ${dinero(ci.incrementables)}` : '-'],
+      [ci.incrInformativo ? 'Incrementables (informativo)' : 'Incrementables', ci.incrementables ? `$ ${dinero(ci.incrementables)}` : '-'],
       ['Valor aduana', ci.valorAduana ? `$ ${dinero(ci.valorAduana)}` : '-'],
     ];
     const der = [['I.G.I. / Ad Valorem', ci.igi], ['D.T.A.', ci.dta], ['I.V.A.', ci.iva], ['Prevalidación', ci.prevalidacion], ['Contraprestación', ci.contraprestacion]]
