@@ -372,7 +372,7 @@ function opcionesContenedor(tipo, valor, conservar = true) {
 }
 // Naviera y Buque se desactivan en terrestre
 function camposPorTipo(tipo) {
-  const ter = tipo === 'TERRESTRE';
+  const ter = ['TERRESTRE', 'PIPA'].includes(tipo);   // incrementables informativos
   const inc = document.querySelector('[data-i=incrementables]');
   if (inc.readOnly !== ter) { inc.readOnly = ter; if (!ter) { inc.value = '$ 0.00'; } }
   inc.title = ter ? 'Solo informativo: suma del desglose de cargos en pesos. No entra en ningún cálculo.' : '';

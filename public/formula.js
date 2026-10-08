@@ -149,7 +149,7 @@
   // Calcula montos y totales de una cotización.
   function calcular(cot) {
     const tc = num(cot.tc);
-    const terrestre = cot.tipo === 'TERRESTRE';
+    const terrestre = ['TERRESTRE', 'PIPA'].includes(cot.tipo);   // por carretera: incrementables solo informativos
     const imp = calcularImpuestos(cot.impuestos || {}, tc, terrestre);
     const vars = { tc, valor_usd: imp.valorUsd, valor_mxn: r2(imp.valorUsd * imp.tc), valor_aduana: imp.valorAduana };
     const cargos = { USD: 0, MXN: 0 };
