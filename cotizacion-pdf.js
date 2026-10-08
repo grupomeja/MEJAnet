@@ -218,7 +218,7 @@ async function generarPDFCotizacion(reg, calc, folio) {
     espacio(150); // la sección completa va junta
     titulo('IMPUESTOS ADUANALES');
     cuadricula([['FACTURA', im.factura], ['TIPO DE CAMBIO APROX.', ci.tc ? `$ ${ci.tc} MXN por USD` : ''],
-      ['MERCANCÍA', im.mercancia], ['RÉGIMEN / FRACCIÓN ARANCELARIA', im.regimen]], 4, 26, TINTA);
+      ['MERCANCÍA', im.mercancia, 2], ['RÉGIMEN / FRACCIÓN ARANCELARIA', im.regimen, 4]], 4, 26, TINTA);
     y += 6;
     const izq = [
       ['Valor en dólares', ci.valorUsd ? `USD $ ${dinero(ci.valorUsd)}` : '-'],

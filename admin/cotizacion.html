@@ -76,7 +76,9 @@
   .cuad>div{padding:6px 9px 7px;border-left:1px solid var(--linea);border-top:1px solid var(--linea);min-width:0}
   .cuad>div.c1{border-left:0;background:var(--suave)}
   .cuad>div.f1{border-top:0}
+  .cuad .s2{grid-column:span 2}
   .cuad .s3{grid-column:span 3}
+  .cuad .s4{grid-column:span 4}
   .cuad label{display:block;font-size:7.8px;font-weight:700;letter-spacing:.9px;color:var(--gris);margin-bottom:3px}
   .cuad input,.cuad select{font-size:11.5px;font-weight:700;color:var(--azul)}
   .cuad.oscuro input{color:var(--tinta)}
@@ -135,7 +137,7 @@
   @media (max-width:760px){
     .pad{padding:0 12px}.enc{padding:14px 12px 10px;flex-direction:column}.enc .der{text-align:left}.ref{justify-content:flex-start;flex-wrap:wrap}
     .banda{grid-template-columns:1fr 1fr;padding:10px 12px}.banda>div:first-child{grid-column:1/-1}.banda .r,.banda .r input{text-align:left}
-    .cuad{grid-template-columns:1fr 1fr}.cuad .s3{grid-column:span 2}.cuad>div{border-left:1px solid var(--linea)!important;border-top:1px solid var(--linea)!important}
+    .cuad{grid-template-columns:1fr 1fr}.cuad .s2,.cuad .s3,.cuad .s4{grid-column:span 2}.cuad>div{border-left:1px solid var(--linea)!important;border-top:1px solid var(--linea)!important}
     .final{grid-template-columns:1fr}.totimp{margin-left:0}.quitar{right:-4px;top:-2px;transform:none}
     .imp td{font-size:9.5px;padding:5px 4px}.pie{grid-template-columns:1fr;justify-items:center;padding:9px 12px}.pie #pieFolio{text-align:center}
   }
@@ -221,8 +223,8 @@
     <div class="cuad oscuro">
       <div class="c1 f1"><label>FACTURA</label><input data-i="factura" maxlength="120" placeholder="—"></div>
       <div class="f1"><label>TIPO DE CAMBIO APROX.</label><input data-i="tc" class="dinero" inputmode="decimal" placeholder="0.00"></div>
-      <div class="f1"><label>MERCANCÍA</label><input data-i="mercancia" maxlength="200" placeholder="—"></div>
-      <div class="f1"><label>RÉGIMEN / FRACCIÓN ARANCELARIA</label><input data-i="regimen" maxlength="120" placeholder="—"></div>
+      <div class="f1 s2"><label>MERCANCÍA</label><input data-i="mercancia" maxlength="200" placeholder="—"></div>
+      <div class="c1 s4"><label>RÉGIMEN / FRACCIÓN ARANCELARIA</label><input data-i="regimen" list="lReg" maxlength="120" placeholder="ELIGE UN RÉGIMEN DE LA LISTA O ESCRIBE LA FRACCIÓN ARANCELARIA"></div>
     </div>
     <table class="imp" style="margin-top:12px">
       <thead><tr><th style="width:25%">BASE GRAVABLE</th><th style="width:25%">MONTO</th><th style="width:25%">IMPUESTO</th><th>COSTO (MXN)</th></tr></thead>
@@ -257,6 +259,8 @@
 </div>
 
 <datalist id="lCli"></datalist>
+<!-- Régimen: se elige de la lista o se escribe a mano (p. ej. una fracción arancelaria) -->
+<datalist id="lReg"><option>IMPORTACIÓN DEFINITIVA</option><option>EXPORTACIÓN DEFINITIVA</option><option>IMPORTACIÓN TEMPORAL</option><option>EXPORTACIÓN TEMPORAL</option><option>DEPÓSITO FISCAL</option><option>TRÁNSITO INTERNO</option><option>TRÁNSITO INTERNACIONAL</option><option>ELABORACIÓN, TRANSFORMACIÓN O REPARACIÓN EN RECINTO FISCALIZADO</option><option>RECINTO FISCALIZADO ESTRATÉGICO</option></datalist>
 <datalist id="lNav"><option>MAERSK</option><option>MSC</option><option>CMA CGM</option><option>COSCO</option><option>HAPAG-LLOYD</option><option>ONE</option><option>EVERGREEN</option><option>HMM</option><option>ZIM</option><option>YANG MING</option><option>ZIM / HMM</option></datalist>
 
 <script src="/formula.js"></script>
