@@ -24,7 +24,7 @@ const AMBAR = hex('#fdf6e7');
 const NARANJA = hex('#f26a0f');   // títulos de sección (naranja MEJAnet)
 const AMBAR2 = hex('#e8a33d');
 
-const TIPOS = { TERRESTRE: 'TERRESTRE', MARITIMA: 'MARÍTIMA', FFCC: 'FFCC (FERROCARRIL)' };
+const TIPOS = { TERRESTRE: 'TERRESTRE', MARITIMA: 'MARÍTIMA', FFCC: 'FFCC (FERROCARRIL)', PIPA: 'PIPA' };
 const OPER = { IMPORTACION: 'IMPORTACIÓN', EXPORTACION: 'EXPORTACIÓN' };
 const CONT = {
   '20ST': "20' Estándar", '40ST': "40' Estándar", '40HC': "40' High Cube", '45HC': "45' High Cube", '20RF': "20' Refrigerado",
@@ -83,7 +83,7 @@ async function generarPDFCotizacion(reg, calc, folio) {
   const centro = (a, b) => (a + b) / 2;
 
   // ---------- Encabezado ----------
-  const subt = [TIPOS[d.tipo], d.contenedor, d.modalidad].filter(Boolean).join('  |  ');
+  const subt = [...new Set([TIPOS[d.tipo], d.contenedor, d.modalidad].filter(Boolean))].join('  |  ');
   function encabezado(primera) {
     page = pdf.addPage([W, H]);
     y = H - 14;
@@ -158,7 +158,7 @@ async function generarPDFCotizacion(reg, calc, folio) {
 
   // ---------- 1. Detalles del embarque ----------
   titulo('DETALLES DEL EMBARQUE');
-  const ter = d.tipo === 'TERRESTRE';   // naviera y buque no aplican
+  const ter = ['TERRESTRE', 'PIPA'].includes(d.tipo);   // naviera y buque no aplican por carretera
   cuadricula([
     ['TIPO DE COTIZACIÓN', TIPOS[d.tipo]], ['TIPO DE OPERACIÓN', OPER[d.operacion]], ['TRÁFICO', d.trafico], ['NAVIERA', ter ? 'N/A' : d.naviera],
     ['MODALIDAD', d.modalidad], ['TIPO DE CONTENEDOR', d.contenedor ? `${d.contenedor}${CONT[d.contenedor] ? ` - ${CONT[d.contenedor]}` : ''}` : ''],

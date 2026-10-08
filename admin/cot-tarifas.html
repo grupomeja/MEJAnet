@@ -117,6 +117,7 @@
           <label><input type="checkbox" value="TERRESTRE"><span>Terrestre</span></label>
           <label><input type="checkbox" value="MARITIMA"><span>Marítima</span></label>
           <label><input type="checkbox" value="FFCC"><span>FFCC</span></label>
+          <label><input type="checkbox" value="PIPA"><span>Pipa</span></label>
         </div></div>
       <div class="full"><label for="fNota">Nota interna</label><input id="fNota" maxlength="300" placeholder="Opcional"></div>
     </div>
@@ -138,7 +139,7 @@ const $ = (id) => document.getElementById(id);
 const $$ = (sel) => [...document.querySelectorAll(sel)];
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const dinero = (x) => (Number(x) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
-const TIPO_COT = { TERRESTRE: 'TERRESTRE', MARITIMA: 'MARÍTIMA', FFCC: 'FFCC' };
+const TIPO_COT = { TERRESTRE: 'TERRESTRE', MARITIMA: 'MARÍTIMA', FFCC: 'FFCC', PIPA: 'PIPA' };
 const tiposDe = (d) => d.tipos || (d.predeterminado ? ['MARITIMA', 'FFCC'] : []);
 const TIPO_TXT = { fijo: 'Monto fijo', manual: 'Monto manual', formula: 'Fórmula' };
 const EXP = {
@@ -169,7 +170,7 @@ function pintar() {
         <td class="n">${esc(d.nombre)} ${tiposDe(d).map((t) => `<span class="pill pre">${TIPO_COT[t]}</span>`).join(' ')}${d.activo === false ? ' <span class="muted">(inactivo)</span>' : ''}</td>
         <td class="d">${esc(d.descripcion)}</td>
         <td><span class="pill ${d.tipo}">${TIPO_TXT[d.tipo]}</span>${d.formula ? ` <code>${esc(d.formula)}</code>` : ''}</td>
-        <td class="precio">${d.tipo === 'manual' ? '<span class="muted">En cada cotización</span>' : `$${dinero(d.precio)}`}</td>
+        <td class="precio">${d.tipo === 'manual' ? '<span class="muted">En cada cotización</span>' : `$${dinero(d.precio)}`}${Object.entries(d.precios || {}).map(([t, v]) => `<br><small class="muted">${TIPO_COT[t] || t}: $${dinero(v)}</small>`).join('')}</td>
         <td>${d.moneda}</td></tr>`; }).join('')}
       </tbody></table></div></div>`).join('') || '<p class="vacio">No hay conceptos que coincidan.</p>';
 }
@@ -234,6 +235,7 @@ $('f').addEventListener('submit', async (e) => {
     nombre: $('fNombre').value, descripcion: $('fDesc').value, categoria: $('fCategoria').value, moneda: $('fMoneda').value,
     tipo: tipoSel(), precio: $('fPrecio').value, formula: $('fFormula').value, nota: $('fNota').value,
     tipos: $$('#fTipos input:checked').map((x) => x.value), activo: $('fActivo').checked,
+    precios: (conceptos.find((c) => c.id === editando) || { datos: {} }).datos.precios || {},
   };
   btn.disabled = true; msg.className = 'msg';
   try {

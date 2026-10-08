@@ -102,7 +102,7 @@ function pintar() {
   $('lista').innerHTML = lista.map((c) => {
     const x = c.datos;
     const monto = (v, m) => v ? `$${dinero(v)}<small>${m}</small>` : '<span class="muted">—</span>';
-    const tipo = { TERRESTRE: 'Terrestre', MARITIMA: 'Marítima', FFCC: 'FFCC' }[x.tipo] || '';
+    const tipo = { TERRESTRE: 'Terrestre', MARITIMA: 'Marítima', FFCC: 'FFCC', PIPA: 'Pipa' }[x.tipo] || '';
     const det = [x.operacion === 'IMPORTACION' ? 'Importación' : x.operacion === 'EXPORTACION' ? 'Exportación' : '', x.contenedor, x.modalidad].filter(Boolean).join(' · ');
     return `<tr data-id="${c.id}">
       <td class="folio"><a href="/cotizador/editar/${c.id}">${esc(c.folio_txt)}</a></td>

@@ -14,13 +14,14 @@ const FILE_COT = path.join(db.DIR, 'cotizaciones.json');
 const CATEGORIAS = ['DESGLOSE DE CARGOS'];
 const TIPOS = ['fijo', 'manual', 'formula'];
 const ESTADOS = ['BORRADOR', 'ENVIADA', 'ACEPTADA', 'RECHAZADA'];
-const TIPOS_COT = ['TERRESTRE', 'MARITIMA', 'FFCC'];
+const TIPOS_COT = ['TERRESTRE', 'MARITIMA', 'FFCC', 'PIPA'];
 const OPERACIONES = ['IMPORTACION', 'EXPORTACION'];
 const MODALIDADES = ['DOOR TO DOOR', 'FCL', 'LTL'];
 
 // Conceptos iniciales. "tipos" = tipos de cotización donde el concepto aparece solo (predeterminado).
 // El monto se captura en cada cotización.
 const MAR = ['MARITIMA', 'FFCC'];
+const TODOS = ['TERRESTRE', 'MARITIMA', 'FFCC', 'PIPA'];
 const SEMILLA = [
   { categoria: 'DESGLOSE DE CARGOS', nombre: 'EXW OCEAN FREIGHT SHENZEN - MZLO', descripcion: 'RECOLECCION EXW, FLETE MARITIMO, DEST. SURGCHARGE, HANDLING FEE, AMS FEE', moneda: 'USD', tipo: 'manual', precio: 0, formula: '', tipos: MAR },
   { categoria: 'DESGLOSE DE CARGOS', nombre: 'INSURANCE D2D', descripcion: 'APROXIMATE', moneda: 'USD', tipo: 'manual', precio: 0, formula: '', tipos: MAR },
@@ -29,7 +30,15 @@ const SEMILLA = [
   { categoria: 'DESGLOSE DE CARGOS', nombre: 'PAQUETE ALL IN', descripcion: 'PREVIO, BUQUE A PISO, PISO A BLOQUE, PISO A SPF', moneda: 'MXN', tipo: 'manual', precio: 0, formula: '', tipos: MAR },
   { categoria: 'DESGLOSE DE CARGOS', nombre: 'ENTREGA VACIO', descripcion: 'CAMION A PATIO', moneda: 'MXN', tipo: 'manual', precio: 0, formula: '', tipos: MAR },
   ...SEMILLA_TERRESTRE(),
+  ...SEMILLA_HONORARIOS(),
 ].map((c) => ({ ...c, predeterminado: true }));
+// "precios": monto propuesto según el tipo de cotización (si no hay, se usa "precio" en los conceptos de monto fijo)
+function SEMILLA_HONORARIOS() {
+  return [
+    { categoria: 'DESGLOSE DE CARGOS', nombre: 'HONORARIOS', descripcion: '0.45% SOBRE VALOR FACTURA O MINIMO', moneda: 'MXN', tipo: 'manual', precio: 0, formula: '', tipos: TODOS, precios: { PIPA: 2000 }, predeterminado: true },
+    { categoria: 'DESGLOSE DE CARGOS', nombre: 'COMPLEMENTARIOS', descripcion: 'GASTOS COMPLEMENTARIOS', moneda: 'MXN', tipo: 'manual', precio: 0, formula: '', tipos: TODOS, precios: { PIPA: 500 }, predeterminado: true },
+  ];
+}
 // Conceptos de las cotizaciones terrestres (maniobras de bodega, en dólares)
 function SEMILLA_TERRESTRE() {
   return [
@@ -37,7 +46,9 @@ function SEMILLA_TERRESTRE() {
     ['CRUCE DE FRONTERA', 'CRUCE'],
     ['SHIPPER EXTRA', 'SHIPPER EXTRA'],
     ['PALLET EXTRA', 'PALLETS EXTRA'],
-  ].map(([nombre, descripcion]) => ({ categoria: 'DESGLOSE DE CARGOS', nombre, descripcion, moneda: 'USD', tipo: 'manual', precio: 0, formula: '', tipos: ['TERRESTRE'], predeterminado: true }));
+  ].map(([nombre, descripcion]) => (nombre === 'MANIOBRAS BODEGA'
+    ? { categoria: 'DESGLOSE DE CARGOS', nombre, descripcion, moneda: 'USD', tipo: 'manual', precio: 0, formula: '', tipos: ['TERRESTRE', 'PIPA'], precios: { PIPA: 110 }, predeterminado: true }
+    : { categoria: 'DESGLOSE DE CARGOS', nombre, descripcion, moneda: 'USD', tipo: 'manual', precio: 0, formula: '', tipos: ['TERRESTRE'], predeterminado: true }));
 }
 
 const leer = (f) => JSON.parse(fs.readFileSync(f, 'utf8'));
@@ -66,6 +77,34 @@ async function init() {
     if (!fs.existsSync(FILE_COT)) escribir(FILE_COT, []);
   }
   await migrarTipos();
+  await unaVez('cotizador-pipa', migrarPipa);
+}
+
+// Cambios del catálogo que corren una sola vez (se anotan en la tabla "migraciones" de MEJAnet)
+async function unaVez(nombre, fn) {
+  const FILE_MIG = path.join(db.DIR, 'migraciones.json');
+  if (pool) {
+    await pool.query('CREATE TABLE IF NOT EXISTS migraciones (nombre TEXT PRIMARY KEY, aplicada TIMESTAMPTZ NOT NULL DEFAULT now())');
+    if ((await pool.query('SELECT 1 FROM migraciones WHERE nombre = $1', [nombre])).rowCount) return;
+    await fn();
+    await pool.query('INSERT INTO migraciones (nombre) VALUES ($1) ON CONFLICT DO NOTHING', [nombre]);
+    return;
+  }
+  const hechas = new Set(fs.existsSync(FILE_MIG) ? JSON.parse(fs.readFileSync(FILE_MIG, 'utf8')) : []);
+  if (hechas.has(nombre)) return;
+  await fn();
+  hechas.add(nombre); fs.writeFileSync(FILE_MIG, JSON.stringify([...hechas]));
+}
+
+// PIPA: maniobras de bodega aparece también en pipa con $110 USD (en terrestre sigue en $0);
+// honorarios y complementarios en todas las cotizaciones
+async function migrarPipa() {
+  const lista = await listarConceptos();
+  const m = lista.find((c) => c.datos.nombre === 'MANIOBRAS BODEGA');
+  if (m) await guardarConcepto(m.id, { ...m.datos, tipos: [...new Set([...(m.datos.tipos || []), 'PIPA'])], precios: { ...(m.datos.precios || {}), PIPA: 110 }, predeterminado: true });
+  const nombres = new Set(lista.map((c) => c.datos.nombre));
+  for (const c of SEMILLA_HONORARIOS()) if (!nombres.has(c.nombre)) await guardarConcepto(null, c);
+  console.log('Cotizador: conceptos de PIPA, honorarios y complementarios listos');
 }
 
 // Catálogos creados antes de existir "tipos": los predeterminados de entonces quedan para Marítima y FFCC,
@@ -111,7 +150,7 @@ async function borrarConcepto(id) {
 
 // ---------- Cotizaciones ----------
 // Cada tipo lleva su propia serie y numeración: CT terrestre, CM marítima, CF ferrocarril.
-const SERIES = { TERRESTRE: 'CT', MARITIMA: 'CM', FFCC: 'CF' };
+const SERIES = { TERRESTRE: 'CT', MARITIMA: 'CM', FFCC: 'CF', PIPA: 'CP' };
 const serieDe = (tipo) => SERIES[tipo];
 const COLS = 'id, serie, folio, creada, actualizada, datos';
 
@@ -192,6 +231,8 @@ function limpiarConcepto(b) {
     formula: t(b.formula, 400),
     nota: t(b.nota, 300),
     tipos: (Array.isArray(b.tipos) ? b.tipos : []).filter((x) => TIPOS_COT.includes(x)),
+    precios: Object.fromEntries(Object.entries(b.precios && typeof b.precios === 'object' ? b.precios : {})
+      .filter(([k, v]) => TIPOS_COT.includes(k) && v !== '' && v != null).map(([k, v]) => [k, n(v)])),
     activo: b.activo !== false,
   };
   d.predeterminado = d.tipos.length > 0;
@@ -252,7 +293,8 @@ function limpiarCotizacion(b) {
     elaboro: t(b.elaboro, 80),
   };
   if (!datos.tipo) throw new Error('Elige el tipo de cotización (Terrestre, Marítima o FFCC).');
-  if (datos.tipo === 'TERRESTRE') { datos.naviera = ''; datos.buque_eta = ''; } // no aplican en terrestre
+  if (['TERRESTRE', 'PIPA'].includes(datos.tipo)) { datos.naviera = ''; datos.buque_eta = ''; } // no aplican por carretera
+  if (datos.tipo === 'PIPA') { datos.contenedor = 'PIPA'; if (!datos.operacion) datos.operacion = 'IMPORTACION'; }
   if (!datos.cliente && !cargos.length) throw new Error('La cotización está vacía.');
   return datos;
 }

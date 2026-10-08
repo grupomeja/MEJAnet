@@ -196,7 +196,7 @@
     <!-- Detalles del embarque -->
     <div class="tit">DETALLES DEL EMBARQUE</div>
     <div class="cuad">
-      <div class="c1 f1"><label>TIPO DE COTIZACIÓN</label><select data-c="tipo"><option value="">SELECCIONA…</option><option value="TERRESTRE">TERRESTRE</option><option value="MARITIMA">MARÍTIMA</option><option value="FFCC">FFCC (FERROCARRIL)</option></select></div>
+      <div class="c1 f1"><label>TIPO DE COTIZACIÓN</label><select data-c="tipo"><option value="">SELECCIONA…</option><option value="TERRESTRE">TERRESTRE</option><option value="MARITIMA">MARÍTIMA</option><option value="FFCC">FFCC (FERROCARRIL)</option><option value="PIPA">PIPA</option></select></div>
       <div class="f1"><label>TIPO DE OPERACIÓN</label><select data-c="operacion"><option value="">—</option><option value="IMPORTACION">IMPORTACIÓN</option><option value="EXPORTACION">EXPORTACIÓN</option></select></div>
       <div class="f1"><label>TRÁFICO</label><input data-c="trafico" maxlength="40" placeholder="—"></div>
       <div class="f1"><label>NAVIERA</label><input data-c="naviera" list="lNav" maxlength="80" placeholder="—"></div>
@@ -205,7 +205,7 @@
         <select data-c="contenedor"></select></div>
       <div><label>BUQUE / E.T.A.</label><input data-c="buque_eta" maxlength="120" placeholder="—"></div>
       <div><label>FECHA</label><input type="date" data-c="fecha"></div>
-      <div class="c1 s3"><label>PROVEEDOR</label><input data-c="proveedor" maxlength="160" placeholder="—"></div>
+      <div class="c1 s3"><label>PROVEEDOR</label><input data-c="proveedor" list="lProv" maxlength="160" placeholder="—"></div>
       <div><label>TIPO DE CAMBIO (MXN POR USD)</label><input data-c="tc" class="dinero" inputmode="decimal" placeholder="0.00"></div>
     </div>
 
@@ -259,6 +259,7 @@
 </div>
 
 <datalist id="lCli"></datalist>
+<datalist id="lProv"></datalist>
 <datalist id="lNav"><option>MAERSK</option><option>MSC</option><option>CMA CGM</option><option>COSCO</option><option>HAPAG-LLOYD</option><option>ONE</option><option>EVERGREEN</option><option>HMM</option><option>ZIM</option><option>YANG MING</option><option>ZIM / HMM</option></datalist>
 
 <script src="/formula.js"></script>
@@ -272,7 +273,7 @@ const p2 = (x) => String(x).padStart(2, '0');
 const iso = (d) => `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`;
 const hoy = () => iso(new Date());
 const masDias = (f, n) => { const d = new Date(`${f}T12:00:00`); d.setDate(d.getDate() + n); return iso(d); };
-const TIPOS = { TERRESTRE: 'TERRESTRE', MARITIMA: 'MARÍTIMA', FFCC: 'FFCC (FERROCARRIL)' };
+const TIPOS = { TERRESTRE: 'TERRESTRE', MARITIMA: 'MARÍTIMA', FFCC: 'FFCC (FERROCARRIL)', PIPA: 'PIPA' };
 const NOTAS_DEF = 'PRECIOS SUJETOS A CAMBIO SIN PREVIO AVISO.\nTIPO DE CAMBIO APROXIMADO; SE APLICARÁ EL DEL DÍA DE PAGO.';
 
 const mId = /\/cotizador\/editar\/(\d+)/.exec(location.pathname);
@@ -320,13 +321,25 @@ const CONT_TER = [
     ['PLATAFORMA CON REDILAS', 'CON REDILAS'],
   ].map(([v, t]) => [v, t, 'PLATAFORMA']),
 ];
-const NO_TERRESTRE = ['naviera', 'buque_eta'];   // no aplican en cotizaciones terrestres
+const NO_TERRESTRE = ['naviera', 'buque_eta'];   // no aplican en cotizaciones terrestres ni de pipa
+const POR_CARRETERA = ['TERRESTRE', 'PIPA'];
+const CONT_PIPA = [['PIPA', 'PIPA']];
+// Sugerencias de cliente y proveedor en cotizaciones de PIPA (se puede escribir otro)
+const PIPA_CLIENTES = ['CO2 LIQUID', 'EXEL AIR', 'CARBON XEO'];
+const PIPA_PROVEEDORES = ['MESSER LLC', 'SYOXSA INC', 'AOC'];
+let clientesAnteriores = '';
+function listasPorTipo(tipo) {
+  const pipa = tipo === 'PIPA', opc = (l) => l.map((x) => `<option value="${esc(x)}">`).join('');
+  $('lCli').innerHTML = pipa ? opc(PIPA_CLIENTES) : clientesAnteriores;
+  $('lProv').innerHTML = pipa ? opc(PIPA_PROVEEDORES) : '';
+}
 let conceptos = [];
 
 // Llena la lista de contenedor / caja según el tipo, conservando el valor si existe en la lista nueva
 function opcionesContenedor(tipo, valor, conservar = true) {
   const sel = document.querySelector('select[data-c=contenedor]');
-  const lista = tipo === 'TERRESTRE' ? CONT_TER : CONT_MAR;
+  const lista = tipo === 'PIPA' ? CONT_PIPA : tipo === 'TERRESTRE' ? CONT_TER : CONT_MAR;
+  if (tipo === 'PIPA') valor = 'PIPA';   // en pipa el contenedor es siempre PIPA
   const opcion = ([v, t]) => `<option value="${esc(v)}">${esc(t)}</option>`;
   const grupos = [...new Set(lista.map((x) => x[2]).filter(Boolean))];
   sel.innerHTML = '<option value="">—</option>' + (grupos.length
@@ -341,11 +354,13 @@ function camposPorTipo(tipo) {
   const inc = document.querySelector('[data-i=incrementables]');
   if (inc.readOnly !== ter) { inc.readOnly = ter; if (!ter) { inc.value = '$ 0.00'; } }
   inc.title = ter ? 'Solo informativo: suma del desglose de cargos en pesos. No entra en ningún cálculo.' : '';
+  const carretera = POR_CARRETERA.includes(tipo);
   for (const k of NO_TERRESTRE) for (const el of $$(`[data-c="${k}"]`)) {
-    el.disabled = ter; if (ter) el.value = '';
-    el.placeholder = ter ? 'N/A' : '—';
-    el.closest('div').classList.toggle('na', ter);
+    el.disabled = carretera; if (carretera) el.value = '';
+    el.placeholder = carretera ? 'N/A' : '—';
+    el.closest('div').classList.toggle('na', carretera);
   }
+  listasPorTipo(tipo);
 }
 // Conceptos que aparecen solos en el desglose para cada tipo (sin tipo: los de marítima)
 const predeterminados = (tipo) => conceptos
@@ -353,18 +368,17 @@ const predeterminados = (tipo) => conceptos
   .sort((a, b) => (a.datos.moneda === 'USD' ? 0 : 1) - (b.datos.moneda === 'USD' ? 0 : 1) || a.id - b.id)
   .map((c) => ({ concepto_id: c.id, concepto: c.datos.nombre, descripcion: c.datos.descripcion || '', moneda: c.datos.moneda,
     tipo: c.datos.tipo === 'formula' ? 'formula' : 'manual', formula: c.datos.formula || '', precio: c.datos.tipo === 'formula' ? String(c.datos.precio || '') : '',
-    monto: c.datos.tipo === 'fijo' && c.datos.precio ? String(c.datos.precio) : '0' }));
+    monto: String((c.datos.precios || {})[tipo] ?? (c.datos.tipo === 'fijo' && c.datos.precio ? c.datos.precio : 0)) }));
 // ¿El desglose sigue como venía (mismos conceptos y sin montos capturados)?
-const sinCapturar = (tipoAnterior) => {
-  const base = predeterminados(tipoAnterior).map((p) => p.concepto).join('|');
-  return !cargos.length || (cargos.map((p) => p.concepto).join('|') === base && cargos.every((p) => !(Number(limpiaNum(p.monto)) > 0)));
-};
+const firma = (lista) => lista.map((p) => `${p.concepto}=${Number(limpiaNum(p.monto)) || 0}`).join('|');
+const sinCapturar = (tipoAnterior) => !cargos.length || firma(cargos) === firma(predeterminados(tipoAnterior));
 let tipoActual = '';
 function cambiarTipo(tipo) {
   if (tipo === tipoActual) return;
   const anterior = tipoActual; tipoActual = tipo;
   opcionesContenedor(tipo, document.querySelector('select[data-c=contenedor]').value, false);
   camposPorTipo(tipo);
+  if (tipo === 'PIPA') $$('[data-c=operacion]').forEach((el) => { el.value = 'IMPORTACION'; });   // pipa: importación por defecto
   const nuevos = predeterminados(tipo);
   const mismo = nuevos.map((p) => p.concepto).join('|') === predeterminados(anterior).map((p) => p.concepto).join('|');
   if (!mismo && (sinCapturar(anterior) || confirm(`¿Cambiar los conceptos del desglose de cargos por los de ${TIPOS[tipo] || tipo}?\nSe quitarán los conceptos y montos capturados.`))) {
@@ -453,7 +467,7 @@ $('cargos').addEventListener('click', (e) => {
 function recalcular() {
   const d = datos(), c = Formula.calcular(d), im = c.impuestos;
   // pastilla del encabezado: tipo | contenedor | modalidad
-  $('pill').textContent = [TIPOS[d.tipo], d.contenedor, d.modalidad].filter(Boolean).join('  |  ') || '—';
+  $('pill').textContent = [...new Set([TIPOS[d.tipo], d.contenedor, d.modalidad].filter(Boolean))].join('  |  ') || '—';
   // fórmulas del desglose
   c.partidas.forEach((p, i) => { const el = $('cargos').querySelector(`tr[data-fila="${i}"] .calc`); if (el) el.value = `$ ${dinero(p.monto)}`; });
   const subs = ['USD', 'MXN'].filter((m) => cargos.some((p) => p.moneda === m));
@@ -518,7 +532,8 @@ window.addEventListener('beforeunload', (e) => { if (sucio) { e.preventDefault()
 (async () => {
   const [rc, rl] = await Promise.all([fetch('/api/admin/cot/conceptos').then((r) => r.json()), fetch('/api/admin/cot/cotizaciones').then((r) => r.json()).catch(() => [])]);
   conceptos = rc.conceptos;
-  $('lCli').innerHTML = [...new Set(rl.map((c) => c.datos.cliente).filter(Boolean))].sort().map((c) => `<option value="${esc(c)}">`).join('');
+  clientesAnteriores = [...new Set(rl.map((c) => c.datos.cliente).filter(Boolean))].sort().map((c) => `<option value="${esc(c)}">`).join('');
+  listasPorTipo('');
   const copia = Number(new URLSearchParams(location.search).get('copia'));
   if (id || copia) {
     const r = await fetch(`/api/admin/cot/cotizaciones/${id || copia}`);
