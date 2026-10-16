@@ -33,6 +33,7 @@
   .refrow{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
   .refrow .ref{width:180px}
   #fecha{width:180px;max-width:100%}
+  .derecha{display:flex;flex-direction:column;align-items:flex-end}
   .tipo{display:inline-flex;margin:0;cursor:pointer;text-transform:none;letter-spacing:0}
   .tipo input{position:absolute;opacity:0;width:1px;height:1px}
   .tipo span{display:inline-block;border:2px solid var(--line);border-radius:999px;padding:5px 14px;font-weight:700;font-size:13px;color:var(--muted);background:var(--bg)}
@@ -79,7 +80,7 @@
           <label class="tipo" title="Marca si la entrada es in-bond"><input type="checkbox" id="inbond"><span>in-bond</span></label>
           <label class="tipo hz" title="Marca si la entrada es haz-mat (material peligroso)"><input type="checkbox" id="hazmat"><span>haz-mat</span></label>
         </div></div>
-      <div><label for="fecha">Fecha arribo</label><input type="date" id="fecha"></div>
+      <div class="derecha"><label for="fecha">Fecha arribo</label><input type="date" id="fecha"></div>
       <div><label for="proveedor">Proveedor</label><input type="text" id="proveedor" list="lPro" maxlength="120"></div>
       <div><label for="cliente">Cliente</label><input type="text" id="cliente" list="lCli" maxlength="120"></div>
       <div><label for="bultos">Bultos</label><input type="text" id="bultos" inputmode="numeric" maxlength="120"></div>
