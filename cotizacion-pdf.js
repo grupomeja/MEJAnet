@@ -253,7 +253,7 @@ async function generarPDFCotizacion(reg, calc, folio) {
   const equiv = calc.granMXN !== null && calc.totalUSD && calc.totalMXN;
   const anchoTot = 250, xT = W - M - anchoTot;
   const hResumen = resumen.reduce((h, r) => h + (r[2] ? 20 : 13), 0);
-  const hTotal = totLin.length ? hResumen + 4 + 14 + totLin.length * 16 + (equiv ? 11 : 0) + 4 : 0;
+  const hTotal = totLin.length ? hResumen + 4 + 14 + totLin.length * 16 + (equiv ? 25 : 0) + 4 : 0;
   const notas = vacio(d.notas) ? [] : renglones(d.notas, xT - M - 40, F, 7.5).filter((l) => l.trim());
   const hNotas = notas.length ? 20 + notas.length * 10.5 : 0;
   const hBloque = Math.max(hTotal, hNotas);
@@ -281,11 +281,16 @@ async function generarPDFCotizacion(reg, calc, folio) {
         yy -= h;
       }
       yy -= 4;
-      const hT = 14 + totLin.length * 16 + (equiv ? 11 : 0);
+      const hT = 14 + totLin.length * 16 + (equiv ? 25 : 0);
       caja(xT, yy - hT, anchoTot, hT, NAVY);
       texto('TOTAL ESTIMADO', xT + 8, yy - 12, { f: FB, size: 6.6, color: CLARO, espacio: 1.2 });
       totLin.forEach((t, i) => texto(t, W - M - 8, yy - 15 - i * 16, { f: FB, size: 12.5, color: ORO, align: 'right' }));
-      if (equiv) texto(`Equivalente (T.C. ${d.tc}): MXN $ ${dinero(calc.granMXN)} | USD $ ${dinero(calc.granUSD)}`, W - M - 8, yy - hT + 5, { size: 6, color: hex('#c7d2e2'), align: 'right' });
+      // Equivalente: mismo formato que TOTAL ESTIMADO (negrita, espaciado, mismo color), en dos renglones
+      if (equiv) {
+        const eq = { f: FB, size: 7.2, color: CLARO, align: 'right', espacio: 0.9 };
+        texto(`Equivalente (T.C. ${d.tc}):`, W - M - 8, yy - hT + 17, eq);
+        texto(`MXN $ ${dinero(calc.granMXN)} | USD $ ${dinero(calc.granUSD)}`, W - M - 8, yy - hT + 6, eq);
+      }
     }
     y = y0 - hBloque - 8;
   }

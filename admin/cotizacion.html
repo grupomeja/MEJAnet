@@ -129,7 +129,7 @@
   .total{background:var(--navy);margin-top:6px;padding:9px 12px 8px;display:grid;grid-template-columns:auto 1fr;gap:4px 10px}
   .total .et{color:var(--claro);font-size:8.5px;font-weight:700;letter-spacing:1.6px;padding-top:4px}
   .total .t{color:var(--oro);font-size:17px;font-weight:700;text-align:right;line-height:1.3}
-  .total .eq{grid-column:1/-1;text-align:right;color:#c7d2e2;font-size:8px;margin-top:4px}
+  .total .eq{grid-column:1/-1;text-align:right;color:var(--claro);font-size:9.5px;font-weight:700;letter-spacing:1.2px;line-height:1.5;margin-top:4px}
 
   .pie{background:var(--navy);border-top:2px solid var(--cian);color:var(--claro);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:14px;padding:9px 30px;font-size:8.5px}
   .pie b{color:#fff;font-size:10px}
@@ -541,7 +541,7 @@ function recalcular() {
   res.push(['IMPUESTOS ADUANALES', `MXN $ ${dinero(im.total)}`]);
   $('resumen').innerHTML = res.map(([a, b, nota]) => `<div>${a}<b>${b}</b>${nota ? `<small>${nota}</small>` : ''}</div>`).join('');
   $('totales').innerHTML = `<div class="t">USD $ ${dinero(c.totalUSD)}</div><div class="t">MXN $ ${dinero(c.totalMXN)}</div>`;
-  $('equiv').textContent = c.granMXN !== null && c.totalUSD && c.totalMXN ? `EQUIVALENTE (T.C. ${d.tc}): MXN $ ${dinero(c.granMXN)} | USD $ ${dinero(c.granUSD)}` : '';
+  $('equiv').innerHTML = c.granMXN !== null && c.totalUSD && c.totalMXN ? `EQUIVALENTE (T.C. ${esc(d.tc)}):<br>MXN $ ${dinero(c.granMXN)} | USD $ ${dinero(c.granUSD)}` : '';
 }
 
 // ---------- Guardar ----------
