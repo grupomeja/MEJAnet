@@ -141,6 +141,10 @@ fetch('/api/admin/entradas-bodega').then((r) => r.json()).then((lista) => {
   llena('lCli', 'cliente'); llena('lLin', 'linea'); llena('lPro', 'proveedor');
 }).catch(() => {});
 
+// ENTER no hace nada en el formulario; solo se guarda con clic en el botón (en NOTAS sí hace salto de línea)
+$('f').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') e.preventDefault();
+});
 $('f').onsubmit = async (e) => {
   e.preventDefault();
   const btn = $('guardar'), msg = $('msg');
