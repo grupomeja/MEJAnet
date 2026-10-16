@@ -537,7 +537,7 @@ function recalcular() {
   const tcG = Number(limpiaNum(d.tc)) || 0;
   if (subs.includes('USD')) res.push(['DESGLOSE DE CARGOS (USD)', `USD $ ${dinero(c.cargos.USD)}`,
     tcG > 0 ? `EQUIVALENTE (T.C. ${d.tc}): MXN $ ${dinero(c.cargos.USD * tcG)}` : '']);
-  if (subs.includes('MXN')) res.push(['DESGLOSE DE CARGOS (MXN)', `MXN $ ${dinero(c.cargos.MXN)}`]);
+  if (subs.includes('MXN')) res.push(['DESGLOSE DE CARGOS (MXN) + IVA', `MXN $ ${dinero(c.cargosMXNIva)}`]);
   res.push(['IMPUESTOS ADUANALES', `MXN $ ${dinero(im.total)}`]);
   $('resumen').innerHTML = res.map(([a, b, nota]) => `<div>${a}<b>${b}</b>${nota ? `<small>${nota}</small>` : ''}</div>`).join('');
   $('totales').innerHTML = `<div class="t">USD $ ${dinero(c.totalUSD)}</div><div class="t">MXN $ ${dinero(c.totalMXN)}</div>`;

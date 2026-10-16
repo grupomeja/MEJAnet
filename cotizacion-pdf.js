@@ -247,7 +247,7 @@ async function generarPDFCotizacion(reg, calc, folio) {
   const tcG = Number(String(d.tc ?? '').replace(/[^\d.]/g, '')) || 0;
   if (calc.cargos.USD) resumen.push(['Desglose de cargos (USD)', `USD $ ${dinero(calc.cargos.USD)}`,
     tcG > 0 ? `Equivalente (T.C. ${d.tc}): MXN $ ${dinero(calc.cargos.USD * tcG)}` : '']);
-  if (calc.cargos.MXN) resumen.push(['Desglose de cargos (MXN)', `MXN $ ${dinero(calc.cargos.MXN)}`]);
+  if (calc.cargos.MXN) resumen.push(['Desglose de cargos (MXN) + IVA', `MXN $ ${dinero(calc.cargosMXNIva)}`]);
   if (hayImp) resumen.push(['Impuestos aduanales', `MXN $ ${dinero(ci.total)}`]);
   const totLin = [calc.totalUSD ? `USD $ ${dinero(calc.totalUSD)}` : '', calc.totalMXN ? `MXN $ ${dinero(calc.totalMXN)}` : ''].filter(Boolean);
   const equiv = calc.granMXN !== null && calc.totalUSD && calc.totalMXN;
