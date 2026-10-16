@@ -42,15 +42,15 @@ const vacio = (x) => String(x ?? '').trim() === '';
 
 async function generarPDFCotizacion(reg, calc, folio) {
   const d = reg.datos;
+  // Se dibuja todo en una hoja muy alta (sin saltos de página) y al final se coloca en UNA hoja carta,
+  // reduciendo la escala solo si el contenido no cabe.
   const pdf = await PDFDocument.create();
-  pdf.setTitle(`Cotizacion de servicios ${folio}`);
-  pdf.setAuthor('Grupo Meja');
-  const F = await pdf.embedFont(StandardFonts.Helvetica);
-  const FB = await pdf.embedFont(StandardFonts.HelveticaBold);
+  let F = await pdf.embedFont(StandardFonts.Helvetica);
+  let FB = await pdf.embedFont(StandardFonts.HelveticaBold);
   let logo = null;
   try { logo = await pdf.embedPng(fs.readFileSync(path.join(__dirname, 'public', 'logo-color.png'))); } catch (_) {}
 
-  const W = 612, H = 792, M = 22, ANCHO = W - 2 * M, PIE = 34;
+  const W = 612, HC = 792, H = HC * 3, M = 22, ANCHO = W - 2 * M, PIE = 34;   // HC: alto de la hoja carta; H: hoja de trabajo
   let page, y;
 
   const ancho = (s, f, size, esp = 0) => { const t = limpio(s); return f.widthOfTextAtSize(t, size) + esp * Math.max(t.length - 1, 0); };
@@ -118,7 +118,7 @@ async function generarPDFCotizacion(reg, calc, folio) {
       y -= hB + 22;
     } else y -= 16;
   }
-  const espacio = (h) => { if (y - h < PIE) encabezado(false); };
+  const espacio = () => {};   // todo va en una sola hoja
   const titulo = (t) => {
     espacio(36);
     texto(t, M, y, { f: FB, size: 8, color: NARANJA, espacio: 2.4 });
@@ -144,7 +144,7 @@ async function generarPDFCotizacion(reg, calc, folio) {
       while (size > 6.5 && !vacio(v) && ancho(v, FB, size) > w - 12) size -= 0.25;
       texto(vacio(v) ? '-' : v, x + 7, yy - 20, { f: FB, size, color: vacio(v) ? GRIS2 : colorValor, maxW: w - 12 });
     }
-    y -= filas * rh + 22;
+    y -= filas * rh + 18;
   };
   // Encabezado de tabla: azul claro, títulos centrados en su columna
   const encTabla = (cols) => {
@@ -176,15 +176,13 @@ async function generarPDFCotizacion(reg, calc, folio) {
   for (const [mon, etiqueta] of grupos) {
     const items = calc.partidas.filter((p) => p.moneda === mon);
     if (!items.length) continue;
-    if (y - 30 < PIE) { encabezado(false); encTabla(colsCargos); }
-    caja(M, y - 13, ANCHO, 13, SUAVE2);
+        caja(M, y - 13, ANCHO, 13, SUAVE2);
     texto(etiqueta, centro(C2, C3), y - 9.3, { f: FB, size: 7, color: AZUL, align: 'center', espacio: 1.1 });
     y -= 13;
     for (const p of items) {
       const lc = renglones(p.concepto || '-', C2 - C1 - 12, F, 7.3);
       const ld = renglones(p.descripcion || '', C3 - C2 - 12, F, 7);
       const n = Math.max(lc.length, ld.length), h = 7 + n * LH;
-      if (y - h < PIE) { encabezado(false); encTabla(colsCargos); }
       const base = (k) => y - 10.2 - ((n - k) * LH) / 2;   // centra verticalmente columnas con menos renglones
       lc.forEach((l, i) => texto(l, centro(C1, C2), base(lc.length) - i * LH, { size: 7.3, color: GRIS, align: 'center' }));
       ld.forEach((l, i) => texto(l, centro(C2, C3), base(ld.length) - i * LH, { size: 7, color: GRIS, align: 'center' }));
@@ -209,7 +207,7 @@ async function generarPDFCotizacion(reg, calc, folio) {
     });
     y -= 14;
   }
-  y -= 26;
+  y -= 20;
 
   // ---------- 3. Impuestos aduanales ----------
   const im = d.impuestos || {}, ci = calc.impuestos;
@@ -240,7 +238,7 @@ async function generarPDFCotizacion(reg, calc, folio) {
     caja(mitad, y - 17, ANCHO / 2, 17, NAVY);
     texto('TOTAL IMPUESTOS ADUANALES', mitad + 8, y - 11.3, { f: FB, size: 6.6, color: CLARO, espacio: 1 });
     texto(`MXN $ ${dinero(ci.total)}`, W - M - 8, y - 12, { f: FB, size: 10, color: ORO, align: 'right' });
-    y -= 40;
+    y -= 30;
   }
 
   // ---------- Notas (izquierda) y total estimado (derecha) ----------
@@ -292,8 +290,22 @@ async function generarPDFCotizacion(reg, calc, folio) {
     y = y0 - hBloque - 8;
   }
 
-  // ---------- Pie en todas las páginas ----------
-  const pags = pdf.getPages();
+  // ---------- Pasar a una sola hoja carta ----------
+  const alto = H - y;                                   // alto real del contenido
+  const disp = HC - PIE - 4;                            // espacio arriba del pie
+  const esc = Math.min(1, disp / alto);
+  const fin = await PDFDocument.create();
+  fin.setTitle(`Cotizacion de servicios ${folio}`);
+  fin.setAuthor('Grupo Meja');
+  const src = await PDFDocument.load(await pdf.save());
+  const emb = await fin.embedPage(src.getPage(0), { left: 0, bottom: y, right: W, top: H });
+  page = fin.addPage([W, HC]);
+  page.drawPage(emb, { x: (W - W * esc) / 2, y: HC - alto * esc, xScale: esc, yScale: esc });
+  F = await fin.embedFont(StandardFonts.Helvetica);
+  FB = await fin.embedFont(StandardFonts.HelveticaBold);
+
+  // ---------- Pie ----------
+  const pags = fin.getPages();
   pags.forEach((p, i) => {
     page = p;
     caja(0, 0, W, 24, NAVY);
@@ -302,7 +314,7 @@ async function generarPDFCotizacion(reg, calc, folio) {
     texto('A.A. Gonzalez Castillo & Medina S.C.  ·  Av. Reynosa #2047, Col. Guerrero, Nuevo Laredo, Tamps.  ·  Tel. (867) 715-45-38', W / 2, 9.3, { size: 5.8, color: CLARO, align: 'center' });
     texto(`${folio}   ·   Página ${i + 1} de ${pags.length}`, W - M, 9, { f: FB, size: 6, color: BLANCO, align: 'right' });
   });
-  return Buffer.from(await pdf.save());
+  return Buffer.from(await fin.save());
 }
 
 module.exports = { generarPDFCotizacion };
