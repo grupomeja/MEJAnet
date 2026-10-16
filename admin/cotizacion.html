@@ -124,6 +124,8 @@
   .notas textarea{font-size:10.5px;resize:vertical;min-height:70px;line-height:1.45}
   .resumen div{display:flex;justify-content:space-between;border-bottom:1px solid var(--linea);padding:4px 10px;font-size:10px;color:var(--gris)}
   .resumen b{color:var(--tinta);font-size:10.5px}
+  .resumen div{flex-wrap:wrap}
+  .resumen small{flex-basis:100%;text-align:right;font-size:8px;color:var(--gris);margin-top:1px}
   .total{background:var(--navy);margin-top:6px;padding:9px 12px 8px;display:grid;grid-template-columns:auto 1fr;gap:4px 10px}
   .total .et{color:var(--claro);font-size:8.5px;font-weight:700;letter-spacing:1.6px;padding-top:4px}
   .total .t{color:var(--oro);font-size:17px;font-weight:700;text-align:right;line-height:1.3}
@@ -513,10 +515,13 @@ function recalcular() {
   $('totImp').textContent = `MXN $ ${dinero(im.total)}`;
   // resumen y total
   const res = [];
-  if (subs.includes('USD')) res.push(['DESGLOSE DE CARGOS (USD)', `USD $ ${dinero(c.cargos.USD)}`]);
+  // Debajo de los cargos en dólares: su equivalente en pesos con el tipo de cambio capturado
+  const tcG = Number(limpiaNum(d.tc)) || 0;
+  if (subs.includes('USD')) res.push(['DESGLOSE DE CARGOS (USD)', `USD $ ${dinero(c.cargos.USD)}`,
+    tcG > 0 ? `EQUIVALENTE (T.C. ${d.tc}): MXN $ ${dinero(c.cargos.USD * tcG)}` : '']);
   if (subs.includes('MXN')) res.push(['DESGLOSE DE CARGOS (MXN)', `MXN $ ${dinero(c.cargos.MXN)}`]);
   res.push(['IMPUESTOS ADUANALES', `MXN $ ${dinero(im.total)}`]);
-  $('resumen').innerHTML = res.map(([a, b]) => `<div>${a}<b>${b}</b></div>`).join('');
+  $('resumen').innerHTML = res.map(([a, b, nota]) => `<div>${a}<b>${b}</b>${nota ? `<small>${nota}</small>` : ''}</div>`).join('');
   $('totales').innerHTML = `<div class="t">USD $ ${dinero(c.totalUSD)}</div><div class="t">MXN $ ${dinero(c.totalMXN)}</div>`;
   $('equiv').textContent = c.granMXN !== null && c.totalUSD && c.totalMXN ? `EQUIVALENTE (T.C. ${d.tc}): MXN $ ${dinero(c.granMXN)} | USD $ ${dinero(c.granUSD)}` : '';
 }

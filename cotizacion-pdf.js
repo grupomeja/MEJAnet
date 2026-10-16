@@ -245,13 +245,17 @@ async function generarPDFCotizacion(reg, calc, folio) {
 
   // ---------- Notas (izquierda) y total estimado (derecha) ----------
   const resumen = [];
-  if (calc.cargos.USD) resumen.push(['Desglose de cargos (USD)', `USD $ ${dinero(calc.cargos.USD)}`]);
+  // Debajo de los cargos en dólares: su equivalente en pesos con el tipo de cambio capturado
+  const tcG = Number(String(d.tc ?? '').replace(/[^\d.]/g, '')) || 0;
+  if (calc.cargos.USD) resumen.push(['Desglose de cargos (USD)', `USD $ ${dinero(calc.cargos.USD)}`,
+    tcG > 0 ? `Equivalente (T.C. ${d.tc}): MXN $ ${dinero(calc.cargos.USD * tcG)}` : '']);
   if (calc.cargos.MXN) resumen.push(['Desglose de cargos (MXN)', `MXN $ ${dinero(calc.cargos.MXN)}`]);
   if (hayImp) resumen.push(['Impuestos aduanales', `MXN $ ${dinero(ci.total)}`]);
   const totLin = [calc.totalUSD ? `USD $ ${dinero(calc.totalUSD)}` : '', calc.totalMXN ? `MXN $ ${dinero(calc.totalMXN)}` : ''].filter(Boolean);
   const equiv = calc.granMXN !== null && calc.totalUSD && calc.totalMXN;
   const anchoTot = 250, xT = W - M - anchoTot;
-  const hTotal = totLin.length ? resumen.length * 13 + 4 + 14 + totLin.length * 16 + (equiv ? 11 : 0) + 4 : 0;
+  const hResumen = resumen.reduce((h, r) => h + (r[2] ? 20 : 13), 0);
+  const hTotal = totLin.length ? hResumen + 4 + 14 + totLin.length * 16 + (equiv ? 11 : 0) + 4 : 0;
   const notas = vacio(d.notas) ? [] : renglones(d.notas, xT - M - 40, F, 7.5).filter((l) => l.trim());
   const hNotas = notas.length ? 20 + notas.length * 10.5 : 0;
   const hBloque = Math.max(hTotal, hNotas);
@@ -270,11 +274,13 @@ async function generarPDFCotizacion(reg, calc, folio) {
     }
     if (totLin.length) {
       let yy = y0;
-      for (const [k, v] of resumen) {
+      for (const [k, v, nota] of resumen) {
         texto(k, xT + 8, yy - 9.5, { size: 7.5, color: GRIS });
         texto(v, W - M - 8, yy - 9.5, { f: FB, size: 7.8, align: 'right' });
-        linea(xT, yy - 13, W - M, yy - 13);
-        yy -= 13;
+        if (nota) texto(nota, W - M - 8, yy - 17, { size: 5.8, color: GRIS, align: 'right' });
+        const h = nota ? 20 : 13;
+        linea(xT, yy - h, W - M, yy - h);
+        yy -= h;
       }
       yy -= 4;
       const hT = 14 + totLin.length * 16 + (equiv ? 11 : 0);
