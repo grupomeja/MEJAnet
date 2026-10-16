@@ -201,7 +201,7 @@
       <div class="c1 f1"><label>TIPO DE COTIZACIÓN</label><select data-c="tipo"><option value="">SELECCIONA…</option><option value="TERRESTRE">TERRESTRE</option><option value="MARITIMA">MARÍTIMA</option><option value="FFCC">FFCC (FERROCARRIL)</option><option value="PIPA">PIPA</option></select></div>
       <div class="f1"><label>TIPO DE OPERACIÓN</label><select data-c="operacion"><option value="">—</option><option value="IMPORTACION">IMPORTACIÓN</option><option value="EXPORTACION">EXPORTACIÓN</option></select></div>
       <div class="f1"><label>TRÁFICO</label><input data-c="trafico" maxlength="40" placeholder="—"></div>
-      <div class="f1"><label>NAVIERA</label><input data-c="naviera" list="lNav" maxlength="80" placeholder="—"></div>
+      <div class="f1"><label id="lblNav">NAVIERA</label><input data-c="naviera" list="lNav" maxlength="80" placeholder="—"><select id="mercPipa" hidden><option value="">SELECCIONA…</option><option>CO2</option><option>ARGON</option><option>OXIGENO</option><option>NITROGENO</option></select></div>
       <div class="c1"><label>MODALIDAD</label><select data-c="modalidad"><option value="">—</option><option>DOOR TO DOOR</option><option>FCL</option><option>LTL</option></select></div>
       <div><label>TIPO DE CONTENEDOR</label>
         <select data-c="contenedor"></select></div>
@@ -224,7 +224,7 @@
     <div class="tit">IMPUESTOS ADUANALES</div>
     <div class="cuad oscuro">
       <div class="c1 f1"><label>FACTURA</label><input data-i="factura" maxlength="120" placeholder="—"></div>
-      <div class="f1"><label>TIPO DE CAMBIO APROX.</label><input data-i="tc" class="dinero" inputmode="decimal" placeholder="0.00"></div>
+      <div class="f1"><label>TIPO DE CAMBIO APROX.</label><input data-i="tc" class="dinero" readonly tabindex="-1" title="Se toma del tipo de cambio de DETALLES DEL EMBARQUE" placeholder="0.00"></div>
       <div class="f1 s2"><label>MERCANCÍA</label><input data-i="mercancia" maxlength="200" placeholder="—"></div>
       <div class="c1 s4"><label>RÉGIMEN ADUANERO</label><select data-i="regimen"><option value="">—</option><option>IMPORTACIÓN DEFINITIVA</option><option>EXPORTACIÓN DEFINITIVA</option><option>IMPORTACIÓN TEMPORAL</option><option>EXPORTACIÓN TEMPORAL</option><option>DEPÓSITO FISCAL</option><option>TRÁNSITO INTERNO</option><option>TRÁNSITO INTERNACIONAL</option><option>ELABORACIÓN, TRANSFORMACIÓN O REPARACIÓN EN RECINTO FISCALIZADO</option><option>RECINTO FISCALIZADO ESTRATÉGICO</option></select></div>
     </div>
@@ -386,8 +386,24 @@ function camposPorTipo(tipo) {
     el.closest('div').classList.toggle('na', off);
     if (k === 'buque_eta') el.closest('div').querySelector('label').textContent = pipa ? 'NO. DE PIPA' : 'BUQUE / E.T.A.';
   }
+  // PIPA: en lugar de NAVIERA va MERCANCÍA (lista) y se copia a MERCANCÍA de impuestos aduanales
+  const nav = document.querySelector('[data-c=naviera]'), mp = $('mercPipa'), merc = document.querySelector('[data-i=mercancia]');
+  nav.hidden = pipa; mp.hidden = !pipa;
+  nav.closest('div').classList.toggle('na', carretera && !pipa);
+  $('lblNav').textContent = pipa ? 'MERCANCÍA' : 'NAVIERA';
+  merc.readOnly = pipa; merc.title = pipa ? 'Se toma de MERCANCÍA en DETALLES DEL EMBARQUE' : '';
+  if (pipa) {
+    const v = merc.value.trim().toUpperCase();
+    if (v && ![...mp.options].some((o) => o.value === v)) mp.add(new Option(v, v));
+    mp.value = v; merc.value = v;
+  }
   listasPorTipo(tipo);
 }
+document.addEventListener('change', (e) => {
+  if (e.target.id === 'mercPipa') { document.querySelector('[data-i=mercancia]').value = e.target.value; sucio = true; }
+});
+// El tipo de cambio de impuestos aduanales es copia del de DETALLES DEL EMBARQUE
+function copiaTC() { const el = document.querySelector('[data-i=tc]'); el.value = document.querySelector('[data-c=tc]').value; formatea(el); }
 // Conceptos que aparecen solos en el desglose para cada tipo (sin tipo: los de marítima)
 const predeterminados = (tipo) => conceptos
   .filter((c) => c.datos.activo !== false && (c.datos.tipos || (c.datos.predeterminado ? ['MARITIMA', 'FFCC'] : [])).includes(tipo || 'MARITIMA'))
@@ -425,6 +441,7 @@ function datos() {
   for (const el of $$('[data-c]')) d[el.dataset.c] = valor(el);
   d.impuestos = {};
   for (const el of $$('[data-i]')) d.impuestos[el.dataset.i] = esAuto(el) ? '' : valor(el);
+  d.impuestos.tc = d.tc;   // siempre el mismo tipo de cambio
   return d;
 }
 function llenar(d) {
@@ -442,6 +459,7 @@ function llenar(d) {
   elaboro = d.elaboro || '';
   tipoActual = d.tipo || '';
   camposPorTipo(tipoActual);
+  copiaTC();
 }
 // Campos que aparecen dos veces (tráfico, fecha, operación) se mantienen iguales
 document.addEventListener('input', (e) => {
@@ -511,7 +529,7 @@ function recalcular() {
   if (im.incrInformativo) incInp.value = `$ ${dinero(im.incrementables)}`;
   $('aINC').textContent = im.incrInformativo ? 'INFORMATIVO' : '';
   $('aIVA').textContent = !ivaInp.dataset.manual ? 'CALCULADO' : '';
-  document.querySelector('[data-i=tc]').placeholder = d.tc ? `$ ${d.tc}` : '0.00';
+  if (document.activeElement?.dataset?.c !== 'tc') copiaTC(); else document.querySelector('[data-i=tc]').value = d.tc ? `$ ${d.tc}` : '';
   $('totImp').textContent = `MXN $ ${dinero(im.total)}`;
   // resumen y total
   const res = [];

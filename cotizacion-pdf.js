@@ -160,7 +160,7 @@ async function generarPDFCotizacion(reg, calc, folio) {
   titulo('DETALLES DEL EMBARQUE');
   const ter = ['TERRESTRE', 'PIPA'].includes(d.tipo);   // naviera y buque no aplican por carretera
   cuadricula([
-    ['TIPO DE COTIZACIÓN', TIPOS[d.tipo]], ['TIPO DE OPERACIÓN', OPER[d.operacion]], ['TRÁFICO', d.trafico], ['NAVIERA', ter ? 'N/A' : d.naviera],
+    ['TIPO DE COTIZACIÓN', TIPOS[d.tipo]], ['TIPO DE OPERACIÓN', OPER[d.operacion]], ['TRÁFICO', d.trafico], d.tipo === 'PIPA' ? ['MERCANCÍA', (d.impuestos || {}).mercancia] : ['NAVIERA', ter ? 'N/A' : d.naviera],
     ['MODALIDAD', d.modalidad], ['TIPO DE CONTENEDOR', d.contenedor ? `${d.contenedor}${CONT[d.contenedor] ? ` - ${CONT[d.contenedor]}` : ''}` : ''],
     d.tipo === 'PIPA' ? ['NO. DE PIPA', d.buque_eta] : ['BUQUE / E.T.A.', ter ? 'N/A' : d.buque_eta], ['FECHA', fechaTxt(d.fecha)],
     ['PROVEEDOR', d.proveedor, 3], ['TIPO DE CAMBIO', d.tc ? `$${d.tc} MXN por USD` : ''],

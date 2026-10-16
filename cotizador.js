@@ -285,7 +285,8 @@ function limpiarCotizacion(b) {
     cargos,
     impuestos: {
       factura: t(im.factura, 120).toUpperCase(),
-      valor_usd: numTxt(im.valor_usd), tc: numTxt(im.tc), incrementables: numTxt(im.incrementables), valor_aduana: numTxt(im.valor_aduana),
+      valor_usd: numTxt(im.valor_usd), tc: numTxt(b.tc),   // mismo tipo de cambio que DETALLES DEL EMBARQUE
+      incrementables: numTxt(im.incrementables), valor_aduana: numTxt(im.valor_aduana),
       mercancia: t(im.mercancia, 200).toUpperCase(), regimen: t(im.regimen, 120).toUpperCase(),
       igi: numTxt(im.igi), dta: numTxt(im.dta), iva: numTxt(im.iva), prevalidacion: numTxt(im.prevalidacion), contraprestacion: numTxt(im.contraprestacion),
     },

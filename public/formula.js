@@ -150,7 +150,8 @@
   function calcular(cot) {
     const tc = num(cot.tc);
     const terrestre = true;   // en todos los tipos de cotización los incrementables son solo informativos
-    const imp = calcularImpuestos(cot.impuestos || {}, tc, terrestre);
+    // el tipo de cambio de impuestos es siempre el de DETALLES DEL EMBARQUE
+    const imp = calcularImpuestos({ ...(cot.impuestos || {}), tc: '' }, tc, terrestre);
     const vars = { tc, valor_usd: imp.valorUsd, valor_mxn: r2(imp.valorUsd * imp.tc), valor_aduana: imp.valorAduana };
     const cargos = { USD: 0, MXN: 0 };
     const partidas = (cot.cargos || []).map((p) => {
