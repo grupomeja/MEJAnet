@@ -71,13 +71,15 @@
 
   <form id="f" autocomplete="off">
     <section class="card grid">
-      <div class="full"><label for="referencia">Referencia</label>
+      <!-- Izquierda: Referencia, Proveedor, Bultos, Peso (Lbs), Linea fletera, P.O. | Derecha: Fecha, Cliente, Descripcion, Peso (KGS), Tracking, Pedimento -->
+      <div><label for="referencia">Referencia</label>
         <div class="refrow">
           <div class="ref"><span>MEJA</span><input type="text" id="referencia" placeholder="####/###" maxlength="8" required></div>
           <label class="tipo" title="Marca si la entrada es in-bond"><input type="checkbox" id="inbond"><span>in-bond</span></label>
           <label class="tipo hz" title="Marca si la entrada es haz-mat (material peligroso)"><input type="checkbox" id="hazmat"><span>haz-mat</span></label>
         </div></div>
       <div><label for="fecha">Fecha arribo</label><input type="date" id="fecha"></div>
+      <div><label for="proveedor">Proveedor</label><input type="text" id="proveedor" list="lPro" maxlength="120"></div>
       <div><label for="cliente">Cliente</label><input type="text" id="cliente" list="lCli" maxlength="120"></div>
       <div><label for="bultos">Bultos</label><input type="text" id="bultos" inputmode="numeric" maxlength="120"></div>
       <div><label for="descripcion">Descripcion</label>
@@ -97,7 +99,6 @@
       <div><label for="linea">Linea fletera</label><input type="text" id="linea" list="lLin" maxlength="120"></div>
       <div><label for="tracking">Tracking #</label><input type="text" id="tracking" maxlength="120"></div>
       <div><label for="po">P.O.</label><input type="text" id="po" maxlength="120"></div>
-      <div><label for="proveedor">Proveedor</label><input type="text" id="proveedor" list="lPro" maxlength="120"></div>
       <div><label for="pedimento">Pedimento</label><input type="text" id="pedimento" maxlength="120"></div>
       <div class="full"><label for="notas">Notas</label><textarea id="notas" maxlength="500" placeholder="Observaciones de esta entrada"></textarea></div>
     </section>
