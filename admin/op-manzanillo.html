@@ -176,7 +176,8 @@ button.kpi:hover{border-color:var(--ink-3)}
 .tr .c-ref .b{white-space:normal}
 .cell.c-fd .b,.cell.c-fp .b{white-space:normal}
 .cell{overflow:hidden}
-.tr .c-eta,.tr .c-fp,.tr .c-tp,.tr .c-fd,.tr .c-tipo{text-align:center}
+.tr .c-eta,.tr .c-fp,.tr .c-tp,.tr .c-fd,.tr .c-tipo,.tr .c-term,.tr .c-next{text-align:center}
+.tr .c-next .nx{justify-content:center}
 .tr .c-eta .fd2,.tr .c-fp .fd2,.tr .c-fd .fd2{align-items:center}
 @media (max-width:820px){.tr .c-eta{text-align:right}.tr .c-eta .fd2{align-items:flex-end}}
 .cell.c-term .term,.cell.c-ff .ff,.cell.c-tp .tp{overflow-wrap:break-word;word-break:normal}
@@ -211,7 +212,7 @@ button.kpi:hover{border-color:var(--ink-3)}
 .cell{min-width:0}
 .cell .a{font-size:11.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cell .b{font-size:11.5px;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.c-bq .a,.c-bq .b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c-bq .a,.c-bq .b{white-space:nowrap;overflow:hidden;text-overflow:clip}
 .ref{font-family:var(--f-body);font-weight:600}
 .dots{display:flex;gap:3px;align-items:center}
 .dot{width:14px;height:8px;border-radius:2px;background:var(--line)}
@@ -563,6 +564,17 @@ function renderSeg(){
   <div class="tbl-head">${head}</div></div>
   <div class="tbl">${body||`<div class="empty">${loaded?"No hay embarques con estos filtros":"Cargando embarques…"}</div>`}</div>`;
   ajustarRef();
+  ajustarBuque();
+}
+// Si el buque, HBL o MBL no cabe en su línea, se reduce el tamaño de la letra solo en ese dato
+function ajustarBuque(){
+  if($("#v-seg").hidden)return;
+  document.querySelectorAll("#v-seg .c-bq .a, #v-seg .c-bq .b").forEach(el=>{
+    el.style.fontSize="";el.style.whiteSpace="";
+    let fs=parseFloat(getComputedStyle(el).fontSize);
+    while(el.scrollWidth>el.clientWidth+1&&fs>7){fs-=.5;el.style.fontSize=fs+"px"}
+    if(el.scrollWidth>el.clientWidth+1){el.style.whiteSpace="normal";el.style.overflowWrap="anywhere"} // caso extremo: pasa a otra línea antes que cortarse
+  });
 }
 
 // La columna Referencia toma el ancho del texto más largo (referencia o cliente) para que se lea completo
@@ -573,7 +585,7 @@ function ajustarRef(){
   tbl.querySelectorAll(".tr:not(.th) .c-ref .a, .tr:not(.th) .c-ref .b").forEach(el=>{rg.selectNodeContents(el);w=Math.max(w,rg.getBoundingClientRect().width)});
   if(w)tbl.style.setProperty("--refw",Math.min(Math.ceil(w)+30,window.innerWidth<1300?160:window.innerWidth<1500?180:300)+"px");
 }
-window.addEventListener("resize",()=>{clearTimeout(window.__rz);window.__rz=setTimeout(ajustarRef,150)});
+window.addEventListener("resize",()=>{clearTimeout(window.__rz);window.__rz=setTimeout(()=>{ajustarRef();ajustarBuque()},150)});
 
 /* ---------- render: gastos ---------- */
 function renderGas(){
