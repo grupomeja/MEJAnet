@@ -140,6 +140,8 @@ button.kpi:hover{border-color:var(--ink-3)}
 .pill.info{background:var(--info-soft);color:var(--info);border-color:transparent}
 .sema{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--line)}
 .sema.verde{background:var(--ok)} .sema.rojo{background:var(--bad)}
+.sem-verde{color:var(--ok);font-weight:700}
+.sem-rojo{color:var(--bad);font-weight:700}
 .tag{font-family:var(--f-display);font-weight:600;font-size:13px;letter-spacing:.04em;padding:1px 6px;border-radius:3px;border:1px solid var(--line);color:var(--ink-2)}
 
 /* Tracking table */
@@ -461,7 +463,7 @@ function renderSeg(){
   const head=`<div class="tr th"><div>Referencia</div><div>Buque · terminal</div><div>Tipo</div><div>ETA</div><div>Avance</div><div>Siguiente hito</div><div class="c-port">Puerto</div></div>`;
   const body=rows.map(({id,e,a})=>{
     let nextTxt;
-    if(e.estado==="cerrada"){const f=hit(e,"desp_fin").r;nextTxt=`<div class="a"><span class="sema ${e.semaforo||""}"></span> Despachado ${fd(f)}</div><div class="b">${e.semaforo==="rojo"?"Reconocimiento aduanero":e.semaforo==="verde"?"Desaduanamiento libre":""}${e.pedimento?" · Ped. "+esc(e.pedimento):""}</div>`}
+    if(e.estado==="cerrada"){const f=hit(e,"desp_fin").r;nextTxt=`<div class="a"><span class="sema ${e.semaforo||""}"></span> Despachado ${fd(f)}</div><div class="b">${e.semaforo==="rojo"?`<span class="sem-rojo">Reconocimiento aduanero</span>`:e.semaforo==="verde"?`<span class="sem-verde">Desaduanamiento libre</span>`:""}${e.pedimento?" · Ped. "+esc(e.pedimento):""}</div>`}
     else if(a.next){nextTxt=`<div class="a">${esc(a.next.l)} · ${a.nd?fd(a.nd):"sin fecha"}</div><div class="b">${a.alerts.length?`<span class="pill ${a.alerts[0].lvl}">${esc(a.alerts[0].short)}</span>`:(hit(e,a.next.k).c?"Confirmada":a.nd?"Estimada":"Registrar fecha estimada")}</div>`}
     else nextTxt=`<div class="a">Todos los hitos registrados</div><div class="b">Marcar como cerrada</div>`;
     return `<button type="button" class="tr s-${status(e)}" data-open="${esc(id)}" title="${esc(STATUS[status(e)])}">
