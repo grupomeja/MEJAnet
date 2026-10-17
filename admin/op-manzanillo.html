@@ -14,7 +14,7 @@
   --brand:#7A1C1C; --brand-ink:#FFFFFF; --brand-soft:#F5E8E8;
   --ok:#1E7A4C; --ok-soft:#E3F3EA; --warn:#A86200; --warn-soft:#FCF0DC; --bad:#C62828; --bad-soft:#FBE6E6; --info:#1F5F8B; --info-soft:#E3EEF6;
   --bar:#3E4A5E;
-  --cel-bg1:#EEF8FD; --cel-bg2:#DDF1FA; --cel-line:#B9E2F3; --cel-ink:#1690C0; --cel-th:#E3F4FB; --logo:#A3A8AF;
+  --cel-bg1:#FAF6EF; --cel-bg2:#F2ECE1; --cel-line:#E4D7C5; --cel-ink:#5E4E37; --cel-th:#EAE1D3; --cel-ico:#8C7553; --logo:#A3A8AF;
   --st-or:#E46A1C; --st-or-ink:#FFFFFF; --st-or-soft:#FDEBDD;
   --st-ye:#F2C230; --st-ye-ink:#2B2200; --st-ye-soft:#FDF5D2;
   --st-gr:#2E8B57; --st-gr-ink:#FFFFFF; --st-gr-soft:#E2F2E8;
@@ -31,7 +31,7 @@
   --brand:#D26A6A; --brand-ink:#1A0A0A; --brand-soft:#3A2224;
   --ok:#4CC38A; --ok-soft:#173A2A; --warn:#E5A445; --warn-soft:#3B2C14; --bad:#F06C6C; --bad-soft:#401C1E; --info:#6AAEDC; --info-soft:#18303F;
   --bar:#8E9AB0;
-  --cel-bg1:#17303B; --cel-bg2:#132834; --cel-line:#25516A; --cel-ink:#7FD0F0; --cel-th:#16303C; --logo:#7E8591;
+  --cel-bg1:#2B261F; --cel-bg2:#25211B; --cel-line:#4A4032; --cel-ink:#E6D8C1; --cel-th:#332C23; --cel-ico:#8C7553; --logo:#7E8591;
   --st-or:#E87A33; --st-or-ink:#1A0C02; --st-or-soft:#3A2416;
   --st-ye:#E8BE3A; --st-ye-ink:#211A00; --st-ye-soft:#352E15;
   --st-gr:#45B07A; --st-gr-ink:#06180E; --st-gr-soft:#16301F;
@@ -43,7 +43,7 @@
   --brand:#D26A6A; --brand-ink:#1A0A0A; --brand-soft:#3A2224;
   --ok:#4CC38A; --ok-soft:#173A2A; --warn:#E5A445; --warn-soft:#3B2C14; --bad:#F06C6C; --bad-soft:#401C1E; --info:#6AAEDC; --info-soft:#18303F;
   --bar:#8E9AB0;
-  --cel-bg1:#17303B; --cel-bg2:#132834; --cel-line:#25516A; --cel-ink:#7FD0F0; --cel-th:#16303C; --logo:#7E8591;
+  --cel-bg1:#2B261F; --cel-bg2:#25211B; --cel-line:#4A4032; --cel-ink:#E6D8C1; --cel-th:#332C23; --cel-ico:#8C7553; --logo:#7E8591;
   --st-or:#E87A33; --st-or-ink:#1A0C02; --st-or-soft:#3A2416;
   --st-ye:#E8BE3A; --st-ye-ink:#211A00; --st-ye-soft:#352E15;
   --st-gr:#45B07A; --st-gr-ink:#06180E; --st-gr-soft:#16301F;
@@ -69,9 +69,9 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;backgroun
 .title-wrap small{font-size:12px;color:var(--ink-3)}
 /* Título con el azul celeste del botón OP Manzanillo, más tenue */
 h1.titulo{display:inline-flex;align-items:center;gap:12px;margin:0;padding:6px 22px 6px 6px;border-radius:14px;
-  background:linear-gradient(180deg,var(--cel-bg1),var(--cel-bg2));border:1px solid var(--cel-line);box-shadow:0 2px 0 var(--cel-line),0 6px 16px rgba(30,167,220,.12);
+  background:linear-gradient(180deg,var(--cel-bg1),var(--cel-bg2));border:1px solid var(--cel-line);box-shadow:0 2px 0 var(--cel-line),0 6px 16px rgba(140,117,83,.14);
   color:var(--cel-ink);font-family:"Oswald","Arial Narrow",system-ui,sans-serif;font-weight:600;font-size:27px;letter-spacing:1.2px;line-height:1.1;white-space:nowrap}
-h1.titulo .ico{flex:0 0 44px;height:44px;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:10px;color:#1ea7dc;box-shadow:inset 0 -3px 6px rgba(0,0,0,.05)}
+h1.titulo .ico{flex:0 0 44px;height:44px;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:10px;color:var(--cel-ico);box-shadow:inset 0 -3px 6px rgba(0,0,0,.05)}
 h1.titulo .ico svg{width:34px;height:34px}
 .right{display:flex;flex-direction:column;align-items:stretch;gap:8px;justify-self:end;min-width:330px}
 .right nav.tabs button{flex:1;text-align:center}
@@ -193,7 +193,7 @@ button.kpi:hover{border-color:var(--ink-3)}
 .tbl{background:var(--surface);border:1px solid var(--line);border-radius:0 0 8px 8px;overflow:hidden}
 .tbl > .tr:first-child{border-top:0}
 .tr{display:grid;grid-template-columns:var(--refw,150px) minmax(196px,1.2fr) minmax(130px,.7fr) minmax(96px,.8fr) 40px 86px 84px 68px 86px 92px minmax(192px,2.4fr) 54px;gap:9px;align-items:center;padding:0 14px 0 0;border-top:1px solid var(--line-2);width:100%;text-align:left;background:var(--surface);border-left:0;border-right:0;border-bottom:0}
-.tr.th{border-top:0;background:var(--cel-th);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--cel-ink);font-weight:500}
+.tr.th{border-top:0;background:var(--cel-th);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--cel-ink);font-weight:700}
 .tr>div{padding-block:9px}
 .tr>div:first-child{padding-left:14px;align-self:stretch;display:flex;flex-direction:column;justify-content:center}
 .tr.th>div{text-align:center}
