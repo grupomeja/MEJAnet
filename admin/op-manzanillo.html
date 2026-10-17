@@ -188,7 +188,7 @@ button.kpi:hover{border-color:var(--ink-3)}
 :root[data-theme="dark"] .tr:not(.th):hover{filter:brightness(1.3)}
 .tr.s-or{background:var(--st-or-soft)} .tr.s-or>.c-ref{background:var(--st-or);color:var(--st-or-ink)}
 .tr.s-ye{background:var(--st-ye-soft)} .tr.s-ye>.c-ref{background:var(--st-ye);color:var(--st-ye-ink)}
-.tr.s-gr{background:var(--st-gr-soft)} .tr.s-gr>.c-ref{background:var(--st-gr);color:var(--st-gr-ink)}
+.tr.s-gr{background:var(--st-gr-soft)} .tr.s-gr.sem-r{background:var(--bad-soft)} .tr.s-gr>.c-ref{background:var(--st-gr);color:var(--st-gr-ink)}
 .tr[class*=" s-"]>.c-ref .b{color:inherit;opacity:.85}
 .swatch{display:inline-block;width:30px;height:16px;border-radius:3px;vertical-align:middle;margin-right:6px;border:1px solid var(--line)}
 .st-pill{display:inline-flex;align-items:center;font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;white-space:nowrap}
@@ -530,7 +530,7 @@ function renderSeg(){
     if(e.estado==="cerrada"){const f=hit(e,"despacho").r;nextTxt=`<div class="a"><span class="sema ${e.semaforo||""}"></span> <span class="${e.semaforo==="rojo"?"sem-rojo":e.semaforo==="verde"?"sem-verde":""}">Despachado</span></div><div class="${e.semaforo==="rojo"?"sem-rojo":e.semaforo==="verde"?"sem-verde":""}">${fd2(f)}</div><div class="b">${e.semaforo==="rojo"?`<span class="sem-rojo">Reconocimiento aduanero</span>`:e.semaforo==="verde"?`<span class="sem-verde">Desaduanamiento libre</span>`:""}${e.pedimento?" · Ped. "+esc(e.pedimento):""}</div>`}
     else if(a.next){nextTxt=`<div class="a">${esc(a.next.l)}</div><div class="nx">${a.nd?`<span class="nx-d">${fd(a.nd)}</span>`:`<span class="muted">Sin fecha</span>`}${a.alerts.length?`<span class="pill ${a.alerts[0].lvl}">${esc(a.alerts[0].short)}</span>`:`<span class="muted">${a.nd?"Estimada":"Registrar fecha estimada"}</span>`}</div>`}
     else nextTxt=`<div class="a">Todos los hitos registrados</div><div class="b">Marcar como cerrada</div>`;
-    return `<button type="button" class="tr s-${status(e)}" data-open="${esc(id)}" title="${esc(STATUS[status(e)])}">
+    return `<button type="button" class="tr s-${status(e)}${status(e)==="gr"&&e.semaforo==="rojo"?" sem-r":""}" data-open="${esc(id)}" title="${esc(STATUS[status(e)])}">
       <div class="cell c-ref"><div class="a ref">${esc(e.ref)}</div><div class="b">${esc(e.cliente)}</div></div>
       <div class="cell c-bq"><div class="a">${esc(e.buque||"—")} <span class="muted mono">${esc(e.viaje||"")}</span></div><div class="b">${[e.hbl?`<span class="bl">HBL:&nbsp;${esc(e.hbl)}</span>`:"",e.mbl?`<span class="bl">MBL:&nbsp;${esc(e.mbl)}</span>`:""].filter(Boolean).join(" · ")}</div></div>
       <div class="cell c-term"><div class="b term">${esc(e.terminal||"Sin asignar")}</div></div>
