@@ -4,23 +4,741 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>OP Manzanillo · MEJAnet v1.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-  *{box-sizing:border-box}
-  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f4f8fb;color:#0b1a33;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-  main{max-width:480px;padding:32px 20px;text-align:center}
-  img{width:min(220px,60%);height:auto;margin:0 auto 32px;display:block}
-  h1{margin:0 0 12px;font-size:30px;color:#1ea7dc}
-  p{margin:0 0 32px;color:#5d6672;font-size:17px}
-  a{display:inline-block;padding:12px 24px;border-radius:999px;background:#1ea7dc;color:#fff;text-decoration:none;font-weight:700}
-  a:hover{filter:brightness(1.07)}
+/* Layout: barra de marca + pestañas; vistas Ejecutivo / Seguimiento / Gastos; la ficha del embarque se abre como panel lateral sobre cualquier vista. */
+:root{
+  --bg:#F3F4F6; --surface:#FFFFFF; --surface-2:#F7F7F9; --line:#DCDEE3; --line-2:#ECEDF0;
+  --ink:#1B1F27; --ink-2:#4A5160; --ink-3:#7A8191;
+  --brand:#7A1C1C; --brand-ink:#FFFFFF; --brand-soft:#F5E8E8;
+  --ok:#1E7A4C; --ok-soft:#E3F3EA; --warn:#A86200; --warn-soft:#FCF0DC; --bad:#C62828; --bad-soft:#FBE6E6; --info:#1F5F8B; --info-soft:#E3EEF6;
+  --bar:#3E4A5E; --logo:#A3A8AF;
+  --st-or:#E46A1C; --st-or-ink:#FFFFFF; --st-or-soft:#FDEBDD;
+  --st-ye:#F2C230; --st-ye-ink:#2B2200; --st-ye-soft:#FDF5D2;
+  --st-gr:#2E8B57; --st-gr-ink:#FFFFFF; --st-gr-soft:#E2F2E8;
+  --st-no:#E3E5EA; --st-no-ink:#1B1F27;
+  --f-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:6px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12151B; --surface:#1A1E26; --surface-2:#20252E; --line:#323946; --line-2:#272D37;
+  --ink:#E7E9EE; --ink-2:#B3B9C5; --ink-3:#8790A0;
+  --brand:#D26A6A; --brand-ink:#1A0A0A; --brand-soft:#3A2224;
+  --ok:#4CC38A; --ok-soft:#173A2A; --warn:#E5A445; --warn-soft:#3B2C14; --bad:#F06C6C; --bad-soft:#401C1E; --info:#6AAEDC; --info-soft:#18303F;
+  --bar:#8E9AB0; --logo:#7E8591;
+  --st-or:#E87A33; --st-or-ink:#1A0C02; --st-or-soft:#3A2416;
+  --st-ye:#E8BE3A; --st-ye-ink:#211A00; --st-ye-soft:#352E15;
+  --st-gr:#45B07A; --st-gr-ink:#06180E; --st-gr-soft:#16301F;
+  --st-no:#2C323D; --st-no-ink:#E7E9EE; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12151B; --surface:#1A1E26; --surface-2:#20252E; --line:#323946; --line-2:#272D37;
+  --ink:#E7E9EE; --ink-2:#B3B9C5; --ink-3:#8790A0;
+  --brand:#D26A6A; --brand-ink:#1A0A0A; --brand-soft:#3A2224;
+  --ok:#4CC38A; --ok-soft:#173A2A; --warn:#E5A445; --warn-soft:#3B2C14; --bad:#F06C6C; --bad-soft:#401C1E; --info:#6AAEDC; --info-soft:#18303F;
+  --bar:#8E9AB0; --logo:#7E8591;
+  --st-or:#E87A33; --st-or-ink:#1A0C02; --st-or-soft:#3A2416;
+  --st-ye:#E8BE3A; --st-ye-ink:#211A00; --st-ye-soft:#352E15;
+  --st-gr:#45B07A; --st-gr-ink:#06180E; --st-gr-soft:#16301F;
+  --st-no:#2C323D; --st-no-ink:#E7E9EE; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.45}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--surface)}
+.wrap{max-width:1440px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-size:12.5px;letter-spacing:-.01em}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--ink-3)}
+
+/* Header */
+@media (max-width:760px){header.top{position:static!important}}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding-block:10px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.logo{display:block;flex:none}.logo img{height:40px;width:auto;display:block}
+.brand h1{font-family:var(--f-display);font-weight:600;font-size:21px;margin:0;letter-spacing:.01em;text-wrap:balance}
+.brand small{display:block;font-size:12px;color:var(--ink-3);font-family:var(--f-body)}
+nav.tabs{display:flex;gap:2px;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:3px}
+nav.tabs button{border:0;background:transparent;padding:6px 14px;border-radius:6px;font-weight:500;color:var(--ink-2)}
+nav.tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.top .actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.btn{text-decoration:none;color:var(--ink);display:inline-flex;align-items:center;border:1px solid var(--line);background:var(--surface);padding:6px 12px;border-radius:var(--r);font-weight:500}
+.btn:hover{border-color:var(--ink-3)}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn.sm{padding:3px 9px;font-size:12.5px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* Filters */
+.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding-block:14px}
+.filters select,.filters input{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:6px 10px;min-width:0}
+.filters input[type=search]{width:240px;max-width:100%}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:transparent;padding:6px 11px;color:var(--ink-2);border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+.count{color:var(--ink-3);font-size:12.5px;margin-left:auto}
+.banner{margin-top:12px;padding:10px 14px;border-radius:var(--r);background:var(--warn-soft);color:var(--warn);font-weight:500}
+
+/* Cards / sections */
+.grid{display:grid;gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px;min-width:0}
+.card h2{font-family:var(--f-display);font-weight:600;font-size:17px;letter-spacing:.03em;text-transform:uppercase;margin:0 0 12px;color:var(--ink-2)}
+.card h2 .muted{text-transform:none;letter-spacing:0;font-family:var(--f-body);font-size:12.5px;font-weight:400;margin-left:6px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:2px;text-align:left}
+button.kpi:hover{border-color:var(--ink-3)}
+.kpi .lbl{font-size:12px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;font-weight:500}
+.kpi .val{font-family:var(--f-display);font-weight:600;font-size:38px;line-height:1.05;font-variant-numeric:tabular-nums}
+.kpi .val small{font-size:17px;color:var(--ink-3);font-weight:500;margin-left:3px}
+.kpi .sub{font-size:12.5px;color:var(--ink-2)}
+.kpi.alert .val{color:var(--bad)}
+.two{display:grid;grid-template-columns:1.25fr 1fr;gap:14px}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media (max-width:980px){.two,.three{grid-template-columns:1fr}}
+
+/* Month bars */
+.months{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;align-items:end;height:190px;padding-top:18px}
+.mcol{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px;min-width:0}
+.mcol .b{width:100%;max-width:38px;background:var(--bar);border-radius:3px 3px 0 0;position:relative;min-height:2px}
+.mcol .b span{position:absolute;top:-17px;left:50%;transform:translateX(-50%);font-size:11.5px;font-weight:600;font-variant-numeric:tabular-nums}
+.mcol.cur .b{background:var(--brand)}
+.mcol .m{font-size:11.5px;color:var(--ink-3);text-transform:uppercase}
+.mcol .d{font-size:11px;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--ink-3);margin-top:8px;flex-wrap:wrap}
+
+/* Horizontal bars */
+.hbars{display:flex;flex-direction:column;gap:7px}
+.hb{display:grid;grid-template-columns:minmax(0,160px) 1fr 34px;gap:10px;align-items:center;font-size:13px}
+.hb button{all:unset;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink-2)}
+.hb button:hover{color:var(--ink);text-decoration:underline}
+.hb .track{height:12px;background:var(--line-2);border-radius:2px;overflow:hidden}
+.hb .fill{height:100%;background:var(--bar)}
+.hb .n{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+
+/* Lists */
+.list{display:flex;flex-direction:column}
+.li{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line-2);text-align:left;background:none;border-left:0;border-right:0;border-bottom:0;width:100%}
+.li:first-child{border-top:0}
+.li:hover .t{text-decoration:underline}
+.li .t{font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.li .s{font-size:12.5px;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.date-chip{font-family:var(--f-display);font-weight:600;font-size:15px;line-height:1;text-align:center;width:46px;padding:5px 0;border:1px solid var(--line);border-radius:4px;background:var(--surface-2)}
+.date-chip small{display:block;font-size:10.5px;color:var(--ink-3);text-transform:uppercase;font-family:var(--f-body);font-weight:500;margin-top:2px}
+.empty{color:var(--ink-3);padding:18px 0;text-align:center}
+
+/* Pills */
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500;padding:2px 8px;border-radius:999px;white-space:nowrap;background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line)}
+.pill.bad{background:var(--bad-soft);color:var(--bad);border-color:transparent}
+.pill.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.pill.ok{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+.pill.info{background:var(--info-soft);color:var(--info);border-color:transparent}
+.sema{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--line)}
+.sema.verde{background:var(--ok)} .sema.rojo{background:var(--bad)}
+.tag{font-family:var(--f-display);font-weight:600;font-size:13px;letter-spacing:.04em;padding:1px 6px;border-radius:3px;border:1px solid var(--line);color:var(--ink-2)}
+
+/* Tracking table */
+.tbl{background:var(--surface);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.tr{display:grid;grid-template-columns:150px minmax(170px,1.4fr) 50px 76px 168px minmax(170px,1.3fr) 54px;gap:12px;align-items:center;padding:0 14px 0 0;border-top:1px solid var(--line-2);width:100%;text-align:left;background:none;border-left:0;border-right:0;border-bottom:0}
+.tr.th{border-top:0;background:var(--surface-2);font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);font-weight:500}
+.tr>div{padding-block:9px}
+.tr>div:first-child{padding-left:14px;align-self:stretch;display:flex;flex-direction:column;justify-content:center}
+.tr:not(.th):hover{filter:brightness(.97)}
+.tr.s-or{background:var(--st-or-soft)} .tr.s-or>.c-ref{background:var(--st-or);color:var(--st-or-ink)}
+.tr.s-ye{background:var(--st-ye-soft)} .tr.s-ye>.c-ref{background:var(--st-ye);color:var(--st-ye-ink)}
+.tr.s-gr{background:var(--st-gr-soft)} .tr.s-gr>.c-ref{background:var(--st-gr);color:var(--st-gr-ink)}
+.tr[class*=" s-"]>.c-ref .b{color:inherit;opacity:.85}
+.swatch{display:inline-block;width:22px;height:12px;border-radius:2px;vertical-align:middle;margin-right:5px;border:1px solid var(--line)}
+.st-pill{display:inline-flex;align-items:center;font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.st-pill.s-no{background:var(--st-no);color:var(--st-no-ink)} .st-pill.s-or{background:var(--st-or);color:var(--st-or-ink)} .st-pill.s-ye{background:var(--st-ye);color:var(--st-ye-ink)} .st-pill.s-gr{background:var(--st-gr);color:var(--st-gr-ink)}
+.chk{flex-direction:row!important;align-items:center;gap:8px!important;color:var(--ink)!important;font-size:13.5px!important;align-self:end;padding-bottom:6px}
+.chk input{width:auto!important}
+.cell{min-width:0}
+.cell .a{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cell .b{font-size:12.5px;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ref{font-family:var(--f-mono);font-weight:500;font-size:13px}
+.dots{display:flex;gap:3px;align-items:center}
+.dot{width:14px;height:8px;border-radius:2px;background:var(--line)}
+.dot.done{background:var(--ink-2)}
+.s-or .dot.done{background:var(--st-or)} .s-ye .dot.done{background:#C99A0E} .s-gr .dot.done{background:var(--st-gr)}
+.dot.na{opacity:.35}
+.stage{font-size:11.5px;color:var(--ink-3);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:1180px){.tr{grid-template-columns:140px minmax(150px,1.3fr) 46px 72px 150px minmax(150px,1.2fr)}.tr .c-port{display:none}}
+@media (max-width:820px){
+  .tr.th{display:none}
+  .tr{grid-template-columns:1fr auto;grid-template-areas:"ref eta" "bq bq" "prog prog" "next next";row-gap:6px}
+  .tr .c-ref{grid-area:ref}.tr .c-eta{grid-area:eta;text-align:right}.tr .c-bq{grid-area:bq}.tr .c-prog{grid-area:prog}.tr .c-next{grid-area:next}.tr .c-tipo{display:none}
+}
+
+/* Gastos */
+.gt{width:100%;border-collapse:collapse;font-size:13px}
+.gt th{font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);font-weight:500;text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+.gt td{padding:7px 8px;border-bottom:1px solid var(--line-2);vertical-align:middle}
+.gt td.r,.gt th.r{text-align:right;font-variant-numeric:tabular-nums}
+.gt tr.click{cursor:pointer}
+.gt tr.click:hover td{background:var(--surface-2)}
+.gt tfoot td{font-weight:600;border-bottom:0;border-top:1px solid var(--line)}
+.scroll{overflow-x:auto}
+
+/* Drawer */
+.scrim{position:fixed;inset:0;background:rgba(10,12,16,.38);z-index:40}
+aside.drawer{position:fixed;top:0;right:0;bottom:0;width:min(820px,100%);background:var(--bg);z-index:41;display:flex;flex-direction:column;border-left:1px solid var(--line);box-shadow:-12px 0 32px rgba(0,0,0,.18)}
+.dh{background:var(--surface);border-bottom:1px solid var(--line);padding:calc(14px + env(safe-area-inset-top,0px)) max(18px,env(safe-area-inset-right,0px)) 14px 18px;display:flex;gap:14px;align-items:flex-start}
+.dh .id{flex:1;min-width:0}
+.dh .refbig{font-family:var(--f-mono);font-size:22px;font-weight:500;letter-spacing:-.02em}
+.dh .cli{font-weight:500;color:var(--ink-2)}
+.dh .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center}
+.db{overflow-y:auto;padding:16px max(18px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) 18px;display:flex;flex-direction:column;gap:14px}
+.x{border:0;background:transparent;font-size:22px;line-height:1;padding:4px 8px;color:var(--ink-3)}
+.x:hover{color:var(--ink)}
+.mini-select{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:2px 8px;font-size:12.5px}
+
+.ht{width:100%;border-collapse:collapse;font-size:13px}
+.ht th{font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);font-weight:500;text-align:left;padding:6px;border-bottom:1px solid var(--line)}
+.ht td{padding:5px 6px;border-bottom:1px solid var(--line-2)}
+.ht td.h{font-weight:500;white-space:nowrap}
+.ht td.h .n{display:inline-block;width:18px;color:var(--ink-3);font-family:var(--f-mono);font-size:11.5px}
+.ht tr.na td{opacity:.45}
+.ht tr.isnext td.h{color:var(--info)}
+.ht tr.late td.h{color:var(--bad)}
+.ht input[type=date]{border:1px solid var(--line);background:var(--surface);border-radius:4px;padding:3px 5px;font-size:12.5px;width:100%;min-width:118px;font-variant-numeric:tabular-nums}
+.ht input.real{border-color:var(--ok)}
+.ht input.real:placeholder-shown{border-color:var(--line)}
+.ht .st{white-space:nowrap}
+
+.fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 14px}
+.fields .g{grid-column:1/-1;font-family:var(--f-display);font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);font-size:13px;margin-top:6px;border-bottom:1px solid var(--line-2);padding-bottom:3px}
+.fields label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--ink-3);min-width:0}
+.fields label.wide{grid-column:span 2}
+.fields label.full{grid-column:1/-1}
+.fields input,.fields select,.fields textarea,.gform input,.gform select{border:1px solid var(--line);background:var(--surface);border-radius:4px;padding:5px 8px;font-size:13.5px;color:var(--ink);min-width:0;width:100%}
+.fields textarea{min-height:64px;resize:vertical}
+.fields input.mono{font-family:var(--f-mono)}
+@media (max-width:640px){.fields{grid-template-columns:repeat(2,minmax(0,1fr))}.fields label.wide{grid-column:1/-1}}
+.gform{display:grid;grid-template-columns:120px minmax(0,1.4fr) minmax(0,1fr) 110px 76px 100px auto;gap:8px;align-items:end;margin-top:10px}
+.gform label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--ink-3)}
+@media (max-width:760px){.gform{grid-template-columns:1fr 1fr}.gform .btn{grid-column:1/-1}}
+.tot{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;margin-top:8px;color:var(--ink-2)}
+.tot b{font-variant-numeric:tabular-nums;color:var(--ink)}
+.confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.saved{font-size:12px;color:var(--ok);min-height:16px}
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:8px 14px;border-radius:6px;z-index:60;font-size:13px}
+.newform{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px}
+main{padding-bottom:40px}
+@media (prefers-reduced-motion:no-preference){aside.drawer{animation:slide .18s ease-out}@keyframes slide{from{transform:translateX(24px);opacity:.6}to{transform:none;opacity:1}}}
 </style>
 </head>
 <body>
-<main>
-  <a href="/modulos" style="background:none;padding:0"><img src="/mejanet-logo.png" alt="Grupo Meja"></a>
-  <h1>OP Manzanillo</h1>
-  <p>Este tablero está en construcción.</p>
-  <a href="/modulos">← Módulos</a>
+<header class="top">
+  <div class="wrap">
+    <div class="brand"><a class="logo" href="/modulos" aria-label="MEJAnet"><img src="/logo.png" alt="Grupo Meja"></a><div><h1>Operaciones Manzanillo</h1><small id="hoy">Seguimiento marítimo</small></div></div>
+    <nav class="tabs" role="tablist" aria-label="Vistas">
+      <button role="tab" id="t-ejec" aria-selected="true" data-v="ejec">Ejecutivo</button>
+      <button role="tab" id="t-seg" aria-selected="false" data-v="seg">Seguimiento</button>
+      <button role="tab" id="t-gas" aria-selected="false" data-v="gas">Gastos</button>
+    </nav>
+    <div class="actions">
+      <button class="btn" id="b-export" type="button">Exportar CSV</button>
+      <button class="btn primary" id="b-nuevo" type="button">+ Embarque</button>
+      <a class="btn" href="/modulos">MEJAnet</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="banner" class="banner" hidden></div>
+  <div class="filters">
+    <select id="f-cliente" aria-label="Cliente"><option value="">Todos los clientes</option></select>
+    <select id="f-terminal" aria-label="Terminal"><option value="">Todas las terminales</option></select>
+    <input type="search" id="f-q" placeholder="Referencia, buque, BL, pedimento…" aria-label="Buscar">
+    <span class="seg" id="f-estado" role="group" aria-label="Estado">
+      <button type="button" data-e="activa" aria-pressed="true">Activas</button>
+      <button type="button" data-e="cerrada" aria-pressed="false">Cerradas</button>
+      <button type="button" data-e="" aria-pressed="false">Todas</button>
+    </span>
+    <span class="seg" id="f-tipo" role="group" aria-label="Tipo">
+      <button type="button" data-t="" aria-pressed="true">LCL + FCL</button>
+      <button type="button" data-t="LCL" aria-pressed="false">LCL</button>
+      <button type="button" data-t="FCL" aria-pressed="false">FCL</button>
+    </span>
+    <span class="count" id="f-count"></span>
+  </div>
+
+  <section id="v-ejec" class="grid"></section>
+  <section id="v-seg" hidden></section>
+  <section id="v-gas" class="grid" hidden></section>
 </main>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" hidden aria-label="Ficha del embarque"></aside>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function(){
+"use strict";
+const HITOS=[
+  {k:"zarpe",l:"Zarpe en origen",st:"En origen"},
+  {k:"arribo",l:"Arribo a Manzanillo",st:"En tránsito"},
+  {k:"revalidacion",l:"Revalidación",st:"Por revalidar"},
+  {k:"disponible",l:"Disponibilidad de carga",st:"Esperando disponibilidad"},
+  {k:"previo",l:"Previo",st:"Por realizar previo"},
+  {k:"desp_ini",l:"Inicio de despacho",st:"Por programar despacho"},
+  {k:"desp_fin",l:"Conclusión de despacho",st:"Despacho en curso"},
+  {k:"liberacion",l:"Liberación",st:"Por liberar"},
+  {k:"retiro",l:"Retiro del puerto",st:"Por retirar"}
+];
+const CONCEPTOS=["Maniobras / terminal","Almacenaje","Previo","Revalidación / liberación naviera","Desconsolidación (LCL)","Demoras de contenedor","Flete terrestre","Custodia / seguro","Honorarios agencia aduanal","Impuestos y derechos (pedimento)","Otros"];
+const MES=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+const MESL=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+const now=new Date();
+const TODAY=iso(now);
+function iso(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function dn(s){if(!s)return null;const[y,m,d]=s.slice(0,10).split("-").map(Number);return Date.UTC(y,m-1,d)/864e5}
+function diff(a,b){return dn(a)-dn(b)}
+function addDays(s,n){const t=(dn(s)+n)*864e5;const d=new Date(t);return d.getUTCFullYear()+"-"+String(d.getUTCMonth()+1).padStart(2,"0")+"-"+String(d.getUTCDate()).padStart(2,"0")}
+function fd(s){if(!s)return"—";const[y,m,d]=s.split("-");return +d+" "+MES[+m-1]+(+y!==now.getFullYear()?" "+y.slice(2):"")}
+function money(n){return(n||0).toLocaleString("es-MX",{minimumFractionDigits:2,maximumFractionDigits:2})}
+$("#hoy").textContent="Puerto de Manzanillo · "+now.getDate()+" de "+MESL[now.getMonth()].toLowerCase()+" de "+now.getFullYear();
+
+let canWrite=true;
+let EMB={};            // id -> doc
+let loaded=false;
+const ui={view:"ejec",cliente:"",terminal:"",q:"",estado:"activa",tipo:"",open:null,newMode:false,confirmDel:false};
+try{const v=localStorage.getItem("om.view");if(v)ui.view=v}catch(e){}
+
+/* ---------- derived logic ---------- */
+function hit(e,k){return(e.hitos&&e.hitos[k])||{}}
+function applicable(e,k){if(k==="previo"){const p=(e.previo||"").toUpperCase();return !p.startsWith("NO")}return true}
+function due(h){return h.c||h.e||""}
+function analyze(e){
+  const hs=HITOS.filter(h=>applicable(e,h.k));
+  let last=-1;
+  hs.forEach((h,i)=>{if(hit(e,h.k).r)last=i});
+  let next=null;
+  if(e.estado==="activa"){
+    const pend=hs.slice(last+1).filter(h=>!hit(e,h.k).r);
+    next=pend.find(h=>due(hit(e,h.k)))||pend[0]||null;
+  }
+  const nextIdx=next?hs.indexOf(next):-1;
+  const nh=next?hit(e,next.k):{};
+  const nd=due(nh);
+  const late=!!(nd&&nd<TODAY);
+  const arr=hit(e,"arribo");
+  const arrEff=arr.r||((arr.c||arr.e)&&(arr.c||arr.e)<=TODAY?(arr.c||arr.e):"");
+  const endPort=hit(e,"retiro").r||(e.estado!=="activa"?hit(e,"desp_fin").r:"")||TODAY;
+  const diasPuerto=arr.r?Math.max(0,diff(endPort,arr.r)):null;
+  let libres=null;
+  if(e.diasLibres&&e.estado==="activa"&&!hit(e,"retiro").r){
+    const base=hit(e,"disponible").r||arr.r;
+    if(base){const vence=addDays(base,+e.diasLibres);libres={vence,rest:diff(vence,TODAY)}}
+  }
+  const alerts=[];
+  if(e.estado==="activa"){
+    if(late)alerts.push({lvl:"bad",txt:next.l+" vencido hace "+diff(TODAY,nd)+" d",short:"Vencido "+diff(TODAY,nd)+" d"});
+    if(libres&&libres.rest<0)alerts.push({lvl:"bad",txt:"Días libres vencidos hace "+(-libres.rest)+" d",short:"Libres vencidos"});
+    else if(libres&&libres.rest<=3)alerts.push({lvl:"warn",txt:"Días libres vencen "+(libres.rest===0?"hoy":"en "+libres.rest+" d"),short:"Libres "+libres.rest+" d"});
+    if(!arr.r&&!arr.c&&!arr.e)alerts.push({lvl:"warn",txt:"Sin fecha de arribo",short:"Sin ETA"});
+  }
+  const stage=e.estado==="cerrada"?"Cerrada":e.estado==="cancelada"?"Cancelada":(next?next.st:"Por cerrar");
+  return{hs,last,next,nextIdx,nd,late,arrEff,diasPuerto,libres,alerts,stage,eta:arr.r||arr.c||arr.e||""};
+}
+const STATUS={no:"Pendiente ETA y revalidación",or:"Revalidado",ye:"Pedimento pagado · despacho programado",gr:"Desaduanado / cumplido"};
+function status(e){
+  if(e.estado==="cerrada"||hit(e,"desp_fin").r)return "gr";
+  const di=hit(e,"desp_ini");
+  if(e.pedimento&&e.pedimentoPagado&&(di.c||di.r))return "ye";
+  if(hit(e,"revalidacion").r||hit(e,"disponible").r||hit(e,"previo").r||di.c||di.r)return "or";
+  return "no";
+}
+function filtered(opts={}){
+  const q=ui.q.trim().toUpperCase();
+  return Object.entries(EMB).map(([id,e])=>({id,e,a:analyze(e)})).filter(({e})=>{
+    if(ui.cliente&&e.cliente!==ui.cliente)return false;
+    if(ui.terminal&&(e.terminal||"")!==ui.terminal)return false;
+    if(!opts.ignoreEstado&&ui.estado&&e.estado!==ui.estado)return false;
+    if(ui.tipo&&e.tipo!==ui.tipo)return false;
+    if(q){const hay=[e.ref,e.cliente,e.buque,e.viaje,e.hbl,e.mbl,e.pedimento,e.mercancia,e.ff,e.factura,e.contenedores].join(" ").toUpperCase();if(!hay.includes(q))return false}
+    return true;
+  });
+}
+
+/* ---------- render: ejecutivo ---------- */
+function renderEjec(){
+  const all=filtered({ignoreEstado:true});
+  const act=all.filter(x=>x.e.estado==="activa");
+  const in7=act.filter(x=>!hit(x.e,"arribo").r&&x.a.eta&&x.a.eta>=TODAY&&diff(x.a.eta,TODAY)<=7);
+  const enPuerto=act.filter(x=>x.a.arrEff&&!hit(x.e,"desp_fin").r);
+  const ym=TODAY.slice(0,7), y=TODAY.slice(0,4);
+  const despMes=all.filter(x=>(hit(x.e,"desp_fin").r||"").startsWith(ym));
+  const cut=addDays(TODAY,-90);
+  const ciclos=all.map(x=>{const a=hit(x.e,"arribo").r,f=hit(x.e,"desp_fin").r;return a&&f&&f>=cut?diff(f,a):null}).filter(v=>v!==null&&v>=0);
+  const avg=ciclos.length?ciclos.reduce((s,v)=>s+v,0)/ciclos.length:null;
+  const semY=all.filter(x=>x.e.semaforo&&(hit(x.e,"desp_fin").r||"").startsWith(y));
+  const rojos=semY.filter(x=>x.e.semaforo==="rojo").length;
+  const alertN=act.filter(x=>x.a.alerts.some(a=>a.lvl==="bad")).length;
+
+  // months
+  const curM=now.getMonth();const months=[];
+  for(let m=0;m<=curM;m++){
+    const key=y+"-"+String(m+1).padStart(2,"0");
+    const xs=all.filter(x=>(hit(x.e,"desp_fin").r||"").startsWith(key));
+    const cs=xs.map(x=>{const a=hit(x.e,"arribo").r,f=hit(x.e,"desp_fin").r;return a&&f?diff(f,a):null}).filter(v=>v!==null&&v>=0);
+    months.push({m,n:xs.length,avg:cs.length?cs.reduce((s,v)=>s+v,0)/cs.length:null});
+  }
+  const maxM=Math.max(1,...months.map(m=>m.n));
+
+  // stages
+  const stMap={};act.forEach(x=>{stMap[x.a.stage]=(stMap[x.a.stage]||0)+1});
+  const stOrder=HITOS.map(h=>h.st).concat(["Por cerrar"]).filter(s=>stMap[s]);
+  const maxS=Math.max(1,...Object.values(stMap));
+  const byCli={};act.forEach(x=>{const c=x.e.cliente||"Sin cliente";byCli[c]=(byCli[c]||0)+1});
+  const byTer={};act.forEach(x=>{const c=x.e.terminal||"Sin asignar";byTer[c]=(byTer[c]||0)+1});
+  const hbars=(obj,kind)=>{const ent=Object.entries(obj).sort((a,b)=>b[1]-a[1]).slice(0,8);const mx=Math.max(1,...ent.map(e=>e[1]));
+    return ent.length?`<div class="hbars">${ent.map(([k,v])=>`<div class="hb"><button type="button" data-fil="${kind}" data-val="${esc(k)}" title="${esc(k)}">${esc(k)}</button><div class="track"><div class="fill" style="width:${v/mx*100}%"></div></div><div class="n">${v}</div></div>`).join("")}</div>`:`<div class="empty">Sin operaciones activas</div>`};
+
+  // alerts & upcoming
+  const alertas=act.flatMap(x=>x.a.alerts.map(a=>({x,a}))).sort((p,q)=>(p.a.lvl==="bad"?0:1)-(q.a.lvl==="bad"?0:1));
+  const up=[];const lim=addDays(TODAY,14);
+  act.forEach(x=>{x.a.hs.forEach(h=>{const hh=hit(x.e,h.k);const d=due(hh);if(!hh.r&&d&&d>=TODAY&&d<=lim)up.push({x,h,d,conf:!!hh.c})})});
+  up.sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0);
+
+  const gm={MXN:0,USD:0};all.forEach(x=>(x.e.gastos||[]).forEach(g=>{if((g.fecha||"").startsWith(ym))gm[g.moneda||"MXN"]+=+g.importe||0}));
+
+  $("#v-ejec").innerHTML=`
+  <div class="kpis">
+    <button class="kpi" type="button" data-go="seg" data-est="activa"><span class="lbl">Operaciones activas</span><span class="val">${act.length}</span><span class="sub">${act.filter(x=>x.e.tipo==="LCL").length} LCL · ${act.filter(x=>x.e.tipo==="FCL").length} FCL</span></button>
+    <div class="kpi"><span class="lbl">Arriban ≤ 7 días</span><span class="val">${in7.length}</span><span class="sub">${in7.length?esc([...new Set(in7.map(x=>x.e.buque))].slice(0,2).join(", ")):"Sin arribos próximos"}</span></div>
+    <div class="kpi"><span class="lbl">En puerto sin despacho</span><span class="val">${enPuerto.length}</span><span class="sub">Arribados, pendientes de modular</span></div>
+    <div class="kpi ${alertN?"alert":""}"><span class="lbl">Con hito vencido</span><span class="val">${alertN}</span><span class="sub">Fecha estimada o confirmada ya pasó</span></div>
+    <div class="kpi"><span class="lbl">Despachadas en ${MES[curM]}</span><span class="val">${despMes.length}</span><span class="sub">Gastos del mes: $${money(gm.MXN)} MXN${gm.USD?" · US$"+money(gm.USD):""}</span></div>
+    <div class="kpi"><span class="lbl">Arribo → despacho</span><span class="val">${avg===null?"—":avg.toFixed(1)}<small>días</small></span><span class="sub">Promedio últimos 90 días · ${ciclos.length} ops.</span></div>
+    <div class="kpi"><span class="lbl">Reconocimiento aduanero</span><span class="val">${semY.length?Math.round(rojos/semY.length*100):"—"}<small>%</small></span><span class="sub">${rojos} rojos de ${semY.length} modulaciones ${y}</span></div>
+  </div>
+  <div class="two">
+    <div class="card"><h2>Despachos concluidos por mes <span class="muted">${y} · días promedio arribo → despacho</span></h2>
+      <div class="months">${months.map(m=>`<div class="mcol ${m.m===curM?"cur":""}"><div class="b" style="height:${m.n/maxM*130}px"><span>${m.n||""}</span></div><div class="m">${MES[m.m]}</div><div class="d">${m.avg===null?"·":m.avg.toFixed(1)+" d"}</div></div>`).join("")}</div>
+    </div>
+    <div class="card"><h2>Activas por etapa <span class="muted">siguiente hito pendiente</span></h2>
+      ${stOrder.length?`<div class="hbars">${stOrder.map(s=>`<div class="hb"><span title="${esc(s)}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink-2)">${esc(s)}</span><div class="track"><div class="fill" style="width:${stMap[s]/maxS*100}%"></div></div><div class="n">${stMap[s]}</div></div>`).join("")}</div>`:`<div class="empty">Sin operaciones activas</div>`}
+    </div>
+  </div>
+  <div class="two">
+    <div class="card"><h2>Requiere atención <span class="muted">${alertas.length}</span></h2>
+      <div class="list">${alertas.slice(0,12).map(({x,a})=>`<button type="button" class="li" data-open="${esc(x.id)}"><span class="pill ${a.lvl}">${esc(a.short)}</span><span style="min-width:0"><div class="t"><span class="ref">${esc(x.e.ref)}</span> · ${esc(x.e.buque)}</div><div class="s">${esc(a.txt)} · ${esc(x.e.cliente)}</div></span><span class="muted" style="font-size:12px">${esc(x.e.terminal||"")}</span></button>`).join("")||`<div class="empty">Todo al corriente</div>`}</div>
+    </div>
+    <div class="card"><h2>Próximos 14 días <span class="muted">hitos programados</span></h2>
+      <div class="list">${up.slice(0,12).map(u=>`<button type="button" class="li" data-open="${esc(u.x.id)}"><span class="date-chip">${+u.d.slice(8)}<small>${MES[+u.d.slice(5,7)-1]}</small></span><span style="min-width:0"><div class="t">${esc(u.h.l)} · <span class="ref">${esc(u.x.e.ref)}</span></div><div class="s">${esc(u.x.e.buque)} ${esc(u.x.e.viaje||"")} · ${esc(u.x.e.cliente)}</div></span><span class="pill ${u.conf?"ok":""}">${u.conf?"Confirmada":"Estimada"}</span></button>`).join("")||`<div class="empty">Sin hitos en las próximas dos semanas</div>`}</div>
+    </div>
+  </div>
+  <div class="two">
+    <div class="card"><h2>Activas por cliente</h2>${hbars(byCli,"cliente")}</div>
+    <div class="card"><h2>Activas por terminal</h2>${hbars(byTer,"terminal")}</div>
+  </div>`;
+}
+
+/* ---------- render: seguimiento ---------- */
+function dotsHTML(e,a){
+  const closed=e.estado==="cerrada";
+  return `<div class="dots" aria-label="Avance de hitos">${HITOS.map(h=>{
+    const hh=hit(e,h.k);const i=a.hs.indexOf(h);const na=!applicable(e,h.k);
+    const done=closed||(!na&&i<=a.last);
+    return `<span class="dot ${done?"done":""} ${na&&!closed?"na":""}" title="${esc(h.l)}${hh.r?": "+fd(hh.r):na?": no aplica":""}"></span>`}).join("")}</div>`;
+}
+function renderSeg(){
+  const rows=filtered().sort((p,q)=>{
+    if(ui.estado==="cerrada"){return (hit(q.e,"desp_fin").r||"").localeCompare(hit(p.e,"desp_fin").r||"")}
+    const pa=p.a.alerts.some(a=>a.lvl==="bad")?0:1,qa=q.a.alerts.some(a=>a.lvl==="bad")?0:1;if(pa!==qa)return pa-qa;
+    return (p.a.nd||"9999").localeCompare(q.a.nd||"9999");
+  });
+  const head=`<div class="tr th"><div>Referencia</div><div>Buque · terminal</div><div>Tipo</div><div>ETA</div><div>Avance</div><div>Siguiente hito</div><div class="c-port">Puerto</div></div>`;
+  const body=rows.map(({id,e,a})=>{
+    let nextTxt;
+    if(e.estado==="cerrada"){const f=hit(e,"desp_fin").r;nextTxt=`<div class="a"><span class="sema ${e.semaforo||""}"></span> Despachado ${fd(f)}</div><div class="b">${e.semaforo==="rojo"?"Reconocimiento aduanero":e.semaforo==="verde"?"Desaduanamiento libre":""}${e.pedimento?" · Ped. "+esc(e.pedimento):""}</div>`}
+    else if(a.next){nextTxt=`<div class="a">${esc(a.next.l)} · ${a.nd?fd(a.nd):"sin fecha"}</div><div class="b">${a.alerts.length?`<span class="pill ${a.alerts[0].lvl}">${esc(a.alerts[0].short)}</span>`:(hit(e,a.next.k).c?"Confirmada":a.nd?"Estimada":"Registrar fecha estimada")}</div>`}
+    else nextTxt=`<div class="a">Todos los hitos registrados</div><div class="b">Marcar como cerrada</div>`;
+    return `<button type="button" class="tr s-${status(e)}" data-open="${esc(id)}" title="${esc(STATUS[status(e)])}">
+      <div class="cell c-ref"><div class="a ref">${esc(e.ref)}</div><div class="b">${esc(e.cliente)}</div></div>
+      <div class="cell c-bq"><div class="a">${esc(e.buque||"—")} <span class="muted mono">${esc(e.viaje||"")}</span></div><div class="b">${esc(e.terminal||"Terminal sin asignar")}${e.mercancia?" · "+esc(e.mercancia):""}</div></div>
+      <div class="cell c-tipo">${e.tipo?`<span class="tag">${esc(e.tipo)}</span>`:""}</div>
+      <div class="cell c-eta num"><div class="a">${fd(a.eta)}</div><div class="b">${hit(e,"arribo").r?"Real":hit(e,"arribo").c?"Confirmada":a.eta?"Estimada":""}</div></div>
+      <div class="cell c-prog">${dotsHTML(e,a)}<div class="stage">${esc(a.stage)}</div></div>
+      <div class="cell c-next">${nextTxt}</div>
+      <div class="cell c-port num">${a.diasPuerto===null?"—":a.diasPuerto+" d"}</div>
+    </button>`}).join("");
+  $("#v-seg").innerHTML=`<div class="tbl">${head}${body||`<div class="empty">${loaded?"No hay embarques con estos filtros":"Cargando embarques…"}</div>`}</div>
+  <div class="legend"><span><span class="swatch" style="background:var(--surface)"></span>${STATUS.no}</span><span><span class="swatch" style="background:var(--st-or)"></span>${STATUS.or}</span><span><span class="swatch" style="background:var(--st-ye)"></span>${STATUS.ye}</span><span><span class="swatch" style="background:var(--st-gr)"></span>${STATUS.gr}</span><span>Avance: zarpe · arribo · revalidación · disponibilidad · previo · inicio despacho · conclusión · liberación · retiro</span></div>`;
+}
+
+/* ---------- render: gastos ---------- */
+function renderGas(){
+  const xs=filtered();
+  const rows=[];xs.forEach(({id,e})=>(e.gastos||[]).forEach(g=>rows.push({id,e,g})));
+  const tot={MXN:0,USD:0},pend={MXN:0,USD:0},byC={};
+  rows.forEach(({g})=>{const m=g.moneda||"MXN",v=+g.importe||0;tot[m]+=v;if(!g.pagado)pend[m]+=v;byC[g.concepto]=byC[g.concepto]||{MXN:0,USD:0};byC[g.concepto][m]+=v});
+  const byRef=xs.filter(x=>(x.e.gastos||[]).length).map(x=>{const t={MXN:0,USD:0,p:0};x.e.gastos.forEach(g=>{t[g.moneda||"MXN"]+=+g.importe||0;if(!g.pagado)t.p++});return{...x,t}}).sort((a,b)=>b.t.MXN-a.t.MXN);
+  const cEnt=Object.entries(byC).sort((a,b)=>b[1].MXN-a[1].MXN);const mx=Math.max(1,...cEnt.map(c=>c[1].MXN));
+  $("#v-gas").innerHTML=`
+  <div class="kpis">
+    <div class="kpi"><span class="lbl">Total MXN</span><span class="val num">$${money(tot.MXN)}</span><span class="sub">${rows.length} conceptos registrados</span></div>
+    <div class="kpi"><span class="lbl">Total USD</span><span class="val num">$${money(tot.USD)}</span><span class="sub">Sin conversión de tipo de cambio</span></div>
+    <div class="kpi ${pend.MXN||pend.USD?"alert":""}"><span class="lbl">Pendiente de pago</span><span class="val num">$${money(pend.MXN)}</span><span class="sub">MXN${pend.USD?" · US$"+money(pend.USD):""}</span></div>
+    <div class="kpi"><span class="lbl">Referencias con gastos</span><span class="val">${byRef.length}</span><span class="sub">de ${xs.length} en el filtro actual</span></div>
+  </div>
+  <div class="two">
+    <div class="card"><h2>Gastos por referencia</h2>
+      ${byRef.length?`<div class="scroll"><table class="gt"><thead><tr><th>Referencia</th><th>Cliente</th><th class="r">MXN</th><th class="r">USD</th><th class="r">Pend.</th></tr></thead><tbody>
+      ${byRef.map(r=>`<tr class="click" data-open="${esc(r.id)}"><td class="ref">${esc(r.e.ref)}</td><td>${esc(r.e.cliente)}</td><td class="r">${money(r.t.MXN)}</td><td class="r">${r.t.USD?money(r.t.USD):"—"}</td><td class="r">${r.t.p?`<span class="pill warn">${r.t.p}</span>`:`<span class="pill ok">0</span>`}</td></tr>`).join("")}
+      </tbody><tfoot><tr><td colspan="2">Total</td><td class="r">${money(tot.MXN)}</td><td class="r">${money(tot.USD)}</td><td></td></tr></tfoot></table></div>`
+      :`<div class="empty">Aún no hay gastos en este filtro. Abre un embarque desde Seguimiento y agrega sus gastos en la sección «Gastos de la referencia».</div>`}
+    </div>
+    <div class="card"><h2>Por concepto <span class="muted">MXN</span></h2>
+      ${cEnt.length?`<div class="hbars">${cEnt.map(([k,v])=>`<div class="hb" style="grid-template-columns:minmax(0,170px) 1fr 92px"><span title="${esc(k)}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink-2)">${esc(k)}</span><div class="track"><div class="fill" style="width:${v.MXN/mx*100}%"></div></div><div class="n">${money(v.MXN)}</div></div>`).join("")}</div>`:`<div class="empty">Sin datos</div>`}
+    </div>
+  </div>
+  ${rows.length?`<div class="card"><h2>Detalle de gastos</h2><div class="scroll"><table class="gt"><thead><tr><th>Fecha</th><th>Referencia</th><th>Concepto</th><th>Proveedor</th><th class="r">Importe</th><th>Mon.</th><th>Estado</th></tr></thead><tbody>
+  ${rows.sort((a,b)=>(b.g.fecha||"").localeCompare(a.g.fecha||"")).map(({id,e,g})=>`<tr class="click" data-open="${esc(id)}"><td class="num">${fd(g.fecha)}</td><td class="ref">${esc(e.ref)}</td><td>${esc(g.concepto)}</td><td>${esc(g.proveedor||"")}</td><td class="r">${money(+g.importe)}</td><td>${esc(g.moneda||"MXN")}</td><td>${g.pagado?`<span class="pill ok">Pagado</span>`:`<span class="pill warn">Pendiente</span>`}</td></tr>`).join("")}
+  </tbody></table></div></div>`:""}`;
+}
+
+/* ---------- drawer: ficha ---------- */
+const F=(f,l,cls="",type="text",extra="")=>`<label class="${cls}">${l}<input id="fx-${f}" data-f="${f}" type="${type}" ${extra}></label>`;
+let needDrawer=false;
+function renderDrawer(){
+  const ae=document.activeElement,fid=ae&&ae.closest&&ae.closest("#drawer")?ae.id:"";
+  const sc=$("#drawer .db"),top=sc?sc.scrollTop:0;
+  renderDrawerInner();needDrawer=false;
+  const sc2=$("#drawer .db");if(sc2&&ui.open)sc2.scrollTop=top;
+  if(fid){const f=document.getElementById(fid);if(f)f.focus({preventScroll:true})}
+}
+document.addEventListener("focusout",ev=>{if(!ev.target.closest||!ev.target.closest("#drawer"))return;setTimeout(()=>{if(needDrawer&&!isEditing())renderDrawer()},120)});
+function isEditing(){const ae=document.activeElement;return !!(ae&&ae.closest&&ae.closest("#drawer")&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName))}
+function renderDrawerInner(){
+  const d=$("#drawer");
+  if(!ui.open&&!ui.newMode){d.hidden=true;$("#scrim").hidden=true;return}
+  d.hidden=false;$("#scrim").hidden=false;
+  if(ui.newMode){renderNew();return}
+  const e=EMB[ui.open];if(!e){d.innerHTML=`<div class="dh"><div class="id"><div class="refbig">Embarque no encontrado</div></div><button class="x" data-close>×</button></div>`;return}
+  const a=analyze(e);
+  const dis=canWrite?"":"disabled";
+  const gt={MXN:0,USD:0};(e.gastos||[]).forEach(g=>gt[g.moneda||"MXN"]+=+g.importe||0);
+  d.innerHTML=`
+  <div class="dh"><div class="id">
+    <div class="refbig">${esc(e.ref)}</div><div class="cli">${esc(e.cliente||"Sin cliente")}</div>
+    <div class="meta">
+      <select class="mini-select" data-f="estado" aria-label="Estado" ${dis}>${["activa","cerrada","cancelada"].map(s=>`<option value="${s}" ${e.estado===s?"selected":""}>${s[0].toUpperCase()+s.slice(1)}</option>`).join("")}</select>
+      <select class="mini-select" data-f="semaforo" aria-label="Semáforo fiscal" ${dis}><option value="">Semáforo: —</option><option value="verde" ${e.semaforo==="verde"?"selected":""}>Desaduanamiento libre</option><option value="rojo" ${e.semaforo==="rojo"?"selected":""}>Reconocimiento aduanero</option></select>
+      <span class="st-pill s-${status(e)}">${esc(STATUS[status(e)])}</span>
+      ${e.tipo?`<span class="tag">${esc(e.tipo)}</span>`:""}
+      <span class="pill ${a.alerts[0]?a.alerts[0].lvl:"info"}">${esc(a.alerts[0]?a.alerts[0].txt:a.stage)}</span>
+      ${a.diasPuerto!==null?`<span class="pill">${a.diasPuerto} d en puerto</span>`:""}
+      ${a.libres?`<span class="pill ${a.libres.rest<0?"bad":a.libres.rest<=3?"warn":""}">Libres hasta ${fd(a.libres.vence)}</span>`:""}
+    </div>
+    <div class="saved" id="saved"></div>
+  </div><button class="x" type="button" data-close aria-label="Cerrar">×</button></div>
+  <div class="db">
+    <div class="card"><h2>Hitos y seguimiento <span class="muted">estimada · confirmada · real</span></h2>
+      <div class="scroll"><table class="ht"><thead><tr><th>Hito</th><th>Estimada</th><th>Confirmada</th><th>Real</th><th>Estado</th></tr></thead><tbody>
+      ${HITOS.map((h,i)=>{const hh=hit(e,h.k);const na=!applicable(e,h.k);const isN=a.next===h;
+        let st=na?`<span class="muted">No aplica</span>`:hh.r?`<span class="pill ok">Cumplido</span>`:isN?(a.late?`<span class="pill bad">Vencido ${diff(TODAY,a.nd)} d</span>`:`<span class="pill info">Siguiente</span>`):"";
+        if(hh.r&&due(hh)&&hh.r>due(hh))st+=` <span class="muted" style="font-size:11.5px">+${diff(hh.r,due(hh))} d</span>`;
+        return `<tr class="${na?"na":""} ${isN?"isnext":""} ${isN&&a.late?"late":""}"><td class="h"><span class="n">${i+1}</span>${esc(h.l)}${hh.hora?` <span class="muted mono">${esc(hh.hora)}</span>`:""}</td>
+        ${["e","c","r"].map(k=>`<td><input type="date" id="h-${h.k}-${k}" data-h="${h.k}" data-k="${k}" value="${esc(hh[k]||"")}" class="${k==="r"&&hh.r?"real":""}" aria-label="${esc(h.l)} ${k==="e"?"estimada":k==="c"?"confirmada":"real"}" ${dis}></td>`).join("")}
+        <td class="st">${st}</td></tr>`}).join("")}
+      </tbody></table></div>
+    </div>
+    <div class="card"><h2>Datos del embarque</h2>
+      <div class="fields">
+        <div class="g">Transporte</div>
+        ${F("buque","Buque","wide")}${F("viaje","Viaje","", "text",'class="mono"')}
+        ${F("bandera","Bandera")}${F("terminal","Terminal / operadora","","text",'list="dl-term"')}${F("claveCR","Clave CR")}
+        ${F("ff","Forwarder / consolidador","wide")}${F("origen_puerto","Puerto de origen")}
+        <div class="g">Conocimiento de embarque</div>
+        ${F("hbl","House B/L","", "text",'class="mono"')}${F("mbl","Master B/L","","text",'class="mono"')}${F("contenedores","Contenedor(es)","","text",'class="mono"')}
+        <div class="g">Carga</div>
+        <label>Tipo de carga<select id="fx-tipo" data-f="tipo"><option value="">—</option><option>LCL</option><option>FCL</option></select></label>
+        ${F("mercancia","Mercancía","wide")}
+        ${F("marca","Marca")}${F("factura","Factura","","text",'class="mono"')}${F("bultos","Bultos","","number",'min="0" step="1"')}
+        ${F("peso","Peso (kg)","","number",'min="0" step="0.01"')}
+        <div class="g">Despacho</div>
+        <label>Cliente<input id="fx-cliente" data-f="cliente" list="dl-cli"></label>
+        <label>Tipo de previo<select id="fx-previo" data-f="previo"><option value="">—</option><option>PREVIO</option><option>PREVIO OCULAR</option><option>PREVIO + DESYCON</option><option>DESYCON</option><option>NO PREVIO</option></select></label>
+        ${F("pedimento","Pedimento","","text",'class="mono" placeholder="3596-0000000"')}
+        <label class="chk"><input type="checkbox" id="fx-pedimentoPagado" data-f="pedimentoPagado"> Pedimento pagado</label>
+        ${F("diasLibres","Días libres almacenaje","","number",'min="0" step="1"')}
+        <label class="full">Estatus / observaciones<textarea id="fx-nota" data-f="nota"></textarea></label>
+      </div>
+    </div>
+    <div class="card"><h2>Gastos de la referencia</h2>
+      ${(e.gastos||[]).length?`<div class="scroll"><table class="gt"><thead><tr><th>Fecha</th><th>Concepto</th><th>Proveedor</th><th class="r">Importe</th><th>Mon.</th><th>Estado</th><th></th></tr></thead><tbody>
+      ${(e.gastos||[]).map(g=>`<tr><td class="num">${fd(g.fecha)}</td><td>${esc(g.concepto)}</td><td>${esc(g.proveedor||"")}</td><td class="r">${money(+g.importe)}</td><td>${esc(g.moneda||"MXN")}</td>
+        <td><button type="button" class="pill ${g.pagado?"ok":"warn"}" data-gpay="${esc(g.id)}" ${dis} title="Cambiar estado">${g.pagado?"Pagado":"Pendiente"}</button></td>
+        <td><button type="button" class="btn sm" data-gdel="${esc(g.id)}" ${dis} aria-label="Eliminar gasto">Quitar</button></td></tr>`).join("")}
+      </tbody></table></div><div class="tot"><span>Total MXN <b>$${money(gt.MXN)}</b></span>${gt.USD?`<span>Total USD <b>$${money(gt.USD)}</b></span>`:""}</div>`:`<div class="muted">Sin gastos registrados para esta referencia.</div>`}
+      ${canWrite?`<form class="gform" id="gform">
+        <label>Fecha<input type="date" id="g-fecha" value="${TODAY}" required></label>
+        <label>Concepto<select id="g-concepto">${CONCEPTOS.map(c=>`<option>${c}</option>`).join("")}</select></label>
+        <label>Proveedor<input id="g-prov" placeholder="TIMSA, naviera…"></label>
+        <label>Importe<input type="number" id="g-imp" min="0" step="0.01" required></label>
+        <label>Moneda<select id="g-mon"><option>MXN</option><option>USD</option></select></label>
+        <label>Estado<select id="g-pag"><option value="0">Pendiente</option><option value="1">Pagado</option></select></label>
+        <button class="btn primary" type="submit">Agregar</button>
+      </form>`:""}
+    </div>
+    ${canWrite?`<div class="confirm">${ui.confirmDel?`<span>¿Eliminar ${esc(e.ref)} con sus hitos y gastos?</span><button class="btn danger" type="button" id="del-yes">Sí, eliminar</button><button class="btn" type="button" id="del-no">Cancelar</button>`:`<button class="btn danger sm" type="button" id="del-ask">Eliminar embarque</button>`}</div>`:""}
+  </div>
+  <datalist id="dl-term">${["TIMSA","CONTECON","SSA MEXICO","OCUPA","CORPORACION MULTIMODAL","COMERCIALIZADORA LA JUNTA","TAP","FRIMAN","HAZESA"].map(t=>`<option value="${t}">`).join("")}</datalist>
+  <datalist id="dl-cli">${clientes().map(c=>`<option value="${esc(c)}">`).join("")}</datalist>`;
+  d.querySelectorAll("[data-f]").forEach(el=>{if(el.type==="checkbox")el.checked=!!e[el.dataset.f];else if(el.tagName!=="SELECT"||!el.classList.contains("mini-select")){const v=e[el.dataset.f];el.value=v==null?"":v} if(!canWrite)el.disabled=true});
+}
+function renderNew(){
+  const d=$("#drawer");
+  const nums=Object.values(EMB).map(e=>{const m=/^MA(\d+)\/(\d+)$/.exec(e.ref||"");return m&&m[2]===TODAY.slice(2,4)?+m[1]:0});
+  const sug="MA"+String(Math.max(0,...nums)+1).padStart(3,"0")+"/"+TODAY.slice(2,4);
+  d.innerHTML=`<div class="dh"><div class="id"><div class="refbig">Nuevo embarque</div><div class="cli">Registra lo básico; el resto se completa en la ficha.</div></div><button class="x" type="button" data-close aria-label="Cerrar">×</button></div>
+  <div class="db"><form class="card" id="newform"><div class="newform fields" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+    <label>Referencia<input id="n-ref" class="mono" value="${sug}" required></label>
+    <label>Cliente<input id="n-cli" list="dl-cli2" required></label>
+    <label>Buque<input id="n-buque"></label><label>Viaje<input id="n-viaje" class="mono"></label>
+    <label>Tipo de carga<select id="n-tipo"><option>LCL</option><option>FCL</option></select></label>
+    <label>ETA estimada<input type="date" id="n-eta"></label>
+    <label>House B/L<input id="n-hbl" class="mono"></label><label>Master B/L<input id="n-mbl" class="mono"></label>
+    <label class="full">Mercancía<input id="n-merc"></label>
+  </div><div id="n-err" class="muted" style="margin-top:8px"></div><div style="margin-top:12px;display:flex;gap:8px"><button class="btn primary" type="submit">Crear embarque</button><button class="btn" type="button" data-close>Cancelar</button></div></form></div>
+  <datalist id="dl-cli2">${clientes().map(c=>`<option value="${esc(c)}">`).join("")}</datalist>`;
+}
+function clientes(){return [...new Set(Object.values(EMB).map(e=>e.cliente).filter(Boolean))].sort()}
+function terminales(){return [...new Set(Object.values(EMB).map(e=>e.terminal).filter(Boolean))].sort()}
+
+/* ---------- servidor ---------- */
+async function api(method,url,body){
+  const r=await fetch(url,{method,headers:body?{"Content-Type":"application/json"}:{},body:body?JSON.stringify(body):undefined,credentials:"same-origin"});
+  let j=null;try{j=await r.json()}catch(e){}
+  if(r.status===401){location.href="/?next=/op-manzanillo";throw new Error("Tu sesión terminó")}
+  if(!r.ok)throw new Error((j&&j.error)||("Error "+r.status));
+  return j;
+}
+function merge(a,b){const r={...(a||{})};for(const[k,v]of Object.entries(b))r[k]=v&&typeof v==="object"&&!Array.isArray(v)?merge(r[k],v):v;return r}
+let loading=false;
+async function load(){
+  if(loading)return;loading=true;
+  try{const rows=await api("GET","/api/admin/opm/embarques");const m={};rows.forEach(x=>{const{id,actualizada,...d}=x;m[id]=d});EMB=m;loaded=true;$("#banner").hidden=true;refresh()}
+  catch(e){$("#banner").hidden=false;$("#banner").textContent="No se pudieron cargar los embarques: "+e.message;loaded=true;renderAll()}
+  finally{loading=false}
+}
+function refresh(){renderAll();if(isEditing())needDrawer=true;else renderDrawer()}
+function bajar(nombre,lineas){
+  const url=URL.createObjectURL(new Blob(["\ufeff"+lineas.join("\r\n")],{type:"text/csv;charset=utf-8"}));
+  const a=document.createElement("a");a.href=url;a.download=nombre;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);
+}
+
+/* ---------- writes ---------- */
+const queues={};
+function write(id,patch){
+  if(EMB[id])EMB[id]=merge(EMB[id],patch); // se ve el cambio de inmediato
+  const run=()=>api("PATCH","/api/admin/opm/embarques/"+encodeURIComponent(id),patch).then(r=>{if(r&&r.datos&&EMB[id])EMB[id]=r.datos;flash("Guardado");refresh()}).catch(err=>{toast("No se pudo guardar: "+err.message);load()});
+  queues[id]=(queues[id]||Promise.resolve()).then(run,run);return queues[id];
+}
+function flash(t){const s=$("#saved");if(s){s.textContent=t+" · "+new Date().toLocaleTimeString("es-MX",{hour:"2-digit",minute:"2-digit"})}}
+let tt;function toast(t){const el=$("#toast");el.textContent=t;el.hidden=false;clearTimeout(tt);tt=setTimeout(()=>el.hidden=true,3200)}
+
+/* ---------- events ---------- */
+document.addEventListener("click",ev=>{
+  const t=ev.target.closest("button,[data-open],tr.click");if(!t)return;
+  if(t.matches("nav.tabs button")){setView(t.dataset.v);return}
+  if(t.dataset.go){ui.estado=t.dataset.est||"activa";syncSeg();setView(t.dataset.go);return}
+  if(t.dataset.fil){ui[t.dataset.fil]=t.dataset.val==="Sin asignar"||t.dataset.val==="Sin cliente"?"":t.dataset.val;$("#f-"+t.dataset.fil).value=ui[t.dataset.fil];setView("seg");return}
+  if(t.dataset.open){ui.open=t.dataset.open;ui.newMode=false;ui.confirmDel=false;renderDrawer();return}
+  if(t.hasAttribute("data-close")){ui.open=null;ui.newMode=false;renderDrawer();return}
+  if(t.closest("#f-estado")&&t.dataset.e!==undefined){ui.estado=t.dataset.e;syncSeg();renderAll();return}
+  if(t.closest("#f-tipo")&&t.dataset.t!==undefined){ui.tipo=t.dataset.t;syncSeg();renderAll();return}
+  if(t.id==="b-nuevo"){if(!canWrite){toast("Este tablero es de solo lectura para ti");return}ui.newMode=true;ui.open=null;renderDrawer();return}
+  if(t.id==="b-export"){exportCSV();return}
+  if(t.id==="del-ask"){ui.confirmDel=true;renderDrawer();return}
+  if(t.id==="del-no"){ui.confirmDel=false;renderDrawer();return}
+  if(t.id==="del-yes"){const id=ui.open;ui.open=null;ui.confirmDel=false;renderDrawer();api("DELETE","/api/admin/opm/embarques/"+encodeURIComponent(id)).then(()=>{delete EMB[id];renderAll();toast("Embarque eliminado")}).catch(e=>toast(e.message));return}
+  if(t.dataset.gdel){const e=EMB[ui.open];write(ui.open,{gastos:(e.gastos||[]).filter(g=>g.id!==t.dataset.gdel)});return}
+  if(t.dataset.gpay){const e=EMB[ui.open];write(ui.open,{gastos:(e.gastos||[]).map(g=>g.id===t.dataset.gpay?{...g,pagado:!g.pagado}:g)});return}
+});
+$("#scrim").addEventListener("click",()=>{ui.open=null;ui.newMode=false;renderDrawer()});
+document.addEventListener("keydown",ev=>{if(ev.key==="Escape"&&(ui.open||ui.newMode)){ui.open=null;ui.newMode=false;renderDrawer()}});
+document.addEventListener("change",ev=>{
+  const el=ev.target;
+  if(el.id==="f-cliente"){ui.cliente=el.value;renderAll();return}
+  if(el.id==="f-terminal"){ui.terminal=el.value;renderAll();return}
+  if(!ui.open||!el.closest("#drawer"))return;
+  if(el.dataset.h){const k=el.dataset.h,f=el.dataset.k;const patch={hitos:{[k]:{[f]:el.value}}};
+    if(k==="retiro"&&f==="r"&&el.value&&EMB[ui.open].estado==="activa"){patch.estado="cerrada";toast("Retiro registrado: la operación pasa a Cerradas")}
+    write(ui.open,patch);return}
+  if(el.dataset.f){let v=el.value;const f=el.dataset.f;
+    if(el.type==="checkbox"){write(ui.open,{[f]:el.checked});return}
+    if(["peso","bultos","diasLibres"].includes(f))v=v===""?null:Number(v);
+    else if(f!=="nota"&&f!=="estado"&&f!=="semaforo")v=v.trim().toUpperCase();
+    write(ui.open,{[f]:v});}
+});
+document.addEventListener("submit",ev=>{
+  ev.preventDefault();
+  if(ev.target.id==="gform"){const imp=parseFloat($("#g-imp").value);if(!(imp>=0))return;
+    const e=EMB[ui.open];const g={id:"g"+Date.now().toString(36),fecha:$("#g-fecha").value,concepto:$("#g-concepto").value,proveedor:$("#g-prov").value.trim().toUpperCase(),importe:imp,moneda:$("#g-mon").value,pagado:$("#g-pag").value==="1"};
+    write(ui.open,{gastos:[...(e.gastos||[]),g]});return}
+  if(ev.target.id==="newform"){
+    const ref=$("#n-ref").value.trim().toUpperCase();const id=ref.replace(/\//g,"-").replace(/[^A-Z0-9_\-.]/g,"");
+    if(!id){$("#n-err").textContent="Escribe una referencia válida, por ejemplo MA143/26.";return}
+    if(EMB[id]){$("#n-err").textContent="La referencia "+ref+" ya existe. Ábrela desde Seguimiento.";return}
+    const hitos={};HITOS.forEach(h=>hitos[h.k]={e:"",c:"",r:""});hitos.arribo.e=$("#n-eta").value;
+    const doc={ref,cliente:$("#n-cli").value.trim().toUpperCase(),buque:$("#n-buque").value.trim().toUpperCase(),viaje:$("#n-viaje").value.trim().toUpperCase(),bandera:"",hbl:$("#n-hbl").value.trim().toUpperCase(),mbl:$("#n-mbl").value.trim().toUpperCase(),ff:"",tipo:$("#n-tipo").value,previo:"PREVIO",mercancia:$("#n-merc").value.trim().toUpperCase(),marca:"",factura:"",peso:null,bultos:null,contenedores:"",terminal:"",claveCR:"",pedimento:"",semaforo:"",estado:"activa",diasLibres:null,nota:"",hitos,gastos:[],creado:new Date().toISOString()};
+    api("POST","/api/admin/opm/embarques",doc).then(r=>{EMB[r.id]=doc;ui.newMode=false;ui.open=r.id;toast("Embarque "+ref+" creado");renderAll();renderDrawer()}).catch(err=>{$("#n-err").textContent=err.message});
+  }
+});
+let qT;$("#f-q").addEventListener("input",ev=>{clearTimeout(qT);qT=setTimeout(()=>{ui.q=ev.target.value;renderAll()},150)});
+
+function syncSeg(){
+  document.querySelectorAll("#f-estado button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.e===ui.estado)));
+  document.querySelectorAll("#f-tipo button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.t===ui.tipo)));
+}
+function setView(v){ui.view=v;try{localStorage.setItem("om.view",v)}catch(e){}
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.v===v)));
+  $("#v-ejec").hidden=v!=="ejec";$("#v-seg").hidden=v!=="seg";$("#v-gas").hidden=v!=="gas";
+  $("#f-estado").hidden=v==="ejec";renderAll();}
+function fillSelect(id,vals,cur,all){const s=$(id);const html=`<option value="">${all}</option>`+vals.map(v=>`<option ${v===cur?"selected":""}>${esc(v)}</option>`).join("");if(s.dataset.h!==html){s.innerHTML=html;s.dataset.h=html}s.value=cur}
+function renderAll(){
+  fillSelect("#f-cliente",clientes(),ui.cliente,"Todos los clientes");
+  fillSelect("#f-terminal",terminales(),ui.terminal,"Todas las terminales");
+  const n=filtered({ignoreEstado:ui.view==="ejec"}).length;
+  $("#f-count").textContent=loaded?n+" embarque"+(n===1?"":"s"):"";
+  if(ui.view==="ejec")renderEjec();else if(ui.view==="seg")renderSeg();else renderGas();
+}
+
+/* ---------- export ---------- */
+function csvCell(v){v=v==null?"":String(v);return /[",\n;]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
+async function exportCSV(){
+  const xs=filtered({ignoreEstado:ui.view==="ejec"});
+  const base=["ref","cliente","estado","buque","viaje","bandera","terminal","claveCR","ff","hbl","mbl","contenedores","tipo","previo","mercancia","marca","factura","peso","bultos","pedimento","pedimentoPagado","semaforo","diasLibres","nota"];
+  const hcols=[];HITOS.forEach(h=>["e","c","r"].forEach(k=>hcols.push([h.k,k])));
+  const head=base.concat(hcols.map(([h,k])=>h+"_"+({e:"estimada",c:"confirmada",r:"real"})[k]),["total_mxn","total_usd"]);
+  const lines=[head.join(",")];
+  xs.forEach(({e})=>{const t={MXN:0,USD:0};(e.gastos||[]).forEach(g=>t[g.moneda||"MXN"]+=+g.importe||0);
+    lines.push(base.map(f=>csvCell(e[f])).concat(hcols.map(([h,k])=>csvCell(hit(e,h)[k])),[t.MXN.toFixed(2),t.USD.toFixed(2)]).join(","))});
+  const g=["ref,cliente,fecha,concepto,proveedor,importe,moneda,pagado"];
+  xs.forEach(({e})=>(e.gastos||[]).forEach(x=>g.push([e.ref,e.cliente,x.fecha,x.concepto,x.proveedor,x.importe,x.moneda,x.pagado?"SI":"NO"].map(csvCell).join(","))));
+  bajar("embarques_manzanillo_"+TODAY+".csv",lines);
+  if(g.length>1)setTimeout(()=>bajar("gastos_manzanillo_"+TODAY+".csv",g),400);
+}
+
+/* ---------- boot ---------- */
+syncSeg();setView(["ejec","seg","gas"].includes(ui.view)?ui.view:"ejec");
+load();
+setInterval(()=>{if(!document.hidden&&!isEditing())load()},60000); // trae cambios de otros usuarios cada minuto
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!isEditing())load()});
+})();
+</script>
+
 </body>
 </html>

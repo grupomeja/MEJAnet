@@ -4,7 +4,7 @@ Formulario web para que los trabajadores llenen la ORDEN DE CARGA desde el celul
 Al enviar, la orden se **guarda** y se **manda por correo en PDF**.
 
 - `/` → página principal: inicio de sesión (logo, "MEJAnet v1.0", usuario y contraseña). Si ya hay sesión, pasa directo a `/modulos`.
-- `/modulos` → Módulos (logo y botones: Orden de Carga, Entradas Bodega, Cotizador) y botón "Cerrar sesión".
+- `/modulos` → Módulos (logo y botones: Orden de Carga, Entradas Bodega, Cotizador, OP Manzanillo) y botón "Cerrar sesión".
 - Al entrar se guarda una cookie que dura 1 año y se renueva en cada visita, así que no se vuelve a pedir en ese navegador. Cambiar la contraseña de un usuario cierra sus sesiones; cambiar `SESSION_SECRET` cierra todas.
 - `/logout` → cierra la sesión en ese navegador y regresa a `/`.
 - Todas las demás secciones (Orden de Carga, Entradas Bodega, Cotizador) usan la misma sesión.
@@ -52,3 +52,11 @@ Sin `DATABASE_URL` las órdenes se guardan en un archivo local, que se borra cua
 - Folio por tipo, con numeración propia y asignado al guardar: `CT-0001` terrestre, `CM-0001` marítima, `CF-0001` ferrocarril; el PDF se genera en `/api/admin/cot/cotizaciones/:id/pdf`.
 - Archivos: `cotizador.js` (datos y rutas), `cotizacion-pdf.js` (PDF), `public/formula.js` (cálculos, se usa en servidor y navegador), `admin/cotizador.html`, `admin/cotizacion.html`, `admin/cot-tarifas.html`.
 - Las tablas `cot_conceptos` y `cotizaciones` se crean solas al arrancar; la primera vez se cargan los 6 conceptos de ejemplo.
+
+## OP Manzanillo
+
+- `/op-manzanillo` → tablero de operaciones marítimas por el puerto de Manzanillo (pide contraseña), con tres vistas: **Ejecutivo** (indicadores, despachos por mes, alertas y próximos hitos), **Seguimiento** (una fila por referencia, coloreada por estatus) y **Gastos** (por referencia y por concepto). Al hacer clic en una referencia se abre su ficha con los datos del embarque, los hitos y los gastos.
+- Hitos (fecha estimada, confirmada y real): zarpe, arribo, revalidación, disponibilidad de carga, previo, inicio de despacho, conclusión de despacho, liberación y retiro.
+- Color de la fila: sin color = pendiente de ETA y revalidación; naranja = revalidado; amarillo = pedimento asignado y pagado con despacho programado; verde = desaduanado / cumplido.
+- La primera vez que arranca con la tabla vacía, carga `seed/op_manzanillo.json` (operaciones 2026 del Excel "REPORTE DE DESPACHOS").
+- Archivos: `opmanzanillo.js` (datos y rutas, tabla `op_manzanillo`) y `admin/op-manzanillo.html`.
