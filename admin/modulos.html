@@ -33,6 +33,7 @@
   a.boton.carga{--c:#ff6100;--c-osc:#c24a00}
   a.boton.bodega{--c:#875a86;--c-osc:#5f3f5e}
   a.boton.cotizador{--c:#1a64c8;--c-osc:#114a99}
+  a.boton.manzanillo{--c:#1ea7dc;--c-osc:#1580ab}
   /* Cerrar sesión: botón secundario, discreto debajo de los módulos */
   a.salir{display:inline-flex;align-items:center;gap:8px;margin-top:40px;padding:10px 22px;border:1.5px solid #c9d4e0;border-radius:999px;
     background:#fff;color:#5d6672;text-decoration:none;font-weight:700;font-size:15px;letter-spacing:.3px;transition:color .15s,border-color .15s,background .15s}
@@ -95,6 +96,22 @@
         </svg>
       </span>
       <span class="txt">Cotizador</span>
+    </a>
+    <a class="boton manzanillo" href="/op-manzanillo">
+      <span class="ico" aria-hidden="true">
+        <svg viewBox="0 0 64 64">
+          <rect x="29" y="6" width="3" height="10" fill="currentColor"/>
+          <path d="M20 16h22v10H20z" fill="currentColor"/>
+          <g fill="#fff"><rect x="23.5" y="19" width="4" height="3.5" rx=".6"/><rect x="29" y="19" width="4" height="3.5" rx=".6"/><rect x="34.5" y="19" width="4" height="3.5" rx=".6"/></g>
+          <path d="M14 26h34v6H14z" fill="currentColor"/>
+          <g fill="#fff"><rect x="17" y="27.6" width="5" height="2.8"/><rect x="23.5" y="27.6" width="5" height="2.8"/><rect x="30" y="27.6" width="5" height="2.8"/><rect x="36.5" y="27.6" width="5" height="2.8"/></g>
+          <path d="M6 33h52l-7 14H13z" fill="currentColor"/>
+          <path d="M11 37h42" stroke="#fff" stroke-width="1.6"/>
+          <path d="M3 52c4 0 4-2.6 8-2.6s4 2.6 8 2.6 4-2.6 8-2.6 4 2.6 8 2.6 4-2.6 8-2.6 4 2.6 8 2.6 4-2.6 8-2.6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
+          <path d="M9 58c4 0 4-2.4 8-2.4s4 2.4 8 2.4 4-2.4 8-2.4 4 2.4 8 2.4 4-2.4 8-2.4 4 2.4 7 2.4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" opacity=".6"/>
+        </svg>
+      </span>
+      <span class="txt">OP Manzanillo</span>
     </a>
   </div>
   <a class="salir" href="/logout">
