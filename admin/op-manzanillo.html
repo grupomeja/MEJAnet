@@ -99,6 +99,7 @@ nav.tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink)
 .tbl-head{background:var(--surface);border:1px solid var(--line);border-bottom:0;border-radius:8px 8px 0 0;overflow:hidden}
 @media (max-width:760px){.filters,.seg-head{position:static}}
 .filters select,.filters input{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:6px 10px;min-width:0}
+.filters .orden{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-3);font-weight:600}
 .filters input[type=search]{width:240px;max-width:100%}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--surface)}
 .seg button{border:0;background:transparent;padding:6px 11px;color:var(--ink-2);border-right:1px solid var(--line)}
@@ -333,6 +334,17 @@ main{padding-bottom:40px}
       <button type="button" data-e="cerrada" aria-pressed="false">Cerradas</button>
       <button type="button" data-e="" aria-pressed="false">Todas</button>
     </span>
+    <label class="orden" id="f-orden-w">Ordenar por
+      <select id="f-orden" aria-label="Ordenar por">
+        <option value="prioridad">Prioridad (vencidos primero)</option>
+        <option value="estatus">Estatus (color)</option>
+        <option value="eta">ETA (más próxima primero)</option>
+        <option value="despacho">Fecha de despacho (más reciente)</option>
+        <option value="ref">Referencia (más nueva primero)</option>
+        <option value="cliente">Cliente (A-Z)</option>
+        <option value="puerto">Días en puerto (más días primero)</option>
+      </select>
+    </label>
     <span class="seg" id="f-tipo" role="group" aria-label="Tipo">
       <button type="button" data-t="" aria-pressed="true">LCL + FCL</button>
       <button type="button" data-t="LCL" aria-pressed="false">LCL</button>
@@ -386,8 +398,8 @@ $("#hoy").textContent="Puerto de Manzanillo · "+fd(TODAY);
 let canWrite=true;
 let EMB={};            // id -> doc
 let loaded=false;
-const ui={view:"ejec",cliente:"",terminal:"",q:"",estado:"activa",tipo:"",open:null,newMode:false,confirmDel:false};
-try{const v=localStorage.getItem("om.view");if(v)ui.view=v}catch(e){}
+const ui={view:"ejec",cliente:"",terminal:"",q:"",estado:"activa",tipo:"",orden:"prioridad",open:null,newMode:false,confirmDel:false};
+try{const v=localStorage.getItem("om.view");if(v)ui.view=v;const o=localStorage.getItem("om.orden");if(o)ui.orden=o}catch(e){}
 
 /* ---------- derived logic ---------- */
 function hit(e,k){return(e.hitos&&e.hitos[k])||{}}
@@ -523,6 +535,28 @@ function renderEjec(){
 }
 
 /* ---------- render: seguimiento ---------- */
+// Orden de la tabla según «Ordenar por»
+const RANGO={ye:0,az:1,or:2,no:3,gr:4};
+function numRef(r){const m=/^MA(\d+)\/(\d+)/.exec(r||"");return m?(+m[2])*10000+(+m[1]):-1}
+function fechaDesp(e){const h=hit(e,"despacho");return h.r||h.e||""}
+function prioridad(p,q){
+  const pc=p.e.estado!=="activa",qc=q.e.estado!=="activa";
+  if(pc!==qc)return pc?1:-1;
+  if(pc)return fechaDesp(q.e).localeCompare(fechaDesp(p.e));
+  const pa=p.a.alerts.some(a=>a.lvl==="bad")?0:1,qa=q.a.alerts.some(a=>a.lvl==="bad")?0:1;if(pa!==qa)return pa-qa;
+  return (p.a.nd||"9999").localeCompare(q.a.nd||"9999");
+}
+function ordenar(p,q){
+  switch(ui.orden){
+    case "estatus":{const d=RANGO[status(p.e)]-RANGO[status(q.e)];return d||prioridad(p,q)}
+    case "eta":return (p.a.eta||"9999").localeCompare(q.a.eta||"9999")||prioridad(p,q);
+    case "despacho":{const a=fechaDesp(p.e),b=fechaDesp(q.e);if(!a!==!b)return a?-1:1;return b.localeCompare(a)||prioridad(p,q)}
+    case "ref":return numRef(q.e.ref)-numRef(p.e.ref);
+    case "cliente":return (p.e.cliente||"").localeCompare(q.e.cliente||"")||numRef(q.e.ref)-numRef(p.e.ref);
+    case "puerto":return (q.a.diasPuerto??-1)-(p.a.diasPuerto??-1)||prioridad(p,q);
+    default:return prioridad(p,q);
+  }
+}
 // Separa un campo de B/L que trae varios números ("A // B", "BL: A / BL: B", "A - MBL: B") en una lista
 function partirBL(txt){
   const out={bl:[],mbl:[]};
@@ -556,11 +590,7 @@ function dotsHTML(e,a){
     return `<span class="dot ${done?"done":""} ${na&&!closed?"na":""}" title="${esc(h.l)}${hh.r?": "+fd(hh.r):na?": no aplica":""}"></span>`}).join("")}</div>`;
 }
 function renderSeg(){
-  const rows=filtered().sort((p,q)=>{
-    if(ui.estado==="cerrada"){return (hit(q.e,"despacho").r||"").localeCompare(hit(p.e,"despacho").r||"")}
-    const pa=p.a.alerts.some(a=>a.lvl==="bad")?0:1,qa=q.a.alerts.some(a=>a.lvl==="bad")?0:1;if(pa!==qa)return pa-qa;
-    return (p.a.nd||"9999").localeCompare(q.a.nd||"9999");
-  });
+  const rows=filtered().sort(ordenar);
   const head=`<div class="tr th"><div>Referencia / cliente</div><div>Buque / HBL / MBL</div><div class="c-term">Terminal</div><div class="c-ff">Forwarder</div><div>Tipo</div><div>ETA</div><div class="c-fp">Fecha<br>previo</div><div class="c-tp">Tipo de<br>previo</div><div class="c-fd">Fecha<br>despacho</div><div>Avance</div><div>Siguiente hito</div><div class="c-port">Días en puerto</div></div>`;
   const body=rows.map(({id,e,a})=>{
     let nextTxt;
@@ -810,6 +840,7 @@ document.addEventListener("change",ev=>{
   const el=ev.target;
   if(el.id==="f-cliente"){ui.cliente=el.value;renderAll();return}
   if(el.id==="f-terminal"){ui.terminal=el.value;renderAll();return}
+  if(el.id==="f-orden"){ui.orden=el.value;try{localStorage.setItem("om.orden",ui.orden)}catch(e){}renderAll();return}
   if(!ui.open||!el.closest("#drawer"))return;
   if(el.dataset.h){const k=el.dataset.h,f=el.dataset.k;const patch={hitos:{[k]:{[f]:el.value}}};
     if(k==="retiro"&&f==="r"&&el.value&&EMB[ui.open].estado==="activa"){patch.estado="cerrada";toast("Retiro registrado: la operación pasa a Cerradas")}
@@ -843,7 +874,7 @@ function syncSeg(){
 function setView(v){ui.view=v;try{localStorage.setItem("om.view",v)}catch(e){}
   document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.v===v)));
   $("#v-ejec").hidden=v!=="ejec";$("#v-seg").hidden=v!=="seg";$("#v-gas").hidden=v!=="gas";
-  $("#f-estado").hidden=v==="ejec";renderAll();}
+  $("#f-estado").hidden=v==="ejec";$("#f-orden-w").hidden=v!=="seg";renderAll();}
 function fillSelect(id,vals,cur,all){const s=$(id);const html=`<option value="">${all}</option>`+vals.map(v=>`<option ${v===cur?"selected":""}>${esc(v)}</option>`).join("");if(s.dataset.h!==html){s.innerHTML=html;s.dataset.h=html}s.value=cur}
 function renderAll(){
   fillSelect("#f-cliente",clientes(),ui.cliente,"Todos los clientes");
@@ -878,6 +909,7 @@ async function exportCSV(){
 }
 
 /* ---------- boot ---------- */
+$("#f-orden").value=ui.orden;if(!$("#f-orden").value){ui.orden="prioridad";$("#f-orden").value="prioridad"}
 syncSeg();setView(["ejec","seg","gas"].includes(ui.view)?ui.view:"ejec");
 load();
 setInterval(()=>{if(!document.hidden&&!isEditing())load()},60000); // trae cambios de otros usuarios cada minuto
