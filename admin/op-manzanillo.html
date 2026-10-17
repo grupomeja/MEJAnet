@@ -151,13 +151,14 @@ button.kpi:hover{border-color:var(--ink-3)}
 .fd2 .d{font-weight:600;white-space:nowrap}
 .sem-verde .fd2 .w,.sem-rojo .fd2 .w{color:inherit;opacity:.8}
 .tr .fd2 .w,.tr .fd2 .d,.tr .ref,.tr .pill{font-size:11.5px}
+.cell.c-term .term{white-space:normal;overflow:visible;color:var(--ink-2)}
 .cell.c-ff .ff{white-space:normal;overflow:visible;color:var(--ink-2)}
 .tag{font-family:var(--f-body);font-weight:600;font-size:11px;letter-spacing:.02em;padding:1px 6px;border-radius:3px;border:1px solid var(--line);color:var(--ink-2)}
 
 /* Tracking table */
 .tbl{background:var(--surface);border:1px solid var(--line);border-radius:0 0 8px 8px;overflow:hidden}
 .tbl > .tr:first-child{border-top:0}
-.tr{display:grid;grid-template-columns:var(--refw,150px) minmax(170px,1.4fr) minmax(110px,.8fr) 46px 100px 168px minmax(160px,1.2fr) 50px;gap:12px;align-items:center;padding:0 14px 0 0;border-top:1px solid var(--line-2);width:100%;text-align:left;background:var(--surface);border-left:0;border-right:0;border-bottom:0}
+.tr{display:grid;grid-template-columns:var(--refw,150px) minmax(160px,1.3fr) minmax(90px,.6fr) minmax(110px,.8fr) 46px 100px 168px minmax(160px,1.2fr) 50px;gap:12px;align-items:center;padding:0 14px 0 0;border-top:1px solid var(--line-2);width:100%;text-align:left;background:var(--surface);border-left:0;border-right:0;border-bottom:0}
 .tr.th{border-top:0;background:var(--surface-2);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);font-weight:500}
 .tr>div{padding-block:9px}
 .tr>div:first-child{padding-left:14px;align-self:stretch;display:flex;flex-direction:column;justify-content:center}
@@ -185,11 +186,11 @@ button.kpi:hover{border-color:var(--ink-3)}
 .s-or .dot.done{background:var(--st-or)} .s-ye .dot.done{background:#C99A0E} .s-gr .dot.done{background:var(--st-gr)}
 .dot.na{opacity:.35}
 .stage{font-size:11.5px;color:var(--ink-3);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-@media (max-width:1180px){.tr{grid-template-columns:var(--refw,140px) minmax(150px,1.3fr) minmax(100px,.8fr) 46px 96px 150px minmax(150px,1.2fr)}.tr .c-port{display:none}}
+@media (max-width:1180px){.tr{grid-template-columns:var(--refw,140px) minmax(140px,1.2fr) minmax(80px,.6fr) minmax(100px,.8fr) 46px 96px 150px minmax(150px,1.2fr)}.tr .c-port{display:none}}
 @media (max-width:820px){
   .tr.th{display:none}
   .tr{grid-template-columns:1fr auto;grid-template-areas:"ref eta" "bq bq" "prog prog" "next next";row-gap:6px}
-  .tr .c-ref{grid-area:ref}.tr .c-eta{grid-area:eta;text-align:right}.tr .c-bq{grid-area:bq}.tr .c-prog{grid-area:prog}.tr .c-next{grid-area:next}.tr .c-tipo,.tr .c-ff{display:none}
+  .tr .c-ref{grid-area:ref}.tr .c-eta{grid-area:eta;text-align:right}.tr .c-bq{grid-area:bq}.tr .c-prog{grid-area:prog}.tr .c-next{grid-area:next}.tr .c-tipo,.tr .c-ff,.tr .c-term{display:none}
 }
 
 /* Gastos */
@@ -481,7 +482,7 @@ function renderSeg(){
     const pa=p.a.alerts.some(a=>a.lvl==="bad")?0:1,qa=q.a.alerts.some(a=>a.lvl==="bad")?0:1;if(pa!==qa)return pa-qa;
     return (p.a.nd||"9999").localeCompare(q.a.nd||"9999");
   });
-  const head=`<div class="tr th"><div>Referencia</div><div>Buque · terminal</div><div class="c-ff">Forwarder</div><div>Tipo</div><div>ETA</div><div>Avance</div><div>Siguiente hito</div><div class="c-port">Puerto</div></div>`;
+  const head=`<div class="tr th"><div>Referencia</div><div>Buque</div><div class="c-term">Terminal</div><div class="c-ff">Forwarder</div><div>Tipo</div><div>ETA</div><div>Avance</div><div>Siguiente hito</div><div class="c-port">Puerto</div></div>`;
   const body=rows.map(({id,e,a})=>{
     let nextTxt;
     if(e.estado==="cerrada"){const f=hit(e,"desp_fin").r;nextTxt=`<div class="a"><span class="sema ${e.semaforo||""}"></span> <span class="${e.semaforo==="rojo"?"sem-rojo":e.semaforo==="verde"?"sem-verde":""}">Despachado</span></div><div class="${e.semaforo==="rojo"?"sem-rojo":e.semaforo==="verde"?"sem-verde":""}">${fd2(f)}</div><div class="b">${e.semaforo==="rojo"?`<span class="sem-rojo">Reconocimiento aduanero</span>`:e.semaforo==="verde"?`<span class="sem-verde">Desaduanamiento libre</span>`:""}${e.pedimento?" · Ped. "+esc(e.pedimento):""}</div>`}
@@ -489,7 +490,8 @@ function renderSeg(){
     else nextTxt=`<div class="a">Todos los hitos registrados</div><div class="b">Marcar como cerrada</div>`;
     return `<button type="button" class="tr s-${status(e)}" data-open="${esc(id)}" title="${esc(STATUS[status(e)])}">
       <div class="cell c-ref"><div class="a ref">${esc(e.ref)}</div><div class="b">${esc(e.cliente)}</div></div>
-      <div class="cell c-bq"><div class="a">${esc(e.buque||"—")} <span class="muted mono">${esc(e.viaje||"")}</span></div><div class="b">${[e.hbl?`<span class="bl">HBL:&nbsp;${esc(e.hbl)}</span>`:"",e.mbl?`<span class="bl">MBL:&nbsp;${esc(e.mbl)}</span>`:"",esc(e.terminal||"Terminal sin asignar")].filter(Boolean).join(" · ")}</div></div>
+      <div class="cell c-bq"><div class="a">${esc(e.buque||"—")} <span class="muted mono">${esc(e.viaje||"")}</span></div><div class="b">${[e.hbl?`<span class="bl">HBL:&nbsp;${esc(e.hbl)}</span>`:"",e.mbl?`<span class="bl">MBL:&nbsp;${esc(e.mbl)}</span>`:""].filter(Boolean).join(" · ")}</div></div>
+      <div class="cell c-term"><div class="b term">${esc(e.terminal||"Sin asignar")}</div></div>
       <div class="cell c-ff"><div class="b ff">${esc(e.ff||"—")}</div></div>
       <div class="cell c-tipo">${e.tipo?`<span class="tag">${esc(e.tipo)}</span>`:""}</div>
       <div class="cell c-eta num"><div class="a">${fd2(a.eta)}</div><div class="b">${hit(e,"arribo").r?"Real":a.eta?"Estimada":""}</div></div>
