@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>OP Manzanillo · MEJAnet v1.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@600&family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Layout: barra de marca + pestañas; vistas Ejecutivo / Seguimiento / Gastos; la ficha del embarque se abre como panel lateral sobre cualquier vista. */
 :root{
@@ -13,7 +13,8 @@
   --ink:#1B1F27; --ink-2:#4A5160; --ink-3:#7A8191;
   --brand:#7A1C1C; --brand-ink:#FFFFFF; --brand-soft:#F5E8E8;
   --ok:#1E7A4C; --ok-soft:#E3F3EA; --warn:#A86200; --warn-soft:#FCF0DC; --bad:#C62828; --bad-soft:#FBE6E6; --info:#1F5F8B; --info-soft:#E3EEF6;
-  --bar:#3E4A5E; --logo:#A3A8AF;
+  --bar:#3E4A5E;
+  --cel-bg1:#EEF8FD; --cel-bg2:#DDF1FA; --cel-line:#B9E2F3; --cel-ink:#1690C0; --cel-th:#E3F4FB; --logo:#A3A8AF;
   --st-or:#E46A1C; --st-or-ink:#FFFFFF; --st-or-soft:#FDEBDD;
   --st-ye:#F2C230; --st-ye-ink:#2B2200; --st-ye-soft:#FDF5D2;
   --st-gr:#2E8B57; --st-gr-ink:#FFFFFF; --st-gr-soft:#E2F2E8;
@@ -28,7 +29,8 @@
   --ink:#E7E9EE; --ink-2:#B3B9C5; --ink-3:#8790A0;
   --brand:#D26A6A; --brand-ink:#1A0A0A; --brand-soft:#3A2224;
   --ok:#4CC38A; --ok-soft:#173A2A; --warn:#E5A445; --warn-soft:#3B2C14; --bad:#F06C6C; --bad-soft:#401C1E; --info:#6AAEDC; --info-soft:#18303F;
-  --bar:#8E9AB0; --logo:#7E8591;
+  --bar:#8E9AB0;
+  --cel-bg1:#17303B; --cel-bg2:#132834; --cel-line:#25516A; --cel-ink:#7FD0F0; --cel-th:#16303C; --logo:#7E8591;
   --st-or:#E87A33; --st-or-ink:#1A0C02; --st-or-soft:#3A2416;
   --st-ye:#E8BE3A; --st-ye-ink:#211A00; --st-ye-soft:#352E15;
   --st-gr:#45B07A; --st-gr-ink:#06180E; --st-gr-soft:#16301F;
@@ -38,7 +40,8 @@
   --ink:#E7E9EE; --ink-2:#B3B9C5; --ink-3:#8790A0;
   --brand:#D26A6A; --brand-ink:#1A0A0A; --brand-soft:#3A2224;
   --ok:#4CC38A; --ok-soft:#173A2A; --warn:#E5A445; --warn-soft:#3B2C14; --bad:#F06C6C; --bad-soft:#401C1E; --info:#6AAEDC; --info-soft:#18303F;
-  --bar:#8E9AB0; --logo:#7E8591;
+  --bar:#8E9AB0;
+  --cel-bg1:#17303B; --cel-bg2:#132834; --cel-line:#25516A; --cel-ink:#7FD0F0; --cel-th:#16303C; --logo:#7E8591;
   --st-or:#E87A33; --st-or-ink:#1A0C02; --st-or-soft:#3A2416;
   --st-ye:#E8BE3A; --st-ye-ink:#211A00; --st-ye-soft:#352E15;
   --st-gr:#45B07A; --st-gr-ink:#06180E; --st-gr-soft:#16301F;
@@ -58,7 +61,17 @@ button{cursor:pointer}
 /* Header */
 @media (max-width:760px){header.top{position:static!important}}
 header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
-.top .wrap{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding-block:10px}
+.top .wrap{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px 18px;padding-block:10px}
+.title-wrap{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0}
+.title-wrap small{font-size:12px;color:var(--ink-3)}
+/* Título con el azul celeste del botón OP Manzanillo, más tenue */
+h1.titulo{display:inline-flex;align-items:center;gap:12px;margin:0;padding:6px 22px 6px 6px;border-radius:14px;
+  background:linear-gradient(180deg,var(--cel-bg1),var(--cel-bg2));border:1px solid var(--cel-line);box-shadow:0 2px 0 var(--cel-line),0 6px 16px rgba(30,167,220,.12);
+  color:var(--cel-ink);font-family:"Oswald","Arial Narrow",system-ui,sans-serif;font-weight:600;font-size:27px;letter-spacing:1.2px;line-height:1.1;white-space:nowrap}
+h1.titulo .ico{flex:0 0 44px;height:44px;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:10px;color:#1ea7dc;box-shadow:inset 0 -3px 6px rgba(0,0,0,.05)}
+h1.titulo .ico svg{width:34px;height:34px}
+.right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;justify-self:end}
+@media (max-width:980px){.top .wrap{grid-template-columns:1fr}.brand,.title-wrap,.right{justify-self:center;align-items:center}h1.titulo{font-size:21px;white-space:normal}}
 .brand{display:flex;align-items:center;gap:10px;min-width:0}
 .logo{display:block;flex:none}.logo img{height:40px;width:auto;display:block}
 .brand h1{font-family:var(--f-display);font-weight:600;font-size:21px;margin:0;letter-spacing:.01em;text-wrap:balance}
@@ -66,7 +79,7 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;backgroun
 nav.tabs{display:flex;gap:2px;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:3px}
 nav.tabs button{border:0;background:transparent;padding:6px 14px;border-radius:6px;font-weight:500;color:var(--ink-2)}
 nav.tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
-.top .actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.top .actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .btn{text-decoration:none;color:var(--ink);display:inline-flex;align-items:center;border:1px solid var(--line);background:var(--surface);padding:6px 12px;border-radius:var(--r);font-weight:500}
 .btn:hover{border-color:var(--ink-3)}
 .btn.primary{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
@@ -162,7 +175,7 @@ button.kpi:hover{border-color:var(--ink-3)}
 .tbl{background:var(--surface);border:1px solid var(--line);border-radius:0 0 8px 8px;overflow:hidden}
 .tbl > .tr:first-child{border-top:0}
 .tr{display:grid;grid-template-columns:var(--refw,150px) minmax(160px,1.3fr) minmax(90px,.6fr) minmax(110px,.8fr) 46px 100px 168px minmax(215px,1.3fr) 50px;gap:12px;align-items:center;padding:0 14px 0 0;border-top:1px solid var(--line-2);width:100%;text-align:left;background:var(--surface);border-left:0;border-right:0;border-bottom:0}
-.tr.th{border-top:0;background:var(--surface-2);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);font-weight:500}
+.tr.th{border-top:0;background:var(--cel-th);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--cel-ink);font-weight:500}
 .tr>div{padding-block:9px}
 .tr>div:first-child{padding-left:14px;align-self:stretch;display:flex;flex-direction:column;justify-content:center}
 .tr.th>div{text-align:center}
@@ -259,16 +272,32 @@ main{padding-bottom:40px}
 <body>
 <header class="top">
   <div class="wrap">
-    <div class="brand"><a class="logo" href="/modulos" aria-label="MEJAnet"><img src="/logo.png" alt="Grupo Meja"></a><div><h1>Operaciones Manzanillo</h1><small id="hoy">Seguimiento marítimo</small></div></div>
-    <nav class="tabs" role="tablist" aria-label="Vistas">
-      <button role="tab" id="t-ejec" aria-selected="true" data-v="ejec">Ejecutivo</button>
-      <button role="tab" id="t-seg" aria-selected="false" data-v="seg">Seguimiento</button>
-      <button role="tab" id="t-gas" aria-selected="false" data-v="gas">Gastos</button>
-    </nav>
-    <div class="actions">
-      <button class="btn" id="b-export" type="button">Exportar CSV</button>
-      <button class="btn primary" id="b-nuevo" type="button">+ Embarque</button>
-      <a class="btn" href="/modulos">MEJAnet</a>
+    <div class="brand"><a class="logo" href="/modulos" aria-label="MEJAnet"><img src="/logo.png" alt="Grupo Meja"></a></div>
+    <div class="title-wrap">
+      <h1 class="titulo"><span class="ico" aria-hidden="true"><svg viewBox="0 0 64 64">
+          <rect x="29" y="6" width="3" height="10" fill="currentColor"/>
+          <path d="M20 16h22v10H20z" fill="currentColor"/>
+          <g fill="#fff"><rect x="23.5" y="19" width="4" height="3.5" rx=".6"/><rect x="29" y="19" width="4" height="3.5" rx=".6"/><rect x="34.5" y="19" width="4" height="3.5" rx=".6"/></g>
+          <path d="M14 26h34v6H14z" fill="currentColor"/>
+          <g fill="#fff"><rect x="17" y="27.6" width="5" height="2.8"/><rect x="23.5" y="27.6" width="5" height="2.8"/><rect x="30" y="27.6" width="5" height="2.8"/><rect x="36.5" y="27.6" width="5" height="2.8"/></g>
+          <path d="M6 33h52l-7 14H13z" fill="currentColor"/>
+          <path d="M11 37h42" stroke="#fff" stroke-width="1.6"/>
+          <path d="M3 52c4 0 4-2.6 8-2.6s4 2.6 8 2.6 4-2.6 8-2.6 4 2.6 8 2.6 4-2.6 8-2.6 4 2.6 8 2.6 4-2.6 8-2.6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
+          <path d="M9 58c4 0 4-2.4 8-2.4s4 2.4 8 2.4 4-2.4 8-2.4 4 2.4 8 2.4 4-2.4 8-2.4 4 2.4 7 2.4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" opacity=".6"/>
+        </svg></span>OPERACIONES MANZANILLO</h1>
+      <small id="hoy">Puerto de Manzanillo</small>
+    </div>
+    <div class="right">
+      <nav class="tabs" role="tablist" aria-label="Vistas">
+        <button role="tab" id="t-ejec" aria-selected="true" data-v="ejec">Ejecutivo</button>
+        <button role="tab" id="t-seg" aria-selected="false" data-v="seg">Seguimiento</button>
+        <button role="tab" id="t-gas" aria-selected="false" data-v="gas">Gastos</button>
+      </nav>
+      <div class="actions">
+        <button class="btn" id="b-export" type="button">Exportar CSV</button>
+        <button class="btn primary" id="b-nuevo" type="button">+ Embarque</button>
+        <a class="btn" href="/modulos">MEJAnet</a>
+      </div>
     </div>
   </div>
 </header>
