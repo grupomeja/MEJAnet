@@ -150,7 +150,7 @@ button.kpi:hover{border-color:var(--ink-3)}
 
 /* Tracking table */
 .tbl{background:var(--surface);border:1px solid var(--line);border-radius:8px;overflow:hidden}
-.tr{display:grid;grid-template-columns:150px minmax(170px,1.4fr) 50px 100px 168px minmax(170px,1.3fr) 54px;gap:12px;align-items:center;padding:0 14px 0 0;border-top:1px solid var(--line-2);width:100%;text-align:left;background:none;border-left:0;border-right:0;border-bottom:0}
+.tr{display:grid;grid-template-columns:var(--refw,150px) minmax(170px,1.4fr) 50px 100px 168px minmax(170px,1.3fr) 54px;gap:12px;align-items:center;padding:0 14px 0 0;border-top:1px solid var(--line-2);width:100%;text-align:left;background:none;border-left:0;border-right:0;border-bottom:0}
 .tr.th{border-top:0;background:var(--surface-2);font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);font-weight:500}
 .tr>div{padding-block:9px}
 .tr>div:first-child{padding-left:14px;align-self:stretch;display:flex;flex-direction:column;justify-content:center}
@@ -167,6 +167,7 @@ button.kpi:hover{border-color:var(--ink-3)}
 .cell{min-width:0}
 .cell .a{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cell .b{font-size:12.5px;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.c-bq .b{white-space:normal;overflow-wrap:anywhere}
 .ref{font-family:var(--f-mono);font-weight:500;font-size:13px}
 .dots{display:flex;gap:3px;align-items:center}
 .dot{width:14px;height:8px;border-radius:2px;background:var(--line)}
@@ -174,7 +175,7 @@ button.kpi:hover{border-color:var(--ink-3)}
 .s-or .dot.done{background:var(--st-or)} .s-ye .dot.done{background:#C99A0E} .s-gr .dot.done{background:var(--st-gr)}
 .dot.na{opacity:.35}
 .stage{font-size:11.5px;color:var(--ink-3);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-@media (max-width:1180px){.tr{grid-template-columns:140px minmax(150px,1.3fr) 46px 96px 150px minmax(150px,1.2fr)}.tr .c-port{display:none}}
+@media (max-width:1180px){.tr{grid-template-columns:var(--refw,140px) minmax(150px,1.3fr) 46px 96px 150px minmax(150px,1.2fr)}.tr .c-port{display:none}}
 @media (max-width:820px){
   .tr.th{display:none}
   .tr{grid-template-columns:1fr auto;grid-template-areas:"ref eta" "bq bq" "prog prog" "next next";row-gap:6px}
@@ -478,7 +479,7 @@ function renderSeg(){
     else nextTxt=`<div class="a">Todos los hitos registrados</div><div class="b">Marcar como cerrada</div>`;
     return `<button type="button" class="tr s-${status(e)}" data-open="${esc(id)}" title="${esc(STATUS[status(e)])}">
       <div class="cell c-ref"><div class="a ref">${esc(e.ref)}</div><div class="b">${esc(e.cliente)}</div></div>
-      <div class="cell c-bq"><div class="a">${esc(e.buque||"—")} <span class="muted mono">${esc(e.viaje||"")}</span></div><div class="b">${esc(e.terminal||"Terminal sin asignar")}${e.mercancia?" · "+esc(e.mercancia):""}</div></div>
+      <div class="cell c-bq"><div class="a">${esc(e.buque||"—")} <span class="muted mono">${esc(e.viaje||"")}</span></div><div class="b">${esc(e.terminal||"Terminal sin asignar")}${e.hbl?` · HBL <span class="mono">${esc(e.hbl)}</span>`:""}${e.mbl?` · MBL <span class="mono">${esc(e.mbl)}</span>`:""}</div></div>
       <div class="cell c-tipo">${e.tipo?`<span class="tag">${esc(e.tipo)}</span>`:""}</div>
       <div class="cell c-eta num"><div class="a">${fd2(a.eta)}</div><div class="b">${hit(e,"arribo").r?"Real":a.eta?"Estimada":""}</div></div>
       <div class="cell c-prog">${dotsHTML(e,a)}<div class="stage">${esc(a.stage)}</div></div>
@@ -487,7 +488,16 @@ function renderSeg(){
     </button>`}).join("");
   $("#v-seg").innerHTML=`<div class="tbl">${head}${body||`<div class="empty">${loaded?"No hay embarques con estos filtros":"Cargando embarques…"}</div>`}</div>
   <div class="legend"><span><span class="swatch" style="background:var(--surface)"></span>${STATUS.no}</span><span><span class="swatch" style="background:var(--st-or)"></span>${STATUS.or}</span><span><span class="swatch" style="background:var(--st-ye)"></span>${STATUS.ye}</span><span><span class="swatch" style="background:var(--st-gr)"></span>${STATUS.gr}</span><span>Avance: zarpe · arribo · revalidación · disponibilidad · previo · inicio despacho · conclusión · liberación · retiro</span></div>`;
+  ajustarRef();
 }
+
+// La columna Referencia toma el ancho del texto más largo (referencia o cliente) para que se lea completo
+function ajustarRef(){
+  const tbl=$("#v-seg .tbl");if(!tbl||$("#v-seg").hidden)return;
+  let w=0;tbl.querySelectorAll(".tr:not(.th) .c-ref .a, .tr:not(.th) .c-ref .b").forEach(el=>{w=Math.max(w,el.scrollWidth)});
+  if(w)tbl.style.setProperty("--refw",Math.min(Math.ceil(w)+30,380)+"px");
+}
+window.addEventListener("resize",()=>{clearTimeout(window.__rz);window.__rz=setTimeout(ajustarRef,150)});
 
 /* ---------- render: gastos ---------- */
 function renderGas(){
