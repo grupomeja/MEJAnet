@@ -175,6 +175,8 @@ button.kpi:hover{border-color:var(--ink-3)}
 .nx-d{font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
 .tr .c-ref .b{white-space:normal}
 .cell.c-fd .b,.cell.c-fp .b{white-space:normal}
+.cell{overflow:hidden}
+.cell.c-term .term,.cell.c-ff .ff,.cell.c-tp .tp{overflow-wrap:break-word;word-break:normal}
 .cell.c-tp .tp{white-space:normal;overflow:visible;color:var(--ink-2)}
 .cell.c-term .term{white-space:normal;overflow:visible;color:var(--ink-2)}
 .cell.c-ff .ff{white-space:normal;overflow:visible;color:var(--ink-2)}
@@ -184,7 +186,7 @@ button.kpi:hover{border-color:var(--ink-3)}
 /* Tracking table */
 .tbl{background:var(--surface);border:1px solid var(--line);border-radius:0 0 8px 8px;overflow:hidden}
 .tbl > .tr:first-child{border-top:0}
-.tr{display:grid;grid-template-columns:var(--refw,150px) minmax(130px,1.3fr) minmax(72px,.6fr) minmax(90px,.8fr) 40px 88px 88px 72px 88px 100px minmax(200px,1.3fr) 54px;gap:9px;align-items:center;padding:0 14px 0 0;border-top:1px solid var(--line-2);width:100%;text-align:left;background:var(--surface);border-left:0;border-right:0;border-bottom:0}
+.tr{display:grid;grid-template-columns:var(--refw,150px) minmax(120px,1.2fr) minmax(130px,.7fr) minmax(96px,.8fr) 40px 86px 84px 68px 86px 92px minmax(198px,1.3fr) 54px;gap:9px;align-items:center;padding:0 14px 0 0;border-top:1px solid var(--line-2);width:100%;text-align:left;background:var(--surface);border-left:0;border-right:0;border-bottom:0}
 .tr.th{border-top:0;background:var(--cel-th);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--cel-ink);font-weight:500}
 .tr>div{padding-block:9px}
 .tr>div:first-child{padding-left:14px;align-self:stretch;display:flex;flex-direction:column;justify-content:center}
@@ -216,7 +218,7 @@ button.kpi:hover{border-color:var(--ink-3)}
 .s-or .dot.done{background:var(--st-or)} .s-ye .dot.done{background:#C99A0E} .s-gr .dot.done{background:var(--st-gr)} .s-az .dot.done{background:var(--st-az)}
 .dot.na{opacity:.35}
 .stage{font-size:11.5px;color:var(--ink-3);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-@media (max-width:1280px){.tr{grid-template-columns:var(--refw,140px) minmax(120px,1.2fr) minmax(70px,.6fr) minmax(84px,.8fr) 40px 86px 86px 70px 86px 96px minmax(195px,1.3fr)}.tr .c-port{display:none}}
+@media (max-width:1280px){.tr{grid-template-columns:var(--refw,140px) minmax(112px,1.2fr) minmax(130px,.7fr) minmax(90px,.8fr) 40px 84px 82px 66px 84px 90px minmax(195px,1.3fr)}.tr .c-port{display:none}}
 @media (max-width:820px){
   .tr.th{display:none}
   .tr{grid-template-columns:1fr auto;grid-template-areas:"ref eta" "bq bq" "prog prog" "next next";row-gap:6px}
@@ -567,7 +569,7 @@ function ajustarRef(){
   // Se mide el ancho del texto mismo (no el de la celda), así el resultado no crece en cada actualización
   const rg=document.createRange();let w=0;
   tbl.querySelectorAll(".tr:not(.th) .c-ref .a, .tr:not(.th) .c-ref .b").forEach(el=>{rg.selectNodeContents(el);w=Math.max(w,rg.getBoundingClientRect().width)});
-  if(w)tbl.style.setProperty("--refw",Math.min(Math.ceil(w)+30,window.innerWidth<1500?200:300)+"px");
+  if(w)tbl.style.setProperty("--refw",Math.min(Math.ceil(w)+30,window.innerWidth<1500?180:300)+"px");
 }
 window.addEventListener("resize",()=>{clearTimeout(window.__rz);window.__rz=setTimeout(ajustarRef,150)});
 
