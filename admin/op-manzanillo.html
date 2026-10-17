@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>OP Manzanillo · MEJAnet v1.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 /* Layout: barra de marca + pestañas; vistas Ejecutivo / Seguimiento / Gastos; la ficha del embarque se abre como panel lateral sobre cualquier vista. */
 :root{
@@ -20,7 +20,7 @@
   --st-no:#E3E5EA; --st-no-ink:#1B1F27;
   --f-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
   --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
-  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --f-mono:var(--f-body);
   --r:6px;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
@@ -51,7 +51,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:2px solid var(--brand);outline-offset:2px}
-.mono{font-family:var(--f-mono);font-size:12.5px;letter-spacing:-.01em}
+.mono{font-family:var(--f-body);font-variant-numeric:tabular-nums}
 .num{font-variant-numeric:tabular-nums}
 .muted{color:var(--ink-3)}
 
@@ -168,7 +168,8 @@ button.kpi:hover{border-color:var(--ink-3)}
 .cell .a{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cell .b{font-size:12.5px;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .c-bq .b{white-space:normal;overflow-wrap:anywhere}
-.ref{font-family:var(--f-mono);font-weight:500;font-size:13px}
+.c-bq .bl{white-space:nowrap}
+.ref{font-family:var(--f-body);font-weight:600}
 .dots{display:flex;gap:3px;align-items:center}
 .dot{width:14px;height:8px;border-radius:2px;background:var(--line)}
 .dot.done{background:var(--ink-2)}
@@ -197,7 +198,7 @@ button.kpi:hover{border-color:var(--ink-3)}
 aside.drawer{position:fixed;top:0;right:0;bottom:0;width:min(820px,100%);background:var(--bg);z-index:41;display:flex;flex-direction:column;border-left:1px solid var(--line);box-shadow:-12px 0 32px rgba(0,0,0,.18)}
 .dh{background:var(--surface);border-bottom:1px solid var(--line);padding:calc(14px + env(safe-area-inset-top,0px)) max(18px,env(safe-area-inset-right,0px)) 14px 18px;display:flex;gap:14px;align-items:flex-start}
 .dh .id{flex:1;min-width:0}
-.dh .refbig{font-family:var(--f-mono);font-size:22px;font-weight:500;letter-spacing:-.02em}
+.dh .refbig{font-family:var(--f-body);font-size:22px;font-weight:600}
 .dh .cli{font-weight:500;color:var(--ink-2)}
 .dh .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center}
 .db{overflow-y:auto;padding:16px max(18px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) 18px;display:flex;flex-direction:column;gap:14px}
@@ -479,7 +480,7 @@ function renderSeg(){
     else nextTxt=`<div class="a">Todos los hitos registrados</div><div class="b">Marcar como cerrada</div>`;
     return `<button type="button" class="tr s-${status(e)}" data-open="${esc(id)}" title="${esc(STATUS[status(e)])}">
       <div class="cell c-ref"><div class="a ref">${esc(e.ref)}</div><div class="b">${esc(e.cliente)}</div></div>
-      <div class="cell c-bq"><div class="a">${esc(e.buque||"—")} <span class="muted mono">${esc(e.viaje||"")}</span></div><div class="b">${esc(e.terminal||"Terminal sin asignar")}${e.hbl?` · HBL <span class="mono">${esc(e.hbl)}</span>`:""}${e.mbl?` · MBL <span class="mono">${esc(e.mbl)}</span>`:""}</div></div>
+      <div class="cell c-bq"><div class="a">${esc(e.buque||"—")} <span class="muted mono">${esc(e.viaje||"")}</span></div><div class="b">${esc(e.terminal||"Terminal sin asignar")}${e.hbl?` · <span class="bl">HBL ${esc(e.hbl)}</span>`:""}${e.mbl?` · <span class="bl">MBL ${esc(e.mbl)}</span>`:""}</div></div>
       <div class="cell c-tipo">${e.tipo?`<span class="tag">${esc(e.tipo)}</span>`:""}</div>
       <div class="cell c-eta num"><div class="a">${fd2(a.eta)}</div><div class="b">${hit(e,"arribo").r?"Real":a.eta?"Estimada":""}</div></div>
       <div class="cell c-prog">${dotsHTML(e,a)}<div class="stage">${esc(a.stage)}</div></div>
