@@ -329,7 +329,7 @@ try{const v=localStorage.getItem("om.view");if(v)ui.view=v}catch(e){}
 /* ---------- derived logic ---------- */
 function hit(e,k){return(e.hitos&&e.hitos[k])||{}}
 function applicable(e,k){if(k==="previo"){const p=(e.previo||"").toUpperCase();return !p.startsWith("NO")}return true}
-function due(h){return h.c||h.e||""}
+function due(h){return h.e||""}
 function analyze(e){
   const hs=HITOS.filter(h=>applicable(e,h.k));
   let last=-1;
@@ -344,7 +344,7 @@ function analyze(e){
   const nd=due(nh);
   const late=!!(nd&&nd<TODAY);
   const arr=hit(e,"arribo");
-  const arrEff=arr.r||((arr.c||arr.e)&&(arr.c||arr.e)<=TODAY?(arr.c||arr.e):"");
+  const arrEff=arr.r||(arr.e&&arr.e<=TODAY?arr.e:"");
   const endPort=hit(e,"retiro").r||(e.estado!=="activa"?hit(e,"desp_fin").r:"")||TODAY;
   const diasPuerto=arr.r?Math.max(0,diff(endPort,arr.r)):null;
   let libres=null;
@@ -357,17 +357,17 @@ function analyze(e){
     if(late)alerts.push({lvl:"bad",txt:next.l+" vencido hace "+diff(TODAY,nd)+" d",short:"Vencido "+diff(TODAY,nd)+" d"});
     if(libres&&libres.rest<0)alerts.push({lvl:"bad",txt:"Días libres vencidos hace "+(-libres.rest)+" d",short:"Libres vencidos"});
     else if(libres&&libres.rest<=3)alerts.push({lvl:"warn",txt:"Días libres vencen "+(libres.rest===0?"hoy":"en "+libres.rest+" d"),short:"Libres "+libres.rest+" d"});
-    if(!arr.r&&!arr.c&&!arr.e)alerts.push({lvl:"warn",txt:"Sin fecha de arribo",short:"Sin ETA"});
+    if(!arr.r&&!arr.e)alerts.push({lvl:"warn",txt:"Sin fecha de arribo",short:"Sin ETA"});
   }
   const stage=e.estado==="cerrada"?"Cerrada":e.estado==="cancelada"?"Cancelada":(next?next.st:"Por cerrar");
-  return{hs,last,next,nextIdx,nd,late,arrEff,diasPuerto,libres,alerts,stage,eta:arr.r||arr.c||arr.e||""};
+  return{hs,last,next,nextIdx,nd,late,arrEff,diasPuerto,libres,alerts,stage,eta:arr.r||arr.e||""};
 }
 const STATUS={no:"Pendiente ETA y revalidación",or:"Revalidado",ye:"Pedimento pagado · despacho programado",gr:"Desaduanado / cumplido"};
 function status(e){
   if(e.estado==="cerrada"||hit(e,"desp_fin").r)return "gr";
   const di=hit(e,"desp_ini");
-  if(e.pedimento&&e.pedimentoPagado&&(di.c||di.r))return "ye";
-  if(hit(e,"revalidacion").r||hit(e,"disponible").r||hit(e,"previo").r||di.c||di.r)return "or";
+  if(e.pedimento&&e.pedimentoPagado&&(di.e||di.r))return "ye";
+  if(hit(e,"revalidacion").r||hit(e,"disponible").r||hit(e,"previo").r||di.e||di.r)return "or";
   return "no";
 }
 function filtered(opts={}){
@@ -419,7 +419,7 @@ function renderEjec(){
   // alerts & upcoming
   const alertas=act.flatMap(x=>x.a.alerts.map(a=>({x,a}))).sort((p,q)=>(p.a.lvl==="bad"?0:1)-(q.a.lvl==="bad"?0:1));
   const up=[];const lim=addDays(TODAY,14);
-  act.forEach(x=>{x.a.hs.forEach(h=>{const hh=hit(x.e,h.k);const d=due(hh);if(!hh.r&&d&&d>=TODAY&&d<=lim)up.push({x,h,d,conf:!!hh.c})})});
+  act.forEach(x=>{x.a.hs.forEach(h=>{const hh=hit(x.e,h.k);const d=due(hh);if(!hh.r&&d&&d>=TODAY&&d<=lim)up.push({x,h,d})})});
   up.sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0);
 
   const gm={MXN:0,USD:0};all.forEach(x=>(x.e.gastos||[]).forEach(g=>{if((g.fecha||"").startsWith(ym))gm[g.moneda||"MXN"]+=+g.importe||0}));
@@ -429,7 +429,7 @@ function renderEjec(){
     <button class="kpi" type="button" data-go="seg" data-est="activa"><span class="lbl">Operaciones activas</span><span class="val">${act.length}</span><span class="sub">${act.filter(x=>x.e.tipo==="LCL").length} LCL · ${act.filter(x=>x.e.tipo==="FCL").length} FCL</span></button>
     <div class="kpi"><span class="lbl">Arriban ≤ 7 días</span><span class="val">${in7.length}</span><span class="sub">${in7.length?esc([...new Set(in7.map(x=>x.e.buque))].slice(0,2).join(", ")):"Sin arribos próximos"}</span></div>
     <div class="kpi"><span class="lbl">En puerto sin despacho</span><span class="val">${enPuerto.length}</span><span class="sub">Arribados, pendientes de modular</span></div>
-    <div class="kpi ${alertN?"alert":""}"><span class="lbl">Con hito vencido</span><span class="val">${alertN}</span><span class="sub">Fecha estimada o confirmada ya pasó</span></div>
+    <div class="kpi ${alertN?"alert":""}"><span class="lbl">Con hito vencido</span><span class="val">${alertN}</span><span class="sub">La fecha estimada ya pasó</span></div>
     <div class="kpi"><span class="lbl">Despachadas en ${MES[curM]}</span><span class="val">${despMes.length}</span><span class="sub">Gastos del mes: $${money(gm.MXN)} MXN${gm.USD?" · US$"+money(gm.USD):""}</span></div>
     <div class="kpi"><span class="lbl">Arribo → despacho</span><span class="val">${avg===null?"—":avg.toFixed(1)}<small>días</small></span><span class="sub">Promedio últimos 90 días · ${ciclos.length} ops.</span></div>
     <div class="kpi"><span class="lbl">Reconocimiento aduanero</span><span class="val">${semY.length?Math.round(rojos/semY.length*100):"—"}<small>%</small></span><span class="sub">${rojos} rojos de ${semY.length} modulaciones ${y}</span></div>
@@ -447,7 +447,7 @@ function renderEjec(){
       <div class="list">${alertas.slice(0,12).map(({x,a})=>`<button type="button" class="li" data-open="${esc(x.id)}"><span class="pill ${a.lvl}">${esc(a.short)}</span><span style="min-width:0"><div class="t"><span class="ref">${esc(x.e.ref)}</span> · ${esc(x.e.buque)}</div><div class="s">${esc(a.txt)} · ${esc(x.e.cliente)}</div></span><span class="muted" style="font-size:12px">${esc(x.e.terminal||"")}</span></button>`).join("")||`<div class="empty">Todo al corriente</div>`}</div>
     </div>
     <div class="card"><h2>Próximos 14 días <span class="muted">hitos programados</span></h2>
-      <div class="list">${up.slice(0,12).map(u=>`<button type="button" class="li" data-open="${esc(u.x.id)}"><span class="date-chip">${fd2(u.d)}</span><span style="min-width:0"><div class="t">${esc(u.h.l)} · <span class="ref">${esc(u.x.e.ref)}</span></div><div class="s">${esc(u.x.e.buque)} ${esc(u.x.e.viaje||"")} · ${esc(u.x.e.cliente)}</div></span><span class="pill ${u.conf?"ok":""}">${u.conf?"Confirmada":"Estimada"}</span></button>`).join("")||`<div class="empty">Sin hitos en las próximas dos semanas</div>`}</div>
+      <div class="list">${up.slice(0,12).map(u=>`<button type="button" class="li" data-open="${esc(u.x.id)}"><span class="date-chip">${fd2(u.d)}</span><span style="min-width:0"><div class="t">${esc(u.h.l)} · <span class="ref">${esc(u.x.e.ref)}</span></div><div class="s">${esc(u.x.e.buque)} ${esc(u.x.e.viaje||"")} · ${esc(u.x.e.cliente)}</div></span><span class="pill">Estimada</span></button>`).join("")||`<div class="empty">Sin hitos en las próximas dos semanas</div>`}</div>
     </div>
   </div>
   <div class="two">
@@ -474,13 +474,13 @@ function renderSeg(){
   const body=rows.map(({id,e,a})=>{
     let nextTxt;
     if(e.estado==="cerrada"){const f=hit(e,"desp_fin").r;nextTxt=`<div class="a"><span class="sema ${e.semaforo||""}"></span> <span class="${e.semaforo==="rojo"?"sem-rojo":e.semaforo==="verde"?"sem-verde":""}">Despachado</span></div><div class="${e.semaforo==="rojo"?"sem-rojo":e.semaforo==="verde"?"sem-verde":""}">${fd2(f)}</div><div class="b">${e.semaforo==="rojo"?`<span class="sem-rojo">Reconocimiento aduanero</span>`:e.semaforo==="verde"?`<span class="sem-verde">Desaduanamiento libre</span>`:""}${e.pedimento?" · Ped. "+esc(e.pedimento):""}</div>`}
-    else if(a.next){nextTxt=`<div class="a">${esc(a.next.l)}</div>${a.nd?fd2(a.nd):`<div class="b">Sin fecha</div>`}<div class="b">${a.alerts.length?`<span class="pill ${a.alerts[0].lvl}">${esc(a.alerts[0].short)}</span>`:(hit(e,a.next.k).c?"Confirmada":a.nd?"Estimada":"Registrar fecha estimada")}</div>`}
+    else if(a.next){nextTxt=`<div class="a">${esc(a.next.l)}</div>${a.nd?fd2(a.nd):`<div class="b">Sin fecha</div>`}<div class="b">${a.alerts.length?`<span class="pill ${a.alerts[0].lvl}">${esc(a.alerts[0].short)}</span>`:(a.nd?"Estimada":"Registrar fecha estimada")}</div>`}
     else nextTxt=`<div class="a">Todos los hitos registrados</div><div class="b">Marcar como cerrada</div>`;
     return `<button type="button" class="tr s-${status(e)}" data-open="${esc(id)}" title="${esc(STATUS[status(e)])}">
       <div class="cell c-ref"><div class="a ref">${esc(e.ref)}</div><div class="b">${esc(e.cliente)}</div></div>
       <div class="cell c-bq"><div class="a">${esc(e.buque||"—")} <span class="muted mono">${esc(e.viaje||"")}</span></div><div class="b">${esc(e.terminal||"Terminal sin asignar")}${e.mercancia?" · "+esc(e.mercancia):""}</div></div>
       <div class="cell c-tipo">${e.tipo?`<span class="tag">${esc(e.tipo)}</span>`:""}</div>
-      <div class="cell c-eta num"><div class="a">${fd2(a.eta)}</div><div class="b">${hit(e,"arribo").r?"Real":hit(e,"arribo").c?"Confirmada":a.eta?"Estimada":""}</div></div>
+      <div class="cell c-eta num"><div class="a">${fd2(a.eta)}</div><div class="b">${hit(e,"arribo").r?"Real":a.eta?"Estimada":""}</div></div>
       <div class="cell c-prog">${dotsHTML(e,a)}<div class="stage">${esc(a.stage)}</div></div>
       <div class="cell c-next">${nextTxt}</div>
       <div class="cell c-port num">${a.diasPuerto===null?"—":a.diasPuerto+" d"}</div>
@@ -556,13 +556,13 @@ function renderDrawerInner(){
     <div class="saved" id="saved"></div>
   </div><button class="x" type="button" data-close aria-label="Cerrar">×</button></div>
   <div class="db">
-    <div class="card"><h2>Hitos y seguimiento <span class="muted">estimada · confirmada · real</span></h2>
-      <div class="scroll"><table class="ht"><thead><tr><th>Hito</th><th>Estimada</th><th>Confirmada</th><th>Real</th><th>Estado</th></tr></thead><tbody>
+    <div class="card"><h2>Hitos y seguimiento <span class="muted">estimada · real</span></h2>
+      <div class="scroll"><table class="ht"><thead><tr><th>Hito</th><th>Estimada</th><th>Real</th><th>Estado</th></tr></thead><tbody>
       ${HITOS.map((h,i)=>{const hh=hit(e,h.k);const na=!applicable(e,h.k);const isN=a.next===h;
         let st=na?`<span class="muted">No aplica</span>`:hh.r?`<span class="pill ok">Cumplido</span>`:isN?(a.late?`<span class="pill bad">Vencido ${diff(TODAY,a.nd)} d</span>`:`<span class="pill info">Siguiente</span>`):"";
         if(hh.r&&due(hh)&&hh.r>due(hh))st+=` <span class="muted" style="font-size:11.5px">+${diff(hh.r,due(hh))} d</span>`;
         return `<tr class="${na?"na":""} ${isN?"isnext":""} ${isN&&a.late?"late":""}"><td class="h"><span class="n">${i+1}</span>${esc(h.l)}${hh.hora?` <span class="muted mono">${esc(hh.hora)}</span>`:""}</td>
-        ${["e","c","r"].map(k=>`<td><input type="date" id="h-${h.k}-${k}" data-h="${h.k}" data-k="${k}" value="${esc(hh[k]||"")}" class="${k==="r"&&hh.r?"real":""}" aria-label="${esc(h.l)} ${k==="e"?"estimada":k==="c"?"confirmada":"real"}" ${dis}></td>`).join("")}
+        ${["e","r"].map(k=>`<td><input type="date" id="h-${h.k}-${k}" data-h="${h.k}" data-k="${k}" value="${esc(hh[k]||"")}" class="${k==="r"&&hh.r?"real":""}" aria-label="${esc(h.l)} ${k==="e"?"estimada":"real"}" ${dis}></td>`).join("")}
         <td class="st">${st}</td></tr>`}).join("")}
       </tbody></table></div>
     </div>
@@ -733,8 +733,8 @@ function csvCell(v){v=v==null?"":String(v);return /[",\n;]/.test(v)?'"'+v.replac
 async function exportCSV(){
   const xs=filtered({ignoreEstado:ui.view==="ejec"});
   const base=["ref","cliente","estado","buque","viaje","bandera","terminal","claveCR","ff","hbl","mbl","contenedores","tipo","previo","mercancia","marca","factura","peso","bultos","pedimento","pedimentoPagado","semaforo","diasLibres","nota"];
-  const hcols=[];HITOS.forEach(h=>["e","c","r"].forEach(k=>hcols.push([h.k,k])));
-  const head=base.concat(hcols.map(([h,k])=>h+"_"+({e:"estimada",c:"confirmada",r:"real"})[k]),["total_mxn","total_usd"]);
+  const hcols=[];HITOS.forEach(h=>["e","r"].forEach(k=>hcols.push([h.k,k])));
+  const head=base.concat(hcols.map(([h,k])=>h+"_"+({e:"estimada",r:"real"})[k]),["total_mxn","total_usd"]);
   const lines=[head.join(",")];
   xs.forEach(({e})=>{const t={MXN:0,USD:0};(e.gastos||[]).forEach(g=>t[g.moneda||"MXN"]+=+g.importe||0);
     lines.push(base.map(f=>csvCell(e[f])).concat(hcols.map(([h,k])=>csvCell(hit(e,h)[k])),[t.MXN.toFixed(2),t.USD.toFixed(2)]).join(","))});

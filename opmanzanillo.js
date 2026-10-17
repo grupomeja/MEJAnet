@@ -36,6 +36,31 @@ async function init() {
   } else if (!fs.existsSync(FILE) && fs.existsSync(SEED)) {
     escribir(JSON.parse(fs.readFileSync(SEED, 'utf8')));
   }
+  await sinConfirmada();
+}
+
+// Ya no se usa la fecha "confirmada": si un hito la tiene, pasa a ser la fecha estimada
+// (cuando no había estimada) y se quita. Solo cambia registros que todavía la traen.
+function quitarConfirmada(d) {
+  let cambio = false;
+  for (const h of Object.values(d.hitos || {})) {
+    if (h && typeof h === 'object' && 'c' in h) {
+      if (h.c && !h.e) h.e = h.c;
+      delete h.c; cambio = true;
+    }
+  }
+  return cambio;
+}
+async function sinConfirmada() {
+  if (pool) {
+    const r = await pool.query("SELECT id, datos FROM op_manzanillo WHERE jsonb_path_exists(datos, '$.hitos.*.c')");
+    for (const row of r.rows) if (quitarConfirmada(row.datos)) await pool.query('UPDATE op_manzanillo SET datos = $2 WHERE id = $1', [row.id, row.datos]);
+    if (r.rowCount) console.log(`OP Manzanillo: fecha confirmada pasada a estimada en ${r.rowCount} embarques`);
+    return;
+  }
+  const o = leer(); let n = 0;
+  for (const d of Object.values(o)) if (quitarConfirmada(d)) n++;
+  if (n) escribir(o);
 }
 
 // ---------- Limpieza ----------
@@ -43,7 +68,7 @@ const t = (v, max = 400) => String(v ?? '').trim().slice(0, max);
 const fecha = (v) => (/^\d{4}-\d{2}-\d{2}$/.test(v || '') ? v : '');
 function limpiarHito(h) {
   const o = {};
-  for (const k of ['e', 'c', 'r']) if (k in h) o[k] = fecha(h[k]);
+  for (const k of ['e', 'r']) if (k in h) o[k] = fecha(h[k]);
   if ('hora' in h) o.hora = t(h.hora, 10);
   return o;
 }
