@@ -545,8 +545,10 @@ function renderSeg(){
 // La columna Referencia toma el ancho del texto más largo (referencia o cliente) para que se lea completo
 function ajustarRef(){
   const tbl=$("#v-seg");if(!tbl||tbl.hidden)return;
-  let w=0;tbl.querySelectorAll(".tr:not(.th) .c-ref .a, .tr:not(.th) .c-ref .b").forEach(el=>{w=Math.max(w,el.scrollWidth)});
-  if(w)tbl.style.setProperty("--refw",Math.min(Math.ceil(w)+30,380)+"px");
+  // Se mide el ancho del texto mismo (no el de la celda), así el resultado no crece en cada actualización
+  const rg=document.createRange();let w=0;
+  tbl.querySelectorAll(".tr:not(.th) .c-ref .a, .tr:not(.th) .c-ref .b").forEach(el=>{rg.selectNodeContents(el);w=Math.max(w,rg.getBoundingClientRect().width)});
+  if(w)tbl.style.setProperty("--refw",Math.min(Math.ceil(w)+30,320)+"px");
 }
 window.addEventListener("resize",()=>{clearTimeout(window.__rz);window.__rz=setTimeout(ajustarRef,150)});
 
