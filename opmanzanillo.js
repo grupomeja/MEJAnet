@@ -10,7 +10,7 @@ const pool = db.pool;
 const FILE = path.join(db.DIR, 'op_manzanillo.json');
 const SEED = path.join(__dirname, 'seed', 'op_manzanillo.json'); // carga inicial desde el Excel "REPORTE DE DESPACHOS"
 
-const HITOS = ['zarpe', 'arribo', 'revalidacion', 'disponible', 'previo', 'desp_ini', 'desp_fin', 'liberacion', 'retiro'];
+const HITOS = ['zarpe', 'arribo', 'revalidacion', 'previo', 'despacho', 'retiro'];
 const TEXTO = ['ref', 'cliente', 'buque', 'viaje', 'bandera', 'hbl', 'mbl', 'ff', 'tipo', 'previo', 'mercancia', 'marca', 'factura',
   'contenedores', 'terminal', 'claveCR', 'pedimento', 'semaforo', 'estado', 'nota', 'origen', 'origen_puerto', 'creado'];
 const NUM = ['peso', 'bultos', 'diasLibres'];
@@ -37,6 +37,34 @@ async function init() {
     escribir(JSON.parse(fs.readFileSync(SEED, 'utf8')));
   }
   await sinConfirmada();
+  await hitosNuevos();
+}
+
+// Hitos de 6 pasos: zarpe, arribo, revalidación, previo, despacho y retiro.
+// "Inicio de despacho" y "Conclusión de despacho" se juntan en "Despacho": la fecha estimada sale del
+// inicio (programación) y la real de la conclusión. "Disponibilidad de carga" y "Liberación" se quitan.
+const VIEJOS = ['desp_ini', 'desp_fin', 'disponible', 'liberacion'];
+function aHitosNuevos(d) {
+  const h = d.hitos || {};
+  if (!VIEJOS.some((k) => k in h)) return false;
+  const ini = h.desp_ini || {}, fin = h.desp_fin || {}, ya = h.despacho || {};
+  const desp = { e: ya.e || ini.e || fin.e || '', r: ya.r || fin.r || '' };
+  if (ya.hora || ini.hora) desp.hora = ya.hora || ini.hora;
+  h.despacho = desp;
+  for (const k of VIEJOS) delete h[k];
+  d.hitos = h;
+  return true;
+}
+async function hitosNuevos() {
+  if (pool) {
+    const r = await pool.query("SELECT id, datos FROM op_manzanillo WHERE jsonb_path_exists(datos, '$.hitos.desp_ini') OR jsonb_path_exists(datos, '$.hitos.desp_fin') OR jsonb_path_exists(datos, '$.hitos.disponible') OR jsonb_path_exists(datos, '$.hitos.liberacion')");
+    for (const row of r.rows) if (aHitosNuevos(row.datos)) await pool.query('UPDATE op_manzanillo SET datos = $2 WHERE id = $1', [row.id, row.datos]);
+    if (r.rowCount) console.log(`OP Manzanillo: hitos pasados al nuevo esquema en ${r.rowCount} embarques`);
+    return;
+  }
+  const o = leer(); let n = 0;
+  for (const d of Object.values(o)) if (aHitosNuevos(d)) n++;
+  if (n) escribir(o);
 }
 
 // Ya no se usa la fecha "confirmada": si un hito la tiene, pasa a ser la fecha estimada

@@ -56,7 +56,7 @@ Sin `DATABASE_URL` las órdenes se guardan en un archivo local, que se borra cua
 ## OP Manzanillo
 
 - `/op-manzanillo` → tablero de operaciones marítimas por el puerto de Manzanillo (pide contraseña), con tres vistas: **Ejecutivo** (indicadores, despachos por mes, alertas y próximos hitos), **Seguimiento** (una fila por referencia, coloreada por estatus) y **Gastos** (por referencia y por concepto). Al hacer clic en una referencia se abre su ficha con los datos del embarque, los hitos y los gastos.
-- Hitos (fecha estimada, confirmada y real): zarpe, arribo, revalidación, disponibilidad de carga, previo, inicio de despacho, conclusión de despacho, liberación y retiro.
+- Hitos (fecha estimada y real): zarpe en origen, arribo a Manzanillo, revalidación, previo, despacho y retiro de puerto.
 - Color de la fila: sin color = pendiente de ETA y revalidación; naranja = revalidado; amarillo = pedimento asignado y pagado con despacho programado; verde = desaduanado / cumplido.
 - La primera vez que arranca con la tabla vacía, carga `seed/op_manzanillo.json` (operaciones 2026 del Excel "REPORTE DE DESPACHOS").
 - Archivos: `opmanzanillo.js` (datos y rutas, tabla `op_manzanillo`) y `admin/op-manzanillo.html`.

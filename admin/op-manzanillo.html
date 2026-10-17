@@ -340,12 +340,9 @@ const HITOS=[
   {k:"zarpe",l:"Zarpe en origen",st:"En origen"},
   {k:"arribo",l:"Arribo a Manzanillo",st:"En tránsito"},
   {k:"revalidacion",l:"Revalidación",st:"Por revalidar"},
-  {k:"disponible",l:"Disponibilidad de carga",st:"Esperando disponibilidad"},
   {k:"previo",l:"Previo",st:"Por realizar previo"},
-  {k:"desp_ini",l:"Inicio de despacho",st:"Por programar despacho"},
-  {k:"desp_fin",l:"Conclusión de despacho",st:"Despacho en curso"},
-  {k:"liberacion",l:"Liberación",st:"Por liberar"},
-  {k:"retiro",l:"Retiro del puerto",st:"Por retirar"}
+  {k:"despacho",l:"Despacho",st:"Por despachar"},
+  {k:"retiro",l:"Retiro de puerto",st:"Por retirar"}
 ];
 const CONCEPTOS=["Maniobras / terminal","Almacenaje","Previo","Revalidación / liberación naviera","Desconsolidación (LCL)","Demoras de contenedor","Flete terrestre","Custodia / seguro","Honorarios agencia aduanal","Impuestos y derechos (pedimento)","Otros"];
 const MES=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
@@ -394,11 +391,11 @@ function analyze(e){
   const late=!!(nd&&nd<TODAY);
   const arr=hit(e,"arribo");
   const arrEff=arr.r||(arr.e&&arr.e<=TODAY?arr.e:"");
-  const endPort=hit(e,"retiro").r||(e.estado!=="activa"?hit(e,"desp_fin").r:"")||TODAY;
+  const endPort=hit(e,"retiro").r||(e.estado!=="activa"?hit(e,"despacho").r:"")||TODAY;
   const diasPuerto=arr.r?Math.max(0,diff(endPort,arr.r)):null;
   let libres=null;
   if(e.diasLibres&&e.estado==="activa"&&!hit(e,"retiro").r){
-    const base=hit(e,"disponible").r||arr.r;
+    const base=arr.r;
     if(base){const vence=addDays(base,+e.diasLibres);libres={vence,rest:diff(vence,TODAY)}}
   }
   const alerts=[];
@@ -413,10 +410,10 @@ function analyze(e){
 }
 const STATUS={no:"Pendiente ETA y revalidación",or:"Revalidado",ye:"Pedimento pagado · despacho programado",gr:"Desaduanado / cumplido"};
 function status(e){
-  if(e.estado==="cerrada"||hit(e,"desp_fin").r)return "gr";
-  const di=hit(e,"desp_ini");
+  if(e.estado==="cerrada"||hit(e,"despacho").r)return "gr";
+  const di=hit(e,"despacho");
   if(e.pedimento&&e.pedimentoPagado&&(di.e||di.r))return "ye";
-  if(hit(e,"revalidacion").r||hit(e,"disponible").r||hit(e,"previo").r||di.e||di.r)return "or";
+  if(hit(e,"revalidacion").r||hit(e,"previo").r||di.e||di.r)return "or";
   return "no";
 }
 function filtered(opts={}){
@@ -436,13 +433,13 @@ function renderEjec(){
   const all=filtered({ignoreEstado:true});
   const act=all.filter(x=>x.e.estado==="activa");
   const in7=act.filter(x=>!hit(x.e,"arribo").r&&x.a.eta&&x.a.eta>=TODAY&&diff(x.a.eta,TODAY)<=7);
-  const enPuerto=act.filter(x=>x.a.arrEff&&!hit(x.e,"desp_fin").r);
+  const enPuerto=act.filter(x=>x.a.arrEff&&!hit(x.e,"despacho").r);
   const ym=TODAY.slice(0,7), y=TODAY.slice(0,4);
-  const despMes=all.filter(x=>(hit(x.e,"desp_fin").r||"").startsWith(ym));
+  const despMes=all.filter(x=>(hit(x.e,"despacho").r||"").startsWith(ym));
   const cut=addDays(TODAY,-90);
-  const ciclos=all.map(x=>{const a=hit(x.e,"arribo").r,f=hit(x.e,"desp_fin").r;return a&&f&&f>=cut?diff(f,a):null}).filter(v=>v!==null&&v>=0);
+  const ciclos=all.map(x=>{const a=hit(x.e,"arribo").r,f=hit(x.e,"despacho").r;return a&&f&&f>=cut?diff(f,a):null}).filter(v=>v!==null&&v>=0);
   const avg=ciclos.length?ciclos.reduce((s,v)=>s+v,0)/ciclos.length:null;
-  const semY=all.filter(x=>x.e.semaforo&&(hit(x.e,"desp_fin").r||"").startsWith(y));
+  const semY=all.filter(x=>x.e.semaforo&&(hit(x.e,"despacho").r||"").startsWith(y));
   const rojos=semY.filter(x=>x.e.semaforo==="rojo").length;
   const alertN=act.filter(x=>x.a.alerts.some(a=>a.lvl==="bad")).length;
 
@@ -450,8 +447,8 @@ function renderEjec(){
   const curM=now.getMonth();const months=[];
   for(let m=0;m<=curM;m++){
     const key=y+"-"+String(m+1).padStart(2,"0");
-    const xs=all.filter(x=>(hit(x.e,"desp_fin").r||"").startsWith(key));
-    const cs=xs.map(x=>{const a=hit(x.e,"arribo").r,f=hit(x.e,"desp_fin").r;return a&&f?diff(f,a):null}).filter(v=>v!==null&&v>=0);
+    const xs=all.filter(x=>(hit(x.e,"despacho").r||"").startsWith(key));
+    const cs=xs.map(x=>{const a=hit(x.e,"arribo").r,f=hit(x.e,"despacho").r;return a&&f?diff(f,a):null}).filter(v=>v!==null&&v>=0);
     months.push({m,n:xs.length,avg:cs.length?cs.reduce((s,v)=>s+v,0)/cs.length:null});
   }
   const maxM=Math.max(1,...months.map(m=>m.n));
@@ -515,14 +512,14 @@ function dotsHTML(e,a){
 }
 function renderSeg(){
   const rows=filtered().sort((p,q)=>{
-    if(ui.estado==="cerrada"){return (hit(q.e,"desp_fin").r||"").localeCompare(hit(p.e,"desp_fin").r||"")}
+    if(ui.estado==="cerrada"){return (hit(q.e,"despacho").r||"").localeCompare(hit(p.e,"despacho").r||"")}
     const pa=p.a.alerts.some(a=>a.lvl==="bad")?0:1,qa=q.a.alerts.some(a=>a.lvl==="bad")?0:1;if(pa!==qa)return pa-qa;
     return (p.a.nd||"9999").localeCompare(q.a.nd||"9999");
   });
   const head=`<div class="tr th"><div>Referencia</div><div>Buque</div><div class="c-term">Terminal</div><div class="c-ff">Forwarder</div><div>Tipo</div><div>ETA</div><div>Avance</div><div>Siguiente hito</div><div class="c-port">Puerto</div></div>`;
   const body=rows.map(({id,e,a})=>{
     let nextTxt;
-    if(e.estado==="cerrada"){const f=hit(e,"desp_fin").r;nextTxt=`<div class="a"><span class="sema ${e.semaforo||""}"></span> <span class="${e.semaforo==="rojo"?"sem-rojo":e.semaforo==="verde"?"sem-verde":""}">Despachado</span></div><div class="${e.semaforo==="rojo"?"sem-rojo":e.semaforo==="verde"?"sem-verde":""}">${fd2(f)}</div><div class="b">${e.semaforo==="rojo"?`<span class="sem-rojo">Reconocimiento aduanero</span>`:e.semaforo==="verde"?`<span class="sem-verde">Desaduanamiento libre</span>`:""}${e.pedimento?" · Ped. "+esc(e.pedimento):""}</div>`}
+    if(e.estado==="cerrada"){const f=hit(e,"despacho").r;nextTxt=`<div class="a"><span class="sema ${e.semaforo||""}"></span> <span class="${e.semaforo==="rojo"?"sem-rojo":e.semaforo==="verde"?"sem-verde":""}">Despachado</span></div><div class="${e.semaforo==="rojo"?"sem-rojo":e.semaforo==="verde"?"sem-verde":""}">${fd2(f)}</div><div class="b">${e.semaforo==="rojo"?`<span class="sem-rojo">Reconocimiento aduanero</span>`:e.semaforo==="verde"?`<span class="sem-verde">Desaduanamiento libre</span>`:""}${e.pedimento?" · Ped. "+esc(e.pedimento):""}</div>`}
     else if(a.next){nextTxt=`<div class="a">${esc(a.next.l)}</div><div class="nx">${a.nd?`<span class="nx-d">${fd(a.nd)}</span>`:`<span class="muted">Sin fecha</span>`}${a.alerts.length?`<span class="pill ${a.alerts[0].lvl}">${esc(a.alerts[0].short)}</span>`:`<span class="muted">${a.nd?"Estimada":"Registrar fecha estimada"}</span>`}</div>`}
     else nextTxt=`<div class="a">Todos los hitos registrados</div><div class="b">Marcar como cerrada</div>`;
     return `<button type="button" class="tr s-${status(e)}" data-open="${esc(id)}" title="${esc(STATUS[status(e)])}">
@@ -536,7 +533,7 @@ function renderSeg(){
       <div class="cell c-next">${nextTxt}</div>
       <div class="cell c-port num">${a.diasPuerto===null?"—":a.diasPuerto+" d"}</div>
     </button>`}).join("");
-  $("#v-seg").innerHTML=`<div class="seg-head"><div class="legend top"><span><span class="swatch" style="background:var(--surface)"></span>${STATUS.no}</span><span><span class="swatch" style="background:var(--st-or)"></span>${STATUS.or}</span><span><span class="swatch" style="background:var(--st-ye)"></span>${STATUS.ye}</span><span><span class="swatch" style="background:var(--st-gr)"></span>${STATUS.gr}</span><span>Avance: zarpe · arribo · revalidación · disponibilidad · previo · inicio despacho · conclusión · liberación · retiro</span></div>
+  $("#v-seg").innerHTML=`<div class="seg-head"><div class="legend top"><span><span class="swatch" style="background:var(--surface)"></span>${STATUS.no}</span><span><span class="swatch" style="background:var(--st-or)"></span>${STATUS.or}</span><span><span class="swatch" style="background:var(--st-ye)"></span>${STATUS.ye}</span><span><span class="swatch" style="background:var(--st-gr)"></span>${STATUS.gr}</span><span>Avance: zarpe · arribo · revalidación · previo · despacho · retiro</span></div>
   <div class="tbl-head">${head}</div></div>
   <div class="tbl">${body||`<div class="empty">${loaded?"No hay embarques con estos filtros":"Cargando embarques…"}</div>`}</div>`;
   ajustarRef();
