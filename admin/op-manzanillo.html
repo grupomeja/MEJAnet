@@ -214,6 +214,7 @@ button.kpi:hover{border-color:var(--ink-3)}
 .cell .a{font-size:11.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cell .b{font-size:11.5px;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .c-bq .a,.c-bq .b{white-space:nowrap;overflow:hidden;text-overflow:clip}
+.c-bq .blsp{visibility:hidden}
 .ref{font-family:var(--f-body);font-weight:600}
 .dots{display:flex;gap:3px;align-items:center}
 .dot{width:14px;height:8px;border-radius:2px;background:var(--line)}
@@ -521,6 +522,24 @@ function renderEjec(){
 }
 
 /* ---------- render: seguimiento ---------- */
+// Separa un campo de B/L que trae varios números ("A // B", "BL: A / BL: B", "A - MBL: B") en una lista
+function partirBL(txt){
+  const out={bl:[],mbl:[]};
+  String(txt||"").split(/\s*\/\/\s*|\s+\/\s+|\s+-\s+/).forEach(p=>{
+    p=p.trim();if(!p)return;
+    const esMbl=/^MBL\s*:/i.test(p);
+    p=p.replace(/^((H|M)?BL\s*:\s*)+/i,"").trim();
+    if(p)(esMbl?out.mbl:out.bl).push(p);
+  });
+  return out;
+}
+// Líneas de HBL y MBL: una por cada número de B/L
+function lineasBL(e){
+  const h=partirBL(e.hbl),m=partirBL(e.mbl);
+  const hbl=h.bl, mbl=m.bl.concat(h.mbl).concat(m.mbl);
+  const lin=(lbl,arr)=>(arr.length?arr:["—"]).map((v,i)=>`<div class="b" title="${esc(v)}">${i?`<span class="blsp">${lbl}:</span>`:lbl+":"} ${esc(v)}</div>`).join("");
+  return lin("HBL",hbl)+lin("MBL",mbl);
+}
 // Fecha de un hito para la tabla: la real si existe, si no la estimada
 function celdaFecha(e,k){
   if(!applicable(e,k))return `<div class="b">No aplica</div>`;
@@ -549,7 +568,7 @@ function renderSeg(){
     else nextTxt=`<div class="a">Todos los hitos registrados</div><div class="b">Marcar como cerrada</div>`;
     return `<button type="button" class="tr s-${status(e)}${status(e)==="gr"&&e.semaforo==="rojo"?" sem-r":""}" data-open="${esc(id)}" title="${esc(STATUS[status(e)])}">
       <div class="cell c-ref"><div class="a ref">${esc(e.ref)}</div><div class="b">${esc(e.cliente)}</div></div>
-      <div class="cell c-bq"><div class="a" title="${esc((e.buque||"")+" "+(e.viaje||""))}">${esc(e.buque||"—")} <span class="muted mono">${esc(e.viaje||"")}</span></div><div class="b" title="${esc(e.hbl||"")}">HBL: ${esc(e.hbl||"—")}</div><div class="b" title="${esc(e.mbl||"")}">MBL: ${esc(e.mbl||"—")}</div></div>
+      <div class="cell c-bq"><div class="a" title="${esc((e.buque||"")+" "+(e.viaje||""))}">${esc(e.buque||"—")} <span class="muted mono">${esc(e.viaje||"")}</span></div>${lineasBL(e)}</div>
       <div class="cell c-term"><div class="b term">${esc(e.terminal||"Sin asignar")}</div></div>
       <div class="cell c-ff"><div class="b ff">${esc(e.ff||"—")}</div></div>
       <div class="cell c-tipo">${e.tipo?`<span class="tag ${e.tipo==="FCL"||e.tipo==="LCL"?e.tipo:""}">${esc(e.tipo)}</span>`:""}</div>
