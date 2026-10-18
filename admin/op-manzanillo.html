@@ -755,6 +755,13 @@ function renderGas(){
 }
 
 /* ---------- drawer: ficha ---------- */
+const LB=2.20462;
+function numero(v){v=String(v==null?"":v).replace(/,/g,"").trim();if(v==="")return null;const n=Number(v);return Number.isFinite(n)&&n>=0?n:null}
+const dos=n=>n==null?"":String(Math.round(n*100)/100);
+/* Peso: al escribir kg se calcula lbs y al revés */
+document.addEventListener("input",ev=>{const el=ev.target;if(!el.closest||!el.closest("#drawer"))return;
+  if(el.id==="fx-peso"){const n=numero(el.value),o=document.getElementById("fx-pesoLbs");if(o)o.value=n==null?"":dos(n*LB)}
+  else if(el.id==="fx-pesoLbs"){const n=numero(el.value),o=document.getElementById("fx-peso");if(o)o.value=n==null?"":dos(n/LB)}});
 const F=(f,l,cls="",type="text",extra="")=>`<label class="${cls}">${l}<input id="fx-${f}" data-f="${f}" type="${type}" ${extra}></label>`;
 let needDrawer=false;
 function renderDrawer(){
@@ -811,8 +818,8 @@ function renderDrawerInner(){
         ${F("hbl","House B/L","", "text",'class="mono"')}${F("mbl","Master B/L","","text",'class="mono"')}${F("contenedores","Contenedor(es)","","text",'class="mono"')}
         <label>Tipo de carga<select id="fx-tipo" data-f="tipo"><option value="">—</option><option>LCL</option><option>FCL</option></select></label>
         ${F("mercancia","Mercancía","wide")}
-        ${F("marca","Marca")}${F("factura","Factura","","text",'class="mono"')}${F("bultos","Bultos","","number",'min="0" step="1"')}
-        ${F("peso","Peso (kg)","","number",'min="0" step="0.01"')}
+        ${F("marca","Marca")}${F("factura","Factura","","text",'class="mono"')}${F("bultos","Bultos","","text",'inputmode="numeric" autocomplete="off"')}
+        ${F("peso","Peso (kg)","","text",'inputmode="decimal" autocomplete="off"')}<label>Peso (lbs)<input id="fx-pesoLbs" data-lbs="1" type="text" inputmode="decimal" autocomplete="off"></label>
       </div></section>
       <section class="sec"><h3>Despacho</h3><div class="fields">
         <label>Cliente<input id="fx-cliente" data-f="cliente" list="dl-cli"></label>
@@ -845,6 +852,9 @@ function renderDrawerInner(){
   <datalist id="dl-term">${["TIMSA","CONTECON","SSA MEXICO","OCUPA","CORPORACION MULTIMODAL","COMERCIALIZADORA LA JUNTA","TAP","FRIMAN","HAZESA"].map(t=>`<option value="${t}">`).join("")}</datalist>
   <datalist id="dl-cli">${clientes().map(c=>`<option value="${esc(c)}">`).join("")}</datalist>`;
   d.querySelectorAll("[data-f]").forEach(el=>{if(el.dataset.f==="operacion"){el.value=e.operacion||"";return}if(el.type==="checkbox")el.checked=!!e[el.dataset.f];else if(el.tagName!=="SELECT"||!el.classList.contains("mini-select")){const v=e[el.dataset.f];el.value=v==null?"":v} if(!canWrite)el.disabled=true});
+  {const pk=d.querySelector("#fx-peso"),pl=d.querySelector("#fx-pesoLbs"),bu=d.querySelector("#fx-bultos");
+   const kg=numero(e.peso);if(pk)pk.value=kg?dos(kg):"";if(pl){pl.value=kg?dos(kg*LB):"";if(!canWrite)pl.disabled=true}
+   if(bu&&!numero(e.bultos))bu.value="";}
   {const ri=d.querySelector("#fx-ref");if(ri){const fit=()=>{const c=fit.c||(fit.c=document.createElement("canvas").getContext("2d"));const cs=getComputedStyle(ri);c.font=cs.fontWeight+" "+cs.fontSize+" "+cs.fontFamily;ri.style.width=Math.ceil(c.measureText(ri.value||"MA000/00").width+2)+"px"};fit();requestAnimationFrame(fit);document.fonts&&document.fonts.ready.then(fit);ri.addEventListener("input",fit)}}
 }
 function renderNew(){
@@ -928,9 +938,10 @@ document.addEventListener("change",ev=>{
   if(el.dataset.h){const k=el.dataset.h,f=el.dataset.k;const patch={hitos:{[k]:{[f]:el.value}}};
     if(k==="retiro"&&f==="r"&&el.value&&EMB[ui.open].estado==="activa"){patch.estado="cerrada";toast("Retiro registrado: la operación pasa a Cerradas")}
     write(ui.open,patch);return}
+  if(el.dataset.lbs){const lb=numero(el.value);write(ui.open,{peso:lb==null?null:Math.round(lb/LB*100)/100});return}
   if(el.dataset.f){let v=el.value;const f=el.dataset.f;
     if(el.type==="checkbox"){write(ui.open,{[f]:el.checked});return}
-    if(["peso","bultos","diasLibres"].includes(f))v=v===""?null:Number(v);
+    if(["peso","bultos","diasLibres"].includes(f)){v=numero(v);if(f==="peso"&&v!=null)v=Math.round(v*100)/100;if(f==="bultos"&&v!=null)v=Math.round(v)}
     else if(f!=="nota"&&f!=="estado"&&f!=="semaforo")v=v.trim().toUpperCase();
     write(ui.open,{[f]:v});}
 });
