@@ -181,7 +181,16 @@ function rutas(admin) {
   });
   r.patch('/api/admin/opm/embarques/:id', admin, async (req, res) => {
     if (!idValido(req.params.id)) return res.status(400).json({ error: 'Datos inválidos' });
-    const cambio = limpiar(req.body); delete cambio.ref;
+    const cambio = limpiar(req.body);
+    // La referencia se puede corregir desde la ficha, siempre que no la tenga otro embarque
+    if ('ref' in cambio) {
+      cambio.ref = cambio.ref.toUpperCase();
+      if (!cambio.ref) return res.status(400).json({ error: 'La referencia no puede quedar vacía.' });
+      try {
+        const otra = (await listar()).find((x) => x.id !== req.params.id && String(x.ref || '').toUpperCase() === cambio.ref);
+        if (otra) return res.status(409).json({ error: `La referencia ${cambio.ref} ya la tiene otro embarque.` });
+      } catch (e) { return err(res, e, 'No se pudo guardar'); }
+    }
     try {
       const d = await cambiar(req.params.id, cambio);
       d ? res.json({ ok: true, datos: d }) : res.status(404).json({ error: 'No encontrado' });

@@ -268,6 +268,12 @@ aside.drawer{position:fixed;top:0;right:0;bottom:0;width:min(820px,100%);backgro
 .ht input.real:placeholder-shown{border-color:var(--line)}
 .ht .st{white-space:nowrap}
 
+/* Encabezado de Datos del embarque: referencia a la izquierda, título centrado */
+.datos-head{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px;margin-bottom:12px}
+.datos-head h2{margin:0;text-align:center;padding-bottom:6px}
+.ref-campo{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--ink-2);font-weight:600;max-width:200px}
+.ref-campo input{border:1px solid var(--cel-line);background:var(--surface);border-radius:4px;padding:6px 8px;font-size:15px;font-weight:700;color:var(--ink);width:100%}
+@media (max-width:640px){.datos-head{grid-template-columns:1fr}.datos-head h2{order:-1}.ref-campo{max-width:none}}
 /* Ficha: tres secciones con fondo más oscuro y título grande */
 .secciones{display:flex;flex-direction:column;gap:16px}
 .sec{background:var(--sec-body,#FDFBF8);border:1px solid var(--cel-line);border-radius:8px;overflow:hidden}
@@ -729,7 +735,7 @@ function renderDrawerInner(){
         <td class="st">${st}</td></tr>`}).join("")}
       </tbody></table></div>
     </div>
-    <div class="card"><h2>Datos del embarque</h2>
+    <div class="card"><div class="datos-head"><label class="ref-campo">Referencia<input id="fx-ref" data-f="ref" ${dis}></label><h2>Datos del embarque</h2><span></span></div>
       <div class="secciones">
       <section class="sec"><h3>Transporte</h3><div class="fields">
         ${F("buque","Buque","wide")}${F("viaje","Viaje","", "text",'class="mono"')}
