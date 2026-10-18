@@ -314,7 +314,38 @@ aside.drawer{position:fixed;top:0;right:0;bottom:0;width:min(820px,100%);backgro
 #drawer .ht th{font-size:10px;padding:4px 5px}
 #drawer .ht td{padding:3px 5px}
 #drawer .ht input[type=date]{font-size:11.5px;padding:2px 4px}
-#drawer .chk{font-size:12px!important;padding-bottom:3px}
+#drawer .chk{font-size:11px!important;padding-bottom:2px}
+/* Ficha aún más compacta */
+#drawer .dh{padding-top:calc(10px + env(safe-area-inset-top,0px));padding-bottom:10px;gap:10px}
+#drawer .dh .refbig{font-size:17px}
+#drawer .dh .cli{font-size:12px}
+#drawer .dh .meta{gap:6px;margin-top:6px}
+#drawer .dh .meta select,#drawer .mini-select{font-size:11px;padding:1px 6px}
+#drawer .pill{font-size:10.5px;padding:1px 7px}
+#drawer .db{gap:10px;padding-top:12px}
+#drawer .card{padding:10px 12px}
+#drawer .card h2{font-size:12.5px;margin-bottom:6px}
+#drawer .card h2 .muted{font-size:11px}
+#drawer .datos-head{min-height:38px;margin-bottom:6px}
+#drawer .ref-wrap{gap:14px}
+#drawer .op-sel{margin-left:0;padding:3px 0;font-size:11px;width:auto;flex:none}
+#drawer .ref-campo{font-size:10px}
+#drawer .ref-campo input{font-size:12px;padding:2px 5px}
+#drawer .secciones{gap:6px}
+#drawer .sec h3{font-size:10.5px;padding:3px 9px}
+#drawer .sec>.fields{padding:6px 9px 8px}
+#drawer .fields{gap:4px 8px}
+#drawer .fields label{font-size:10px;gap:1px}
+#drawer .fields input,#drawer .fields select,#drawer .fields textarea,#drawer .gform input,#drawer .gform select{font-size:11.5px;padding:2px 5px}
+#drawer .fields textarea{min-height:36px}
+#drawer .gform{gap:6px;margin-top:6px}
+#drawer .gform label{font-size:10px}
+#drawer .ht{font-size:11.5px}
+#drawer .ht th{font-size:9.5px;padding:3px 4px}
+#drawer .ht td{padding:2px 4px}
+#drawer .ht td.h .n{font-size:10.5px;width:15px}
+#drawer .ht input[type=date]{font-size:11px;padding:1px 4px}
+#drawer .btn{font-size:11.5px;padding:3px 9px}
 .gform{display:grid;grid-template-columns:120px minmax(0,1.4fr) minmax(0,1fr) 110px 76px 100px auto;gap:8px;align-items:end;margin-top:10px}
 .gform label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--ink-3)}
 @media (max-width:760px){.gform{grid-template-columns:1fr 1fr}.gform .btn{grid-column:1/-1}}
@@ -810,7 +841,7 @@ function renderDrawerInner(){
   <datalist id="dl-term">${["TIMSA","CONTECON","SSA MEXICO","OCUPA","CORPORACION MULTIMODAL","COMERCIALIZADORA LA JUNTA","TAP","FRIMAN","HAZESA"].map(t=>`<option value="${t}">`).join("")}</datalist>
   <datalist id="dl-cli">${clientes().map(c=>`<option value="${esc(c)}">`).join("")}</datalist>`;
   d.querySelectorAll("[data-f]").forEach(el=>{if(el.dataset.f==="operacion"){el.value=e.operacion||"";return}if(el.type==="checkbox")el.checked=!!e[el.dataset.f];else if(el.tagName!=="SELECT"||!el.classList.contains("mini-select")){const v=e[el.dataset.f];el.value=v==null?"":v} if(!canWrite)el.disabled=true});
-  {const ri=d.querySelector("#fx-ref");if(ri){const fit=()=>{const c=fit.c||(fit.c=document.createElement("canvas").getContext("2d"));const cs=getComputedStyle(ri);c.font=cs.fontWeight+" "+cs.fontSize+" "+cs.fontFamily;ri.style.width=Math.ceil(c.measureText(ri.value||"MA000/00").width+2)+"px"};fit();ri.addEventListener("input",fit)}}
+  {const ri=d.querySelector("#fx-ref");if(ri){const fit=()=>{const c=fit.c||(fit.c=document.createElement("canvas").getContext("2d"));const cs=getComputedStyle(ri);c.font=cs.fontWeight+" "+cs.fontSize+" "+cs.fontFamily;ri.style.width=Math.ceil(c.measureText(ri.value||"MA000/00").width+2)+"px"};fit();requestAnimationFrame(fit);document.fonts&&document.fonts.ready.then(fit);ri.addEventListener("input",fit)}}
 }
 function renderNew(){
   const d=$("#drawer");
