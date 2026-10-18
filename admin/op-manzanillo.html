@@ -270,8 +270,10 @@ aside.drawer{position:fixed;top:0;right:0;bottom:0;width:min(820px,100%);backgro
 
 /* Ficha: tres secciones con fondo más oscuro y título grande */
 .secciones{display:flex;flex-direction:column;gap:16px}
-.sec{background:var(--cel-bg1);border:1px solid var(--cel-line);border-radius:8px;overflow:hidden}
+.sec{background:var(--sec-body,#FDFBF8);border:1px solid var(--cel-line);border-radius:8px;overflow:hidden}
 .sec>.fields{padding:12px 14px 14px}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--sec-body:var(--cel-bg1)}}
+:root[data-theme="dark"]{--sec-body:var(--cel-bg1)}
 .sec h3{margin:0;font-family:var(--f-body);font-size:15px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--cel-ink);padding:10px 14px;background:var(--cel-bg2);border-bottom:2px solid var(--cel-line)}
 .sec .fields label{color:var(--ink-2);font-weight:600}
 .fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 14px}
