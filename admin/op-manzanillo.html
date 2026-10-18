@@ -195,7 +195,7 @@ button.kpi:hover{border-color:var(--ink-3)}
 /* Tracking table */
 .tbl{background:var(--surface);border:1px solid var(--line);border-radius:0 0 8px 8px;overflow:hidden}
 .tbl > .tr:first-child{border-top:0}
-.tr{display:grid;grid-template-columns:var(--refw,150px) minmax(196px,1.2fr) minmax(130px,.7fr) minmax(96px,.8fr) 58px 40px 86px 84px 68px 86px 92px minmax(192px,2.4fr) 54px;gap:9px;align-items:center;padding:0 14px 0 0;border-top:1px solid var(--line-2);width:100%;text-align:left;background:var(--surface);border-left:0;border-right:0;border-bottom:0}
+.tr{display:grid;grid-template-columns:var(--refw,150px) minmax(196px,1.2fr) minmax(130px,.7fr) minmax(96px,.8fr) 58px 50px 86px 84px 68px 86px 92px minmax(192px,2.4fr) 54px;gap:9px;align-items:center;padding:0 14px 0 0;border-top:1px solid var(--line-2);width:100%;text-align:left;background:var(--surface);border-left:0;border-right:0;border-bottom:0}
 .tr.th{border-top:0;background:var(--cel-th);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--cel-ink);font-weight:700}
 .tr>div{padding-block:9px}
 .tr>div:first-child{padding-left:14px;align-self:stretch;display:flex;flex-direction:column;justify-content:center}
@@ -226,8 +226,8 @@ button.kpi:hover{border-color:var(--ink-3)}
 .s-or .dot.done{background:var(--st-or)} .s-ye .dot.done{background:#C99A0E} .s-gr .dot.done{background:var(--st-gr)} .s-az .dot.done{background:var(--st-az)}
 .dot.na{opacity:.35}
 .stage{font-size:11.5px;color:var(--ink-3);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-@media (max-width:1500px){.tr{grid-template-columns:var(--refw,140px) minmax(180px,1.2fr) minmax(122px,.7fr) minmax(84px,.8fr) 50px 38px 80px 76px 60px 80px 76px minmax(150px,2fr) 50px;gap:6px}}
-@media (max-width:1280px){.tr{grid-template-columns:var(--refw,140px) minmax(172px,1.2fr) minmax(122px,.7fr) minmax(80px,.8fr) 48px 38px 78px 74px 58px 78px 74px minmax(150px,2fr);gap:6px}.tr .c-port{display:none}}
+@media (max-width:1500px){.tr{grid-template-columns:var(--refw,140px) minmax(180px,1.2fr) minmax(122px,.7fr) minmax(84px,.8fr) 50px 46px 78px 76px 60px 80px 76px minmax(150px,2fr) 50px;gap:6px}}
+@media (max-width:1280px){.tr{grid-template-columns:var(--refw,140px) minmax(172px,1.2fr) minmax(122px,.7fr) minmax(80px,.8fr) 48px 46px 76px 74px 58px 78px 74px minmax(150px,2fr);gap:6px}.tr .c-port{display:none}}
 @media (max-width:820px){
   .tr.th{display:none}
   .tr{grid-template-columns:1fr auto;grid-template-areas:"ref eta" "bq bq" "prog prog" "next next";row-gap:6px}
@@ -609,7 +609,7 @@ function dotsHTML(e,a){
 }
 function renderSeg(){
   const rows=filtered().sort(ordenar);
-  const head=`<div class="tr th"><div>Referencia / cliente</div><div>Buque / HBL / MBL</div><div class="c-term">Terminal</div><div class="c-ff">Forwarder</div><div class="c-op">Tipo<br>de operación</div><div>Tipo</div><div>ETA</div><div class="c-fp">Fecha<br>previo</div><div class="c-tp">Tipo de<br>previo</div><div class="c-fd">Fecha<br>despacho</div><div>Avance</div><div>Siguiente hito</div><div class="c-port">Días en puerto</div></div>`;
+  const head=`<div class="tr th"><div>Referencia / cliente</div><div>Buque / HBL / MBL</div><div class="c-term">Terminal</div><div class="c-ff">Forwarder</div><div class="c-op">Tipo de<br>operación</div><div>Tipo de<br>carga</div><div>ETA</div><div class="c-fp">Fecha<br>previo</div><div class="c-tp">Tipo de<br>previo</div><div class="c-fd">Fecha<br>despacho</div><div>Avance</div><div>Siguiente hito</div><div class="c-port">Días en puerto</div></div>`;
   const body=rows.map(({id,e,a})=>{
     let nextTxt;
     if(e.estado==="cerrada"){const f=hit(e,"despacho").r;nextTxt=`<div class="a"><span class="sema ${e.semaforo||""}"></span> <span class="${e.semaforo==="rojo"?"sem-rojo":e.semaforo==="verde"?"sem-verde":""}">Despachado</span></div><div class="${e.semaforo==="rojo"?"sem-rojo":e.semaforo==="verde"?"sem-verde":""}">${fd2(f)}</div><div class="b">${e.semaforo==="rojo"?`<span class="sem-rojo">Reconocimiento aduanero</span>`:e.semaforo==="verde"?`<span class="sem-verde">Desaduanamiento libre</span>`:""}${e.pedimento?" · Ped. "+esc(e.pedimento):""}</div>`}
@@ -620,7 +620,7 @@ function renderSeg(){
       <div class="cell c-bq"><div class="a" title="${esc((e.buque||"")+" "+(e.viaje||""))}">${esc(e.buque||"—")} <span class="muted mono">${esc(e.viaje||"")}</span></div>${lineasBL(e)}</div>
       <div class="cell c-term"><div class="b term">${esc(e.terminal||"Sin asignar")}</div></div>
       <div class="cell c-ff"><div class="b ff">${esc(e.ff||"—")}</div></div>
-      <div class="cell c-op"><span class="op ${(e.operacion||"IMPORTACION")==="EXPORTACION"?"exp":"imp"}">${(e.operacion||"IMPORTACION")==="EXPORTACION"?"EXP":"IMP"}</span></div>
+      <div class="cell c-op">${e.operacion==="EXPORTACION"?'<span class="op exp">EXP</span>':e.operacion==="IMPORTACION"?'<span class="op imp">IMP</span>':""}</div>
       <div class="cell c-tipo">${e.tipo?`<span class="tag ${e.tipo==="FCL"||e.tipo==="LCL"?e.tipo:""}">${esc(e.tipo)}</span>`:""}</div>
       <div class="cell c-eta num"><div class="a">${fd2(a.eta)}</div><div class="b">${hit(e,"arribo").r?"Real":a.eta?"Estimada":""}</div></div>
       <div class="cell c-fp num">${celdaFecha(e,"previo")}</div>
@@ -745,7 +745,7 @@ function renderDrawerInner(){
         <td class="st">${st}</td></tr>`}).join("")}
       </tbody></table></div>
     </div>
-    <div class="card"><div class="datos-head"><div class="ref-wrap"><label class="ref-campo">Referencia<input id="fx-ref" data-f="ref" ${dis}></label><select class="op-sel" id="fx-operacion" data-f="operacion" aria-label="Tipo de operación" ${dis}><option value="IMPORTACION">IMPORTACIÓN</option><option value="EXPORTACION">EXPORTACIÓN</option></select></div><h2>Datos del embarque</h2><span></span></div>
+    <div class="card"><div class="datos-head"><div class="ref-wrap"><label class="ref-campo">Referencia<input id="fx-ref" data-f="ref" ${dis}></label><select class="op-sel" id="fx-operacion" data-f="operacion" aria-label="Tipo de operación" ${dis}><option value="">SIN ESPECIFICAR</option><option value="IMPORTACION">IMPORTACIÓN</option><option value="EXPORTACION">EXPORTACIÓN</option></select></div><h2>Datos del embarque</h2><span></span></div>
       <div class="secciones">
       <section class="sec"><h3>Transporte</h3><div class="fields">
         ${F("buque","Buque","wide")}${F("viaje","Viaje","", "text",'class="mono"')}
@@ -789,7 +789,7 @@ function renderDrawerInner(){
   </div>
   <datalist id="dl-term">${["TIMSA","CONTECON","SSA MEXICO","OCUPA","CORPORACION MULTIMODAL","COMERCIALIZADORA LA JUNTA","TAP","FRIMAN","HAZESA"].map(t=>`<option value="${t}">`).join("")}</datalist>
   <datalist id="dl-cli">${clientes().map(c=>`<option value="${esc(c)}">`).join("")}</datalist>`;
-  d.querySelectorAll("[data-f]").forEach(el=>{if(el.dataset.f==="operacion"){el.value=e.operacion||"IMPORTACION";return}if(el.type==="checkbox")el.checked=!!e[el.dataset.f];else if(el.tagName!=="SELECT"||!el.classList.contains("mini-select")){const v=e[el.dataset.f];el.value=v==null?"":v} if(!canWrite)el.disabled=true});
+  d.querySelectorAll("[data-f]").forEach(el=>{if(el.dataset.f==="operacion"){el.value=e.operacion||"";return}if(el.type==="checkbox")el.checked=!!e[el.dataset.f];else if(el.tagName!=="SELECT"||!el.classList.contains("mini-select")){const v=e[el.dataset.f];el.value=v==null?"":v} if(!canWrite)el.disabled=true});
   {const ri=d.querySelector("#fx-ref");if(ri){const fit=()=>{const c=fit.c||(fit.c=document.createElement("canvas").getContext("2d"));const cs=getComputedStyle(ri);c.font=cs.fontWeight+" "+cs.fontSize+" "+cs.fontFamily;ri.style.width=Math.ceil(c.measureText(ri.value||"MA000/00").width+2)+"px"};fit();ri.addEventListener("input",fit)}}
 }
 function renderNew(){
@@ -801,7 +801,7 @@ function renderNew(){
     <label>Referencia<input id="n-ref" class="mono" value="${sug}" required></label>
     <label>Cliente<input id="n-cli" list="dl-cli2" required></label>
     <label>Buque<input id="n-buque"></label><label>Viaje<input id="n-viaje" class="mono"></label>
-    <label>Tipo de operación<select id="n-op"><option value="IMPORTACION">IMPORTACIÓN</option><option value="EXPORTACION">EXPORTACIÓN</option></select></label>
+    <label>Tipo de operación<select id="n-op"><option value="">SIN ESPECIFICAR</option><option value="IMPORTACION">IMPORTACIÓN</option><option value="EXPORTACION">EXPORTACIÓN</option></select></label>
     <label>Tipo de carga<select id="n-tipo"><option>LCL</option><option>FCL</option></select></label>
     <label>ETA estimada<input type="date" id="n-eta"></label>
     <label>House B/L<input id="n-hbl" class="mono"></label><label>Master B/L<input id="n-mbl" class="mono"></label>
