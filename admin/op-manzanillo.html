@@ -668,7 +668,7 @@ function dotsHTML(e,a){
 }
 function renderSeg(){
   const rows=filtered().sort(ordenar);
-  const head=`<div class="tr th"><div>Referencia / cliente</div><div>Buque / HBL / MBL</div><div class="c-term">Terminal</div><div class="c-ff">Forwarder</div><div class="c-op">Tipo de<br>operación</div><div>Tipo de<br>carga</div><div>ETA</div><div class="c-fp">Fecha<br>previo</div><div class="c-tp">Tipo de<br>previo</div><div class="c-fd">Fecha<br>despacho</div><div>Avance</div><div>Siguiente hito</div><div class="c-port">Días en puerto</div></div>`;
+  const head=`<div class="tr th"><div>Referencia / cliente</div><div>Buque / HBL / MBL</div><div class="c-term">Terminal</div><div class="c-ff">Freight<br>forwarder</div><div class="c-op">Tipo de<br>operación</div><div>Tipo de<br>carga</div><div>ETA</div><div class="c-fp">Fecha<br>previo</div><div class="c-tp">Tipo de<br>previo</div><div class="c-fd">Fecha<br>despacho</div><div>Avance</div><div>Siguiente hito</div><div class="c-port">Días en puerto</div></div>`;
   const body=rows.map(({id,e,a})=>{
     let nextTxt;
     if(e.estado==="cerrada"){const f=hit(e,"despacho").r;nextTxt=`<div class="a"><span class="sema ${e.semaforo||""}"></span> <span class="${e.semaforo==="rojo"?"sem-rojo":e.semaforo==="verde"?"sem-verde":""}">Despachado</span></div><div class="${e.semaforo==="rojo"?"sem-rojo":e.semaforo==="verde"?"sem-verde":""}">${fd2(f)}</div><div class="b">${e.semaforo==="rojo"?`<span class="sem-rojo">Reconocimiento aduanero</span>`:e.semaforo==="verde"?`<span class="sem-verde">Desaduanamiento libre</span>`:""}${e.pedimento?" · Ped. "+esc(e.pedimento):""}</div>`}
