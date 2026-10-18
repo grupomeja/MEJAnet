@@ -215,6 +215,8 @@ button.kpi:hover{border-color:var(--ink-3)}
 .chk{flex-direction:row!important;align-items:center;gap:8px!important;color:var(--ink)!important;font-size:13.5px!important;align-self:end;padding-bottom:6px}
 .chk input{width:auto!important}
 .chk-ped{justify-self:end;margin-right:24px}
+.chk-ped:has(input:checked){color:var(--ok)!important;font-weight:800}
+.chk-ped input:checked{accent-color:var(--ok)}
 .chk-ped input{width:18px!important;height:18px;accent-color:var(--cel-ico);cursor:pointer}
 .cell{min-width:0}
 .cell .a{font-size:11.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -820,13 +822,13 @@ function renderDrawerInner(){
         ${F("hbl","House B/L","", "text",'class="mono"')}${F("mbl","Master B/L","","text",'class="mono"')}${F("contenedores","Contenedor(es)","","text",'class="mono"')}
         <label>Tipo de carga<select id="fx-tipo" data-f="tipo"><option value="">—</option><option>LCL</option><option>FCL</option></select></label>
         ${F("mercancia","Mercancía","wide")}
-        ${F("marca","Marca")}${F("factura","Factura","","text",'class="mono"')}${F("bultos","Bultos","","text",'inputmode="numeric" autocomplete="off"')}
+        ${F("bultos","Bultos","","text",'inputmode="numeric" autocomplete="off"')}
         ${F("peso","Peso (kg)","","text",'inputmode="decimal" autocomplete="off"')}<label>Peso (lbs)<input id="fx-pesoLbs" data-lbs="1" type="text" inputmode="decimal" autocomplete="off"></label>
       </div></section>
       <section class="sec"><h3>Despacho</h3><div class="fields">
-        <label>Cliente<input id="fx-cliente" data-f="cliente" list="dl-cli"></label>
+        <label class="wide">Cliente<input id="fx-cliente" data-f="cliente" list="dl-cli"></label>
         <label>Tipo de previo<select id="fx-previo" data-f="previo"><option value="">—</option><option>PREVIO</option><option>PREVIO OCULAR</option><option>PREVIO + DESYCON</option><option>DESYCON</option><option>NO PREVIO</option></select></label>
-        ${F("diasLibres","Días libres almacenaje","","text",'inputmode="numeric" autocomplete="off"')}
+        ${F("marca","Marca")}${F("factura","Factura","","text",'class="mono"')}${F("diasLibres","Días libres almacenaje","","text",'inputmode="numeric" autocomplete="off"')}
         <label class="chk chk-ped"><input type="checkbox" id="fx-pedimentoPagado" data-f="pedimentoPagado"> Pedimento pagado</label>
         ${F("pedimento","Pedimento","","text",'class="mono" placeholder="3596-0000000"')}
         <label class="full">Estatus / observaciones<textarea id="fx-nota" data-f="nota"></textarea></label>
@@ -856,7 +858,7 @@ function renderDrawerInner(){
   d.querySelectorAll("[data-f]").forEach(el=>{if(el.dataset.f==="operacion"){el.value=e.operacion||"";return}if(el.type==="checkbox")el.checked=!!e[el.dataset.f];else if(el.tagName!=="SELECT"||!el.classList.contains("mini-select")){const v=e[el.dataset.f];el.value=v==null?"":v} if(!canWrite)el.disabled=true});
   {const pk=d.querySelector("#fx-peso"),pl=d.querySelector("#fx-pesoLbs"),bu=d.querySelector("#fx-bultos");
    const kg=numero(e.peso);if(pk)pk.value=kg?dos(kg):"";if(pl){pl.value=kg?dos(kg*LB):"";if(!canWrite)pl.disabled=true}
-   if(bu&&!numero(e.bultos))bu.value="";}
+   if(bu&&!numero(e.bultos))bu.value="";const dl=d.querySelector("#fx-diasLibres");if(dl&&!numero(e.diasLibres))dl.value="";}
   {const ri=d.querySelector("#fx-ref");if(ri){const fit=()=>{const c=fit.c||(fit.c=document.createElement("canvas").getContext("2d"));const cs=getComputedStyle(ri);c.font=cs.fontWeight+" "+cs.fontSize+" "+cs.fontFamily;ri.style.width=Math.ceil(c.measureText(ri.value||"MA000/00").width+2)+"px"};fit();requestAnimationFrame(fit);document.fonts&&document.fonts.ready.then(fit);ri.addEventListener("input",fit)}}
 }
 function renderNew(){
