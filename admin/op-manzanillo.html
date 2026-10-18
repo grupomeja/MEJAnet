@@ -245,7 +245,11 @@ button.kpi:hover{border-color:var(--ink-3)}
 .scroll{overflow-x:auto}
 
 /* Drawer */
-.scrim{position:fixed;inset:0;background:rgba(10,12,16,.38);z-index:40}
+.scrim{position:fixed;inset:0;background:rgba(10,12,16,.38);z-index:40;touch-action:none}
+/* Con la ficha abierta, el tablero no se desplaza: solo la ficha */
+html{scrollbar-gutter:stable}
+html.ficha-abierta,html.ficha-abierta body{overflow:hidden}
+.drawer .db{overscroll-behavior:contain}
 aside.drawer{position:fixed;top:0;right:0;bottom:0;width:min(820px,100%);background:var(--bg);z-index:41;display:flex;flex-direction:column;border-left:1px solid var(--line);box-shadow:-12px 0 32px rgba(0,0,0,.18)}
 .dh{background:var(--surface);border-bottom:1px solid var(--line);padding:calc(14px + env(safe-area-inset-top,0px)) max(18px,env(safe-area-inset-right,0px)) 14px 18px;display:flex;gap:14px;align-items:flex-start}
 .dh .id{flex:1;min-width:0}
@@ -764,8 +768,8 @@ document.addEventListener("focusout",ev=>{if(!ev.target.closest||!ev.target.clos
 function isEditing(){const ae=document.activeElement;return !!(ae&&ae.closest&&ae.closest("#drawer")&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName))}
 function renderDrawerInner(){
   const d=$("#drawer");
-  if(!ui.open&&!ui.newMode){d.hidden=true;$("#scrim").hidden=true;return}
-  d.hidden=false;$("#scrim").hidden=false;
+  if(!ui.open&&!ui.newMode){d.hidden=true;$("#scrim").hidden=true;document.documentElement.classList.remove("ficha-abierta");return}
+  d.hidden=false;$("#scrim").hidden=false;document.documentElement.classList.add("ficha-abierta");
   if(ui.newMode){renderNew();return}
   const e=EMB[ui.open];if(!e){d.innerHTML=`<div class="dh"><div class="id"><div class="refbig">Embarque no encontrado</div></div><button class="x" data-close>×</button></div>`;return}
   const a=analyze(e);
