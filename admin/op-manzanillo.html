@@ -179,21 +179,23 @@ button.kpi:hover{border-color:var(--ink-3)}
 #v-seg.midiendo .c-ref .a,#v-seg.midiendo .c-ref .b{white-space:nowrap!important}
 .cell.c-fd .b,.cell.c-fp .b{white-space:normal}
 .cell{overflow:hidden}
-.tr .c-eta,.tr .c-fp,.tr .c-tp,.tr .c-fd,.tr .c-tipo,.tr .c-term,.tr .c-next{text-align:center}
+.tr .c-eta,.tr .c-fp,.tr .c-tp,.tr .c-fd,.tr .c-tipo,.tr .c-op,.tr .c-term,.tr .c-next{text-align:center}
 .tr .c-next .nx{justify-content:center}
 .tr .c-eta .fd2,.tr .c-fp .fd2,.tr .c-fd .fd2{align-items:center}
 @media (max-width:820px){.tr .c-eta{text-align:right}.tr .c-eta .fd2{align-items:flex-end}}
-.cell.c-term .term,.cell.c-ff .ff,.cell.c-tp .tp{overflow-wrap:break-word;word-break:normal}
+.cell.c-tp .tp{overflow-wrap:break-word;word-break:normal}
+.cell.c-term .term,.cell.c-ff .ff{overflow-wrap:normal;word-break:normal;overflow:hidden;text-overflow:clip}
 .cell.c-tp .tp{white-space:normal;overflow:visible;color:var(--ink-2)}
-.cell.c-term .term{white-space:normal;overflow:visible;color:var(--ink-2)}
-.cell.c-ff .ff{white-space:normal;overflow:visible;color:var(--ink-2)}
+.cell.c-term .term{white-space:normal;overflow:hidden;color:var(--ink-2)}
+.cell.c-ff .ff{white-space:normal;overflow:hidden;color:var(--ink-2)}
 .tag{font-family:var(--f-body);font-weight:700;font-size:11px;letter-spacing:.04em;padding:2px 7px;border-radius:3px;background:var(--ink-2);color:var(--surface)}
+.op{font-weight:800;font-size:11.5px;letter-spacing:.04em;color:var(--cel-ico)}
 .tag.FCL{background:#1F4E8C;color:#FFFFFF} .tag.LCL{background:#0E7C86;color:#FFFFFF}
 
 /* Tracking table */
 .tbl{background:var(--surface);border:1px solid var(--line);border-radius:0 0 8px 8px;overflow:hidden}
 .tbl > .tr:first-child{border-top:0}
-.tr{display:grid;grid-template-columns:var(--refw,150px) minmax(196px,1.2fr) minmax(130px,.7fr) minmax(96px,.8fr) 40px 86px 84px 68px 86px 92px minmax(192px,2.4fr) 54px;gap:9px;align-items:center;padding:0 14px 0 0;border-top:1px solid var(--line-2);width:100%;text-align:left;background:var(--surface);border-left:0;border-right:0;border-bottom:0}
+.tr{display:grid;grid-template-columns:var(--refw,150px) minmax(196px,1.2fr) minmax(130px,.7fr) minmax(96px,.8fr) 58px 40px 86px 84px 68px 86px 92px minmax(192px,2.4fr) 54px;gap:9px;align-items:center;padding:0 14px 0 0;border-top:1px solid var(--line-2);width:100%;text-align:left;background:var(--surface);border-left:0;border-right:0;border-bottom:0}
 .tr.th{border-top:0;background:var(--cel-th);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--cel-ink);font-weight:700}
 .tr>div{padding-block:9px}
 .tr>div:first-child{padding-left:14px;align-self:stretch;display:flex;flex-direction:column;justify-content:center}
@@ -224,12 +226,12 @@ button.kpi:hover{border-color:var(--ink-3)}
 .s-or .dot.done{background:var(--st-or)} .s-ye .dot.done{background:#C99A0E} .s-gr .dot.done{background:var(--st-gr)} .s-az .dot.done{background:var(--st-az)}
 .dot.na{opacity:.35}
 .stage{font-size:11.5px;color:var(--ink-3);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-@media (max-width:1400px){.tr{grid-template-columns:var(--refw,140px) minmax(186px,1.2fr) minmax(124px,.7fr) minmax(86px,.8fr) 38px 80px 76px 60px 80px 78px minmax(168px,2fr) 50px;gap:7px}}
-@media (max-width:1280px){.tr{grid-template-columns:var(--refw,140px) minmax(172px,1.2fr) minmax(122px,.7fr) minmax(80px,.8fr) 38px 78px 74px 58px 78px 74px minmax(150px,2fr);gap:6px}.tr .c-port{display:none}}
+@media (max-width:1500px){.tr{grid-template-columns:var(--refw,140px) minmax(180px,1.2fr) minmax(122px,.7fr) minmax(84px,.8fr) 50px 38px 80px 76px 60px 80px 76px minmax(150px,2fr) 50px;gap:6px}}
+@media (max-width:1280px){.tr{grid-template-columns:var(--refw,140px) minmax(172px,1.2fr) minmax(122px,.7fr) minmax(80px,.8fr) 48px 38px 78px 74px 58px 78px 74px minmax(150px,2fr);gap:6px}.tr .c-port{display:none}}
 @media (max-width:820px){
   .tr.th{display:none}
   .tr{grid-template-columns:1fr auto;grid-template-areas:"ref eta" "bq bq" "prog prog" "next next";row-gap:6px}
-  .tr .c-ref{grid-area:ref}.tr .c-eta{grid-area:eta;text-align:right}.tr .c-bq{grid-area:bq}.tr .c-prog{grid-area:prog}.tr .c-next{grid-area:next}.tr .c-tipo,.tr .c-ff,.tr .c-term,.tr .c-fp,.tr .c-fd,.tr .c-tp{display:none}
+  .tr .c-ref{grid-area:ref}.tr .c-eta{grid-area:eta;text-align:right}.tr .c-bq{grid-area:bq}.tr .c-prog{grid-area:prog}.tr .c-next{grid-area:next}.tr .c-tipo,.tr .c-op,.tr .c-ff,.tr .c-term,.tr .c-fp,.tr .c-fd,.tr .c-tp{display:none}
 }
 
 /* Gastos */
@@ -269,11 +271,13 @@ aside.drawer{position:fixed;top:0;right:0;bottom:0;width:min(820px,100%);backgro
 .ht .st{white-space:nowrap}
 
 /* Encabezado de Datos del embarque: referencia a la izquierda, título centrado */
-.datos-head{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:12px;margin-bottom:12px}
-.datos-head h2{margin:0;text-align:center;padding-bottom:6px}
-.ref-campo{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--ink-2);font-weight:600;max-width:200px}
-.ref-campo input{border:1px solid var(--cel-line);background:var(--surface);border-radius:4px;padding:6px 8px;font-size:15px;font-weight:700;color:var(--ink);width:100%}
-@media (max-width:640px){.datos-head{grid-template-columns:1fr}.datos-head h2{order:-1}.ref-campo{max-width:none}}
+.datos-head{position:relative;display:flex;align-items:flex-end;min-height:56px;margin-bottom:12px}
+.datos-head h2{position:absolute;left:50%;bottom:0;transform:translateX(-50%);margin:0;padding-bottom:6px;white-space:nowrap}
+.ref-wrap{display:flex;align-items:flex-end;gap:8px;flex-wrap:nowrap}
+.ref-campo{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--ink-2);font-weight:600}
+.op-sel{border:0;background:transparent;color:var(--cel-ico);font-weight:800;font-size:13px;letter-spacing:.03em;padding:6px 0;cursor:pointer}
+.ref-campo input{border:1px solid var(--cel-line);background:var(--surface);border-radius:4px;padding:5px 7px;font-size:14px;font-weight:700;color:var(--ink);width:auto}
+@media (max-width:640px){.datos-head{flex-direction:column;align-items:flex-start;gap:8px}.datos-head h2{position:static;transform:none;align-self:center;order:-1}}
 /* Ficha: tres secciones con fondo más oscuro y título grande */
 .secciones{display:flex;flex-direction:column;gap:16px}
 .sec{background:var(--sec-body,#FDFBF8);border:1px solid var(--cel-line);border-radius:8px;overflow:hidden}
@@ -605,7 +609,7 @@ function dotsHTML(e,a){
 }
 function renderSeg(){
   const rows=filtered().sort(ordenar);
-  const head=`<div class="tr th"><div>Referencia / cliente</div><div>Buque / HBL / MBL</div><div class="c-term">Terminal</div><div class="c-ff">Forwarder</div><div>Tipo</div><div>ETA</div><div class="c-fp">Fecha<br>previo</div><div class="c-tp">Tipo de<br>previo</div><div class="c-fd">Fecha<br>despacho</div><div>Avance</div><div>Siguiente hito</div><div class="c-port">Días en puerto</div></div>`;
+  const head=`<div class="tr th"><div>Referencia / cliente</div><div>Buque / HBL / MBL</div><div class="c-term">Terminal</div><div class="c-ff">Forwarder</div><div class="c-op">Tipo<br>de operación</div><div>Tipo</div><div>ETA</div><div class="c-fp">Fecha<br>previo</div><div class="c-tp">Tipo de<br>previo</div><div class="c-fd">Fecha<br>despacho</div><div>Avance</div><div>Siguiente hito</div><div class="c-port">Días en puerto</div></div>`;
   const body=rows.map(({id,e,a})=>{
     let nextTxt;
     if(e.estado==="cerrada"){const f=hit(e,"despacho").r;nextTxt=`<div class="a"><span class="sema ${e.semaforo||""}"></span> <span class="${e.semaforo==="rojo"?"sem-rojo":e.semaforo==="verde"?"sem-verde":""}">Despachado</span></div><div class="${e.semaforo==="rojo"?"sem-rojo":e.semaforo==="verde"?"sem-verde":""}">${fd2(f)}</div><div class="b">${e.semaforo==="rojo"?`<span class="sem-rojo">Reconocimiento aduanero</span>`:e.semaforo==="verde"?`<span class="sem-verde">Desaduanamiento libre</span>`:""}${e.pedimento?" · Ped. "+esc(e.pedimento):""}</div>`}
@@ -616,6 +620,7 @@ function renderSeg(){
       <div class="cell c-bq"><div class="a" title="${esc((e.buque||"")+" "+(e.viaje||""))}">${esc(e.buque||"—")} <span class="muted mono">${esc(e.viaje||"")}</span></div>${lineasBL(e)}</div>
       <div class="cell c-term"><div class="b term">${esc(e.terminal||"Sin asignar")}</div></div>
       <div class="cell c-ff"><div class="b ff">${esc(e.ff||"—")}</div></div>
+      <div class="cell c-op"><span class="op ${(e.operacion||"IMPORTACION")==="EXPORTACION"?"exp":"imp"}">${(e.operacion||"IMPORTACION")==="EXPORTACION"?"EXP":"IMP"}</span></div>
       <div class="cell c-tipo">${e.tipo?`<span class="tag ${e.tipo==="FCL"||e.tipo==="LCL"?e.tipo:""}">${esc(e.tipo)}</span>`:""}</div>
       <div class="cell c-eta num"><div class="a">${fd2(a.eta)}</div><div class="b">${hit(e,"arribo").r?"Real":a.eta?"Estimada":""}</div></div>
       <div class="cell c-fp num">${celdaFecha(e,"previo")}</div>
@@ -634,6 +639,11 @@ function renderSeg(){
 // Si el buque, HBL o MBL no cabe en su línea, se reduce el tamaño de la letra solo en ese dato
 function ajustarBuque(){
   if($("#v-seg").hidden)return;
+  document.querySelectorAll("#v-seg .c-ff .ff, #v-seg .c-term .term").forEach(el=>{
+    el.style.fontSize="";
+    let fs=parseFloat(getComputedStyle(el).fontSize);
+    while(el.scrollWidth>el.clientWidth&&fs>8.5){fs-=.5;el.style.fontSize=fs+"px"}
+  });
   document.querySelectorAll("#v-seg .c-bq .a, #v-seg .c-bq .b").forEach(el=>{
     el.style.fontSize="";el.style.whiteSpace="";
     let fs=parseFloat(getComputedStyle(el).fontSize);
@@ -735,7 +745,7 @@ function renderDrawerInner(){
         <td class="st">${st}</td></tr>`}).join("")}
       </tbody></table></div>
     </div>
-    <div class="card"><div class="datos-head"><label class="ref-campo">Referencia<input id="fx-ref" data-f="ref" ${dis}></label><h2>Datos del embarque</h2><span></span></div>
+    <div class="card"><div class="datos-head"><div class="ref-wrap"><label class="ref-campo">Referencia<input id="fx-ref" data-f="ref" size="${Math.max(7,(e.ref||"").length)}" ${dis}></label><select class="op-sel" id="fx-operacion" data-f="operacion" aria-label="Tipo de operación" ${dis}><option value="IMPORTACION">IMPORTACIÓN</option><option value="EXPORTACION">EXPORTACIÓN</option></select></div><h2>Datos del embarque</h2><span></span></div>
       <div class="secciones">
       <section class="sec"><h3>Transporte</h3><div class="fields">
         ${F("buque","Buque","wide")}${F("viaje","Viaje","", "text",'class="mono"')}
@@ -779,7 +789,7 @@ function renderDrawerInner(){
   </div>
   <datalist id="dl-term">${["TIMSA","CONTECON","SSA MEXICO","OCUPA","CORPORACION MULTIMODAL","COMERCIALIZADORA LA JUNTA","TAP","FRIMAN","HAZESA"].map(t=>`<option value="${t}">`).join("")}</datalist>
   <datalist id="dl-cli">${clientes().map(c=>`<option value="${esc(c)}">`).join("")}</datalist>`;
-  d.querySelectorAll("[data-f]").forEach(el=>{if(el.type==="checkbox")el.checked=!!e[el.dataset.f];else if(el.tagName!=="SELECT"||!el.classList.contains("mini-select")){const v=e[el.dataset.f];el.value=v==null?"":v} if(!canWrite)el.disabled=true});
+  d.querySelectorAll("[data-f]").forEach(el=>{if(el.dataset.f==="operacion"){el.value=e.operacion||"IMPORTACION";return}if(el.type==="checkbox")el.checked=!!e[el.dataset.f];else if(el.tagName!=="SELECT"||!el.classList.contains("mini-select")){const v=e[el.dataset.f];el.value=v==null?"":v} if(!canWrite)el.disabled=true});
 }
 function renderNew(){
   const d=$("#drawer");
@@ -790,6 +800,7 @@ function renderNew(){
     <label>Referencia<input id="n-ref" class="mono" value="${sug}" required></label>
     <label>Cliente<input id="n-cli" list="dl-cli2" required></label>
     <label>Buque<input id="n-buque"></label><label>Viaje<input id="n-viaje" class="mono"></label>
+    <label>Tipo de operación<select id="n-op"><option value="IMPORTACION">IMPORTACIÓN</option><option value="EXPORTACION">EXPORTACIÓN</option></select></label>
     <label>Tipo de carga<select id="n-tipo"><option>LCL</option><option>FCL</option></select></label>
     <label>ETA estimada<input type="date" id="n-eta"></label>
     <label>House B/L<input id="n-hbl" class="mono"></label><label>Master B/L<input id="n-mbl" class="mono"></label>
@@ -877,7 +888,7 @@ document.addEventListener("submit",ev=>{
     if(!id){$("#n-err").textContent="Escribe una referencia válida, por ejemplo MA143/26.";return}
     if(EMB[id]){$("#n-err").textContent="La referencia "+ref+" ya existe. Ábrela desde Seguimiento.";return}
     const hitos={};HITOS.forEach(h=>hitos[h.k]={e:"",c:"",r:""});hitos.arribo.e=$("#n-eta").value;
-    const doc={ref,cliente:$("#n-cli").value.trim().toUpperCase(),buque:$("#n-buque").value.trim().toUpperCase(),viaje:$("#n-viaje").value.trim().toUpperCase(),bandera:"",hbl:$("#n-hbl").value.trim().toUpperCase(),mbl:$("#n-mbl").value.trim().toUpperCase(),ff:"",tipo:$("#n-tipo").value,previo:"PREVIO",mercancia:$("#n-merc").value.trim().toUpperCase(),marca:"",factura:"",peso:null,bultos:null,contenedores:"",terminal:"",claveCR:"",pedimento:"",semaforo:"",estado:"activa",diasLibres:null,nota:"",hitos,gastos:[],creado:new Date().toISOString()};
+    const doc={ref,operacion:$("#n-op").value,cliente:$("#n-cli").value.trim().toUpperCase(),buque:$("#n-buque").value.trim().toUpperCase(),viaje:$("#n-viaje").value.trim().toUpperCase(),bandera:"",hbl:$("#n-hbl").value.trim().toUpperCase(),mbl:$("#n-mbl").value.trim().toUpperCase(),ff:"",tipo:$("#n-tipo").value,previo:"PREVIO",mercancia:$("#n-merc").value.trim().toUpperCase(),marca:"",factura:"",peso:null,bultos:null,contenedores:"",terminal:"",claveCR:"",pedimento:"",semaforo:"",estado:"activa",diasLibres:null,nota:"",hitos,gastos:[],creado:new Date().toISOString()};
     api("POST","/api/admin/opm/embarques",doc).then(r=>{EMB[r.id]=doc;ui.newMode=false;ui.open=r.id;toast("Embarque "+ref+" creado");renderAll();renderDrawer()}).catch(err=>{$("#n-err").textContent=err.message});
   }
 });
@@ -912,7 +923,7 @@ window.addEventListener("resize",()=>{clearTimeout(window.__mf);window.__mf=setT
 function csvCell(v){v=v==null?"":String(v);return /[",\n;]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
 async function exportCSV(){
   const xs=filtered({ignoreEstado:ui.view==="ejec"});
-  const base=["ref","cliente","estado","buque","viaje","bandera","terminal","claveCR","ff","hbl","mbl","contenedores","tipo","previo","mercancia","marca","factura","peso","bultos","pedimento","pedimentoPagado","semaforo","diasLibres","nota"];
+  const base=["ref","operacion","cliente","estado","buque","viaje","bandera","terminal","claveCR","ff","hbl","mbl","contenedores","tipo","previo","mercancia","marca","factura","peso","bultos","pedimento","pedimentoPagado","semaforo","diasLibres","nota"];
   const hcols=[];HITOS.forEach(h=>["e","r"].forEach(k=>hcols.push([h.k,k])));
   const head=base.concat(hcols.map(([h,k])=>h+"_"+({e:"estimada",r:"real"})[k]),["total_mxn","total_usd"]);
   const lines=[head.join(",")];
