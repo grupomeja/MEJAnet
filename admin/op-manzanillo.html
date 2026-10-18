@@ -270,8 +270,9 @@ aside.drawer{position:fixed;top:0;right:0;bottom:0;width:min(820px,100%);backgro
 
 /* Ficha: tres secciones con fondo más oscuro y título grande */
 .secciones{display:flex;flex-direction:column;gap:16px}
-.sec{background:var(--cel-bg2);border:1px solid var(--cel-line);border-radius:8px;padding:12px 14px 14px}
-.sec h3{margin:0 0 10px;font-family:var(--f-body);font-size:15px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--cel-ink);padding-bottom:6px;border-bottom:2px solid var(--cel-line)}
+.sec{background:var(--cel-bg1);border:1px solid var(--cel-line);border-radius:8px;overflow:hidden}
+.sec>.fields{padding:12px 14px 14px}
+.sec h3{margin:0;font-family:var(--f-body);font-size:15px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--cel-ink);padding:10px 14px;background:var(--cel-bg2);border-bottom:2px solid var(--cel-line)}
 .sec .fields label{color:var(--ink-2);font-weight:600}
 .fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 14px}
 .fields .g{grid-column:1/-1;font-family:var(--f-display);font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);font-size:13px;margin-top:6px;border-bottom:1px solid var(--line-2);padding-bottom:3px}
