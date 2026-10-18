@@ -273,10 +273,10 @@ aside.drawer{position:fixed;top:0;right:0;bottom:0;width:min(820px,100%);backgro
 /* Encabezado de Datos del embarque: referencia a la izquierda, título centrado */
 .datos-head{position:relative;display:flex;align-items:flex-end;min-height:56px;margin-bottom:12px}
 .datos-head h2{position:absolute;left:50%;bottom:0;transform:translateX(-50%);margin:0;padding-bottom:6px;white-space:nowrap}
-.ref-wrap{display:flex;align-items:flex-end;gap:8px;flex-wrap:nowrap}
+.ref-wrap{display:flex;align-items:flex-end;gap:6px;flex-wrap:nowrap}
 .ref-campo{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--ink-2);font-weight:600}
-.op-sel{border:0;background:transparent;color:var(--cel-ico);font-weight:800;font-size:13px;letter-spacing:.03em;padding:6px 0;cursor:pointer}
-.ref-campo input{border:1px solid var(--cel-line);background:var(--surface);border-radius:4px;padding:5px 7px;font-size:14px;font-weight:700;color:var(--ink);width:auto}
+.op-sel{border:0;background:transparent;margin-left:-4px;color:var(--cel-ico);font-weight:800;font-size:13px;letter-spacing:.03em;padding:6px 0;cursor:pointer}
+.ref-campo input{border:1px solid var(--cel-line);background:var(--surface);border-radius:4px;padding:5px 6px;font-size:14px;font-weight:700;color:var(--ink);width:auto;box-sizing:content-box;min-width:3ch}
 @media (max-width:640px){.datos-head{flex-direction:column;align-items:flex-start;gap:8px}.datos-head h2{position:static;transform:none;align-self:center;order:-1}}
 /* Ficha: tres secciones con fondo más oscuro y título grande */
 .secciones{display:flex;flex-direction:column;gap:16px}
@@ -745,7 +745,7 @@ function renderDrawerInner(){
         <td class="st">${st}</td></tr>`}).join("")}
       </tbody></table></div>
     </div>
-    <div class="card"><div class="datos-head"><div class="ref-wrap"><label class="ref-campo">Referencia<input id="fx-ref" data-f="ref" size="${Math.max(7,(e.ref||"").length)}" ${dis}></label><select class="op-sel" id="fx-operacion" data-f="operacion" aria-label="Tipo de operación" ${dis}><option value="IMPORTACION">IMPORTACIÓN</option><option value="EXPORTACION">EXPORTACIÓN</option></select></div><h2>Datos del embarque</h2><span></span></div>
+    <div class="card"><div class="datos-head"><div class="ref-wrap"><label class="ref-campo">Referencia<input id="fx-ref" data-f="ref" ${dis}></label><select class="op-sel" id="fx-operacion" data-f="operacion" aria-label="Tipo de operación" ${dis}><option value="IMPORTACION">IMPORTACIÓN</option><option value="EXPORTACION">EXPORTACIÓN</option></select></div><h2>Datos del embarque</h2><span></span></div>
       <div class="secciones">
       <section class="sec"><h3>Transporte</h3><div class="fields">
         ${F("buque","Buque","wide")}${F("viaje","Viaje","", "text",'class="mono"')}
@@ -790,6 +790,7 @@ function renderDrawerInner(){
   <datalist id="dl-term">${["TIMSA","CONTECON","SSA MEXICO","OCUPA","CORPORACION MULTIMODAL","COMERCIALIZADORA LA JUNTA","TAP","FRIMAN","HAZESA"].map(t=>`<option value="${t}">`).join("")}</datalist>
   <datalist id="dl-cli">${clientes().map(c=>`<option value="${esc(c)}">`).join("")}</datalist>`;
   d.querySelectorAll("[data-f]").forEach(el=>{if(el.dataset.f==="operacion"){el.value=e.operacion||"IMPORTACION";return}if(el.type==="checkbox")el.checked=!!e[el.dataset.f];else if(el.tagName!=="SELECT"||!el.classList.contains("mini-select")){const v=e[el.dataset.f];el.value=v==null?"":v} if(!canWrite)el.disabled=true});
+  {const ri=d.querySelector("#fx-ref");if(ri){const fit=()=>{const c=fit.c||(fit.c=document.createElement("canvas").getContext("2d"));const cs=getComputedStyle(ri);c.font=cs.fontWeight+" "+cs.fontSize+" "+cs.fontFamily;ri.style.width=Math.ceil(c.measureText(ri.value||"MA000/00").width+2)+"px"};fit();ri.addEventListener("input",fit)}}
 }
 function renderNew(){
   const d=$("#drawer");
