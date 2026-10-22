@@ -377,7 +377,7 @@ function camposPorTipo(tipo) {
   // Incrementables: en todos los tipos es solo informativo (desglose de cargos en pesos); no entra en ningún cálculo
   const inc = document.querySelector('[data-i=incrementables]');
   inc.readOnly = true;
-  inc.title = 'Solo informativo: suma del desglose de cargos en pesos. No entra en ningún cálculo.';
+  inc.title = 'Solo informativo: cargos en dólares convertidos a pesos (no incluye los cargos en pesos). No entra en ningún cálculo.';
   const carretera = POR_CARRETERA.includes(tipo), pipa = tipo === 'PIPA';
   for (const k of NO_TERRESTRE) for (const el of $$(`[data-c="${k}"]`)) {
     const off = carretera && !(pipa && k === 'buque_eta');
@@ -524,7 +524,7 @@ function recalcular() {
     if (!el.dataset.manual && el !== document.activeElement) el.value = `$ ${dinero(v)}`;
   }
   $('aVA').textContent = !vaInp.dataset.manual ? 'CALCULADO' : '';
-  // Terrestre: incrementables = desglose de cargos en pesos, solo informativo
+  // Incrementables = cargos en dólares × tipo de cambio, solo informativo
   const incInp = document.querySelector('[data-i=incrementables]');
   if (im.incrInformativo) incInp.value = `$ ${dinero(im.incrementables)}`;
   $('aINC').textContent = im.incrInformativo ? 'INFORMATIVO' : '';

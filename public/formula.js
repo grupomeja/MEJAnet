@@ -168,7 +168,7 @@
     cargos.USD = r2(cargos.USD); cargos.MXN = r2(cargos.MXN);
     // Terrestre: los incrementables son el desglose de cargos convertido a pesos. Solo informativo:
     // no entran al valor aduana, al IVA ni a ningún total (el desglose ya se suma por su lado).
-    if (terrestre) { imp.incrementables = r2(cargos.USD * imp.tc + cargos.MXN); imp.incrInformativo = true; }
+    if (terrestre) { imp.incrementables = r2(cargos.USD * imp.tc); imp.incrInformativo = true; }   // solo cargos en dólares (los de pesos no cuentan)
     // Los cargos en pesos llevan 16% de IVA
     const ivaCargosMXN = r2(cargos.MXN * 0.16), cargosMXNIva = r2(cargos.MXN + ivaCargosMXN);
     const totalMXN = r2(cargosMXNIva + imp.total);         // todo lo que se cobra en pesos
