@@ -9,12 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/cotizador.css">
 <style>
-  .kpis{display:grid;gap:10px;grid-template-columns:repeat(4,1fr);margin-bottom:14px}
-  .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;text-align:center}
-  .kpi b{display:block;font-size:26px;font-variant-numeric:tabular-nums}
-  .kpi span{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.4px}
-  .kpi .ENVIADA{color:var(--accent)} .kpi .ACEPTADA{color:var(--ok)} .kpi .RECHAZADA{color:var(--err)}
-  .filtros{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;margin-bottom:12px;align-items:end}
+  .filtros{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;margin-bottom:12px;align-items:end}
   .tablewrap{overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:10px}
   table{border-collapse:collapse;width:100%;font-size:13.5px}
   th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
@@ -26,8 +21,7 @@
   td.monto{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
   td.monto small{color:var(--muted);font-size:11px;margin-left:3px}
   td.acciones{white-space:nowrap;text-align:right}
-  select.estado{width:auto;padding:4px 8px;font-size:12px;font-weight:700;border-radius:999px}
-  @media (max-width:860px){.kpis{grid-template-columns:1fr 1fr}.filtros{grid-template-columns:1fr 1fr}.filtros .q{grid-column:1/-1}}
+  @media (max-width:860px){.filtros{grid-template-columns:1fr 1fr}.filtros .q{grid-column:1/-1}}
 </style>
 </head>
 <body>
@@ -38,11 +32,8 @@
     <div class="acc"><a class="nuevo" href="/cotizador/nueva">+ Nueva Cotización</a><a href="/cotizador/tarifas">Conceptos</a><a href="/modulos">MEJAnet</a></div>
   </div>
 
-  <div class="kpis" id="kpis"></div>
-
   <div class="filtros">
     <div class="q"><label for="q">Buscar</label><input id="q" type="search" placeholder="Folio, cliente, tráfico, naviera…"></div>
-    <div><label for="fEstado">Estado</label><select id="fEstado"><option value="">Todos</option><option>BORRADOR</option><option>ENVIADA</option><option>ACEPTADA</option><option>RECHAZADA</option></select></div>
     <div><label for="fDesde">Desde</label><input id="fDesde" type="date"></div>
     <div><label for="fHasta">Hasta</label><input id="fHasta" type="date"></div>
   </div>
@@ -60,7 +51,6 @@ const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const dinero = (x) => (Number(x) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fecha = (iso) => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || ''); return m ? `${m[3]}/${m[2]}/${m[1]}` : ''; };
-const ESTADOS = ['BORRADOR', 'ENVIADA', 'ACEPTADA', 'RECHAZADA'];
 const ICO_PDF = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 14h6M9 17h4"/></svg>';
 const ICO_COPIA = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
 const ICO_BORRAR = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>';
@@ -76,10 +66,9 @@ async function cargar() {
 }
 
 function filtradas() {
-  const q = $('q').value.trim().toLowerCase(), est = $('fEstado').value, d = $('fDesde').value, h = $('fHasta').value;
+  const q = $('q').value.trim().toLowerCase(), d = $('fDesde').value, h = $('fHasta').value;
   return todas.filter((c) => {
     const x = c.datos;
-    if (est && x.estado !== est) return false;
     if (d && x.fecha < d) return false;
     if (h && x.fecha > h) return false;
     if (q) {
@@ -92,9 +81,6 @@ function filtradas() {
 
 function pintar() {
   const lista = filtradas();
-  const cuenta = (e) => todas.filter((c) => c.datos.estado === e).length;
-  $('kpis').innerHTML = `<div class="kpi"><b>${todas.length}</b><span>Cotizaciones</span></div>` +
-    ['ENVIADA', 'ACEPTADA', 'RECHAZADA'].map((e) => `<div class="kpi"><b class="${e}">${cuenta(e)}</b><span>${e === 'ENVIADA' ? 'Enviadas' : e === 'ACEPTADA' ? 'Aceptadas' : 'Rechazadas'}</span></div>`).join('');
   if (!lista.length) {
     $('lista').innerHTML = `<tr><td colspan="8" class="vacio">${todas.length ? 'Ninguna cotización coincide con el filtro.' : 'Todavía no hay cotizaciones. <a href="/cotizador/nueva">Crea la primera</a>.'}</td></tr>`;
     return;
@@ -129,7 +115,7 @@ $('lista').addEventListener('click', async (ev) => {
   if (!r || !r.ok) { alert('No se pudo borrar.'); b.disabled = false; return; }
   todas = todas.filter((x) => x.id !== id); pintar();
 });
-for (const id of ['q', 'fEstado', 'fDesde', 'fHasta']) $(id).addEventListener('input', pintar);
+for (const id of ['q', 'fDesde', 'fHasta']) $(id).addEventListener('input', pintar);
 cargar();
 </script>
 </body>
