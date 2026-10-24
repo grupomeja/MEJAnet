@@ -424,6 +424,12 @@ main{padding-bottom:40px}
 .pv-cu .rg{display:flex;align-items:flex-end;gap:8px;margin-top:9px}
 .pv-cu .rg span{font-size:11px;font-weight:700;color:var(--pv-cafe);white-space:nowrap;padding-bottom:5px}
 .pv-cu .rg input{text-align:center;font-weight:700;font-size:12.5px}
+.pv-cu .rg-t{display:block;font-size:11px;font-weight:700;color:var(--pv-cafe);margin-bottom:2px}
+.pv-cu .rg-med{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding-left:10px}
+.pv-cu .rg-med .rg{margin-top:4px}
+.pv-cu .rg-notas{align-items:flex-start}
+.pv-cu .rg-notas span{padding-top:4px}
+.pv-cu .rg-notas textarea{text-align:left;font-weight:400;min-height:46px}
 .pv-add{margin-top:10px;border:1px dashed var(--pv-ico);background:var(--pv-suave);color:var(--pv-cafe);font-weight:700;font-size:12px;padding:6px 14px;border-radius:6px;cursor:pointer}
 .pv-add:hover{background:var(--pv-beige)}
 .pv-pie{display:flex;justify-content:space-between;margin-top:26px;padding-top:6px;border-top:1px solid var(--pv-line);font-size:9.5px;color:var(--pv-gris)}
@@ -987,22 +993,22 @@ let tt;function toast(t){const el=$("#toast");el.textContent=t;el.hidden=false;c
 const PV={id:null,datos:null,t:null};
 const PV_TIPOS=[["20DC","20' DC"],["40DC","40' DC"],["40HC","40' HC"],["SUELTA","Carga suelta"]];
 const PV_PALLETS=[["MADERA","Madera"],["PLASTICO","Plástico"],["SIN","Sin pallets"]];
-const PV_RENG=[["marca","Marca"],["modelo","Modelo"],["origen","Origen"],["pzsCarton","Cant. pzs x cartón"],["mercancia","Mercancía"],["cant","Cant. pzs"]];
-const pvVacia=()=>({desc:"",marca:"",modelo:"",origen:"",pzsCarton:"",mercancia:"",cant:""});
+const PV_RENG=[["marca","MARCA"],["modelo","MODELO"],["origen","ORIGEN"],["lote","LOTE #"],["pzsCarton","CANT. PZS X CARTÓN"],["cant","CANT. PZS"]];
+const pvVacia=()=>({desc:"",marca:"",modelo:"",origen:"",lote:"",pzsCarton:"",cant:"",palAlto:"",palLargo:"",palAncho:"",notas:""});
 // Datos iniciales tomados de la ficha y del tablero
 function pvDesdeFicha(e){
   const pv=hit(e,"previo");
   return {cliente:e.cliente||"",fecha:pv.r||pv.e||iso(new Date()),trafico:e.ref||"",factura:e.factura||"",
     buque:[e.buque,e.viaje?"V-"+e.viaje:""].filter(Boolean).join(" "),contenedor:e.contenedores||"",
     tipoCont:e.tipo==="LCL"?"SUELTA":"",sello:"",operadora:e.terminal||"",claveCR:e.claveCR||"",
-    bultos:e.bultos?String(e.bultos):"",peso:e.peso?String(e.peso):"",pallets:"",palletsCant:"",partidas:[pvVacia(),pvVacia(),pvVacia(),pvVacia()]};
+    bultos:e.bultos?String(e.bultos):"",peso:e.peso?String(e.peso):"",pallets:"",palletsCant:"",partidas:[pvVacia(),pvVacia()]};
 }
 function abrirPrevio(id){
   const e=EMB[id];if(!e)return;
   PV.id=id;
   const base=pvDesdeFicha(e),g=e.reportePrevio;
   PV.datos=g?{...base,...g,partidas:(g.partidas&&g.partidas.length?g.partidas:[pvVacia()]).map(p=>({...pvVacia(),...p}))}:base;
-  while(PV.datos.partidas.length<4)PV.datos.partidas.push(pvVacia());
+  while(PV.datos.partidas.length<2)PV.datos.partidas.push(pvVacia());
   renderPrevio();
   const el=$("#previo");el.hidden=false;document.documentElement.classList.add("ficha-abierta");
   el.querySelector(".pv-scroll").scrollTop=0;
@@ -1017,8 +1023,11 @@ function pvOps(k,lista){const dis=canWrite?"":"disabled";
   return `<div class="pv-ops">${lista.map(([v,n])=>`<label><input type="checkbox" data-pvop="${k}" value="${v}" ${PV.datos[k]===v?"checked":""} ${dis}>${n}</label>`).join("")}</div>`}
 function pvFilas(){const dis=canWrite?"":"disabled";
   return PV.datos.partidas.map((p,i)=>`<div class="pv-cu" data-i="${i}"><div class="hd"><b>PARTIDA ${i+1}</b>${canWrite?`<button type="button" class="del" data-pvdel="${i}" aria-label="Quitar partida ${i+1}">Quitar ×</button>`:""}</div>
-    <div class="bd"><span class="pv-lbl">Desc. prod.</span><textarea rows="2" data-pp="desc" ${dis}>${esc(p.desc||"")}</textarea>
-    ${PV_RENG.map(([k,n])=>`<label class="rg"><span>${n}:</span><input data-pp="${k}" value="${esc(p[k]||"")}" ${dis}></label>`).join("")}</div></div>`).join("")}
+    <div class="bd"><span class="rg-t">DESC. PROD.:</span><textarea rows="2" data-pp="desc" ${dis}>${esc(p.desc||"")}</textarea>
+    ${PV_RENG.map(([k,n])=>`<label class="rg"><span>${n}:</span><input data-pp="${k}" value="${esc(p[k]||"")}" ${dis}></label>`).join("")}
+    <span class="rg-t" style="margin-top:12px">MEDIDAS DE PALLET:</span>
+    <div class="rg-med">${[["palAlto","ALTO"],["palLargo","LARGO"],["palAncho","ANCHO"]].map(([k,n])=>`<label class="rg"><span>${n}:</span><input data-pp="${k}" value="${esc(p[k]||"")}" ${dis}></label>`).join("")}</div>
+    <label class="rg rg-notas"><span>NOTAS:</span><textarea rows="2" data-pp="notas" ${dis}>${esc(p.notas||"")}</textarea></label></div></div>`).join("")}
 function renderPrevio(){
   const e=EMB[PV.id],d=PV.datos;
   $("#previo").innerHTML=`

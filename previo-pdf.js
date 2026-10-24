@@ -8,7 +8,7 @@ const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
 // ---------- Datos ----------
 const CAMPOS = ['cliente', 'fecha', 'trafico', 'factura', 'buque', 'contenedor', 'tipoCont', 'sello', 'operadora', 'claveCR',
   'bultos', 'peso', 'pallets', 'palletsCant'];
-const PARTIDA = ['desc', 'marca', 'modelo', 'origen', 'pzsCarton', 'mercancia', 'cant'];
+const PARTIDA = ['desc', 'marca', 'modelo', 'origen', 'lote', 'pzsCarton', 'cant', 'palAlto', 'palLargo', 'palAncho', 'notas'];
 const TIPOS_CONT = { '20DC': "20' DC", '40DC': "40' DC", '40HC': "40' HC", SUELTA: 'Carga suelta' };
 const PALLETS = { MADERA: 'Madera', PLASTICO: 'Plástico', SIN: 'Sin pallets' };
 
@@ -23,7 +23,7 @@ function limpiarPrevio(b) {
   if (Array.isArray(b.partidas)) {
     o.partidas = b.partidas.slice(0, 80).map((p) => {
       const q = {};
-      for (const k of PARTIDA) q[k] = t(p && p[k], k === 'desc' ? 400 : 160);
+      for (const k of PARTIDA) q[k] = t(p && p[k], k === 'desc' || k === 'notas' ? 600 : 160);
       return q;
     });
   }
@@ -163,53 +163,83 @@ async function generarPrevio(rep, ref) {
   b3 = campo('Cant. de pallets', r.palletsCant, M + 3 * (c4 + g), y, c4);
   y = Math.min(b1, b2, b3) - 14;
 
-  // ---------- 3. Partidas (cuadrantes: 4 por hoja, con renglones para escribir a mano) ----------
+  // ---------- 3. Partidas (cuadrantes con renglones para escribir a mano) ----------
+  // Hoja 1: 2 cuadrantes (debajo de la información del contenedor). Hojas siguientes: 4 cuadrantes.
   const filas = (r.partidas || []).filter((p) => PARTIDA.some((k) => p[k]));
-  const total = Math.max(4, Math.ceil(filas.length / 4) * 4);
   const PIE = M + 22, GX = 10, GY = 10;
   const CW = (AN - GX) / 2;
-  const RENGLONES = [['Marca', 'marca'], ['Modelo', 'modelo'], ['Origen', 'origen'], ['Cant. pzs x cartón', 'pzsCarton'], ['Mercancía', 'mercancia'], ['Cant. pzs', 'cant']];
+  const RENGLONES = [['MARCA', 'marca'], ['MODELO', 'modelo'], ['ORIGEN', 'origen'], ['LOTE #', 'lote'], ['CANT. PZS X CARTÓN', 'pzsCarton'], ['CANT. PZS', 'cant']];
+  const ET = 8.2, VT = 9.5;
+  const linea = (x1, x2, yy) => pg.drawLine({ start: { x: x1, y: yy }, end: { x: x2, y: yy }, thickness: 0.5, color: LINEA });
+  const valor = (v, x1, x2, base) => {
+    const l = partir(v || '', VT, x2 - x1 - 4, FB)[0];
+    if (l) txt(l, x1 + (x2 - x1 - ancho(l, VT, FB)) / 2, base + 3, VT, FB, TINTA);
+  };
   const cuadrante = (n, p, x, top, h) => {
     pg.drawRectangle({ x, y: top - h, width: CW, height: h, borderColor: LINEA, borderWidth: 0.8, color: BLANCO });
-    // Encabezado: número de partida
     pg.drawRectangle({ x, y: top - 17, width: CW, height: 17, color: BEIGE_SUAVE });
     pg.drawLine({ start: { x, y: top - 17 }, end: { x: x + CW, y: top - 17 }, thickness: 0.6, color: LINEA });
     const et = `PARTIDA ${n}`, ew = ancho(et, 8, FB) + 16;
     pg.drawRectangle({ x, y: top - 17, width: ew, height: 17, color: CAFE_OSC });
     txt(et, x + 8, top - 11.5, 8, FB, BEIGE);
-    const pad = 9, iw = CW - 2 * pad;
-    // Desc. prod.: hasta 3 renglones
+    const pad = 9, x1 = x + pad, x2 = x + CW - pad;
+    // Renglones: desc (2) + 6 campos + medidas + notas (mínimo 2)
+    const util = h - 17 - 12 - 8;
+    const paso = Math.max(18, Math.min(30, util / 12.5));
     let yy = top - 17 - 12;
-    txt('DESC. PROD.', x + pad, yy, 6.8, FB, GRIS);
-    const dl = partir(p.desc || '', 9.5, iw - 4, FB).slice(0, 3);
-    const paso = Math.max(15, Math.min(19, (h - 17 - 12) / 11));
-    for (let k = 0; k < 2; k++) {
-      const base = yy - 6 - (k + 1) * paso;
-      const l = dl[k] || '';
-      if (l) txt(l, x + pad + (iw - ancho(l, 9.5, FB)) / 2, base + 3, 9.5, FB, TINTA);
-      pg.drawLine({ start: { x: x + pad, y: base }, end: { x: x + pad + iw, y: base }, thickness: 0.5, color: LINEA });
+    txt('DESC. PROD.:', x1, yy, ET, FB, CAFE);
+    const dl = partir(p.desc || '', VT, x2 - x1 - 4, FB).slice(0, 2);
+    for (let k = 0; k < 2; k++) { const base = yy - k * paso - paso + 4; linea(x1, x2, base); valor(dl[k], x1, x2, base); }
+    yy -= 2 * paso;
+    for (const [etq, k] of RENGLONES) {
+      const base = yy - paso + 4;
+      txt(etq + ':', x1, base + 3, ET, FB, CAFE);
+      const lx = x1 + ancho(etq + ':', ET, FB) + 6;
+      linea(lx, x2, base); valor(p[k], lx, x2, base);
+      yy -= paso;
     }
-    yy = yy - 6 - 2 * paso;
-    // Renglones con etiqueta a la izquierda y línea para escribir
-    const resto = (yy - (top - h) - 6) / RENGLONES.length;
-    RENGLONES.forEach(([etq, k], i) => {
-      const base = yy - (i + 1) * resto + 4;
-      txt(etq + ':', x + pad, base + 3, 8.2, FB, CAFE);
-      const lx = x + pad + ancho(etq + ':', 8.2, FB) + 6;
-      pg.drawLine({ start: { x: lx, y: base }, end: { x: x + pad + iw, y: base }, thickness: 0.5, color: LINEA });
-      const v = partir(p[k] || '', 9.5, x + pad + iw - lx - 4, FB)[0];
-      if (v) txt(v, lx + (x + pad + iw - lx - ancho(v, 9.5, FB)) / 2, base + 3, 9.5, FB, TINTA);
-    });
+    // MEDIDAS DE PALLET: (renglón propio)  ALTO ___  LARGO ___  ANCHO ___
+    {
+      txt('MEDIDAS DE PALLET:', x1, yy - paso + 7, ET, FB, CAFE);
+      yy -= paso;
+      const base = yy - paso + 4;
+      let cx = x1 + 10;
+      const grupo = (x2 - cx) / 3;
+      for (const [etq, k] of [['ALTO', 'palAlto'], ['LARGO', 'palLargo'], ['ANCHO', 'palAncho']]) {
+        txt(etq + ':', cx, base + 3, ET, FB, CAFE);
+        const lx = cx + ancho(etq + ':', ET, FB) + 4;
+        linea(lx, cx + grupo - 8, base); valor(p[k], lx, cx + grupo - 8, base);
+        cx += grupo;
+      }
+      yy -= paso;
+    }
+    // NOTAS: renglones hasta el final del cuadrante
+    const nl = partir(p.notas || '', VT, x2 - x1 - 40, F);
+    let k = 0;
+    while (yy - paso + 4 > top - h + 6) {
+      const base = yy - paso + 4;
+      if (k === 0) {
+        txt('NOTAS:', x1, base + 3, ET, FB, CAFE);
+        const lx = x1 + ancho('NOTAS:', ET, FB) + 6;
+        linea(lx, x2, base);
+        if (nl[0]) txt(nl[0], lx + 2, base + 3, VT, F, TINTA);
+      } else {
+        linea(x1, x2, base);
+        if (nl[k]) txt(nl[k], x1 + 2, base + 3, VT, F, TINTA);
+      }
+      k++; yy -= paso;
+    }
   };
   y = barra('PARTIDAS', y) - 8;
-  for (let i = 0; i < total; i += 4) {
-    if (i > 0) { pg = pdf.addPage([W, H]); y = barra('PARTIDAS', H - M) - 8; }
+  // Hoja 1
+  const h1 = y - PIE;
+  let n = 0;
+  for (let j = 0; j < 2; j++, n++) cuadrante(n + 1, filas[n] || {}, M + j * (CW + GX), y, h1);
+  // Hojas siguientes, de 4 en 4
+  while (n < filas.length) {
+    pg = pdf.addPage([W, H]); y = barra('PARTIDAS', H - M) - 8;
     const h = (y - PIE - GY) / 2;
-    for (let j = 0; j < 4; j++) {
-      const n = i + j;
-      const x = M + (j % 2) * (CW + GX), top = y - Math.floor(j / 2) * (h + GY);
-      cuadrante(n + 1, filas[n] || {}, x, top, h);
-    }
+    for (let j = 0; j < 4; j++, n++) cuadrante(n + 1, filas[n] || {}, M + (j % 2) * (CW + GX), y - Math.floor(j / 2) * (h + GY), h);
   }
 
   // Pie en todas las hojas
