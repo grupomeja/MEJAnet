@@ -160,48 +160,55 @@ async function generarPrevio(rep, ref) {
   b3 = campo('Cant. de pallets', r.palletsCant, M + 3 * (c4 + g), y, c4);
   y = Math.min(b1, b2, b3) - 14;
 
-  // ---------- 3. Partidas ----------
-  const COLS = [
-    ['No.', 0.05], ['Desc. prod.', 0.31], ['Marca', 0.10], ['Modelo', 0.10], ['Origen', 0.09],
-    ['Cant. pzs x cartón', 0.11], ['Mercancía', 0.13], ['Cant. pzs', 0.11],
-  ].map(([n, f]) => [n, f * AN]);
-  const enc = (yy) => {
-    yy = barra('PARTIDAS', yy);
-    const hh = 22;
-    pg.drawRectangle({ x: M, y: yy - hh, width: AN, height: hh, color: BEIGE_SUAVE, borderColor: LINEA, borderWidth: 0.6 });
-    let x = M;
-    for (const [n, w] of COLS) {
-      const lin = partir(n.toUpperCase(), 6.8, w - 6, FB);
-      lin.slice(0, 2).forEach((l, i) => txt(l, x + (w - ancho(l, 6.8, FB)) / 2, yy - (lin.length > 1 ? 9 : 13) - i * 8, 6.8, FB, CAFE));
-      x += w;
-    }
-    return yy - hh;
-  };
-  y = enc(y);
+  // ---------- 3. Partidas (cuadrantes: 4 por hoja, con renglones para escribir a mano) ----------
   const filas = (r.partidas || []).filter((p) => PARTIDA.some((k) => p[k]));
-  const PIE = M + 22;
-  // Se imprimen las partidas capturadas y renglones en blanco hasta llenar la hoja (mínimo 8 en total)
-  for (let i = 0; ; i++) {
-    if (i >= filas.length && i >= 8 && y - 20 < PIE) break;
-    const p = filas[i] || {};
-    const celdas = [String(i + 1), p.desc, p.marca, p.modelo, p.origen, p.pzsCarton, p.mercancia, p.cant];
-    const lineas = celdas.map((v, j) => partir(v || '', 8.5, COLS[j][1] - 8, j === 0 ? FB : F));
-    const alto = Math.max(20, 8 + Math.max(...lineas.map((l) => l.length)) * 10.5);
-    if (y - alto < PIE) { if (i >= filas.length) break; pg = pdf.addPage([W, H]); y = enc(H - M); }
-    let x = M;
-    lineas.forEach((lin, j) => {
-      const w = COLS[j][1];
-      pg.drawRectangle({ x, y: y - alto, width: w, height: alto, borderColor: LINEA, borderWidth: 0.6 });
-      // Texto centrado a lo ancho y a lo alto de la celda
-      const arriba = (alto - lin.length * 10.5) / 2;
-      lin.forEach((l, k) => {
-        const px = x + (w - ancho(l, 8.5, j === 0 ? FB : F)) / 2;
-        txt(l, px, y - arriba - 8 - k * 10.5, 8.5, j === 0 ? FB : F, j === 0 ? CAFE_ICO : TINTA);
-      });
-      x += w;
+  const total = Math.max(4, Math.ceil(filas.length / 4) * 4);
+  const PIE = M + 22, GX = 10, GY = 10;
+  const CW = (AN - GX) / 2;
+  const RENGLONES = [['Marca', 'marca'], ['Modelo', 'modelo'], ['Origen', 'origen'], ['Cant. pzs x cartón', 'pzsCarton'], ['Mercancía', 'mercancia'], ['Cant. pzs', 'cant']];
+  const cuadrante = (n, p, x, top, h) => {
+    pg.drawRectangle({ x, y: top - h, width: CW, height: h, borderColor: LINEA, borderWidth: 0.8, color: BLANCO });
+    // Encabezado: número de partida
+    pg.drawRectangle({ x, y: top - 17, width: CW, height: 17, color: BEIGE_SUAVE });
+    pg.drawLine({ start: { x, y: top - 17 }, end: { x: x + CW, y: top - 17 }, thickness: 0.6, color: LINEA });
+    const et = `PARTIDA ${n}`, ew = ancho(et, 8, FB) + 16;
+    pg.drawRectangle({ x, y: top - 17, width: ew, height: 17, color: CAFE_OSC });
+    txt(et, x + 8, top - 11.5, 8, FB, BEIGE);
+    const pad = 9, iw = CW - 2 * pad;
+    // Desc. prod.: hasta 3 renglones
+    let yy = top - 17 - 12;
+    txt('DESC. PROD.', x + pad, yy, 6.8, FB, GRIS);
+    const dl = partir(p.desc || '', 9.5, iw - 4, FB).slice(0, 3);
+    const paso = Math.max(15, Math.min(19, (h - 17 - 12) / 11));
+    for (let k = 0; k < 2; k++) {
+      const base = yy - 6 - (k + 1) * paso;
+      const l = dl[k] || '';
+      if (l) txt(l, x + pad + (iw - ancho(l, 9.5, FB)) / 2, base + 3, 9.5, FB, TINTA);
+      pg.drawLine({ start: { x: x + pad, y: base }, end: { x: x + pad + iw, y: base }, thickness: 0.5, color: LINEA });
+    }
+    yy = yy - 6 - 2 * paso;
+    // Renglones con etiqueta a la izquierda y línea para escribir
+    const resto = (yy - (top - h) - 6) / RENGLONES.length;
+    RENGLONES.forEach(([etq, k], i) => {
+      const base = yy - (i + 1) * resto + 4;
+      txt(etq + ':', x + pad, base + 3, 8.2, FB, CAFE);
+      const lx = x + pad + ancho(etq + ':', 8.2, FB) + 6;
+      pg.drawLine({ start: { x: lx, y: base }, end: { x: x + pad + iw, y: base }, thickness: 0.5, color: LINEA });
+      const v = partir(p[k] || '', 9.5, x + pad + iw - lx - 4, FB)[0];
+      if (v) txt(v, lx + (x + pad + iw - lx - ancho(v, 9.5, FB)) / 2, base + 3, 9.5, FB, TINTA);
     });
-    y -= alto;
+  };
+  y = barra('PARTIDAS', y) - 8;
+  for (let i = 0; i < total; i += 4) {
+    if (i > 0) { pg = pdf.addPage([W, H]); y = barra('PARTIDAS', H - M) - 8; }
+    const h = (y - PIE - GY) / 2;
+    for (let j = 0; j < 4; j++) {
+      const n = i + j;
+      const x = M + (j % 2) * (CW + GX), top = y - Math.floor(j / 2) * (h + GY);
+      cuadrante(n + 1, filas[n] || {}, x, top, h);
+    }
   }
+
   // Pie en todas las hojas
   const pags = pdf.getPages();
   pags.forEach((p, i) => {

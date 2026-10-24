@@ -413,11 +413,22 @@ main{padding-bottom:40px}
 .pv-tabla td.cen input{text-align:center}
 .pv-tabla .del{position:absolute;left:-26px;top:50%;margin-top:-10px;width:20px;height:20px;border-radius:50%;border:1px solid #c9b9a0;background:#fff;color:#7A1C1C;font-weight:700;font-size:13px;line-height:16px;padding:0;cursor:pointer;opacity:0;transition:opacity .15s}
 .pv-tabla tr:hover .del,.pv-tabla .del:focus{opacity:1}
+.pv-cuads{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:10px}
+.pv-cu{border:1px solid var(--pv-line);position:relative;background:#fff}
+.pv-cu .hd{display:flex;align-items:center;justify-content:space-between;background:var(--pv-suave);border-bottom:1px solid var(--pv-line);height:24px}
+.pv-cu .hd b{background:var(--pv-osc);color:var(--pv-beige);font-size:10.5px;letter-spacing:.05em;padding:0 12px;height:100%;display:flex;align-items:center}
+.pv-cu .hd .del{border:0;background:none;color:#7A1C1C;font-size:11.5px;font-weight:700;cursor:pointer;padding:0 10px;opacity:.55}
+.pv-cu .hd .del:hover{opacity:1}
+.pv-cu .bd{padding:8px 12px 12px}
+.pv-cu textarea{text-align:center;font-weight:700;font-size:12.5px;resize:none;overflow:hidden;display:block;line-height:1.35;min-height:46px;background-image:linear-gradient(transparent calc(100% - 1px),var(--pv-line) 0);background-size:100% 23px;border-bottom:0}
+.pv-cu .rg{display:flex;align-items:flex-end;gap:8px;margin-top:9px}
+.pv-cu .rg span{font-size:11px;font-weight:700;color:var(--pv-cafe);white-space:nowrap;padding-bottom:5px}
+.pv-cu .rg input{text-align:center;font-weight:700;font-size:12.5px}
 .pv-add{margin-top:10px;border:1px dashed var(--pv-ico);background:var(--pv-suave);color:var(--pv-cafe);font-weight:700;font-size:12px;padding:6px 14px;border-radius:6px;cursor:pointer}
 .pv-add:hover{background:var(--pv-beige)}
 .pv-pie{display:flex;justify-content:space-between;margin-top:26px;padding-top:6px;border-top:1px solid var(--pv-line);font-size:9.5px;color:var(--pv-gris)}
 .pv-pie b{color:var(--pv-ico)}
-@media (max-width:760px){.hoja{padding:22px 16px}.pv-g.c3,.pv-g.c4{grid-template-columns:repeat(2,minmax(0,1fr))}.pv-head{flex-direction:column;align-items:flex-start}.pv-head .der{text-align:left}.pv-head input.cli{text-align:left}.pv-scroll{padding:10px 4px 30px}.pv-tabla{min-width:640px}.pv-tw{overflow-x:auto}}
+@media (max-width:760px){.pv-cuads{grid-template-columns:1fr}.hoja{padding:22px 16px}.pv-g.c3,.pv-g.c4{grid-template-columns:repeat(2,minmax(0,1fr))}.pv-head{flex-direction:column;align-items:flex-start}.pv-head .der{text-align:left}.pv-head input.cli{text-align:left}.pv-scroll{padding:10px 4px 30px}.pv-tabla{min-width:640px}.pv-tw{overflow-x:auto}}
 </style>
 </head>
 <body>
@@ -976,7 +987,7 @@ let tt;function toast(t){const el=$("#toast");el.textContent=t;el.hidden=false;c
 const PV={id:null,datos:null,t:null};
 const PV_TIPOS=[["20DC","20' DC"],["40DC","40' DC"],["40HC","40' HC"],["SUELTA","Carga suelta"]];
 const PV_PALLETS=[["MADERA","Madera"],["PLASTICO","Plástico"],["SIN","Sin pallets"]];
-const PV_COLS=[["desc","Desc. prod.",31],["marca","Marca",10],["modelo","Modelo",10],["origen","Origen",9],["pzsCarton","Cant. pzs x cartón",11],["mercancia","Mercancía",13],["cant","Cant. pzs",11]];
+const PV_RENG=[["marca","Marca"],["modelo","Modelo"],["origen","Origen"],["pzsCarton","Cant. pzs x cartón"],["mercancia","Mercancía"],["cant","Cant. pzs"]];
 const pvVacia=()=>({desc:"",marca:"",modelo:"",origen:"",pzsCarton:"",mercancia:"",cant:""});
 // Datos iniciales tomados de la ficha y del tablero
 function pvDesdeFicha(e){
@@ -984,13 +995,14 @@ function pvDesdeFicha(e){
   return {cliente:e.cliente||"",fecha:pv.r||pv.e||iso(new Date()),trafico:e.ref||"",factura:e.factura||"",
     buque:[e.buque,e.viaje?"V-"+e.viaje:""].filter(Boolean).join(" "),contenedor:e.contenedores||"",
     tipoCont:e.tipo==="LCL"?"SUELTA":"",sello:"",operadora:e.terminal||"",claveCR:e.claveCR||"",
-    bultos:e.bultos?String(e.bultos):"",peso:e.peso?String(e.peso):"",pallets:"",palletsCant:"",partidas:[pvVacia()]};
+    bultos:e.bultos?String(e.bultos):"",peso:e.peso?String(e.peso):"",pallets:"",palletsCant:"",partidas:[pvVacia(),pvVacia(),pvVacia(),pvVacia()]};
 }
 function abrirPrevio(id){
   const e=EMB[id];if(!e)return;
   PV.id=id;
   const base=pvDesdeFicha(e),g=e.reportePrevio;
   PV.datos=g?{...base,...g,partidas:(g.partidas&&g.partidas.length?g.partidas:[pvVacia()]).map(p=>({...pvVacia(),...p}))}:base;
+  while(PV.datos.partidas.length<4)PV.datos.partidas.push(pvVacia());
   renderPrevio();
   const el=$("#previo");el.hidden=false;document.documentElement.classList.add("ficha-abierta");
   el.querySelector(".pv-scroll").scrollTop=0;
@@ -1004,9 +1016,9 @@ function pvIn(k,extra=""){const dis=canWrite?"":"disabled";return `<input data-p
 function pvOps(k,lista){const dis=canWrite?"":"disabled";
   return `<div class="pv-ops">${lista.map(([v,n])=>`<label><input type="checkbox" data-pvop="${k}" value="${v}" ${PV.datos[k]===v?"checked":""} ${dis}>${n}</label>`).join("")}</div>`}
 function pvFilas(){const dis=canWrite?"":"disabled";
-  return PV.datos.partidas.map((p,i)=>`<tr data-i="${i}"><td class="n">${i+1}${canWrite?`<button type="button" class="del" data-pvdel="${i}" title="Quitar partida ${i+1}" aria-label="Quitar partida ${i+1}">×</button>`:""}</td>${PV_COLS.map(([k],j)=>j===0
-    ?`<td><textarea rows="1" data-pp="${k}" ${dis}>${esc(p[k]||"")}</textarea></td>`
-    :`<td class="${j>=4?"cen":""}"><input data-pp="${k}" value="${esc(p[k]||"")}" ${dis}></td>`).join("")}</tr>`).join("")}
+  return PV.datos.partidas.map((p,i)=>`<div class="pv-cu" data-i="${i}"><div class="hd"><b>PARTIDA ${i+1}</b>${canWrite?`<button type="button" class="del" data-pvdel="${i}" aria-label="Quitar partida ${i+1}">Quitar ×</button>`:""}</div>
+    <div class="bd"><span class="pv-lbl">Desc. prod.</span><textarea rows="2" data-pp="desc" ${dis}>${esc(p.desc||"")}</textarea>
+    ${PV_RENG.map(([k,n])=>`<label class="rg"><span>${n}:</span><input data-pp="${k}" value="${esc(p[k]||"")}" ${dis}></label>`).join("")}</div></div>`).join("")}
 function renderPrevio(){
   const e=EMB[PV.id],d=PV.datos;
   $("#previo").innerHTML=`
@@ -1037,8 +1049,7 @@ function renderPrevio(){
       <div class="s2"><span class="pv-lbl">Pallets</span>${pvOps("pallets",PV_PALLETS)}</div>
       <label><span class="pv-lbl">Cant. de pallets</span>${pvIn("palletsCant",'inputmode="numeric"')}</label></div>
     <div class="pv-sec">PARTIDAS</div>
-    <div class="pv-tw"><table class="pv-tabla"><colgroup><col style="width:5%">${PV_COLS.map(c=>`<col style="width:${c[2]}%">`).join("")}</colgroup>
-      <thead><tr><th>No.</th>${PV_COLS.map(c=>`<th>${c[1]}</th>`).join("")}</tr></thead><tbody id="pv-filas">${pvFilas()}</tbody></table></div>
+    <div class="pv-cuads" id="pv-filas">${pvFilas()}</div>
     ${canWrite?`<button type="button" class="pv-add" id="pv-add">+ Agregar partida</button>`:""}
     <div class="pv-pie"><b>GRUPO MEJA</b><span>${esc(d.trafico||e.ref)} · Reporte de previo</span></div>
   </div></div>`;
@@ -1069,7 +1080,7 @@ async function descargarPrevio(){
   const box=$("#previo");
   box.addEventListener("input",ev=>{const el=ev.target;
     if(el.dataset.pv){PV.datos[el.dataset.pv]=el.value;pvCambio();return}
-    if(el.dataset.pp){const i=+el.closest("tr").dataset.i;PV.datos.partidas[i][el.dataset.pp]=el.value;if(el.tagName==="TEXTAREA"){el.style.height="auto";el.style.height=el.scrollHeight+"px"}pvCambio()}});
+    if(el.dataset.pp){const i=+el.closest("[data-i]").dataset.i;PV.datos.partidas[i][el.dataset.pp]=el.value;if(el.tagName==="TEXTAREA"){el.style.height="auto";el.style.height=el.scrollHeight+"px"}pvCambio()}});
   box.addEventListener("change",ev=>{const el=ev.target;
     if(el.dataset.pvop){const k=el.dataset.pvop;PV.datos[k]=el.checked?el.value:"";
       box.querySelectorAll(`[data-pvop="${k}"]`).forEach(x=>{if(x!==el)x.checked=false});pvCambio()}});
@@ -1077,7 +1088,7 @@ async function descargarPrevio(){
     if(t.id==="pv-cerrar")return cerrarPrevio();
     if(t.id==="pv-pdf")return descargarPrevio();
     if(t.id==="pv-add"){PV.datos.partidas.push(pvVacia());$("#pv-filas").innerHTML=pvFilas();pvAjustarAlto();pvCambio();
-      const f=box.querySelectorAll("#pv-filas tr");f[f.length-1].querySelector("textarea").focus();return}
+      const f=box.querySelectorAll("#pv-filas .pv-cu");f[f.length-1].querySelector("textarea").focus();return}
     if(t.dataset.pvdel!=null){const i=+t.dataset.pvdel;PV.datos.partidas.splice(i,1);if(!PV.datos.partidas.length)PV.datos.partidas.push(pvVacia());
       $("#pv-filas").innerHTML=pvFilas();pvAjustarAlto();pvCambio();return}
     if(t.id==="pv-ficha"){const n=pvDesdeFicha(EMB[PV.id]);delete n.partidas;Object.assign(PV.datos,n);renderPrevio();pvCambio();toast("Se tomaron los datos actuales de la ficha (las partidas no cambian)");return}
