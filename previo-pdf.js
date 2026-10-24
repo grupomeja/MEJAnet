@@ -126,7 +126,7 @@ async function generarPrevio(rep, ref) {
 
   // ---------- 1. Revisión de mercancía ----------
   pg.drawRectangle({ x: M, y: y - 74, width: AN, height: 74, color: BEIGE_SUAVE, borderColor: LINEA, borderWidth: 0.8 });
-  pg.drawRectangle({ x: M, y: y - 74, width: AN, height: 3, color: GUINDA });
+  pg.drawRectangle({ x: M, y: y - 74, width: AN, height: 3, color: CAFE_OSC });
   if (logo) {
     const lw = 150, lh = lw * logo.height / logo.width;
     pg.drawImage(logo, { x: M + 14, y: y - 37 - lh / 2, width: lw, height: lh });
@@ -136,8 +136,11 @@ async function generarPrevio(rep, ref) {
   const sub = 'Reporte de previo · Puerto de Manzanillo';
   txt(sub, M + AN - 14 - ancho(sub, 8.5), y - 41, 8.5, F, CAFE_ICO);
   const cli = limpio(r.cliente || '').toUpperCase();
-  const cliLin = partir(cli, 11, 300, FB).slice(0, 2);
-  cliLin.forEach((l, i) => txt(l, M + AN - 14 - ancho(l, 11, FB), y - 57 - i * 12, 11, FB, GUINDA));
+  // Cliente grande; si no cabe en un renglón, en dos renglones un poco más chicos
+  const una = ancho(cli, 14, FB) <= 330;
+  const ct = una ? 14 : 11.5;
+  const cliLin = partir(cli, ct, 330, FB).slice(0, 2);
+  cliLin.forEach((l, i) => txt(l, M + AN - 14 - ancho(l, ct, FB), (una ? y - 59 : y - 55) - i * 12.5, ct, FB, GUINDA));
   y -= 84;
   const c3 = (AN - 2 * 14) / 3;
   let b1 = campo('Fecha', fechaTxt(r.fecha), M, y, c3);
