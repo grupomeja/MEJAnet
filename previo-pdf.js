@@ -125,47 +125,45 @@ async function generarPrevio(rep, ref) {
   };
 
   // ---------- 1. Revisión de mercancía ----------
-  pg.drawRectangle({ x: M, y: y - 74, width: AN, height: 74, color: BEIGE_SUAVE, borderColor: LINEA, borderWidth: 0.8 });
-  pg.drawRectangle({ x: M, y: y - 74, width: AN, height: 3, color: CAFE_OSC });
+  const HH = 64;
+  pg.drawRectangle({ x: M, y: y - HH, width: AN, height: HH, color: BEIGE_SUAVE, borderColor: LINEA, borderWidth: 0.8 });
+  pg.drawRectangle({ x: M, y: y - HH, width: AN, height: 3, color: CAFE_OSC });
   if (logo) {
-    const lw = 150, lh = lw * logo.height / logo.width;
-    pg.drawImage(logo, { x: M + 14, y: y - 37 - lh / 2, width: lw, height: lh });
+    const lw = 140, lh = lw * logo.height / logo.width;
+    pg.drawImage(logo, { x: M + 14, y: y - 32 - lh / 2, width: lw, height: lh });
   }
   const tit = 'REVISIÓN DE MERCANCÍA';
-  txt(tit, M + AN - 14 - ancho(tit, 17, FB), y - 28, 17, FB, CAFE_OSC);
+  txt(tit, M + AN - 14 - ancho(tit, 16, FB), y - 20, 16, FB, CAFE_OSC);
   const sub = 'Reporte de previo · Puerto de Manzanillo';
-  txt(sub, M + AN - 14 - ancho(sub, 8.5), y - 41, 8.5, F, CAFE_ICO);
+  txt(sub, M + AN - 14 - ancho(sub, 8), y - 31, 8, F, CAFE_ICO);
   const cli = limpio(r.cliente || '').toUpperCase();
   // Cliente grande; si no cabe en un renglón, en dos renglones un poco más chicos
   const una = ancho(cli, 14, FB) <= 330;
   const ct = una ? 14 : 11.5;
   const cliLin = partir(cli, ct, 330, FB).slice(0, 2);
-  cliLin.forEach((l, i) => txt(l, M + AN - 14 - ancho(l, ct, FB), (una ? y - 59 : y - 55) - i * 12.5, ct, FB, GUINDA));
-  y -= 84;
+  cliLin.forEach((l, i) => txt(l, M + AN - 14 - ancho(l, ct, FB), (una ? y - 51 : y - 46) - i * 12, ct, FB, GUINDA));
+  y -= HH + 6;
   const c3 = (AN - 2 * 14) / 3;
   let b1 = campo('Fecha', fechaTxt(r.fecha), M, y, c3);
   let b2 = campo('Tráfico', r.trafico, M + c3 + 14, y, c3);
   let b3 = campo('Factura', r.factura, M + 2 * (c3 + 14), y, c3);
-  y = Math.min(b1, b2, b3) - 14;
+  y = Math.min(b1, b2, b3) - 10;
 
   // ---------- 2. Información del contenedor ----------
-  y = barra('INFORMACIÓN DEL CONTENEDOR', y) - 8;
+  y = barra('INFORMACIÓN DEL CONTENEDOR', y) - 4;
   const g = 14, c2 = (AN - g) / 2;
   b1 = campo('Buque / viaje', r.buque, M, y, c2);
   b2 = campo('Contenedor no.', r.contenedor, M + c2 + g, y, c2);
-  y = Math.min(b1, b2) - 8;
-  y = opciones('Tipo de contenedor', TIPOS_CONT, r.tipoCont, M, y, AN) - 8;
-  const c4 = (AN - 3 * g) / 4;
-  const fila4 = [['Sello', r.sello], ['Operadora', r.operadora], ['Clave CR', r.claveCR], ['Bultos', r.bultos]];
-  y = Math.min(...fila4.map(([e, v], i) => campo(e, v, M + i * (c4 + g), y, c4))) - 8;
-  b1 = campo('Peso (kg)', r.peso, M, y, c4);
-  b2 = opciones('Pallets', PALLETS, r.pallets, M + c4 + g, y, 2 * c4 + g);
-  b3 = campo('Cant. de pallets', r.palletsCant, M + 3 * (c4 + g), y, c4);
-  y = Math.min(b1, b2, b3) - 14;
+  y = Math.min(b1, b2) - 4;
+  b1 = opciones('Tipo de contenedor', TIPOS_CONT, r.tipoCont, M, y, c2);
+  b2 = opciones('Pallets', PALLETS, r.pallets, M + c2 + g, y, c2);
+  y = Math.min(b1, b2) - 4;
+  const g6 = 10, c6 = (AN - 5 * g6) / 6;
+  const fila6 = [['Sello', r.sello], ['Operadora', r.operadora], ['Clave CR', r.claveCR], ['Bultos', r.bultos], ['Peso (kg)', r.peso], ['Cant. de pallets', r.palletsCant]];
+  y = Math.min(...fila6.map(([e, v], i) => campo(e, v, M + i * (c6 + g6), y, c6))) - 10;
 
   // ---------- 3. Partidas (cuadrantes con renglones para escribir a mano) ----------
-  // Hoja 1: 2 cuadrantes (debajo de la información del contenedor). Hojas siguientes: 4 cuadrantes.
-  const filas = (r.partidas || []).filter((p) => PARTIDA.some((k) => p[k]));
+    const filas = (r.partidas || []).filter((p) => PARTIDA.some((k) => p[k]));
   const PIE = M + 22, GX = 10, GY = 10;
   const CW = (AN - GX) / 2;
   const RENGLONES = [['MARCA', 'marca'], ['MODELO', 'modelo'], ['ORIGEN', 'origen'], ['LOTE #', 'lote'], ['CANT. PZS X CARTÓN', 'pzsCarton'], ['CANT. PZS', 'cant']];
@@ -183,14 +181,19 @@ async function generarPrevio(rep, ref) {
     pg.drawRectangle({ x, y: top - 17, width: ew, height: 17, color: CAFE_OSC });
     txt(et, x + 8, top - 11.5, 8, FB, BEIGE);
     const pad = 9, x1 = x + pad, x2 = x + CW - pad;
-    // Renglones: desc (2) + 6 campos + medidas + notas (mínimo 2)
-    const util = h - 17 - 12 - 8;
-    const paso = Math.max(18, Math.min(30, util / 12.5));
-    let yy = top - 17 - 12;
+    // DESC. PROD. (normalmente se captura en computadora): 2 renglones compactos
+    let yy = top - 17 - 11;
     txt('DESC. PROD.:', x1, yy, ET, FB, CAFE);
-    const dl = partir(p.desc || '', VT, x2 - x1 - 4, FB).slice(0, 2);
-    for (let k = 0; k < 2; k++) { const base = yy - k * paso - paso + 4; linea(x1, x2, base); valor(dl[k], x1, x2, base); }
-    yy -= 2 * paso;
+    const dl = partir(p.desc || '', 9, x2 - x1 - 4, FB).slice(0, 2);
+    const pd = 12.5;
+    for (let k = 0; k < 2; k++) {
+      const base = yy - 4 - (k + 1) * pd;
+      linea(x1, x2, base);
+      const l = dl[k]; if (l) txt(l, x1 + (x2 - x1 - ancho(l, 9, FB)) / 2, base + 2.5, 9, FB, TINTA);
+    }
+    yy -= 4 + 2 * pd + 2;
+    // Renglones para escribir con pluma: 6 campos + medidas + notas
+    const paso = Math.max(15, Math.min(30, (yy - (top - h) - 4) / 8));
     for (const [etq, k] of RENGLONES) {
       const base = yy - paso + 4;
       txt(etq + ':', x1, base + 3, ET, FB, CAFE);
@@ -198,17 +201,16 @@ async function generarPrevio(rep, ref) {
       linea(lx, x2, base); valor(p[k], lx, x2, base);
       yy -= paso;
     }
-    // MEDIDAS DE PALLET: (renglón propio)  ALTO ___  LARGO ___  ANCHO ___
+    // MEDIDAS:  ALTO ___  LARGO ___  ANCHO ___  (todo en un renglón)
     {
-      txt('MEDIDAS DE PALLET:', x1, yy - paso + 7, ET, FB, CAFE);
-      yy -= paso;
       const base = yy - paso + 4;
-      let cx = x1 + 10;
+      txt('MEDIDAS:', x1, base + 3, ET, FB, CAFE);
+      let cx = x1 + ancho('MEDIDAS:', ET, FB) + 8;
       const grupo = (x2 - cx) / 3;
       for (const [etq, k] of [['ALTO', 'palAlto'], ['LARGO', 'palLargo'], ['ANCHO', 'palAncho']]) {
-        txt(etq + ':', cx, base + 3, ET, FB, CAFE);
-        const lx = cx + ancho(etq + ':', ET, FB) + 4;
-        linea(lx, cx + grupo - 8, base); valor(p[k], lx, cx + grupo - 8, base);
+        txt(etq + ':', cx, base + 3, 7.4, FB, CAFE);
+        const lx = cx + ancho(etq + ':', 7.4, FB) + 3;
+        linea(lx, cx + grupo - 5, base); valor(p[k], lx, cx + grupo - 5, base);
         cx += grupo;
       }
       yy -= paso;
@@ -216,7 +218,7 @@ async function generarPrevio(rep, ref) {
     // NOTAS: renglones hasta el final del cuadrante
     const nl = partir(p.notas || '', VT, x2 - x1 - 40, F);
     let k = 0;
-    while (yy - paso + 4 > top - h + 6) {
+    while (k === 0 || yy - paso + 4 > top - h + 4) {
       const base = yy - paso + 4;
       if (k === 0) {
         txt('NOTAS:', x1, base + 3, ET, FB, CAFE);
@@ -230,14 +232,11 @@ async function generarPrevio(rep, ref) {
       k++; yy -= paso;
     }
   };
-  y = barra('PARTIDAS', y) - 8;
-  // Hoja 1
-  const h1 = y - PIE;
+  // 4 cuadrantes por hoja (2 x 2); si hay más partidas, siguen en otra hoja
+  y = barra('PARTIDAS', y) - 6;
   let n = 0;
-  for (let j = 0; j < 2; j++, n++) cuadrante(n + 1, filas[n] || {}, M + j * (CW + GX), y, h1);
-  // Hojas siguientes, de 4 en 4
-  while (n < filas.length) {
-    pg = pdf.addPage([W, H]); y = barra('PARTIDAS', H - M) - 8;
+  while (n === 0 || n < filas.length) {
+    if (n > 0) { pg = pdf.addPage([W, H]); y = barra('PARTIDAS', H - M) - 6; }
     const h = (y - PIE - GY) / 2;
     for (let j = 0; j < 4; j++, n++) cuadrante(n + 1, filas[n] || {}, M + (j % 2) * (CW + GX), y - Math.floor(j / 2) * (h + GY), h);
   }

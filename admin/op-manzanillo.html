@@ -397,6 +397,7 @@ main{padding-bottom:40px}
 .pv-g.c3{grid-template-columns:repeat(3,minmax(0,1fr))}
 .pv-g.c2{grid-template-columns:repeat(2,minmax(0,1fr))}
 .pv-g.c4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.pv-g.c6{grid-template-columns:repeat(6,minmax(0,1fr));gap:12px 12px}
 .pv-g .s2{grid-column:span 2}
 .pv-g input{font-weight:700;font-size:13px}
 .pv-sec{margin-top:20px;background:var(--pv-beige);border-left:4px solid var(--pv-ico);padding:5px 12px;font-weight:800;font-size:12.5px;letter-spacing:.04em;color:var(--pv-cafe)}
@@ -425,8 +426,10 @@ main{padding-bottom:40px}
 .pv-cu .rg span{font-size:11px;font-weight:700;color:var(--pv-cafe);white-space:nowrap;padding-bottom:5px}
 .pv-cu .rg input{text-align:center;font-weight:700;font-size:12.5px}
 .pv-cu .rg-t{display:block;font-size:11px;font-weight:700;color:var(--pv-cafe);margin-bottom:2px}
-.pv-cu .rg-med{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding-left:10px}
-.pv-cu .rg-med .rg{margin-top:4px}
+.pv-cu .rg-med{display:grid;grid-template-columns:auto repeat(3,minmax(0,1fr));gap:8px;align-items:end;margin-top:9px}
+.pv-cu .rg-m{font-size:11px;font-weight:700;color:var(--pv-cafe);padding-bottom:5px}
+.pv-cu .rg-med .rg{margin-top:0;gap:4px}
+.pv-cu .rg-med .rg span{font-size:9.5px}
 .pv-cu .rg-notas{align-items:flex-start}
 .pv-cu .rg-notas span{padding-top:4px}
 .pv-cu .rg-notas textarea{text-align:left;font-weight:400;min-height:46px}
@@ -434,7 +437,7 @@ main{padding-bottom:40px}
 .pv-add:hover{background:var(--pv-beige)}
 .pv-pie{display:flex;justify-content:space-between;margin-top:26px;padding-top:6px;border-top:1px solid var(--pv-line);font-size:9.5px;color:var(--pv-gris)}
 .pv-pie b{color:var(--pv-ico)}
-@media (max-width:760px){.pv-cuads{grid-template-columns:1fr}.hoja{padding:22px 16px}.pv-g.c3,.pv-g.c4{grid-template-columns:repeat(2,minmax(0,1fr))}.pv-head{flex-direction:column;align-items:flex-start}.pv-head .der{text-align:left}.pv-head input.cli{text-align:left}.pv-scroll{padding:10px 4px 30px}.pv-tabla{min-width:640px}.pv-tw{overflow-x:auto}}
+@media (max-width:760px){.pv-cuads{grid-template-columns:1fr}.hoja{padding:22px 16px}.pv-g.c3,.pv-g.c4,.pv-g.c6,.pv-g.c2{grid-template-columns:repeat(2,minmax(0,1fr))}.pv-head{flex-direction:column;align-items:flex-start}.pv-head .der{text-align:left}.pv-head input.cli{text-align:left}.pv-scroll{padding:10px 4px 30px}.pv-tabla{min-width:640px}.pv-tw{overflow-x:auto}}
 </style>
 </head>
 <body>
@@ -1001,14 +1004,14 @@ function pvDesdeFicha(e){
   return {cliente:e.cliente||"",fecha:pv.r||pv.e||iso(new Date()),trafico:e.ref||"",factura:e.factura||"",
     buque:[e.buque,e.viaje?"V-"+e.viaje:""].filter(Boolean).join(" "),contenedor:e.contenedores||"",
     tipoCont:e.tipo==="LCL"?"SUELTA":"",sello:"",operadora:e.terminal||"",claveCR:e.claveCR||"",
-    bultos:e.bultos?String(e.bultos):"",peso:e.peso?String(e.peso):"",pallets:"",palletsCant:"",partidas:[pvVacia(),pvVacia()]};
+    bultos:e.bultos?String(e.bultos):"",peso:e.peso?String(e.peso):"",pallets:"",palletsCant:"",partidas:[pvVacia(),pvVacia(),pvVacia(),pvVacia()]};
 }
 function abrirPrevio(id){
   const e=EMB[id];if(!e)return;
   PV.id=id;
   const base=pvDesdeFicha(e),g=e.reportePrevio;
   PV.datos=g?{...base,...g,partidas:(g.partidas&&g.partidas.length?g.partidas:[pvVacia()]).map(p=>({...pvVacia(),...p}))}:base;
-  while(PV.datos.partidas.length<2)PV.datos.partidas.push(pvVacia());
+  while(PV.datos.partidas.length<4)PV.datos.partidas.push(pvVacia());
   renderPrevio();
   const el=$("#previo");el.hidden=false;document.documentElement.classList.add("ficha-abierta");
   el.querySelector(".pv-scroll").scrollTop=0;
@@ -1025,8 +1028,7 @@ function pvFilas(){const dis=canWrite?"":"disabled";
   return PV.datos.partidas.map((p,i)=>`<div class="pv-cu" data-i="${i}"><div class="hd"><b>PARTIDA ${i+1}</b>${canWrite?`<button type="button" class="del" data-pvdel="${i}" aria-label="Quitar partida ${i+1}">Quitar ×</button>`:""}</div>
     <div class="bd"><span class="rg-t">DESC. PROD.:</span><textarea rows="2" data-pp="desc" ${dis}>${esc(p.desc||"")}</textarea>
     ${PV_RENG.map(([k,n])=>`<label class="rg"><span>${n}:</span><input data-pp="${k}" value="${esc(p[k]||"")}" ${dis}></label>`).join("")}
-    <span class="rg-t" style="margin-top:12px">MEDIDAS DE PALLET:</span>
-    <div class="rg-med">${[["palAlto","ALTO"],["palLargo","LARGO"],["palAncho","ANCHO"]].map(([k,n])=>`<label class="rg"><span>${n}:</span><input data-pp="${k}" value="${esc(p[k]||"")}" ${dis}></label>`).join("")}</div>
+    <div class="rg-med"><span class="rg-m">MEDIDAS:</span>${[["palAlto","ALTO"],["palLargo","LARGO"],["palAncho","ANCHO"]].map(([k,n])=>`<label class="rg"><span>${n}:</span><input data-pp="${k}" value="${esc(p[k]||"")}" ${dis}></label>`).join("")}</div>
     <label class="rg rg-notas"><span>NOTAS:</span><textarea rows="2" data-pp="notas" ${dis}>${esc(p.notas||"")}</textarea></label></div></div>`).join("")}
 function renderPrevio(){
   const e=EMB[PV.id],d=PV.datos;
@@ -1048,14 +1050,14 @@ function renderPrevio(){
     <div class="pv-g c2">
       <label><span class="pv-lbl">Buque / viaje</span>${pvIn("buque")}</label>
       <label><span class="pv-lbl">Contenedor no.</span>${pvIn("contenedor",'placeholder="-"')}</label></div>
-    <div class="pv-g"><div><span class="pv-lbl">Tipo de contenedor</span>${pvOps("tipoCont",PV_TIPOS)}</div></div>
-    <div class="pv-g c4">
+    <div class="pv-g c2"><div><span class="pv-lbl">Tipo de contenedor</span>${pvOps("tipoCont",PV_TIPOS)}</div>
+      <div><span class="pv-lbl">Pallets</span>${pvOps("pallets",PV_PALLETS)}</div></div>
+    <div class="pv-g c6">
       <label><span class="pv-lbl">Sello</span>${pvIn("sello")}</label>
       <label><span class="pv-lbl">Operadora</span>${pvIn("operadora")}</label>
       <label><span class="pv-lbl">Clave CR</span>${pvIn("claveCR")}</label>
       <label><span class="pv-lbl">Bultos</span>${pvIn("bultos")}</label>
       <label><span class="pv-lbl">Peso (kg)</span>${pvIn("peso",'inputmode="decimal"')}</label>
-      <div class="s2"><span class="pv-lbl">Pallets</span>${pvOps("pallets",PV_PALLETS)}</div>
       <label><span class="pv-lbl">Cant. de pallets</span>${pvIn("palletsCant",'inputmode="numeric"')}</label></div>
     <div class="pv-sec">PARTIDAS</div>
     <div class="pv-cuads" id="pv-filas">${pvFilas()}</div>
