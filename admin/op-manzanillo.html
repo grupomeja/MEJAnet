@@ -770,7 +770,7 @@ document.addEventListener("input",ev=>{const el=ev.target;if(!el.closest||!el.cl
   if(el.id==="fx-peso"){const n=numero(el.value),o=document.getElementById("fx-pesoLbs");if(o)o.value=n==null?"":dos(n*LB)}
   else if(el.id==="fx-pesoLbs"){const n=numero(el.value),o=document.getElementById("fx-peso");if(o)o.value=n==null?"":dos(n/LB)}});
 function contenedoresHTML(e){const l=String(e.contenedores||"").toUpperCase().split(/[\s,;\/]+/).filter(Boolean);
-  return l.length?l.map(c=>`<span class="cn">${esc(c)}</span>`).join(""):'<span class="vacio">—</span>'}
+  return l.length?l.map(c=>`<span class="cn">${esc(c)}</span>`).join(""):'<span class="vacio">-</span>'}
 const F=(f,l,cls="",type="text",extra="")=>`<label class="${cls}">${l}<input id="fx-${f}" data-f="${f}" type="${type}" ${extra}></label>`;
 let needDrawer=false;
 function renderDrawer(){
@@ -824,7 +824,7 @@ function renderDrawerInner(){
         ${F("ff","Forwarder / consolidador","wide")}${F("origen_puerto","Puerto de origen")}
       </div></section>
       <section class="sec"><h3>Conocimiento de embarque</h3><div class="fields">
-        ${F("hbl","House B/L","", "text",'class="mono"')}${F("mbl","Master B/L","","text",'class="mono"')}${F("contenedores","Contenedor no.","","text",'class="mono" placeholder="ABCU1234567"')}
+        ${F("hbl","House B/L","", "text",'class="mono"')}${F("mbl","Master B/L","","text",'class="mono"')}${F("contenedores","Contenedor no.","","text",'class="mono" placeholder="-"')}
         <label>Tipo de carga<select id="fx-tipo" data-f="tipo"><option value="">—</option><option>LCL</option><option>FCL</option></select></label>
         ${F("mercancia","Mercancía","wide")}
         ${F("bultos","Bultos","","text",'inputmode="numeric" autocomplete="off"')}
@@ -878,7 +878,7 @@ function renderNew(){
     <label>Tipo de operación<select id="n-op"><option value="">SIN ESPECIFICAR</option><option value="IMPORTACION">IMPORTACIÓN</option><option value="EXPORTACION">EXPORTACIÓN</option></select></label>
     <label>Tipo de carga<select id="n-tipo"><option>LCL</option><option>FCL</option></select></label>
     <label>ETA estimada<input type="date" id="n-eta"></label>
-    <label>House B/L<input id="n-hbl" class="mono"></label><label>Master B/L<input id="n-mbl" class="mono"></label><label>Contenedor no.<input id="n-cont" class="mono" placeholder="ABCU1234567"></label>
+    <label>House B/L<input id="n-hbl" class="mono"></label><label>Master B/L<input id="n-mbl" class="mono"></label><label>Contenedor no.<input id="n-cont" class="mono" placeholder="-"></label>
     <label class="full">Mercancía<input id="n-merc"></label>
   </div><div id="n-err" class="muted" style="margin-top:8px"></div><div style="margin-top:12px;display:flex;gap:8px"><button class="btn primary" type="submit">Crear embarque</button><button class="btn" type="button" data-close>Cancelar</button></div></form></div>
   <datalist id="dl-cli2">${clientes().map(c=>`<option value="${esc(c)}">`).join("")}</datalist>`;
