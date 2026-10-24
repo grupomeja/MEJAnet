@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const express = require('express');
 const db = require('./db');
+const { limpiarPrevio, generarPrevio } = require('./previo-pdf');
 
 const pool = db.pool;
 const FILE = path.join(db.DIR, 'op_manzanillo.json');
@@ -120,6 +121,7 @@ function limpiar(b) {
     for (const k of HITOS) if (b.hitos[k] && typeof b.hitos[k] === 'object') o.hitos[k] = limpiarHito(b.hitos[k]);
   }
   if (Array.isArray(b.gastos)) o.gastos = b.gastos.slice(0, 200).map(limpiarGasto);
+  if (b.reportePrevio && typeof b.reportePrevio === 'object') o.reportePrevio = limpiarPrevio(b.reportePrevio);
   return o;
 }
 // Mezcla un cambio parcial: los objetos se combinan, todo lo demás (incluidas listas) se reemplaza.
@@ -195,6 +197,16 @@ function rutas(admin) {
       const d = await cambiar(req.params.id, cambio);
       d ? res.json({ ok: true, datos: d }) : res.status(404).json({ error: 'No encontrado' });
     } catch (e) { err(res, e, 'No se pudo guardar'); }
+  });
+  // Reporte de previo: arma el PDF con lo que está en pantalla (ya editado)
+  r.post('/api/admin/opm/embarques/:id/previo.pdf', admin, async (req, res) => {
+    if (!idValido(req.params.id)) return res.status(400).json({ error: 'Datos inválidos' });
+    try {
+      const ref = String((req.body && req.body.trafico) || req.params.id.replace(/-(\d{2})$/, '/$1'));
+      const buf = await generarPrevio(req.body || {}, ref);
+      const nombre = `Reporte de previo ${ref}`.replace(/[\/\\:*?"<>|]+/g, '-') + '.pdf';
+      res.set({ 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="${nombre}"`, 'Cache-Control': 'no-store' }).send(buf);
+    } catch (e) { err(res, e, 'No se pudo generar el PDF'); }
   });
   r.delete('/api/admin/opm/embarques/:id', admin, async (req, res) => {
     if (!idValido(req.params.id)) return res.status(400).json({ error: 'Datos inválidos' });
