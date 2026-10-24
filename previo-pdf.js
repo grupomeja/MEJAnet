@@ -7,8 +7,8 @@ const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
 
 // ---------- Datos ----------
 const CAMPOS = ['cliente', 'fecha', 'trafico', 'factura', 'buque', 'contenedor', 'tipoCont', 'sello', 'operadora', 'claveCR',
-  'bultos', 'peso', 'pallets', 'palletsCant'];
-const PARTIDA = ['desc', 'marca', 'modelo', 'origen', 'lote', 'pzsCarton', 'cant', 'palAlto', 'palLargo', 'palAncho', 'notas'];
+  'bultos', 'peso', 'pallets', 'palletsCant', 'palAlto', 'palLargo', 'palAncho'];
+const PARTIDA = ['desc', 'marca', 'modelo', 'origen', 'lote', 'pzsCarton', 'cant', 'notas'];
 const TIPOS_CONT = { '20DC': "20' DC", '40DC': "40' DC", '40HC': "40' HC", SUELTA: 'Carga suelta' };
 const PALLETS = { MADERA: 'Madera', PLASTICO: 'Plástico', SIN: 'Sin pallets' };
 
@@ -155,12 +155,31 @@ async function generarPrevio(rep, ref) {
   b1 = campo('Buque / viaje', r.buque, M, y, c2);
   b2 = campo('Contenedor no.', r.contenedor, M + c2 + g, y, c2);
   y = Math.min(b1, b2) - 4;
+  const cq = (c2 - g) / 2;
   b1 = opciones('Tipo de contenedor', TIPOS_CONT, r.tipoCont, M, y, c2);
-  b2 = opciones('Pallets', PALLETS, r.pallets, M + c2 + g, y, c2);
-  y = Math.min(b1, b2) - 4;
-  const g6 = 10, c6 = (AN - 5 * g6) / 6;
-  const fila6 = [['Sello', r.sello], ['Operadora', r.operadora], ['Clave CR', r.claveCR], ['Bultos', r.bultos], ['Peso (kg)', r.peso], ['Cant. de pallets', r.palletsCant]];
-  y = Math.min(...fila6.map(([e, v], i) => campo(e, v, M + i * (c6 + g6), y, c6))) - 10;
+  b2 = campo('Sello', r.sello, M + c2 + g, y, cq);
+  b3 = campo('Clave CR', r.claveCR, M + c2 + g + cq + g, y, cq);
+  y = Math.min(b1, b2, b3) - 4;
+  const c4 = (AN - 3 * g) / 4;
+  const fila4 = [['Operadora', r.operadora], ['Bultos', r.bultos], ['Peso (kg)', r.peso], ['Cant. de pallets', r.palletsCant]];
+  y = Math.min(...fila4.map(([e, v], i) => campo(e, v, M + i * (c4 + g), y, c4))) - 4;
+  // Pallets: tipo y medidas en el mismo renglón
+  b1 = opciones('Pallets', PALLETS, r.pallets, M, y, c2);
+  {
+    const x0 = M + c2 + g;
+    txt('MEDIDAS DE PALLET', x0, y - 8, 6.8, FB, GRIS);
+    const base = y - 27, grupo = c2 / 3;
+    [['ALTO', r.palAlto], ['LARGO', r.palLargo], ['ANCHO', r.palAncho]].forEach(([etq, v], i) => {
+      const cx = x0 + i * grupo;
+      txt(etq + ':', cx, base + 4, 8, FB, CAFE);
+      const lx = cx + ancho(etq + ':', 8, FB) + 4, rx = cx + grupo - 8;
+      pg.drawLine({ start: { x: lx, y: base }, end: { x: rx, y: base }, thickness: 0.6, color: LINEA });
+      const l = partir(v || '', 10, rx - lx - 2, FB)[0];
+      if (l) txt(l, lx + (rx - lx - ancho(l, 10, FB)) / 2, base + 4, 10, FB, TINTA);
+    });
+    b2 = base;
+  }
+  y = Math.min(b1, b2) - 10;
 
   // ---------- 3. Partidas (cuadrantes con renglones para escribir a mano) ----------
     const filas = (r.partidas || []).filter((p) => PARTIDA.some((k) => p[k]));
@@ -193,26 +212,12 @@ async function generarPrevio(rep, ref) {
     }
     yy -= 4 + 2 * pd + 2;
     // Renglones para escribir con pluma: 6 campos + medidas + notas
-    const paso = Math.max(15, Math.min(30, (yy - (top - h) - 4) / 8));
+    const paso = Math.max(15, Math.min(30, (yy - (top - h) - 4) / 7));
     for (const [etq, k] of RENGLONES) {
       const base = yy - paso + 4;
       txt(etq + ':', x1, base + 3, ET, FB, CAFE);
       const lx = x1 + ancho(etq + ':', ET, FB) + 6;
       linea(lx, x2, base); valor(p[k], lx, x2, base);
-      yy -= paso;
-    }
-    // MEDIDAS:  ALTO ___  LARGO ___  ANCHO ___  (todo en un renglón)
-    {
-      const base = yy - paso + 4;
-      txt('MEDIDAS:', x1, base + 3, ET, FB, CAFE);
-      let cx = x1 + ancho('MEDIDAS:', ET, FB) + 8;
-      const grupo = (x2 - cx) / 3;
-      for (const [etq, k] of [['ALTO', 'palAlto'], ['LARGO', 'palLargo'], ['ANCHO', 'palAncho']]) {
-        txt(etq + ':', cx, base + 3, 7.4, FB, CAFE);
-        const lx = cx + ancho(etq + ':', 7.4, FB) + 3;
-        linea(lx, cx + grupo - 5, base); valor(p[k], lx, cx + grupo - 5, base);
-        cx += grupo;
-      }
       yy -= paso;
     }
     // NOTAS: renglones hasta el final del cuadrante

@@ -397,6 +397,10 @@ main{padding-bottom:40px}
 .pv-g.c3{grid-template-columns:repeat(3,minmax(0,1fr))}
 .pv-g.c2{grid-template-columns:repeat(2,minmax(0,1fr))}
 .pv-g.c4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.pv-med{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.pv-med label{display:flex;align-items:flex-end;gap:5px}
+.pv-med span{font-size:11px;font-weight:700;color:var(--pv-cafe);padding-bottom:5px}
+.pv-med input{text-align:center}
 .pv-g.c6{grid-template-columns:repeat(6,minmax(0,1fr));gap:12px 12px}
 .pv-g .s2{grid-column:span 2}
 .pv-g input{font-weight:700;font-size:13px}
@@ -997,13 +1001,13 @@ const PV={id:null,datos:null,t:null};
 const PV_TIPOS=[["20DC","20' DC"],["40DC","40' DC"],["40HC","40' HC"],["SUELTA","Carga suelta"]];
 const PV_PALLETS=[["MADERA","Madera"],["PLASTICO","Plástico"],["SIN","Sin pallets"]];
 const PV_RENG=[["marca","MARCA"],["modelo","MODELO"],["origen","ORIGEN"],["lote","LOTE #"],["pzsCarton","CANT. PZS X CARTÓN"],["cant","CANT. PZS"]];
-const pvVacia=()=>({desc:"",marca:"",modelo:"",origen:"",lote:"",pzsCarton:"",cant:"",palAlto:"",palLargo:"",palAncho:"",notas:""});
+const pvVacia=()=>({desc:"",marca:"",modelo:"",origen:"",lote:"",pzsCarton:"",cant:"",notas:""});
 // Datos iniciales tomados de la ficha y del tablero
 function pvDesdeFicha(e){
   const pv=hit(e,"previo");
   return {cliente:e.cliente||"",fecha:pv.r||pv.e||iso(new Date()),trafico:e.ref||"",factura:e.factura||"",
     buque:[e.buque,e.viaje?"V-"+e.viaje:""].filter(Boolean).join(" "),contenedor:e.contenedores||"",
-    tipoCont:e.tipo==="LCL"?"SUELTA":"",sello:"",operadora:e.terminal||"",claveCR:e.claveCR||"",
+    tipoCont:e.tipo==="LCL"?"SUELTA":"",sello:"",palAlto:"",palLargo:"",palAncho:"",operadora:e.terminal||"",claveCR:e.claveCR||"",
     bultos:e.bultos?String(e.bultos):"",peso:e.peso?String(e.peso):"",pallets:"",palletsCant:"",partidas:[pvVacia(),pvVacia(),pvVacia(),pvVacia()]};
 }
 function abrirPrevio(id){
@@ -1028,7 +1032,6 @@ function pvFilas(){const dis=canWrite?"":"disabled";
   return PV.datos.partidas.map((p,i)=>`<div class="pv-cu" data-i="${i}"><div class="hd"><b>PARTIDA ${i+1}</b>${canWrite?`<button type="button" class="del" data-pvdel="${i}" aria-label="Quitar partida ${i+1}">Quitar ×</button>`:""}</div>
     <div class="bd"><span class="rg-t">DESC. PROD.:</span><textarea rows="2" data-pp="desc" ${dis}>${esc(p.desc||"")}</textarea>
     ${PV_RENG.map(([k,n])=>`<label class="rg"><span>${n}:</span><input data-pp="${k}" value="${esc(p[k]||"")}" ${dis}></label>`).join("")}
-    <div class="rg-med"><span class="rg-m">MEDIDAS:</span>${[["palAlto","ALTO"],["palLargo","LARGO"],["palAncho","ANCHO"]].map(([k,n])=>`<label class="rg"><span>${n}:</span><input data-pp="${k}" value="${esc(p[k]||"")}" ${dis}></label>`).join("")}</div>
     <label class="rg rg-notas"><span>NOTAS:</span><textarea rows="2" data-pp="notas" ${dis}>${esc(p.notas||"")}</textarea></label></div></div>`).join("")}
 function renderPrevio(){
   const e=EMB[PV.id],d=PV.datos;
@@ -1050,15 +1053,17 @@ function renderPrevio(){
     <div class="pv-g c2">
       <label><span class="pv-lbl">Buque / viaje</span>${pvIn("buque")}</label>
       <label><span class="pv-lbl">Contenedor no.</span>${pvIn("contenedor",'placeholder="-"')}</label></div>
-    <div class="pv-g c2"><div><span class="pv-lbl">Tipo de contenedor</span>${pvOps("tipoCont",PV_TIPOS)}</div>
-      <div><span class="pv-lbl">Pallets</span>${pvOps("pallets",PV_PALLETS)}</div></div>
-    <div class="pv-g c6">
+    <div class="pv-g c4">
+      <div class="s2"><span class="pv-lbl">Tipo de contenedor</span>${pvOps("tipoCont",PV_TIPOS)}</div>
       <label><span class="pv-lbl">Sello</span>${pvIn("sello")}</label>
-      <label><span class="pv-lbl">Operadora</span>${pvIn("operadora")}</label>
       <label><span class="pv-lbl">Clave CR</span>${pvIn("claveCR")}</label>
+      <label><span class="pv-lbl">Operadora</span>${pvIn("operadora")}</label>
       <label><span class="pv-lbl">Bultos</span>${pvIn("bultos")}</label>
       <label><span class="pv-lbl">Peso (kg)</span>${pvIn("peso",'inputmode="decimal"')}</label>
-      <label><span class="pv-lbl">Cant. de pallets</span>${pvIn("palletsCant",'inputmode="numeric"')}</label></div>
+      <label><span class="pv-lbl">Cant. de pallets</span>${pvIn("palletsCant",'inputmode="numeric"')}</label>
+      <div class="s2"><span class="pv-lbl">Pallets</span>${pvOps("pallets",PV_PALLETS)}</div>
+      <div class="s2"><span class="pv-lbl">Medidas de pallet</span><div class="pv-med">${[["palAlto","ALTO"],["palLargo","LARGO"],["palAncho","ANCHO"]].map(([k,n])=>`<label><span>${n}:</span>${pvIn(k)}</label>`).join("")}</div></div>
+    </div>
     <div class="pv-sec">PARTIDAS</div>
     <div class="pv-cuads" id="pv-filas">${pvFilas()}</div>
     ${canWrite?`<button type="button" class="pv-add" id="pv-add">+ Agregar partida</button>`:""}
