@@ -179,7 +179,7 @@ button.kpi:hover{border-color:var(--ink-3)}
 #v-seg.midiendo .c-ref .a,#v-seg.midiendo .c-ref .b{white-space:nowrap!important}
 .cell.c-fd .b,.cell.c-fp .b{white-space:normal}
 .cell{overflow:hidden}
-.tr .c-eta,.tr .c-fp,.tr .c-tp,.tr .c-fd,.tr .c-tipo,.tr .c-op,.tr .c-term,.tr .c-next{text-align:center}
+.tr .c-cont,.tr .c-eta,.tr .c-fp,.tr .c-tp,.tr .c-fd,.tr .c-tipo,.tr .c-op,.tr .c-term,.tr .c-next{text-align:center}
 .tr .c-next .nx{justify-content:center}
 .tr .c-eta .fd2,.tr .c-fp .fd2,.tr .c-fd .fd2{align-items:center}
 @media (max-width:820px){.tr .c-eta{text-align:right}.tr .c-eta .fd2{align-items:flex-end}}
@@ -187,6 +187,8 @@ button.kpi:hover{border-color:var(--ink-3)}
 .cell.c-term .term,.cell.c-ff .ff{overflow-wrap:normal;word-break:normal;overflow:hidden;text-overflow:clip}
 .cell.c-tp .tp{white-space:normal;overflow:visible;color:var(--ink-2)}
 .cell.c-term .term{white-space:normal;overflow:hidden;color:var(--ink-2)}
+.cell.c-cont .cn{display:block;font-family:var(--f-mono);font-size:11px;font-weight:600;letter-spacing:.02em;white-space:nowrap;line-height:1.35}
+.cell.c-cont .vacio{color:var(--ink-3)}
 .cell.c-ff .ff{white-space:normal;overflow:hidden;color:var(--ink-2)}
 .tag{font-family:var(--f-body);font-weight:700;font-size:11px;letter-spacing:.04em;padding:2px 7px;border-radius:3px;background:var(--ink-2);color:var(--surface)}
 .op{font-weight:800;font-size:11.5px;letter-spacing:.04em;color:var(--cel-ico)}
@@ -195,7 +197,7 @@ button.kpi:hover{border-color:var(--ink-3)}
 /* Tracking table */
 .tbl{background:var(--surface);border:1px solid var(--line);border-radius:0 0 8px 8px;overflow:hidden}
 .tbl > .tr:first-child{border-top:0}
-.tr{display:grid;grid-template-columns:var(--refw,150px) minmax(196px,1.2fr) minmax(130px,.7fr) minmax(96px,.8fr) 68px 56px 82px 82px 68px 86px 92px minmax(192px,2.4fr) 54px;gap:9px;align-items:center;padding:0 14px 0 0;border-top:1px solid var(--line-2);width:100%;text-align:left;background:var(--surface);border-left:0;border-right:0;border-bottom:0}
+.tr{display:grid;grid-template-columns:var(--refw,150px) minmax(190px,1.2fr) minmax(96px,.55fr) minmax(108px,.6fr) minmax(84px,.8fr) 62px 52px 78px 76px 64px 80px 86px minmax(164px,2.2fr) 54px;gap:9px;align-items:center;padding:0 14px 0 0;border-top:1px solid var(--line-2);width:100%;text-align:left;background:var(--surface);border-left:0;border-right:0;border-bottom:0}
 .tr.th{border-top:0;background:var(--cel-th);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--cel-ink);font-weight:700}
 .tr>div{padding-block:9px}
 .tr>div:first-child{padding-left:14px;align-self:stretch;display:flex;flex-direction:column;justify-content:center}
@@ -230,12 +232,12 @@ button.kpi:hover{border-color:var(--ink-3)}
 .s-or .dot.done{background:var(--st-or)} .s-ye .dot.done{background:#C99A0E} .s-gr .dot.done{background:var(--st-gr)} .s-az .dot.done{background:var(--st-az)}
 .dot.na{opacity:.35}
 .stage{font-size:11.5px;color:var(--ink-3);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-@media (max-width:1500px){.tr{grid-template-columns:var(--refw,140px) minmax(180px,1.2fr) minmax(122px,.7fr) minmax(84px,.8fr) 60px 52px 74px 74px 60px 80px 76px minmax(150px,2fr) 50px;gap:6px}}
-@media (max-width:1280px){.tr{grid-template-columns:var(--refw,140px) minmax(172px,1.2fr) minmax(122px,.7fr) minmax(80px,.8fr) 60px 54px 74px 74px 58px 78px 74px minmax(150px,2fr);gap:6px}.tr .c-port{display:none}}
+@media (max-width:1500px){.tr{grid-template-columns:var(--refw,140px) minmax(160px,1.2fr) minmax(82px,.55fr) minmax(84px,.6fr) minmax(76px,.8fr) 60px 52px 70px 70px 60px 76px 76px minmax(140px,2fr) 50px;gap:6px}}
+@media (max-width:1280px){.tr{grid-template-columns:var(--refw,140px) minmax(156px,1.2fr) minmax(80px,.55fr) minmax(84px,.6fr) minmax(72px,.8fr) 60px 54px 70px 70px 58px 74px 74px minmax(140px,2fr);gap:6px}.tr .c-port{display:none}}
 @media (max-width:820px){
   .tr.th{display:none}
   .tr{grid-template-columns:1fr auto;grid-template-areas:"ref eta" "bq bq" "prog prog" "next next";row-gap:6px}
-  .tr .c-ref{grid-area:ref}.tr .c-eta{grid-area:eta;text-align:right}.tr .c-bq{grid-area:bq}.tr .c-prog{grid-area:prog}.tr .c-next{grid-area:next}.tr .c-tipo,.tr .c-op,.tr .c-ff,.tr .c-term,.tr .c-fp,.tr .c-fd,.tr .c-tp{display:none}
+  .tr .c-ref{grid-area:ref}.tr .c-eta{grid-area:eta;text-align:right}.tr .c-bq{grid-area:bq}.tr .c-prog{grid-area:prog}.tr .c-next{grid-area:next}.tr .c-tipo,.tr .c-op,.tr .c-cont,.tr .c-ff,.tr .c-term,.tr .c-fp,.tr .c-fd,.tr .c-tp{display:none}
 }
 
 /* Gastos */
@@ -668,7 +670,7 @@ function dotsHTML(e,a){
 }
 function renderSeg(){
   const rows=filtered().sort(ordenar);
-  const head=`<div class="tr th"><div>Referencia / cliente</div><div>Buque / HBL / MBL</div><div class="c-term">Terminal</div><div class="c-ff">Freight<br>forwarder</div><div class="c-op">Tipo de<br>operación</div><div>Tipo de<br>carga</div><div>ETA</div><div class="c-fp">Fecha<br>previo</div><div class="c-tp">Tipo de<br>previo</div><div class="c-fd">Fecha<br>despacho</div><div>Avance</div><div>Siguiente hito</div><div class="c-port">Días en puerto</div></div>`;
+  const head=`<div class="tr th"><div>Referencia / cliente</div><div>Buque / HBL / MBL</div><div class="c-cont">Contenedor<br>no.</div><div class="c-term">Terminal</div><div class="c-ff">Freight<br>forwarder</div><div class="c-op">Tipo de<br>operación</div><div>Tipo de<br>carga</div><div>ETA</div><div class="c-fp">Fecha<br>previo</div><div class="c-tp">Tipo de<br>previo</div><div class="c-fd">Fecha<br>despacho</div><div>Avance</div><div>Siguiente hito</div><div class="c-port">Días en puerto</div></div>`;
   const body=rows.map(({id,e,a})=>{
     let nextTxt;
     if(e.estado==="cerrada"){const f=hit(e,"despacho").r;nextTxt=`<div class="a"><span class="sema ${e.semaforo||""}"></span> <span class="${e.semaforo==="rojo"?"sem-rojo":e.semaforo==="verde"?"sem-verde":""}">Despachado</span></div><div class="${e.semaforo==="rojo"?"sem-rojo":e.semaforo==="verde"?"sem-verde":""}">${fd2(f)}</div><div class="b">${e.semaforo==="rojo"?`<span class="sem-rojo">Reconocimiento aduanero</span>`:e.semaforo==="verde"?`<span class="sem-verde">Desaduanamiento libre</span>`:""}${e.pedimento?" · Ped. "+esc(e.pedimento):""}</div>`}
@@ -677,6 +679,7 @@ function renderSeg(){
     return `<button type="button" class="tr s-${status(e)}${status(e)==="gr"&&e.semaforo==="rojo"?" sem-r":""}" data-open="${esc(id)}" title="${esc(STATUS[status(e)])}">
       <div class="cell c-ref"><div class="a ref">${esc(e.ref)}</div><div class="b">${esc(e.cliente)}</div></div>
       <div class="cell c-bq"><div class="a" title="${esc((e.buque||"")+" "+(e.viaje||""))}">${esc(e.buque||"—")} <span class="muted mono">${esc(e.viaje||"")}</span></div>${lineasBL(e)}</div>
+      <div class="cell c-cont">${contenedoresHTML(e)}</div>
       <div class="cell c-term"><div class="b term">${esc(e.terminal||"Sin asignar")}</div></div>
       <div class="cell c-ff"><div class="b ff">${esc(e.ff||"—")}</div></div>
       <div class="cell c-op">${e.operacion==="EXPORTACION"?'<span class="op exp">EXP</span>':e.operacion==="IMPORTACION"?'<span class="op imp">IMP</span>':""}</div>
@@ -766,6 +769,8 @@ const dos=n=>n==null?"":String(Math.round(n*100)/100);
 document.addEventListener("input",ev=>{const el=ev.target;if(!el.closest||!el.closest("#drawer"))return;
   if(el.id==="fx-peso"){const n=numero(el.value),o=document.getElementById("fx-pesoLbs");if(o)o.value=n==null?"":dos(n*LB)}
   else if(el.id==="fx-pesoLbs"){const n=numero(el.value),o=document.getElementById("fx-peso");if(o)o.value=n==null?"":dos(n/LB)}});
+function contenedoresHTML(e){const l=String(e.contenedores||"").toUpperCase().split(/[\s,;\/]+/).filter(Boolean);
+  return l.length?l.map(c=>`<span class="cn">${esc(c)}</span>`).join(""):'<span class="vacio">—</span>'}
 const F=(f,l,cls="",type="text",extra="")=>`<label class="${cls}">${l}<input id="fx-${f}" data-f="${f}" type="${type}" ${extra}></label>`;
 let needDrawer=false;
 function renderDrawer(){
@@ -819,7 +824,7 @@ function renderDrawerInner(){
         ${F("ff","Forwarder / consolidador","wide")}${F("origen_puerto","Puerto de origen")}
       </div></section>
       <section class="sec"><h3>Conocimiento de embarque</h3><div class="fields">
-        ${F("hbl","House B/L","", "text",'class="mono"')}${F("mbl","Master B/L","","text",'class="mono"')}${F("contenedores","Contenedor(es)","","text",'class="mono"')}
+        ${F("hbl","House B/L","", "text",'class="mono"')}${F("mbl","Master B/L","","text",'class="mono"')}${F("contenedores","Contenedor no.","","text",'class="mono" placeholder="ABCU1234567"')}
         <label>Tipo de carga<select id="fx-tipo" data-f="tipo"><option value="">—</option><option>LCL</option><option>FCL</option></select></label>
         ${F("mercancia","Mercancía","wide")}
         ${F("bultos","Bultos","","text",'inputmode="numeric" autocomplete="off"')}
@@ -873,7 +878,7 @@ function renderNew(){
     <label>Tipo de operación<select id="n-op"><option value="">SIN ESPECIFICAR</option><option value="IMPORTACION">IMPORTACIÓN</option><option value="EXPORTACION">EXPORTACIÓN</option></select></label>
     <label>Tipo de carga<select id="n-tipo"><option>LCL</option><option>FCL</option></select></label>
     <label>ETA estimada<input type="date" id="n-eta"></label>
-    <label>House B/L<input id="n-hbl" class="mono"></label><label>Master B/L<input id="n-mbl" class="mono"></label>
+    <label>House B/L<input id="n-hbl" class="mono"></label><label>Master B/L<input id="n-mbl" class="mono"></label><label>Contenedor no.<input id="n-cont" class="mono" placeholder="ABCU1234567"></label>
     <label class="full">Mercancía<input id="n-merc"></label>
   </div><div id="n-err" class="muted" style="margin-top:8px"></div><div style="margin-top:12px;display:flex;gap:8px"><button class="btn primary" type="submit">Crear embarque</button><button class="btn" type="button" data-close>Cancelar</button></div></form></div>
   <datalist id="dl-cli2">${clientes().map(c=>`<option value="${esc(c)}">`).join("")}</datalist>`;
@@ -959,7 +964,7 @@ document.addEventListener("submit",ev=>{
     if(!id){$("#n-err").textContent="Escribe una referencia válida, por ejemplo MA143/26.";return}
     if(EMB[id]){$("#n-err").textContent="La referencia "+ref+" ya existe. Ábrela desde Seguimiento.";return}
     const hitos={};HITOS.forEach(h=>hitos[h.k]={e:"",c:"",r:""});hitos.arribo.e=$("#n-eta").value;
-    const doc={ref,operacion:$("#n-op").value,cliente:$("#n-cli").value.trim().toUpperCase(),buque:$("#n-buque").value.trim().toUpperCase(),viaje:$("#n-viaje").value.trim().toUpperCase(),bandera:"",hbl:$("#n-hbl").value.trim().toUpperCase(),mbl:$("#n-mbl").value.trim().toUpperCase(),ff:"",tipo:$("#n-tipo").value,previo:"PREVIO",mercancia:$("#n-merc").value.trim().toUpperCase(),marca:"",factura:"",peso:null,bultos:null,contenedores:"",terminal:"",claveCR:"",pedimento:"",semaforo:"",estado:"activa",diasLibres:null,nota:"",hitos,gastos:[],creado:new Date().toISOString()};
+    const doc={ref,operacion:$("#n-op").value,cliente:$("#n-cli").value.trim().toUpperCase(),buque:$("#n-buque").value.trim().toUpperCase(),viaje:$("#n-viaje").value.trim().toUpperCase(),bandera:"",hbl:$("#n-hbl").value.trim().toUpperCase(),mbl:$("#n-mbl").value.trim().toUpperCase(),ff:"",tipo:$("#n-tipo").value,previo:"PREVIO",mercancia:$("#n-merc").value.trim().toUpperCase(),marca:"",factura:"",peso:null,bultos:null,contenedores:$("#n-cont").value.trim().toUpperCase(),terminal:"",claveCR:"",pedimento:"",semaforo:"",estado:"activa",diasLibres:null,nota:"",hitos,gastos:[],creado:new Date().toISOString()};
     api("POST","/api/admin/opm/embarques",doc).then(r=>{EMB[r.id]=doc;ui.newMode=false;ui.open=r.id;toast("Embarque "+ref+" creado");renderAll();renderDrawer()}).catch(err=>{$("#n-err").textContent=err.message});
   }
 });
