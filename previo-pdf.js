@@ -162,8 +162,8 @@ async function generarPrevio(rep, ref) {
 
   // ---------- 3. Partidas ----------
   const COLS = [
-    ['No.', 0.05], ['Desc. prod.', 0.25], ['Marca', 0.11], ['Modelo', 0.11], ['Origen', 0.10],
-    ['Cant. pzs x cartón', 0.11], ['Mercancía', 0.15], ['Cant. pzs', 0.12],
+    ['No.', 0.05], ['Desc. prod.', 0.31], ['Marca', 0.10], ['Modelo', 0.10], ['Origen', 0.09],
+    ['Cant. pzs x cartón', 0.11], ['Mercancía', 0.13], ['Cant. pzs', 0.11],
   ].map(([n, f]) => [n, f * AN]);
   const enc = (yy) => {
     yy = barra('PARTIDAS', yy);
@@ -192,9 +192,11 @@ async function generarPrevio(rep, ref) {
     lineas.forEach((lin, j) => {
       const w = COLS[j][1];
       pg.drawRectangle({ x, y: y - alto, width: w, height: alto, borderColor: LINEA, borderWidth: 0.6 });
+      // Texto centrado a lo ancho y a lo alto de la celda
+      const arriba = (alto - lin.length * 10.5) / 2;
       lin.forEach((l, k) => {
-        const px = j === 0 || j >= 5 ? x + (w - ancho(l, 8.5, j === 0 ? FB : F)) / 2 : x + 4;
-        txt(l, px, y - 13 - k * 10.5, 8.5, j === 0 ? FB : F, j === 0 ? CAFE_ICO : TINTA);
+        const px = x + (w - ancho(l, 8.5, j === 0 ? FB : F)) / 2;
+        txt(l, px, y - arriba - 8 - k * 10.5, 8.5, j === 0 ? FB : F, j === 0 ? CAFE_ICO : TINTA);
       });
       x += w;
     });

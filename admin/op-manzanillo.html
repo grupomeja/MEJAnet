@@ -406,12 +406,12 @@ main{padding-bottom:40px}
 .pv-ops label:has(input:checked){font-weight:800}
 .pv-tabla{width:100%;border-collapse:collapse;margin-top:0;table-layout:fixed;font-size:11.5px}
 .pv-tabla th{background:var(--pv-suave);color:var(--pv-cafe);font-size:9px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:6px 4px;border:1px solid var(--pv-line);line-height:1.2}
-.pv-tabla td{border:1px solid var(--pv-line);padding:0;vertical-align:top}
-.pv-tabla td.n{text-align:center;font-weight:800;color:var(--pv-ico);padding-top:7px;position:relative}
-.pv-tabla td input,.pv-tabla td textarea{border:0;padding:6px 5px;font-size:11.5px;min-height:30px}
+.pv-tabla td{border:1px solid var(--pv-line);padding:0;vertical-align:middle}
+.pv-tabla td.n{text-align:center;font-weight:800;color:var(--pv-ico);position:relative}
+.pv-tabla td input,.pv-tabla td textarea{border:0;padding:6px 5px;font-size:11.5px;min-height:30px;text-align:center}
 .pv-tabla td textarea{resize:none;overflow:hidden;display:block;line-height:1.3}
 .pv-tabla td.cen input{text-align:center}
-.pv-tabla .del{position:absolute;left:-26px;top:5px;width:20px;height:20px;border-radius:50%;border:1px solid #c9b9a0;background:#fff;color:#7A1C1C;font-weight:700;font-size:13px;line-height:16px;padding:0;cursor:pointer;opacity:0;transition:opacity .15s}
+.pv-tabla .del{position:absolute;left:-26px;top:50%;margin-top:-10px;width:20px;height:20px;border-radius:50%;border:1px solid #c9b9a0;background:#fff;color:#7A1C1C;font-weight:700;font-size:13px;line-height:16px;padding:0;cursor:pointer;opacity:0;transition:opacity .15s}
 .pv-tabla tr:hover .del,.pv-tabla .del:focus{opacity:1}
 .pv-add{margin-top:10px;border:1px dashed var(--pv-ico);background:var(--pv-suave);color:var(--pv-cafe);font-weight:700;font-size:12px;padding:6px 14px;border-radius:6px;cursor:pointer}
 .pv-add:hover{background:var(--pv-beige)}
@@ -976,7 +976,7 @@ let tt;function toast(t){const el=$("#toast");el.textContent=t;el.hidden=false;c
 const PV={id:null,datos:null,t:null};
 const PV_TIPOS=[["20DC","20' DC"],["40DC","40' DC"],["40HC","40' HC"],["SUELTA","Carga suelta"]];
 const PV_PALLETS=[["MADERA","Madera"],["PLASTICO","Plástico"],["SIN","Sin pallets"]];
-const PV_COLS=[["desc","Desc. prod.",25],["marca","Marca",11],["modelo","Modelo",11],["origen","Origen",10],["pzsCarton","Cant. pzs x cartón",11],["mercancia","Mercancía",15],["cant","Cant. pzs",12]];
+const PV_COLS=[["desc","Desc. prod.",31],["marca","Marca",10],["modelo","Modelo",10],["origen","Origen",9],["pzsCarton","Cant. pzs x cartón",11],["mercancia","Mercancía",13],["cant","Cant. pzs",11]];
 const pvVacia=()=>({desc:"",marca:"",modelo:"",origen:"",pzsCarton:"",mercancia:"",cant:""});
 // Datos iniciales tomados de la ficha y del tablero
 function pvDesdeFicha(e){
