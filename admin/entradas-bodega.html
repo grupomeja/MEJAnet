@@ -13,7 +13,9 @@
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
   main{max-width:none;margin:0 auto;padding:16px 20px}
-  .logo img{height:40px;width:auto;display:block}
+  .logo .marca{display:block;width:162px;height:40px;background:#875a86;
+    -webkit-mask:url(/logo.png) left center/contain no-repeat;mask:url(/logo.png) left center/contain no-repeat}
+  @media (prefers-color-scheme:dark){.logo .marca{background:#c9a3c8}}
   .top{display:grid;grid-template-columns:1fr auto 1fr;gap:10px 16px;align-items:center;margin:0 0 14px}
   .top h1{margin:0;text-align:center;font-size:20px}
   /* Título con el estilo lila del botón Entradas Bodega */
@@ -46,7 +48,9 @@
   .tablewrap{overflow:auto;max-height:70vh;background:var(--card);border:1px solid var(--line);border-radius:10px}
   table{border-collapse:collapse;width:100%;font-size:12px}
   th,td{padding:5px 4px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
-  th{position:sticky;top:0;z-index:1;font-size:11px;text-transform:uppercase;color:var(--muted);letter-spacing:.4px;background:var(--soft)}
+  th{position:sticky;top:0;z-index:1;font-size:11px;text-transform:uppercase;letter-spacing:.4px;
+    background:linear-gradient(180deg,#f4ecf4,#ebdeeb);color:#875a86;font-weight:800;border-bottom:1px solid #d9c3d8}
+  @media (prefers-color-scheme:dark){th{background:linear-gradient(180deg,#3a2c3a,#332633);color:#e2c4e1;border-bottom-color:#5a435a}}
   td{cursor:text;font-variant-numeric:tabular-nums}
   td:hover{outline:1px dashed var(--accent);outline-offset:-3px}
   td[data-c=cliente],td[data-c=linea],td[data-c=po],td[data-c=proveedor],td[data-c=descripcion]{white-space:normal;min-width:64px}
@@ -106,7 +110,7 @@
 <body>
 <main>
   <div class="top">
-    <a class="logo" href="/modulos" aria-label="MEJAnet"><img src="/logo.png" alt="Grupo Meja"></a>
+    <a class="logo" href="/modulos" aria-label="MEJAnet"><span class="marca" role="img" aria-label="Grupo Meja"></span></a>
     <h1 class="titulo"><span class="ico" aria-hidden="true"><svg viewBox="0 0 64 64"> <path d="M2 30 L20 22 H62 V52 H2 Z" fill="currentColor"/> <rect x="24" y="16" width="36" height="11" rx="1" fill="#fff"/> <rect x="25.5" y="17.5" width="33" height="8" fill="currentColor"/> <text x="42" y="24" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="7" fill="#fff" letter-spacing=".3">BODEGA</text> <rect x="20" y="24" width="1.6" height="28" fill="#fff"/> <rect x="7" y="38" width="7" height="14" fill="#fff"/> <rect x="31" y="35" width="22" height="13" fill="#fff"/> <g fill="currentColor"><rect x="31" y="37.5" width="22" height="1.2"/><rect x="31" y="40.5" width="22" height="1.2"/><rect x="31" y="43.5" width="22" height="1.2"/></g> <path d="M29 48h26v4H29z" fill="#fff"/><path d="M30.5 49.5h23v2.5h-23z" fill="currentColor"/> <rect x="1" y="52" width="62" height="2.5" fill="currentColor"/> </svg></span>TABLERO DE ENTRADAS BODEGA</h1>
     <div class="acc"><a class="nuevo" href="/entradas-bodega/nueva">+ Agregar Nuevo</a><a class="inicio" href="/modulos">MEJAnet</a></div>
   </div>
