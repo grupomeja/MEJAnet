@@ -12,7 +12,7 @@ const FILE = path.join(db.DIR, 'op_manzanillo.json');
 const SEED = path.join(__dirname, 'seed', 'op_manzanillo.json'); // carga inicial desde el Excel "REPORTE DE DESPACHOS"
 
 const HITOS = ['zarpe', 'arribo', 'revalidacion', 'previo', 'despacho', 'retiro'];
-const TEXTO = ['ref', 'operacion', 'cliente', 'semaforoFecha', 'bultos', 'buque', 'viaje', 'bandera', 'hbl', 'mbl', 'ff', 'tipo', 'previo', 'mercancia', 'marca', 'factura',
+const TEXTO = ['ref', 'operacion', 'cliente', 'semaforoFecha', 'bultos', 'tipoCont', 'buque', 'viaje', 'bandera', 'hbl', 'mbl', 'ff', 'tipo', 'previo', 'mercancia', 'marca', 'factura',
   'contenedores', 'terminal', 'claveCR', 'pedimento', 'semaforo', 'estado', 'nota', 'origen', 'origen_puerto', 'creado'];
 const NUM = ['peso', 'diasLibres'];
 const BOOL = ['pedimentoPagado'];

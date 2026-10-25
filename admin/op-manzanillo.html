@@ -217,6 +217,7 @@ button.kpi:hover{border-color:var(--ink-3)}
 .chk{flex-direction:row!important;align-items:center;gap:8px!important;color:var(--ink)!important;font-size:13.5px!important;align-self:end;padding-bottom:6px}
 .chk input{width:auto!important}
 .chk-ped{justify-self:start;margin-right:0}
+.cont-fila{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:8px;min-width:0}
 .desp-fila{grid-column:1/-1;display:grid;grid-template-columns:auto minmax(0,1fr) minmax(0,1.3fr) minmax(0,1fr);gap:6px 12px;align-items:end}
 #fx-semaforo.sem-verde{color:var(--ok);font-weight:800}
 #fx-semaforo.sem-rojo{color:var(--bad);font-weight:800}
@@ -919,7 +920,7 @@ function renderDrawerInner(){
         ${F("ff","Forwarder / consolidador","wide")}${F("origen_puerto","Puerto de origen")}
       </div></section>
       <section class="sec"><h3>Conocimiento de embarque</h3><div class="fields">
-        ${F("hbl","House B/L","", "text",'class="mono"')}${F("mbl","Master B/L","","text",'class="mono"')}${F("contenedores","Contenedor no.","","text",'class="mono" placeholder="-"')}
+        ${F("hbl","House B/L","", "text",'class="mono"')}${F("mbl","Master B/L","","text",'class="mono"')}<div class="cont-fila">${F("contenedores","Contenedor no.","","text",'class="mono" placeholder="-"')}<label>Tipo<select id="fx-tipoCont" data-f="tipoCont"><option value="">—</option><option value="20DC">20' DC</option><option value="40DC">40' DC</option><option value="40HC">40' HC</option><option value="SUELTA">Carga suelta</option></select></label></div>
         <label>Tipo de carga<select id="fx-tipo" data-f="tipo"><option value="">—</option><option>LCL</option><option>FCL</option></select></label>
         ${F("mercancia","Mercancía","wide")}
         ${F("bultos","Bultos","","text",'placeholder="Ej. 27 CARTONES"')}
@@ -1031,7 +1032,7 @@ function pvDesdeFicha(e){
   const pv=hit(e,"previo");
   return {cliente:e.cliente||"",fecha:pv.r||pv.e||iso(new Date()),trafico:e.ref||"",factura:e.factura||"",
     buque:[e.buque,e.viaje?"V-"+e.viaje:""].filter(Boolean).join(" "),contenedor:e.contenedores||"",
-    tipoCont:e.tipo==="LCL"?"SUELTA":"",sello:"",palAlto:"",palLargo:"",palAncho:"",operadora:e.terminal||"",claveCR:e.claveCR||"",
+    tipoCont:e.tipoCont||(e.tipo==="LCL"?"SUELTA":""),sello:"",palAlto:"",palLargo:"",palAncho:"",operadora:e.terminal||"",claveCR:e.claveCR||"",
     bultos:e.bultos&&e.bultos!=="0"?String(e.bultos):"",peso:e.peso?String(e.peso):"",pallets:"",palletsCant:"",partidas:[pvVacia(),pvVacia(),pvVacia(),pvVacia()]};
 }
 function abrirPrevio(id){
@@ -1222,7 +1223,7 @@ window.addEventListener("resize",()=>{clearTimeout(window.__mf);window.__mf=setT
 function csvCell(v){v=v==null?"":String(v);return /[",\n;]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
 async function exportCSV(){
   const xs=filtered({ignoreEstado:ui.view==="ejec"});
-  const base=["ref","operacion","cliente","estado","buque","viaje","bandera","terminal","claveCR","ff","hbl","mbl","contenedores","tipo","previo","mercancia","marca","factura","peso","bultos","pedimento","pedimentoPagado","semaforo","semaforoFecha","diasLibres","nota"];
+  const base=["ref","operacion","cliente","estado","buque","viaje","bandera","terminal","claveCR","ff","hbl","mbl","contenedores","tipoCont","tipo","previo","mercancia","marca","factura","peso","bultos","pedimento","pedimentoPagado","semaforo","semaforoFecha","diasLibres","nota"];
   const hcols=[];HITOS.forEach(h=>["e","r"].forEach(k=>hcols.push([h.k,k])));
   const head=base.concat(hcols.map(([h,k])=>h+"_"+({e:"estimada",r:"real"})[k]),["total_mxn","total_usd"]);
   const lines=[head.join(",")];
