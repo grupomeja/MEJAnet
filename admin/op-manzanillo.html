@@ -333,6 +333,7 @@ aside.drawer{position:fixed;top:0;right:0;bottom:0;width:min(820px,100%);backgro
 #drawer .dh{padding-top:calc(10px + env(safe-area-inset-top,0px));padding-bottom:10px;gap:10px}
 #drawer .dh .refbig{font-size:17px}
 #drawer .dh .cli{font-size:14.5px;font-weight:700;color:var(--brand)}
+#drawer .dh .cli.nota-nuevo{font-size:12px;font-weight:500;color:var(--ink-2)}
 #drawer .dh .meta{gap:6px;margin-top:6px}
 #drawer .dh .meta select,#drawer .mini-select{font-size:11px;padding:1px 6px}
 #drawer .pill{font-size:10.5px;padding:1px 7px}
@@ -970,7 +971,7 @@ function renderDrawerInner(){
 }
 function renderNew(){
   const d=$("#drawer");
-  d.innerHTML=`<div class="dh"><div class="id"><div class="refbig">Nuevo embarque</div><div class="cli">Registra lo básico; el resto se completa en la ficha.</div></div><button class="x" type="button" data-close aria-label="Cerrar">×</button></div>
+  d.innerHTML=`<div class="dh"><div class="id"><div class="refbig">Nuevo embarque</div><div class="cli nota-nuevo">Registra lo básico; el resto se completa en la ficha.</div></div><button class="x" type="button" data-close aria-label="Cerrar">×</button></div>
   <div class="db"><form class="card" id="newform"><div class="newform fields" style="grid-template-columns:repeat(2,minmax(0,1fr))">
     <label>Referencia<input id="n-ref" class="mono" required></label>
     <label>Cliente<input id="n-cli" list="dl-cli2" required></label>
