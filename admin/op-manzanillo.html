@@ -507,8 +507,8 @@ main{padding-bottom:40px}
     </span>
     <label class="orden" id="f-orden-w">Ordenar por
       <select id="f-orden" aria-label="Ordenar por">
-        <option value="prioridad">Prioridad (vencidos primero)</option>
         <option value="estatus">Estatus (color)</option>
+        <option value="prioridad">Prioridad (vencidos primero)</option>
         <option value="eta">ETA (más próxima primero)</option>
         <option value="despacho">Fecha de despacho (más reciente)</option>
         <option value="ref">Referencia (más nueva primero)</option>
@@ -570,8 +570,8 @@ $("#hoy").textContent="Puerto de Manzanillo · "+fd(TODAY);
 let canWrite=true;
 let EMB={};            // id -> doc
 let loaded=false;
-const ui={view:"ejec",cliente:"",terminal:"",q:"",estado:"activa",tipo:"",orden:"prioridad",open:null,newMode:false,confirmDel:false};
-try{const v=localStorage.getItem("om.view");if(v)ui.view=v;const o=localStorage.getItem("om.orden");if(o)ui.orden=o}catch(e){}
+const ui={view:"ejec",cliente:"",terminal:"",q:"",estado:"activa",tipo:"",orden:"estatus",open:null,newMode:false,confirmDel:false};
+try{const v=localStorage.getItem("om.view");if(v)ui.view=v;const o=localStorage.getItem("om.orden2");if(o)ui.orden=o}catch(e){}
 
 /* ---------- derived logic ---------- */
 function hit(e,k){return(e.hitos&&e.hitos[k])||{}}
@@ -1166,7 +1166,7 @@ document.addEventListener("change",ev=>{
   const el=ev.target;
   if(el.id==="f-cliente"){ui.cliente=el.value;renderAll();return}
   if(el.id==="f-terminal"){ui.terminal=el.value;renderAll();return}
-  if(el.id==="f-orden"){ui.orden=el.value;try{localStorage.setItem("om.orden",ui.orden)}catch(e){}renderAll();return}
+  if(el.id==="f-orden"){ui.orden=el.value;try{localStorage.setItem("om.orden2",ui.orden)}catch(e){}renderAll();return}
   if(!ui.open||!el.closest("#drawer"))return;
   if(el.dataset.h){const k=el.dataset.h,f=el.dataset.k;const patch={hitos:{[k]:{[f]:el.value}}};
     if(k==="retiro"&&f==="r"&&el.value&&EMB[ui.open].estado==="activa"){patch.estado="cerrada";toast("Retiro registrado: la operación pasa a Cerradas")}
@@ -1236,7 +1236,7 @@ async function exportCSV(){
 }
 
 /* ---------- boot ---------- */
-$("#f-orden").value=ui.orden;if(!$("#f-orden").value){ui.orden="prioridad";$("#f-orden").value="prioridad"}
+$("#f-orden").value=ui.orden;if(!$("#f-orden").value){ui.orden="estatus";$("#f-orden").value="estatus"}
 syncSeg();setView(["ejec","seg","gas"].includes(ui.view)?ui.view:"ejec");
 load();
 setInterval(()=>{if(!document.hidden&&!isEditing())load()},60000); // trae cambios de otros usuarios cada minuto
