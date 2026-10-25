@@ -609,7 +609,7 @@ function analyze(e){
   const stage=e.estado==="cerrada"?"Cerrada":e.estado==="cancelada"?"Cancelada":(next?next.st:"Por cerrar");
   return{hs,last,next,nextIdx,nd,late,arrEff,diasPuerto,libres,alerts,stage,eta:arr.r||arr.e||""};
 }
-const STATUS={no:"Pendiente ETA y revalidación",or:"Revalidado",az:"Previo programado",ye:"Pedimento pagado",gr:"Desaduanado / cumplido"};
+const STATUS={no:"Pendiente ETA y revalidación",or:"Revalidado",az:"Previo programado",ye:"Pedimento pagado · previo programado",gr:"Desaduanado / cumplido"};
 // Verde: despachado. Amarillo: pedimento asignado + pagado + fecha de despacho.
 // Azul: hay fecha de previo. Naranja: hay fecha de revalidación. Sin color: lo demás.
 // Con fecha real de retiro de puerto la operación sale de la lista de activas (cuenta como cerrada)
@@ -618,8 +618,8 @@ function status(e){
   const di=hit(e,"despacho"),pv=hit(e,"previo"),rv=hit(e,"revalidacion");
   // Verde solo si ya tiene resultado de semáforo (libre o reconocimiento) o la operación está cerrada
   if(e.estado==="cerrada"||e.semaforo==="verde"||e.semaforo==="rojo")return "gr";
-  // Amarillo: pedimento capturado y pagado (con o sin fecha de despacho)
-  if(e.pedimento&&e.pedimentoPagado)return "ye";
+  // Amarillo: pedimento capturado y pagado, y previo programado (fecha estimada o real de previo)
+  if(e.pedimento&&e.pedimentoPagado&&(pv.e||pv.r))return "ye";
   if(pv.e||pv.r)return "az";
   if(rv.e||rv.r)return "or";
   return "no";
