@@ -609,7 +609,7 @@ function analyze(e){
   const stage=e.estado==="cerrada"?"Cerrada":e.estado==="cancelada"?"Cancelada":(next?next.st:"Por cerrar");
   return{hs,last,next,nextIdx,nd,late,arrEff,diasPuerto,libres,alerts,stage,eta:arr.r||arr.e||""};
 }
-const STATUS={no:"Pendiente ETA y revalidación",or:"Revalidado",az:"Previo programado",ye:"Pedimento pagado · despacho programado",gr:"Desaduanado / cumplido"};
+const STATUS={no:"Pendiente ETA y revalidación",or:"Revalidado",az:"Previo programado",ye:"Pedimento pagado",gr:"Desaduanado / cumplido"};
 // Verde: despachado. Amarillo: pedimento asignado + pagado + fecha de despacho.
 // Azul: hay fecha de previo. Naranja: hay fecha de revalidación. Sin color: lo demás.
 // Con fecha real de retiro de puerto la operación sale de la lista de activas (cuenta como cerrada)
@@ -789,7 +789,7 @@ function renderSeg(){
       <div class="cell c-next">${nextTxt}</div>
       <div class="cell c-port num" style="text-align:center">${a.diasPuerto===null?"—":a.diasPuerto+" d"}</div>
     </button>`}).join("");
-  $("#v-seg").innerHTML=`<div class="seg-head"><div class="legend top"><span><span class="swatch" style="background:var(--surface)"></span>${STATUS.no}</span><span><span class="swatch" style="background:var(--st-or)"></span>${STATUS.or}</span><span><span class="swatch" style="background:var(--st-az)"></span>${STATUS.az}</span><span><span class="swatch" style="background:var(--st-ye)"></span>${STATUS.ye}</span><span><span class="swatch" style="background:var(--st-gr)"></span>${STATUS.gr}</span><span class="avance-ley">Avance: Zarpe · Arribo · Revalidación · Previo · Despacho · Retiro</span></div>
+  $("#v-seg").innerHTML=`<div class="seg-head"><div class="legend top"><span><span class="swatch" style="background:var(--st-gr)"></span>${STATUS.gr}</span><span><span class="swatch" style="background:var(--st-ye)"></span>${STATUS.ye}</span><span><span class="swatch" style="background:var(--st-az)"></span>${STATUS.az}</span><span><span class="swatch" style="background:var(--st-or)"></span>${STATUS.or}</span><span><span class="swatch" style="background:var(--surface)"></span>${STATUS.no}</span><span class="avance-ley">Avance: Zarpe · Arribo · Revalidación · Previo · Despacho · Retiro</span></div>
   <div class="tbl-head">${head}</div></div>
   <div class="tbl">${body||`<div class="empty">${loaded?"No hay embarques con estos filtros":"Cargando embarques…"}</div>`}</div>`;
   ajustarRef();
