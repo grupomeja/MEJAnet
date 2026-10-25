@@ -341,6 +341,15 @@ aside.drawer{position:fixed;top:0;right:0;bottom:0;width:min(820px,100%);backgro
 #drawer .op-sel{margin-left:0;padding:3px 16px 3px 0;font-size:11px;width:auto;flex:none;-webkit-appearance:none;appearance:none;letter-spacing:.02em;
   background:transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%238C7553' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 2px center}
 #drawer .datos-head h2{font-size:15.5px}
+/* Seguimiento de embarque con el mismo formato que Datos del embarque */
+.card-seg .seg-tit{text-align:center;font-size:15.5px!important;margin:2px 0 10px!important}
+.ht-sec{background:transparent}
+.ht-sec th{background:var(--cel-bg2);color:var(--cel-ink);font-weight:800;font-size:10.5px!important;letter-spacing:.04em;border-bottom:2px solid var(--cel-line)!important;padding:5px 9px!important}
+.ht-sec td{border-bottom:1px solid var(--cel-line)!important;padding-left:9px!important}
+.ht-sec tr:last-child td{border-bottom:0!important}
+.ht-sec td.h{color:var(--ink-2);font-weight:600}
+.ht-sec td.h .n{color:var(--cel-ico)}
+.ht-sec input[type=date]{background:var(--surface)}
 #drawer .ref-campo{font-size:10px}
 #drawer .ref-campo input{font-size:12px;padding:2px 5px}
 #drawer .secciones{gap:6px}
@@ -884,19 +893,19 @@ function renderDrawerInner(){
       ${a.diasPuerto!==null?`<span class="pill">${a.diasPuerto} d en puerto</span>`:""}
       ${a.libres?`<span class="pill ${a.libres.rest<0?"bad":a.libres.rest<=3?"warn":""}">Libres hasta ${fd(a.libres.vence)}</span>`:""}
     </div>
-    <div style="margin-top:8px"><button class="btn sm btn-previo" type="button" id="b-previo">Reporte de previo</button></div>
+    <div style="margin-top:14px"><button class="btn sm btn-previo" type="button" id="b-previo">Reporte de previo</button></div>
     <div class="saved" id="saved"></div>
   </div><button class="x" type="button" data-close aria-label="Cerrar">×</button></div>
   <div class="db">
-    <div class="card"><h2>Seguimiento de embarque <span class="muted">estimada · real</span></h2>
-      <div class="scroll"><table class="ht"><thead><tr><th>Hito</th><th>Estimada</th><th>Real</th><th>Estado</th></tr></thead><tbody>
+    <div class="card card-seg"><h2 class="seg-tit">Seguimiento de embarque</h2>
+      <section class="sec"><div class="scroll"><table class="ht ht-sec"><thead><tr><th>Hito</th><th>Estimada</th><th>Real</th><th>Estado</th></tr></thead><tbody>
       ${HITOS.map((h,i)=>{const hh=hit(e,h.k);const na=!applicable(e,h.k);const isN=a.next===h;
         let st=na?`<span class="muted">No aplica</span>`:hh.r?`<span class="pill ok">Cumplido</span>`:isN?(a.late?`<span class="pill bad">Vencido ${diff(TODAY,a.nd)} d</span>`:`<span class="pill info">Siguiente</span>`):"";
         if(hh.r&&due(hh)&&hh.r>due(hh))st+=` <span class="muted" style="font-size:11.5px">+${diff(hh.r,due(hh))} d</span>`;
         return `<tr class="${na?"na":""} ${isN?"isnext":""} ${isN&&a.late?"late":""}"><td class="h"><span class="n">${i+1}</span>${esc(h.l)}${hh.hora?` <span class="muted mono">${esc(hh.hora)}</span>`:""}</td>
         ${["e","r"].map(k=>`<td><input type="date" id="h-${h.k}-${k}" data-h="${h.k}" data-k="${k}" value="${esc(hh[k]||"")}" class="${k==="r"&&hh.r?"real":""}" aria-label="${esc(h.l)} ${k==="e"?"estimada":"real"}" ${dis}></td>`).join("")}
         <td class="st">${st}</td></tr>`}).join("")}
-      </tbody></table></div>
+      </tbody></table></div></section>
     </div>
     <div class="card"><div class="datos-head"><div class="ref-wrap"><label class="ref-campo">Referencia<input id="fx-ref" data-f="ref" ${dis}></label><select class="op-sel" id="fx-operacion" data-f="operacion" aria-label="Tipo de operación" ${dis}><option value="">SIN ESPECIFICAR</option><option value="IMPORTACION">IMPORTACIÓN</option><option value="EXPORTACION">EXPORTACIÓN</option></select></div><h2>Datos del embarque</h2><span></span></div>
       <div class="secciones">
