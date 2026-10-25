@@ -614,8 +614,10 @@ const STATUS={no:"Pendiente ETA y revalidación",or:"Revalidado",az:"Previo prog
 // Azul: hay fecha de previo. Naranja: hay fecha de revalidación. Sin color: lo demás.
 function status(e){
   const di=hit(e,"despacho"),pv=hit(e,"previo"),rv=hit(e,"revalidacion");
-  if(e.estado==="cerrada"||di.r)return "gr";
-  if(e.pedimento&&e.pedimentoPagado&&(di.e||di.r))return "ye";
+  // Verde solo si ya tiene resultado de semáforo (libre o reconocimiento) o la operación está cerrada
+  if(e.estado==="cerrada"||e.semaforo==="verde"||e.semaforo==="rojo")return "gr";
+  // Amarillo: pedimento capturado y pagado (con o sin fecha de despacho)
+  if(e.pedimento&&e.pedimentoPagado)return "ye";
   if(pv.e||pv.r)return "az";
   if(rv.e||rv.r)return "or";
   return "no";
@@ -892,7 +894,7 @@ function renderDrawerInner(){
     <div class="refbig">${esc(e.ref)}</div><div class="cli">${esc(e.cliente||"Sin cliente")}</div>
     <div class="meta">
       <select class="mini-select" data-f="estado" aria-label="Estado" ${dis}>${["activa","cerrada","cancelada"].map(s=>`<option value="${s}" ${e.estado===s?"selected":""}>${s[0].toUpperCase()+s.slice(1)}</option>`).join("")}</select>
-      <span class="st-pill s-${status(e)}">${esc(STATUS[status(e)])}</span>
+      <span class="st-pill s-${status(e)}">${esc(status(e)==="ye"?"Pedimento pagado":STATUS[status(e)])}</span>
       ${e.tipo?`<span class="tag">${esc(e.tipo)}</span>`:""}
       <span class="pill ${a.alerts[0]?a.alerts[0].lvl:"info"}">${esc(a.alerts[0]?a.alerts[0].txt:a.stage)}</span>
       ${a.diasPuerto!==null?`<span class="pill">${a.diasPuerto} d en puerto</span>`:""}
