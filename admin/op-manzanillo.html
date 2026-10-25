@@ -338,7 +338,9 @@ aside.drawer{position:fixed;top:0;right:0;bottom:0;width:min(820px,100%);backgro
 #drawer .card h2 .muted{font-size:11px}
 #drawer .datos-head{min-height:38px;margin-bottom:6px}
 #drawer .ref-wrap{gap:14px}
-#drawer .op-sel{margin-left:0;padding:3px 0;font-size:11px;width:auto;flex:none}
+#drawer .op-sel{margin-left:0;padding:3px 16px 3px 0;font-size:11px;width:auto;flex:none;-webkit-appearance:none;appearance:none;letter-spacing:.02em;
+  background:transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%238C7553' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 2px center}
+#drawer .datos-head h2{font-size:15.5px}
 #drawer .ref-campo{font-size:10px}
 #drawer .ref-campo input{font-size:12px;padding:2px 5px}
 #drawer .secciones{gap:6px}
@@ -886,7 +888,7 @@ function renderDrawerInner(){
     <div class="saved" id="saved"></div>
   </div><button class="x" type="button" data-close aria-label="Cerrar">×</button></div>
   <div class="db">
-    <div class="card"><h2>Hitos y seguimiento <span class="muted">estimada · real</span></h2>
+    <div class="card"><h2>Seguimiento de embarques <span class="muted">estimada · real</span></h2>
       <div class="scroll"><table class="ht"><thead><tr><th>Hito</th><th>Estimada</th><th>Real</th><th>Estado</th></tr></thead><tbody>
       ${HITOS.map((h,i)=>{const hh=hit(e,h.k);const na=!applicable(e,h.k);const isN=a.next===h;
         let st=na?`<span class="muted">No aplica</span>`:hh.r?`<span class="pill ok">Cumplido</span>`:isN?(a.late?`<span class="pill bad">Vencido ${diff(TODAY,a.nd)} d</span>`:`<span class="pill info">Siguiente</span>`):"";
@@ -944,6 +946,9 @@ function renderDrawerInner(){
   {const pk=d.querySelector("#fx-peso"),pl=d.querySelector("#fx-pesoLbs"),bu=d.querySelector("#fx-bultos");
    const kg=numero(e.peso);if(pk)pk.value=kg?dos(kg):"";if(pl){pl.value=kg?dos(kg*LB):"";if(!canWrite)pl.disabled=true}
    if(bu&&!numero(e.bultos))bu.value="";const dl=d.querySelector("#fx-diasLibres");if(dl&&!numero(e.diasLibres))dl.value="";}
+  {const os=d.querySelector("#fx-operacion");if(os){const fitS=()=>{const c=fitS.c||(fitS.c=document.createElement("canvas").getContext("2d"));const cs=getComputedStyle(os);c.font=cs.fontWeight+" "+cs.fontSize+" "+cs.fontFamily;
+    const t=os.options[os.selectedIndex]?os.options[os.selectedIndex].text:"";const ls=parseFloat(cs.letterSpacing)||0;os.style.width=Math.ceil(c.measureText(t).width+ls*t.length+18)+"px"};
+    fitS();document.fonts&&document.fonts.ready.then(fitS);os.addEventListener("change",fitS)}}
   {const ri=d.querySelector("#fx-ref");if(ri){const fit=()=>{const c=fit.c||(fit.c=document.createElement("canvas").getContext("2d"));const cs=getComputedStyle(ri);c.font=cs.fontWeight+" "+cs.fontSize+" "+cs.fontFamily;ri.style.width=Math.ceil(c.measureText(ri.value||"MA000/00").width+2)+"px"};fit();requestAnimationFrame(fit);document.fonts&&document.fonts.ready.then(fit);ri.addEventListener("input",fit)}}
 }
 function renderNew(){
