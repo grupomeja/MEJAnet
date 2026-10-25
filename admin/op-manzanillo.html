@@ -847,6 +847,9 @@ document.addEventListener("input",ev=>{const el=ev.target;if(!el.closest||!el.cl
   else if(el.id==="fx-pesoLbs"){const n=numero(el.value),o=document.getElementById("fx-peso");if(o)o.value=n==null?"":dos(n/LB)}});
 function contenedoresHTML(e){const l=String(e.contenedores||"").toUpperCase().split(/[\s,;\/]+/).filter(Boolean);
   return l.length?l.map(c=>`<span class="cn">${esc(c)}</span>`).join(""):'<span class="vacio">-</span>'}
+// Tipos de previo, en este orden. Un valor anterior que ya no está en la lista se sigue mostrando hasta que se cambie.
+const TIPOS_PREVIO=["PREVIO OCULAR","PREVIO DESYCON","NO PREVIO","PREVIO EN ORIGEN"];
+function opcionesPrevio(v){const l=TIPOS_PREVIO.slice();if(v&&!l.includes(v))l.push(v);return l.map(o=>`<option>${esc(o)}</option>`).join("")}
 const F=(f,l,cls="",type="text",extra="")=>`<label class="${cls}">${l}<input id="fx-${f}" data-f="${f}" type="${type}" ${extra}></label>`;
 let needDrawer=false;
 function renderDrawer(){
@@ -909,7 +912,7 @@ function renderDrawerInner(){
       </div></section>
       <section class="sec"><h3>Despacho</h3><div class="fields">
         <label class="wide">Cliente<input id="fx-cliente" data-f="cliente" list="dl-cli"></label>
-        <label>Tipo de previo<select id="fx-previo" data-f="previo"><option value="">—</option><option>PREVIO</option><option>PREVIO OCULAR</option><option>PREVIO + DESYCON</option><option>DESYCON</option><option>NO PREVIO</option></select></label>
+        <label>Tipo de previo<select id="fx-previo" data-f="previo"><option value="">—</option>${opcionesPrevio(e.previo)}</select></label>
         ${F("marca","Marca")}${F("factura","Factura","","text",'class="mono"')}${F("diasLibres","Días libres almacenaje","","text",'inputmode="numeric" autocomplete="off"')}
         <label class="chk chk-ped"><input type="checkbox" id="fx-pedimentoPagado" data-f="pedimentoPagado"> Pedimento pagado</label>
         ${F("pedimento","Pedimento","","text",'class="mono" placeholder="3596-0000000"')}
@@ -1159,7 +1162,7 @@ document.addEventListener("submit",ev=>{
     if(!id){$("#n-err").textContent="Escribe una referencia válida, por ejemplo MA143/26.";return}
     if(EMB[id]){$("#n-err").textContent="La referencia "+ref+" ya existe. Ábrela desde Seguimiento.";return}
     const hitos={};HITOS.forEach(h=>hitos[h.k]={e:"",c:"",r:""});hitos.arribo.e=$("#n-eta").value;
-    const doc={ref,operacion:$("#n-op").value,cliente:$("#n-cli").value.trim().toUpperCase(),buque:$("#n-buque").value.trim().toUpperCase(),viaje:$("#n-viaje").value.trim().toUpperCase(),bandera:"",hbl:$("#n-hbl").value.trim().toUpperCase(),mbl:$("#n-mbl").value.trim().toUpperCase(),ff:"",tipo:$("#n-tipo").value,previo:"PREVIO",mercancia:$("#n-merc").value.trim().toUpperCase(),marca:"",factura:"",peso:null,bultos:null,contenedores:$("#n-cont").value.trim().toUpperCase(),terminal:"",claveCR:"",pedimento:"",semaforo:"",estado:"activa",diasLibres:null,nota:"",hitos,gastos:[],creado:new Date().toISOString()};
+    const doc={ref,operacion:$("#n-op").value,cliente:$("#n-cli").value.trim().toUpperCase(),buque:$("#n-buque").value.trim().toUpperCase(),viaje:$("#n-viaje").value.trim().toUpperCase(),bandera:"",hbl:$("#n-hbl").value.trim().toUpperCase(),mbl:$("#n-mbl").value.trim().toUpperCase(),ff:"",tipo:$("#n-tipo").value,previo:"",mercancia:$("#n-merc").value.trim().toUpperCase(),marca:"",factura:"",peso:null,bultos:null,contenedores:$("#n-cont").value.trim().toUpperCase(),terminal:"",claveCR:"",pedimento:"",semaforo:"",estado:"activa",diasLibres:null,nota:"",hitos,gastos:[],creado:new Date().toISOString()};
     api("POST","/api/admin/opm/embarques",doc).then(r=>{EMB[r.id]=doc;ui.newMode=false;ui.open=r.id;toast("Embarque "+ref+" creado");renderAll();renderDrawer()}).catch(err=>{$("#n-err").textContent=err.message});
   }
 });
