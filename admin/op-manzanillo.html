@@ -948,11 +948,9 @@ function renderDrawerInner(){
 }
 function renderNew(){
   const d=$("#drawer");
-  const nums=Object.values(EMB).map(e=>{const m=/^MA(\d+)\/(\d+)$/.exec(e.ref||"");return m&&m[2]===TODAY.slice(2,4)?+m[1]:0});
-  const sug="MA"+String(Math.max(0,...nums)+1).padStart(3,"0")+"/"+TODAY.slice(2,4);
   d.innerHTML=`<div class="dh"><div class="id"><div class="refbig">Nuevo embarque</div><div class="cli">Registra lo básico; el resto se completa en la ficha.</div></div><button class="x" type="button" data-close aria-label="Cerrar">×</button></div>
   <div class="db"><form class="card" id="newform"><div class="newform fields" style="grid-template-columns:repeat(2,minmax(0,1fr))">
-    <label>Referencia<input id="n-ref" class="mono" value="${sug}" required></label>
+    <label>Referencia<input id="n-ref" class="mono" required></label>
     <label>Cliente<input id="n-cli" list="dl-cli2" required></label>
     <label>Buque<input id="n-buque"></label><label>Viaje<input id="n-viaje" class="mono"></label>
     <label>Tipo de operación<select id="n-op"><option value="">SIN ESPECIFICAR</option><option value="IMPORTACION">IMPORTACIÓN</option><option value="EXPORTACION">EXPORTACIÓN</option></select></label>
