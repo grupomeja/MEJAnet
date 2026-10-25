@@ -612,6 +612,8 @@ function analyze(e){
 const STATUS={no:"Pendiente ETA y revalidación",or:"Revalidado",az:"Previo programado",ye:"Pedimento pagado · despacho programado",gr:"Desaduanado / cumplido"};
 // Verde: despachado. Amarillo: pedimento asignado + pagado + fecha de despacho.
 // Azul: hay fecha de previo. Naranja: hay fecha de revalidación. Sin color: lo demás.
+// Con fecha real de retiro de puerto la operación sale de la lista de activas (cuenta como cerrada)
+function estadoEf(e){const st=e.estado||"activa";return st==="activa"&&hit(e,"retiro").r?"cerrada":st}
 function status(e){
   const di=hit(e,"despacho"),pv=hit(e,"previo"),rv=hit(e,"revalidacion");
   // Verde solo si ya tiene resultado de semáforo (libre o reconocimiento) o la operación está cerrada
@@ -627,7 +629,7 @@ function filtered(opts={}){
   return Object.entries(EMB).map(([id,e])=>({id,e,a:analyze(e)})).filter(({e})=>{
     if(ui.cliente&&e.cliente!==ui.cliente)return false;
     if(ui.terminal&&(e.terminal||"")!==ui.terminal)return false;
-    if(!opts.ignoreEstado&&ui.estado&&e.estado!==ui.estado)return false;
+    if(!opts.ignoreEstado&&ui.estado&&estadoEf(e)!==ui.estado)return false;
     if(ui.tipo&&e.tipo!==ui.tipo)return false;
     if(q){const hay=[e.ref,e.cliente,e.buque,e.viaje,e.hbl,e.mbl,e.pedimento,e.mercancia,e.ff,e.factura,e.contenedores].join(" ").toUpperCase();if(!hay.includes(q))return false}
     return true;
@@ -710,7 +712,7 @@ function renderEjec(){
 
 /* ---------- render: seguimiento ---------- */
 // Orden de la tabla según «Ordenar por»
-const RANGO={ye:0,az:1,or:2,no:3,gr:4};
+const RANGO={gr:0,ye:1,az:2,or:3,no:4};
 function numRef(r){const m=/^MA(\d+)\/(\d+)/.exec(r||"");return m?(+m[2])*10000+(+m[1]):-1}
 function fechaDesp(e){const h=hit(e,"despacho");return h.r||h.e||""}
 function prioridad(p,q){
