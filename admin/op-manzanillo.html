@@ -888,7 +888,7 @@ function renderDrawerInner(){
     <div class="saved" id="saved"></div>
   </div><button class="x" type="button" data-close aria-label="Cerrar">×</button></div>
   <div class="db">
-    <div class="card"><h2>Seguimiento de embarques <span class="muted">estimada · real</span></h2>
+    <div class="card"><h2>Seguimiento de embarque <span class="muted">estimada · real</span></h2>
       <div class="scroll"><table class="ht"><thead><tr><th>Hito</th><th>Estimada</th><th>Real</th><th>Estado</th></tr></thead><tbody>
       ${HITOS.map((h,i)=>{const hh=hit(e,h.k);const na=!applicable(e,h.k);const isN=a.next===h;
         let st=na?`<span class="muted">No aplica</span>`:hh.r?`<span class="pill ok">Cumplido</span>`:isN?(a.late?`<span class="pill bad">Vencido ${diff(TODAY,a.nd)} d</span>`:`<span class="pill info">Siguiente</span>`):"";
