@@ -1038,7 +1038,11 @@ function abrirPrevio(id){
   const e=EMB[id];if(!e)return;
   PV.id=id;
   const base=pvDesdeFicha(e),g=e.reportePrevio;
-  PV.datos=g?{...base,...g,partidas:(g.partidas&&g.partidas.length?g.partidas:[pvVacia()]).map(p=>({...pvVacia(),...p}))}:base;
+  // Lo guardado en el reporte manda; si un dato quedó vacío en el reporte, se toma el de la ficha
+  const comb={...base};
+  if(g){for(const k of Object.keys(g)){if(k!=="partidas"&&String(g[k]??"").trim()!=="")comb[k]=g[k]}
+    comb.partidas=(g.partidas&&g.partidas.length?g.partidas:[pvVacia()]).map(p=>({...pvVacia(),...p}))}
+  PV.datos=comb;
   while(PV.datos.partidas.length<4)PV.datos.partidas.push(pvVacia());
   renderPrevio();
   const el=$("#previo");el.hidden=false;document.documentElement.classList.add("ficha-abierta");
