@@ -216,7 +216,11 @@ button.kpi:hover{border-color:var(--ink-3)}
 .st-pill.s-no{background:var(--st-no);color:var(--st-no-ink)} .st-pill.s-or{background:var(--st-or);color:var(--st-or-ink)} .st-pill.s-ye{background:var(--st-ye);color:var(--st-ye-ink)} .st-pill.s-gr{background:var(--st-gr);color:var(--st-gr-ink)} .st-pill.s-az{background:var(--st-az);color:var(--st-az-ink)}
 .chk{flex-direction:row!important;align-items:center;gap:8px!important;color:var(--ink)!important;font-size:13.5px!important;align-self:end;padding-bottom:6px}
 .chk input{width:auto!important}
-.chk-ped{justify-self:end;margin-right:24px}
+.chk-ped{justify-self:start;margin-right:0}
+.desp-fila{grid-column:1/-1;display:grid;grid-template-columns:auto minmax(0,1fr) minmax(0,1.3fr) minmax(0,1fr);gap:6px 12px;align-items:end}
+#fx-semaforo.sem-verde{color:var(--ok);font-weight:800}
+#fx-semaforo.sem-rojo{color:var(--bad);font-weight:800}
+@media (max-width:640px){.desp-fila{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .chk-ped:has(input:checked){color:var(--ok)!important;font-weight:800}
 .chk-ped input:checked{accent-color:var(--ok)}
 .chk-ped input{width:18px!important;height:18px;accent-color:var(--cel-ico);cursor:pointer}
@@ -886,7 +890,6 @@ function renderDrawerInner(){
     <div class="refbig">${esc(e.ref)}</div><div class="cli">${esc(e.cliente||"Sin cliente")}</div>
     <div class="meta">
       <select class="mini-select" data-f="estado" aria-label="Estado" ${dis}>${["activa","cerrada","cancelada"].map(s=>`<option value="${s}" ${e.estado===s?"selected":""}>${s[0].toUpperCase()+s.slice(1)}</option>`).join("")}</select>
-      <select class="mini-select" data-f="semaforo" aria-label="Semáforo fiscal" ${dis}><option value="">Semáforo: —</option><option value="verde" ${e.semaforo==="verde"?"selected":""}>Desaduanamiento libre</option><option value="rojo" ${e.semaforo==="rojo"?"selected":""}>Reconocimiento aduanero</option></select>
       <span class="st-pill s-${status(e)}">${esc(STATUS[status(e)])}</span>
       ${e.tipo?`<span class="tag">${esc(e.tipo)}</span>`:""}
       <span class="pill ${a.alerts[0]?a.alerts[0].lvl:"info"}">${esc(a.alerts[0]?a.alerts[0].txt:a.stage)}</span>
@@ -925,8 +928,12 @@ function renderDrawerInner(){
         <label class="wide">Cliente<input id="fx-cliente" data-f="cliente" list="dl-cli"></label>
         <label>Tipo de previo<select id="fx-previo" data-f="previo"><option value="">—</option>${opcionesPrevio(e.previo)}</select></label>
         ${F("marca","Marca")}${F("factura","Factura","","text",'class="mono"')}${F("diasLibres","Días libres almacenaje","","text",'inputmode="numeric" autocomplete="off"')}
-        <label class="chk chk-ped"><input type="checkbox" id="fx-pedimentoPagado" data-f="pedimentoPagado"> Pedimento pagado</label>
-        ${F("pedimento","Pedimento","","text",'class="mono" placeholder="3596-0000000"')}
+        <div class="full desp-fila">
+          <label class="chk chk-ped"><input type="checkbox" id="fx-pedimentoPagado" data-f="pedimentoPagado"> Pedimento pagado</label>
+          ${F("pedimento","Pedimento","","text",'class="mono" placeholder="3596-0000000"')}
+          <label>Semáforo<select id="fx-semaforo" data-f="semaforo" class="sem-${esc(e.semaforo||"no")}"><option value="">—</option><option value="verde">Desaduanamiento libre</option><option value="rojo">Reconocimiento aduanero</option></select></label>
+          ${F("semaforoFecha","Fecha de semáforo","","date")}
+        </div>
         <label class="full">Estatus / observaciones<textarea id="fx-nota" data-f="nota"></textarea></label>
       </div></section>
       </div>
@@ -955,6 +962,7 @@ function renderDrawerInner(){
   {const pk=d.querySelector("#fx-peso"),pl=d.querySelector("#fx-pesoLbs"),bu=d.querySelector("#fx-bultos");
    const kg=numero(e.peso);if(pk)pk.value=kg?dos(kg):"";if(pl){pl.value=kg?dos(kg*LB):"";if(!canWrite)pl.disabled=true}
    if(bu&&!numero(e.bultos))bu.value="";const dl=d.querySelector("#fx-diasLibres");if(dl&&!numero(e.diasLibres))dl.value="";}
+  {const sm=d.querySelector("#fx-semaforo");if(sm)sm.addEventListener("change",()=>{sm.className="sem-"+(sm.value||"no")})}
   {const os=d.querySelector("#fx-operacion");if(os){const fitS=()=>{const c=fitS.c||(fitS.c=document.createElement("canvas").getContext("2d"));const cs=getComputedStyle(os);c.font=cs.fontWeight+" "+cs.fontSize+" "+cs.fontFamily;
     const t=os.options[os.selectedIndex]?os.options[os.selectedIndex].text:"";const ls=parseFloat(cs.letterSpacing)||0;os.style.width=Math.ceil(c.measureText(t).width+ls*t.length+18)+"px"};
     fitS();document.fonts&&document.fonts.ready.then(fitS);os.addEventListener("change",fitS)}}
@@ -1209,7 +1217,7 @@ window.addEventListener("resize",()=>{clearTimeout(window.__mf);window.__mf=setT
 function csvCell(v){v=v==null?"":String(v);return /[",\n;]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
 async function exportCSV(){
   const xs=filtered({ignoreEstado:ui.view==="ejec"});
-  const base=["ref","operacion","cliente","estado","buque","viaje","bandera","terminal","claveCR","ff","hbl","mbl","contenedores","tipo","previo","mercancia","marca","factura","peso","bultos","pedimento","pedimentoPagado","semaforo","diasLibres","nota"];
+  const base=["ref","operacion","cliente","estado","buque","viaje","bandera","terminal","claveCR","ff","hbl","mbl","contenedores","tipo","previo","mercancia","marca","factura","peso","bultos","pedimento","pedimentoPagado","semaforo","semaforoFecha","diasLibres","nota"];
   const hcols=[];HITOS.forEach(h=>["e","r"].forEach(k=>hcols.push([h.k,k])));
   const head=base.concat(hcols.map(([h,k])=>h+"_"+({e:"estimada",r:"real"})[k]),["total_mxn","total_usd"]);
   const lines=[head.join(",")];
