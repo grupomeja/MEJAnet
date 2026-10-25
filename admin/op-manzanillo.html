@@ -922,7 +922,7 @@ function renderDrawerInner(){
         ${F("hbl","House B/L","", "text",'class="mono"')}${F("mbl","Master B/L","","text",'class="mono"')}${F("contenedores","Contenedor no.","","text",'class="mono" placeholder="-"')}
         <label>Tipo de carga<select id="fx-tipo" data-f="tipo"><option value="">—</option><option>LCL</option><option>FCL</option></select></label>
         ${F("mercancia","Mercancía","wide")}
-        ${F("bultos","Bultos","","text",'inputmode="numeric" autocomplete="off"')}
+        ${F("bultos","Bultos","","text",'placeholder="Ej. 27 CARTONES"')}
         ${F("peso","Peso (kg)","","text",'inputmode="decimal" autocomplete="off"')}<label>Peso (lbs)<input id="fx-pesoLbs" data-lbs="1" type="text" inputmode="decimal" autocomplete="off"></label>
       </div></section>
       <section class="sec"><h3>Despacho</h3><div class="fields">
@@ -962,7 +962,7 @@ function renderDrawerInner(){
   d.querySelectorAll("[data-f]").forEach(el=>{if(el.dataset.f==="operacion"){el.value=e.operacion||"";return}if(el.type==="checkbox")el.checked=!!e[el.dataset.f];else if(el.tagName!=="SELECT"||!el.classList.contains("mini-select")){const v=e[el.dataset.f];el.value=v==null?"":v} if(!canWrite)el.disabled=true});
   {const pk=d.querySelector("#fx-peso"),pl=d.querySelector("#fx-pesoLbs"),bu=d.querySelector("#fx-bultos");
    const kg=numero(e.peso);if(pk)pk.value=kg?dos(kg):"";if(pl){pl.value=kg?dos(kg*LB):"";if(!canWrite)pl.disabled=true}
-   if(bu&&!numero(e.bultos))bu.value="";const dl=d.querySelector("#fx-diasLibres");if(dl&&!numero(e.diasLibres))dl.value="";}
+   if(bu&&(e.bultos==null||e.bultos===0||e.bultos==="0"))bu.value="";const dl=d.querySelector("#fx-diasLibres");if(dl&&!numero(e.diasLibres))dl.value="";}
   {const sm=d.querySelector("#fx-semaforo");if(sm)sm.addEventListener("change",()=>{sm.className="sem-"+(sm.value||"no")})}
   {const os=d.querySelector("#fx-operacion");if(os){const fitS=()=>{const c=fitS.c||(fitS.c=document.createElement("canvas").getContext("2d"));const cs=getComputedStyle(os);c.font=cs.fontWeight+" "+cs.fontSize+" "+cs.fontFamily;
     const t=os.options[os.selectedIndex]?os.options[os.selectedIndex].text:"";const ls=parseFloat(cs.letterSpacing)||0;os.style.width=Math.ceil(c.measureText(t).width+ls*t.length+18)+"px"};
@@ -1032,7 +1032,7 @@ function pvDesdeFicha(e){
   return {cliente:e.cliente||"",fecha:pv.r||pv.e||iso(new Date()),trafico:e.ref||"",factura:e.factura||"",
     buque:[e.buque,e.viaje?"V-"+e.viaje:""].filter(Boolean).join(" "),contenedor:e.contenedores||"",
     tipoCont:e.tipo==="LCL"?"SUELTA":"",sello:"",palAlto:"",palLargo:"",palAncho:"",operadora:e.terminal||"",claveCR:e.claveCR||"",
-    bultos:e.bultos?String(e.bultos):"",peso:e.peso?String(e.peso):"",pallets:"",palletsCant:"",partidas:[pvVacia(),pvVacia(),pvVacia(),pvVacia()]};
+    bultos:e.bultos&&e.bultos!=="0"?String(e.bultos):"",peso:e.peso?String(e.peso):"",pallets:"",palletsCant:"",partidas:[pvVacia(),pvVacia(),pvVacia(),pvVacia()]};
 }
 function abrirPrevio(id){
   const e=EMB[id];if(!e)return;
@@ -1169,7 +1169,7 @@ document.addEventListener("change",ev=>{
   if(el.dataset.lbs){const lb=numero(el.value);write(ui.open,{peso:lb==null?null:Math.round(lb/LB*100)/100});return}
   if(el.dataset.f){let v=el.value;const f=el.dataset.f;
     if(el.type==="checkbox"){write(ui.open,{[f]:el.checked});return}
-    if(["peso","bultos","diasLibres"].includes(f)){v=numero(v);if(f==="peso"&&v!=null)v=Math.round(v*100)/100;if(f==="bultos"&&v!=null)v=Math.round(v)}
+    if(["peso","diasLibres"].includes(f)){v=numero(v);if(f==="peso"&&v!=null)v=Math.round(v*100)/100}
     else if(f!=="nota"&&f!=="estado"&&f!=="semaforo")v=v.trim().toUpperCase();
     write(ui.open,{[f]:v});}
 });
