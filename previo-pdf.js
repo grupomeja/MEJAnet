@@ -65,7 +65,7 @@ async function generarPrevio(rep, ref) {
   let logo = null;
   try { logo = await pdf.embedPng(fs.readFileSync(path.join(__dirname, 'public', 'logo-previo.png'))); } catch { /* sin logo */ }
 
-  const W = 612, H = 792, M = 34, AN = W - 2 * M;
+  const W = 612, H = 792, M = 46, AN = W - 2 * M;
   let pg = pdf.addPage([W, H]);
   let y = H - M;
 
