@@ -38,7 +38,7 @@ const CAFE_OSC = hex('#4A3826');
 const CAFE_ICO = hex('#8C7553');
 const BEIGE = hex('#EAE1D3');      // barras de título
 const BEIGE_SUAVE = hex('#FAF6EF');
-const LINEA = hex('#D9CBB5');
+const LINEA = hex('#9C8A70');   // líneas: más oscuras y gruesas para que se vean al imprimir en blanco y negro
 const GUINDA = hex('#7A1C1C');
 const GRIS = hex('#7A7266');
 const BLANCO = rgb(1, 1, 1);
@@ -102,11 +102,11 @@ async function generarPrevio(rep, ref) {
     const lin = partir(valor, tam, w - 2, FB).slice(0, 2);
     lin.forEach((l, i) => txt(l, x + 1, yy - 21 - i * (tam + 2), tam, FB, TINTA));
     const base = yy - 25 - (lin.length - 1) * (tam + 2);
-    pg.drawLine({ start: { x, y: base }, end: { x: x + w, y: base }, thickness: 0.6, color: LINEA });
+    pg.drawLine({ start: { x, y: base }, end: { x: x + w, y: base }, thickness: 1, color: LINEA });
     return base;
   };
   const casilla = (x, yy, marcada) => {
-    pg.drawRectangle({ x, y: yy, width: 9, height: 9, borderColor: CAFE_OSC, borderWidth: 0.9, color: marcada ? CAFE_OSC : BLANCO });
+    pg.drawRectangle({ x, y: yy, width: 9, height: 9, borderColor: CAFE_OSC, borderWidth: 1.2, color: marcada ? CAFE_OSC : BLANCO });
     if (marcada) {
       pg.drawLine({ start: { x: x + 2, y: yy + 4.6 }, end: { x: x + 3.9, y: yy + 2.4 }, thickness: 1.3, color: BLANCO });
       pg.drawLine({ start: { x: x + 3.9, y: yy + 2.4 }, end: { x: x + 7.3, y: yy + 7 }, thickness: 1.3, color: BLANCO });
@@ -120,13 +120,13 @@ async function generarPrevio(rep, ref) {
       txt(nombre, cx + 13, yy - 21.5, 9, elegido === k ? FB : F, TINTA);
       cx += 13 + ancho(nombre, 9, elegido === k ? FB : F) + 14;
     }
-    pg.drawLine({ start: { x, y: yy - 27 }, end: { x: x + w, y: yy - 27 }, thickness: 0.6, color: LINEA });
+    pg.drawLine({ start: { x, y: yy - 27 }, end: { x: x + w, y: yy - 27 }, thickness: 1, color: LINEA });
     return yy - 27;
   };
 
   // ---------- 1. Revisión de mercancía ----------
   const HH = 64;
-  pg.drawRectangle({ x: M, y: y - HH, width: AN, height: HH, color: BEIGE_SUAVE, borderColor: LINEA, borderWidth: 0.8 });
+  pg.drawRectangle({ x: M, y: y - HH, width: AN, height: HH, color: BEIGE_SUAVE, borderColor: LINEA, borderWidth: 1.2 });
   pg.drawRectangle({ x: M, y: y - HH, width: AN, height: 3, color: CAFE_OSC });
   if (logo) {
     const lw = 140, lh = lw * logo.height / logo.width;
@@ -173,7 +173,7 @@ async function generarPrevio(rep, ref) {
       const cx = x0 + i * grupo;
       txt(etq + ':', cx, base + 4, 8, FB, CAFE);
       const lx = cx + ancho(etq + ':', 8, FB) + 4, rx = cx + grupo - 8;
-      pg.drawLine({ start: { x: lx, y: base }, end: { x: rx, y: base }, thickness: 0.6, color: LINEA });
+      pg.drawLine({ start: { x: lx, y: base }, end: { x: rx, y: base }, thickness: 1, color: LINEA });
       const l = partir(v || '', 10, rx - lx - 2, FB)[0];
       if (l) txt(l, lx + (rx - lx - ancho(l, 10, FB)) / 2, base + 4, 10, FB, TINTA);
     });
@@ -187,15 +187,15 @@ async function generarPrevio(rep, ref) {
   const CW = (AN - GX) / 2;
   const RENGLONES = [['MARCA', 'marca'], ['MODELO', 'modelo'], ['ORIGEN', 'origen'], ['LOTE #', 'lote'], ['CANT. PZS X CARTÓN', 'pzsCarton'], ['CANT. PZS', 'cant']];
   const ET = 8.2, VT = 9.5;
-  const linea = (x1, x2, yy) => pg.drawLine({ start: { x: x1, y: yy }, end: { x: x2, y: yy }, thickness: 0.5, color: LINEA });
+  const linea = (x1, x2, yy) => pg.drawLine({ start: { x: x1, y: yy }, end: { x: x2, y: yy }, thickness: 0.9, color: LINEA });
   const valor = (v, x1, x2, base) => {
     const l = partir(v || '', VT, x2 - x1 - 4, FB)[0];
     if (l) txt(l, x1 + (x2 - x1 - ancho(l, VT, FB)) / 2, base + 3, VT, FB, TINTA);
   };
   const cuadrante = (n, p, x, top, h) => {
-    pg.drawRectangle({ x, y: top - h, width: CW, height: h, borderColor: LINEA, borderWidth: 0.8, color: BLANCO });
+    pg.drawRectangle({ x, y: top - h, width: CW, height: h, borderColor: LINEA, borderWidth: 1.2, color: BLANCO });
     pg.drawRectangle({ x, y: top - 17, width: CW, height: 17, color: BEIGE_SUAVE });
-    pg.drawLine({ start: { x, y: top - 17 }, end: { x: x + CW, y: top - 17 }, thickness: 0.6, color: LINEA });
+    pg.drawLine({ start: { x, y: top - 17 }, end: { x: x + CW, y: top - 17 }, thickness: 1, color: LINEA });
     const et = `PARTIDA ${n}`, ew = ancho(et, 8, FB) + 16;
     pg.drawRectangle({ x, y: top - 17, width: ew, height: 17, color: CAFE_OSC });
     txt(et, x + 8, top - 11.5, 8, FB, BEIGE);
@@ -250,7 +250,7 @@ async function generarPrevio(rep, ref) {
   const pags = pdf.getPages();
   pags.forEach((p, i) => {
     const pie = `${limpio(ref || '')}  ·  Reporte de previo  ·  Hoja ${i + 1} de ${pags.length}`;
-    p.drawLine({ start: { x: M, y: M + 10 }, end: { x: W - M, y: M + 10 }, thickness: 0.5, color: LINEA });
+    p.drawLine({ start: { x: M, y: M + 10 }, end: { x: W - M, y: M + 10 }, thickness: 0.9, color: LINEA });
     p.drawText(pie, { x: W - M - F.widthOfTextAtSize(pie, 7.5), y: M, size: 7.5, font: F, color: GRIS });
     p.drawText('GRUPO MEJA', { x: M, y: M, size: 7.5, font: FB, color: CAFE_ICO });
   });
