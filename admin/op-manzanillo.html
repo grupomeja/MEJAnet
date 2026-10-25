@@ -347,6 +347,8 @@ aside.drawer{position:fixed;top:0;right:0;bottom:0;width:min(820px,100%);backgro
 #drawer .op-sel{margin-left:0;padding:3px 16px 3px 0;font-size:11px;width:auto;flex:none;-webkit-appearance:none;appearance:none;letter-spacing:.02em;
   background:transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%238C7553' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 2px center}
 #drawer .datos-head h2{font-size:15.5px}
+.ref-fila{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.ref-fila .ficha-tit{font-family:var(--f-display);font-weight:600;font-size:15.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-2);margin:0;white-space:nowrap}
 /* Seguimiento de embarque con el mismo formato que Datos del embarque */
 .card-seg .seg-tit{text-align:center;font-size:15.5px!important;margin:2px 0 10px!important}
 .ht-sec{background:transparent}
@@ -893,7 +895,7 @@ function renderDrawerInner(){
   const gt={MXN:0,USD:0};(e.gastos||[]).forEach(g=>gt[g.moneda||"MXN"]+=+g.importe||0);
   d.innerHTML=`
   <div class="dh"><div class="id">
-    <div class="refbig">${esc(e.ref)}</div><div class="cli">${esc(e.cliente||"Sin cliente")}</div>
+    <div class="ref-fila"><div class="refbig">${esc(e.ref)}</div><h2 class="ficha-tit">Ficha de embarque</h2></div><div class="cli">${esc(e.cliente||"Sin cliente")}</div>
     <div class="meta">
       <select class="mini-select" data-f="estado" aria-label="Estado" ${dis}>${["activa","cerrada","cancelada"].map(s=>`<option value="${s}" ${e.estado===s?"selected":""}>${s[0].toUpperCase()+s.slice(1)}</option>`).join("")}</select>
       <span class="st-pill s-${status(e)}">${esc(status(e)==="ye"?(e.pedimento&&e.pedimentoPagado?"Pedimento pagado":"Despacho programado"):STATUS[status(e)])}</span>
