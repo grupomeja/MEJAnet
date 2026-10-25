@@ -1,6 +1,6 @@
 // Google Apps Script: (1) recibe el PDF de cada orden y lo guarda en la carpeta "Ordenes de Carga" de Drive,
 // (2) entrega al tablero el resultado de la revisión de OC_TERMINADAS (archivo _tablero_resultados.json),
-// (3) copia las Entradas Bodega de MEJAnet a la hoja de Google "Entradas Bodega" (y a "FEVISA 2026" los clientes de FEVISA).
+// (3) copia las Entradas Bodega de MEJAnet a la hoja de Google "Entradas Bodega" (y a "FEVISA 2026" y "SAFE MARKET 2026" los clientes de cada una).
 // Cambia TOKEN por la misma clave que pongas en Render como DRIVE_TOKEN.
 const TOKEN = 'A9S8D7F6G5H4';
 const CARPETA_ID = '1mvLs_ZEfAYozwmjxtbegqPbziONLOxRZ'; // carpeta "Ordenes de Carga"
@@ -9,6 +9,8 @@ const HOJA_EB_ID = '18gdfi8oqDxVnrdcj4yWxjHaR2OEC-kr5V6QnQ0Evw2E'; // hoja de Go
 const HOJAS_EB = {
   principal: HOJA_EB_ID,
   fevisa: '1poOSVRZ08AOwQtuEgLosqYn5ospBl9JeniX6P0fVANM', // "FEVISA 2026": clientes FABRICA, MAQUINARIA y FEVISA
+  safemarket: '17OZ_zpPbzar2_-xpmum95R35qOMNBpRMdFls0xigSAU', // "SAFE MARKET 2026", pestaña 1: cliente SAFE MARKET
+  safemarket_rs: ['17OZ_zpPbzar2_-xpmum95R35qOMNBpRMdFls0xigSAU', 1], // misma hoja, pestaña 2: referencias con R o S
 };
 
 function doPost(e) {
@@ -51,9 +53,11 @@ function salida(obj, sinOk) {
 const NUMERICAS_EB = [3, 5, 6]; // BULTOS, PESO (Lbs), PESO (KGS)
 
 function hojaEB(nombre) {
-  const id = HOJAS_EB[nombre || 'principal'];
-  if (!id) throw new Error('Hoja desconocida: ' + nombre);
-  return SpreadsheetApp.openById(id).getSheets()[0];
+  const destino = HOJAS_EB[nombre || 'principal'];
+  if (!destino) throw new Error('Hoja desconocida: ' + nombre);
+  // Un destino es el id de la hoja (primera pestaña) o [id, número de pestaña empezando en 0]
+  const id = Array.isArray(destino) ? destino[0] : destino, pestana = Array.isArray(destino) ? destino[1] : 0;
+  return SpreadsheetApp.openById(id).getSheets()[pestana];
 }
 
 // Zona horaria de la hoja: la fecha se arma en esa zona para que no se recorra un día

@@ -175,17 +175,31 @@ const esFevisa = (d) => {
   const c = String((d && d.cliente) || '').toUpperCase();
   return CLIENTES_FEVISA.some((n) => c.includes(n));
 };
-async function hojaCompletaFevisa() {
-  const lista = (await db.listarEntradasEB()).filter((x) => esFevisa(x.datos)).sort((a, b) => a.referencia.localeCompare(b.referencia));
-  return enviarHojaEB({ accion: 'eb_todo', hoja: 'fevisa', filas: lista.map((x) => filaHoja(x.referencia, x.datos)) });
+// Clientes que además se copian a la hoja "SAFE MARKET 2026" (pestaña 1: todos; pestaña 2: referencias con R o S al final)
+const esSafeMarket = (d) => /SAFE\s*MARKET/i.test(String((d && d.cliente) || ''));
+// Hojas de Google por cliente: a cuáles va cada registro ({ referencia, datos })
+const HOJAS_CLIENTE = {
+  fevisa: { nombre: 'FEVISA 2026', incluye: (x) => esFevisa(x.datos) },
+  safemarket: { nombre: 'SAFE MARKET 2026', incluye: (x) => esSafeMarket(x.datos) },
+  safemarket_rs: { nombre: 'SAFE MARKET 2026 (Referencias R y S)', incluye: (x) => esSafeMarket(x.datos) && /[RS]$/i.test(x.referencia) },
+};
+const enHoja = (hoja, x) => !!x && HOJAS_CLIENTE[hoja].incluye(x);
+async function hojaCompletaCliente(hoja) {
+  const lista = (await db.listarEntradasEB()).filter((x) => enHoja(hoja, x)).sort((a, b) => a.referencia.localeCompare(b.referencia));
+  return enviarHojaEB({ accion: 'eb_todo', hoja, filas: lista.map((x) => filaHoja(x.referencia, x.datos)) });
 }
-// Mantiene al día la hoja FEVISA según el registro antes y después del cambio (null si no existía / se borró)
-function copiarAFevisa(antes, despues) {
-  if (!driveListo() || !(esFevisa(antes && antes.datos) || esFevisa(despues && despues.datos))) return;
-  const p = (esFevisa(antes && antes.datos) || !antes) && despues && esFevisa(despues.datos)
-    ? enviarHojaEB({ accion: 'eb_fila', hoja: 'fevisa', buscar: antes ? antes.referencia : despues.referencia, fila: filaHoja(despues.referencia, despues.datos) })
-    : hojaCompletaFevisa(); // entró o salió de la lista (cambio de cliente o borrado): se reescribe la hoja
-  p.catch((e) => console.error('No se pudo actualizar la hoja FEVISA:', e.message));
+const hojaCompletaFevisa = () => hojaCompletaCliente('fevisa');
+// Mantiene al día las hojas por cliente según el registro antes y después del cambio (null si no existía / se borró)
+function copiarAHojasCliente(antes, despues) {
+  if (!driveListo()) return;
+  for (const hoja of Object.keys(HOJAS_CLIENTE)) {
+    const a = enHoja(hoja, antes), d = enHoja(hoja, despues);
+    if (!a && !d) continue;
+    const p = (a || !antes) && d
+      ? enviarHojaEB({ accion: 'eb_fila', hoja, buscar: antes ? antes.referencia : despues.referencia, fila: filaHoja(despues.referencia, despues.datos) })
+      : hojaCompletaCliente(hoja); // entró o salió de la lista (cambio de cliente/referencia o borrado): se reescribe la hoja
+    p.catch((e) => console.error(`No se pudo actualizar la hoja ${HOJAS_CLIENTE[hoja].nombre}:`, e.message));
+  }
 }
 function copiarAHoja(buscar, referencia, datos) {
   if (!driveListo()) return;
@@ -213,7 +227,7 @@ app.post('/api/admin/entradas-bodega', admin, async (req, res) => {
     const reg = await db.guardarEntradaEB(referencia, datos);
     res.json({ ok: true, id: reg.id, referencia: reg.referencia });
     copiarAHoja(reg.referencia, reg.referencia, reg.datos);
-    copiarAFevisa(null, reg);
+    copiarAHojasCliente(null, reg);
   } catch (e) {
     if (e instanceof db.RefRepetida) return res.status(409).json({ error: 'Esa referencia ya existe.' });
     console.error(e); res.status(500).json({ error: 'No se pudo guardar el registro.' });
@@ -229,6 +243,14 @@ app.post('/api/admin/entradas-bodega/hoja-fevisa', admin, async (_req, res) => {
     if (!driveListo()) return res.status(503).json({ error: 'Falta configurar DRIVE_WEBHOOK_URL y DRIVE_TOKEN en Render.' });
     const r = await hojaCompletaFevisa();
     res.json({ ok: true, filas: r.filas });
+  } catch (e) { console.error(e); res.status(502).json({ error: e.message }); }
+});
+app.post('/api/admin/entradas-bodega/hoja-safemarket', admin, async (_req, res) => {
+  try {
+    if (!driveListo()) return res.status(503).json({ error: 'Falta configurar DRIVE_WEBHOOK_URL y DRIVE_TOKEN en Render.' });
+    const r = await hojaCompletaCliente('safemarket');
+    const rs = await hojaCompletaCliente('safemarket_rs');
+    res.json({ ok: true, filas: r.filas, filasRS: rs.filas });
   } catch (e) { console.error(e); res.status(502).json({ error: e.message }); }
 });
 app.post('/api/admin/entradas-bodega/hoja', admin, async (_req, res) => {
@@ -248,7 +270,7 @@ app.delete('/api/admin/entradas-bodega/:id', admin, async (req, res) => {
     if (!referencia) return res.status(404).json({ error: 'No encontrado' });
     res.json({ ok: true, referencia });
     if (driveListo()) hojaCompleta().catch((e) => console.error(`No se pudo quitar ${referencia} de la hoja:`, e.message));
-    copiarAFevisa(antes, null);
+    copiarAHojasCliente(antes, null);
   } catch (e) { console.error(e); res.status(500).json({ error: 'No se pudo borrar el registro.' }); }
 });
 app.put('/api/admin/entradas-bodega/:id', admin, async (req, res) => {
@@ -277,7 +299,7 @@ app.put('/api/admin/entradas-bodega/:id', admin, async (req, res) => {
     if (!reg) return res.status(404).json({ error: 'No encontrado' });
     res.json({ ok: true, ...reg });
     copiarAHoja(antes ? antes.referencia : reg.referencia, reg.referencia, reg.datos);
-    copiarAFevisa(antes || reg, reg);
+    copiarAHojasCliente(antes || reg, reg);
   } catch (e) {
     if (e instanceof db.RefRepetida) return res.status(409).json({ error: 'Esa referencia ya existe.' });
     console.error(e); res.status(500).json({ error: 'No se pudo guardar el cambio.' });
@@ -366,8 +388,9 @@ db.init().then(async (aplicadas) => {
   if (Array.isArray(aplicadas) && aplicadas.length && driveListo()) {
     hojaCompleta().then((r) => console.log(`Hoja de Google actualizada: ${r.filas} registros`))
       .catch((e) => console.error('No se pudo actualizar la hoja tras la migración:', e.message));
-    hojaCompletaFevisa().then((r) => console.log(`Hoja FEVISA actualizada: ${r.filas} registros`))
-      .catch((e) => console.error('No se pudo actualizar la hoja FEVISA tras la migración:', e.message));
+    for (const hoja of Object.keys(HOJAS_CLIENTE))
+      hojaCompletaCliente(hoja).then((r) => console.log(`Hoja ${HOJAS_CLIENTE[hoja].nombre} actualizada: ${r.filas} registros`))
+        .catch((e) => console.error(`No se pudo actualizar la hoja ${HOJAS_CLIENTE[hoja].nombre} tras la migración:`, e.message));
   }
 })
   .catch((e) => { console.error('No se pudo iniciar la base de datos:', e); process.exit(1); });
