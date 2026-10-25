@@ -193,14 +193,15 @@ async function generarPrevio(rep, ref) {
     if (l) txt(l, x1 + (x2 - x1 - ancho(l, VT, FB)) / 2, base + 3, VT, FB, TINTA);
   };
   const cuadrante = (n, p, x, top, h) => {
-    pg.drawRectangle({ x, y: top - h, width: CW, height: h, borderColor: LINEA, borderWidth: 1.2, color: BLANCO });
+    pg.drawRectangle({ x, y: top - h, width: CW, height: h, color: BLANCO });
     pg.drawRectangle({ x, y: top - 17, width: CW, height: 17, color: BEIGE_SUAVE });
-    pg.drawLine({ start: { x, y: top - 17 }, end: { x: x + CW, y: top - 17 }, thickness: 1, color: LINEA });
-    const et = `PARTIDA ${n}`, ew = ancho(et, 8, FB) + 16;
-    pg.drawRectangle({ x, y: top - 17, width: ew, height: 17, color: CAFE_OSC });
-    txt(et, x + 8, top - 11.5, 8, FB, BEIGE);
-    // El borde se dibuja otra vez encima para que el encabezado no tape la línea de arriba
+    // Línea bajo el encabezado y borde del cuadrante, del mismo grosor
+    pg.drawLine({ start: { x, y: top - 17 }, end: { x: x + CW, y: top - 17 }, thickness: 1.2, color: LINEA });
     pg.drawRectangle({ x, y: top - h, width: CW, height: h, borderColor: LINEA, borderWidth: 1.2 });
+    // Etiqueta café al final, encima de las líneas (las tapa por completo)
+    const et = `PARTIDA ${n}`, ew = ancho(et, 8, FB) + 16;
+    pg.drawRectangle({ x: x - 0.6, y: top - 17 - 0.6, width: ew + 0.6, height: 17 + 1.2, color: CAFE_OSC });
+    txt(et, x + 8, top - 11.5, 8, FB, BEIGE);
     const pad = 9, x1 = x + pad, x2 = x + CW - pad;
     // DESC. PROD. (normalmente se captura en computadora): 2 renglones compactos
     let yy = top - 17 - 11;
