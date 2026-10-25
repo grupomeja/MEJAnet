@@ -199,6 +199,8 @@ async function generarPrevio(rep, ref) {
     const et = `PARTIDA ${n}`, ew = ancho(et, 8, FB) + 16;
     pg.drawRectangle({ x, y: top - 17, width: ew, height: 17, color: CAFE_OSC });
     txt(et, x + 8, top - 11.5, 8, FB, BEIGE);
+    // El borde se dibuja otra vez encima para que el encabezado no tape la línea de arriba
+    pg.drawRectangle({ x, y: top - h, width: CW, height: h, borderColor: LINEA, borderWidth: 1.2 });
     const pad = 9, x1 = x + pad, x2 = x + CW - pad;
     // DESC. PROD. (normalmente se captura en computadora): 2 renglones compactos
     let yy = top - 17 - 11;
