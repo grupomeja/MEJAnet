@@ -126,6 +126,8 @@ app.get('/logout', (_req, res) => {
 
 // Módulos (logo y botones), después de iniciar sesión
 app.get('/modulos', admin, (_req, res) => res.set('Cache-Control', 'no-store').sendFile(path.join(__dirname, 'admin', 'modulos.html')));
+// Herramientas: destino pendiente; por ahora página "en construcción"
+app.get('/herramientas', admin, (_req, res) => res.sendFile(path.join(__dirname, 'admin', 'herramientas.html')));
 
 // --- Crear órdenes (requiere usuario y contraseña) ---
 app.post('/api/ordenes', admin, async (req, res) => {

@@ -38,6 +38,9 @@
   a.boton.manzanillo{--c:#C9B08C;--c-osc:#A08560}
   a.boton.manzanillo .ico{color:#7A5C38}
   a.boton.manzanillo .txt{color:#2E2419;text-shadow:none}
+  a.boton.herramientas{--c:#f5c400;--c-osc:#c99f00}
+  a.boton.herramientas .ico{color:#b38a00}
+  a.boton.herramientas .txt{color:#2b2400;text-shadow:none}
   /* Cerrar sesión: botón secundario, discreto debajo de los módulos */
   a.salir{display:inline-flex;align-items:center;gap:8px;margin-top:22px;padding:8px 18px;border:1.5px solid #c9d4e0;border-radius:999px;
     background:#fff;color:#5d6672;text-decoration:none;font-weight:700;font-size:14px;letter-spacing:.3px;transition:color .15s,border-color .15s,background .15s}
@@ -116,6 +119,17 @@
         </svg>
       </span>
       <span class="txt">OP Manzanillo</span>
+    </a>
+    <a class="boton herramientas" href="/herramientas">
+      <span class="ico" aria-hidden="true">
+        <svg viewBox="0 0 64 64">
+          <path d="M44.5 6.5a13 13 0 0 0-12.3 17.2L8.6 47.3a5.6 5.6 0 0 0 0 7.9l.2.2a5.6 5.6 0 0 0 7.9 0l23.6-23.6A13 13 0 0 0 57.5 19.5l-7.6 7.6-8.1-1.5-1.5-8.1 7.6-7.6a13 13 0 0 0-3.4-3.4z" fill="currentColor"/>
+          <circle cx="12.7" cy="51.3" r="2.4" fill="#fff"/>
+          <path d="M9 13l5-5 7 4 1.5 5.5 13 13-4 4-13-13L13 20z" fill="currentColor"/>
+          <path d="M37.5 37.5l4-4 14.8 14.8a4 4 0 0 1 0 5.7l-1.6 1.6a4 4 0 0 1-5.7 0z" fill="currentColor"/>
+        </svg>
+      </span>
+      <span class="txt">Herramientas</span>
     </a>
   </div>
   <a class="salir" href="/logout">
