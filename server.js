@@ -9,10 +9,13 @@ const { guardarEnDrive, enviarHojaEB, configurado: driveListo } = require('./dri
 const cotizador = require('./cotizador');
 const opManzanillo = require('./opmanzanillo');
 const traducciones = require('./traducciones');
+const shipper = require('./shipper');
 
 const app = express();
 app.set('trust proxy', 1); // Render pasa por un proxy; así req.ip es la IP real del visitante
-app.use(express.json({ limit: '200kb' }));
+// Los reportes Shipper traen sus propias partidas y usan un límite mayor (ver shipper.js)
+const jsonNormal = express.json({ limit: '200kb' });
+app.use((req, res, next) => (req.path.startsWith('/api/shipper') ? next() : jsonNormal(req, res, next)));
 
 // --- Limpieza de datos que llegan del formulario ---
 const t = (v, max = 200) => String(v ?? '').trim().slice(0, max);
@@ -129,7 +132,10 @@ app.get('/logout', (_req, res) => {
 app.get('/modulos', admin, (_req, res) => res.set('Cache-Control', 'no-store').sendFile(path.join(__dirname, 'admin', 'modulos.html')));
 // Herramientas: menú con Reporte Shipper Normal, Reporte Shipper SM y Conversión de unidades
 app.get('/herramientas', admin, (_req, res) => res.sendFile(path.join(__dirname, 'admin', 'herramientas.html')));
-for (const h of ['shipper-normal', 'shipper-sm', 'conversion-unidades']) {
+// Reporte Shipper Normal: lista de reportes guardados y convertidor
+app.get('/herramientas/shipper-normal', admin, (_req, res) => res.set('Cache-Control', 'no-store').sendFile(path.join(__dirname, 'admin', 'shipper-lista.html')));
+app.get('/herramientas/shipper-normal/reporte', admin, (_req, res) => res.set('Cache-Control', 'no-store').sendFile(path.join(__dirname, 'admin', 'shipper-normal.html')));
+for (const h of ['shipper-sm', 'conversion-unidades']) {
   app.get('/herramientas/' + h, admin, (_req, res) => res.sendFile(path.join(__dirname, 'admin', h + '.html')));
 }
 
@@ -386,6 +392,9 @@ app.use(opManzanillo.rutas(admin));
 // --- Traducciones español → inglés (Reporte Shipper) ---
 app.use(traducciones.rutas(admin));
 
+// --- Reportes Shipper Normal guardados ---
+app.use(shipper.rutas(admin));
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 const puerto = process.env.PORT || 3000;
@@ -393,6 +402,7 @@ db.init().then(async (aplicadas) => {
   await cotizador.init();
   await opManzanillo.init();
   await traducciones.init();
+  await shipper.init();
   app.listen(puerto, () => console.log('Escuchando en puerto', puerto));
   // Si un cambio de datos se aplicó al arrancar, se actualiza la hoja de Google completa
   if (Array.isArray(aplicadas) && aplicadas.length && driveListo()) {
