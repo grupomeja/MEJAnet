@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600&display=swap" rel="stylesheet">
 <style>
-  :root{--bg:#f4f8fb;--ink:#0b1a33;--muted:#5d6672;--line:#c9d4e0;--c:#2e8b57;--c-osc:#1f6640;--head:#507CD1;--alt:#EFF3FB;--tot:#DCE6F7;--en:#1f4e8c;--warn:#a86200;--warn-bg:#fcf0dc;--err:#c0262d;--err-bg:#fff5f5;--ok:#1e7a4c}
+  :root{--bg:#f4f8fb;--ink:#0b1a33;--muted:#5d6672;--line:#c9d4e0;--c:#2e8b57;--c-osc:#1f6640;--head:#2e8b57;--alt:#f0f8f3;--tot:#ddefe4;--en:#1f6640;--warn:#a86200;--warn-bg:#fcf0dc;--err:#c0262d;--err-bg:#fff5f5;--ok:#1e7a4c}
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:14px}
   .wrap{max-width:1000px;margin:0 auto;padding:18px 16px 40px}
@@ -61,8 +61,8 @@
   .tabla{overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:8px}
   table{border-collapse:collapse;width:100%;min-width:760px;font-family:Verdana,Geneva,sans-serif;font-size:11px;color:#333}
   caption{caption-side:top;text-align:center;font:700 17px Calibri,Carlito,system-ui,sans-serif;color:var(--ink);padding:10px}
-  th{background:var(--head);color:#fff;font-weight:700;padding:6px 5px;border:1px solid #9aa9c4;white-space:pre-line}
-  td{padding:4px 5px;border:1px solid #c5ccd8;text-align:center;font-variant-numeric:tabular-nums}
+  th{background:var(--head);color:#fff;font-weight:700;padding:6px 5px;border:1px solid #6fb08b;white-space:pre-line}
+  td{padding:4px 5px;border:1px solid #cfe0d5;text-align:center;font-variant-numeric:tabular-nums}
   td.desc{text-align:left}
   tr.alt td{background:var(--alt)}
   tr.tot td{background:var(--tot);font-weight:700;border-top:2px solid var(--head);border-bottom:2px solid var(--head)}
@@ -71,9 +71,9 @@
   tr.en td{border-top-color:transparent;padding-top:1px}
   tr.dato.con-en td{border-bottom-color:transparent}
   .ing{display:block;min-height:1.4em;padding:2px 4px;margin:-1px -4px;border-radius:4px;color:var(--en);font-style:italic;outline:none;cursor:copy;transition:background .25s}
-  .ing:hover{background:#fff;box-shadow:inset 0 0 0 1px #c9d4e0}
+  .ing:hover{background:#fff;box-shadow:inset 0 0 0 1px #b5dcc5}
   .ing[contenteditable="true"]{cursor:text;background:#fff;box-shadow:inset 0 0 0 2px #4fc9ee;font-style:normal}
-  .ing.copiado{background:#dff3e8;box-shadow:inset 0 0 0 1px #9fd3b5}
+  .ing.copiado{background:#c9ead6;box-shadow:inset 0 0 0 1px #8cc7a4}
   .ing:empty::before{content:attr(data-vacio);color:#a3a8af}
   .ing.cargando{color:#a3a8af}
   td.total{text-align:right;padding-right:10px}
@@ -324,7 +324,7 @@ function descargarPDF() {
   const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'letter', compress: true });
   const ancho = doc.internal.pageSize.getWidth();
 
-  const AZUL = [80, 124, 209], ALT = [239, 243, 251], TOT = [220, 230, 247], EN = [31, 78, 140], TXT = [51, 51, 51];
+  const VERDE = [46, 139, 87], ALT = [240, 248, 243], TOT = [221, 239, 228], EN = [31, 102, 64], TXT = [51, 51, 51], LINEA = [190, 214, 199];
   const body = [];
   actual.grupos.forEach((g, gi) => {
     const fondo = gi % 2 === 0 ? ALT : [255, 255, 255];
@@ -346,8 +346,8 @@ function descargarPDF() {
     body: body.map(f => f.celdas),
     theme: 'grid',
     rowPageBreak: 'avoid',
-    styles: { font: 'helvetica', fontSize: 7.5, textColor: TXT, halign: 'center', valign: 'middle', cellPadding: 3, lineColor: [150, 150, 150], lineWidth: 0.4 },
-    headStyles: { fillColor: AZUL, textColor: 255, fontStyle: 'bold', lineColor: [150, 150, 150] },
+    styles: { font: 'helvetica', fontSize: 7.5, textColor: TXT, halign: 'center', valign: 'middle', cellPadding: 3, lineColor: LINEA, lineWidth: 0.4 },
+    headStyles: { fillColor: VERDE, textColor: 255, fontStyle: 'bold', lineColor: [111, 176, 139] },
     columnStyles: { 0: { cellWidth: 52 }, 1: { cellWidth: 58 }, 2: { halign: 'left' }, 3: { cellWidth: 46 }, 4: { cellWidth: 32 }, 5: { cellWidth: 66 }, 6: { cellWidth: 62 }, 7: { cellWidth: 120 } },
     didParseCell: d => {
       if (d.section !== 'body') return;
@@ -365,9 +365,9 @@ function descargarPDF() {
     didDrawCell: d => {
       if (d.section !== 'body') return;
       const f = body[d.row.index];
-      // Línea azul gruesa arriba y abajo del total de cada fracción
+      // Línea verde gruesa arriba y abajo del total de cada fracción
       if (f.tipo === 'tot') {
-        doc.setDrawColor(...AZUL); doc.setLineWidth(1.4);
+        doc.setDrawColor(...VERDE); doc.setLineWidth(1.4);
         doc.line(d.cell.x, d.cell.y, d.cell.x + d.cell.width, d.cell.y);
         doc.line(d.cell.x, d.cell.y + d.cell.height, d.cell.x + d.cell.width, d.cell.y + d.cell.height);
       }
