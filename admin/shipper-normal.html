@@ -11,7 +11,7 @@
   :root{--bg:#f4f8fb;--ink:#0b1a33;--muted:#5d6672;--line:#c9d4e0;--c:#2e8b57;--c-osc:#1f6640;--head:#2e8b57;--alt:#f0f8f3;--tot:#ddefe4;--en:#1f6640;--warn:#a86200;--warn-bg:#fcf0dc;--err:#c0262d;--err-bg:#fff5f5;--ok:#1e7a4c}
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:14px}
-  .wrap{max-width:1000px;margin:0 auto;padding:18px 16px 40px}
+  .wrap{max-width:1800px;margin:0 auto;padding:18px max(16px,2vw) 40px}
   /* Encabezado como el resto de MEJAnet: logo en el color del módulo, título al centro con el ícono de su botón */
   header{display:grid;grid-template-columns:1fr auto 1fr;gap:10px 16px;align-items:center;margin-bottom:18px}
   header .logo{justify-self:start}
@@ -58,10 +58,17 @@
   button:focus-visible,.drop:focus-visible,a:focus-visible{outline:3px solid #4fc9ee;outline-offset:3px}
 
   /* Reporte */
-  .tabla{overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:8px}
+  .tabla{overflow:auto;background:#fff;border:1px solid var(--line);border-top:0;border-radius:0 0 8px 8px}
   table{border-collapse:collapse;width:100%;min-width:760px;font-family:Verdana,Geneva,sans-serif;font-size:11px;color:#333}
-  caption{caption-side:top;text-align:center;font:700 17px Calibri,Carlito,system-ui,sans-serif;color:var(--ink);padding:10px}
-  th{background:var(--head);color:#fff;font-weight:700;padding:6px 5px;border:1px solid #6fb08b;white-space:pre-line}
+  .titref{text-align:center;font:700 17px Calibri,Carlito,system-ui,sans-serif;color:var(--ink);padding:10px;background:#fff;border:1px solid var(--line);border-bottom:0;border-radius:8px 8px 0 0}
+  th{background:var(--head);color:#fff;font-weight:700;padding:6px 5px;border:1px solid #6fb08b;white-space:pre-line;position:sticky;top:-1px;z-index:2;box-shadow:0 -2px 0 var(--head)}
+  td:not(.desc):not(.prov){white-space:nowrap}
+  td.prov{white-space:normal}
+  body.con-reporte{height:100vh;overflow:hidden}
+  body.con-reporte .wrap{height:100vh;display:flex;flex-direction:column;padding-bottom:14px}
+  body.con-reporte .res{flex:1;min-height:0;display:flex;flex-direction:column}
+  body.con-reporte .tabla{flex:1;min-height:0}
+  @media (max-width:760px),(max-height:560px){body.con-reporte{height:auto;overflow:visible}body.con-reporte .wrap{height:auto;display:block}body.con-reporte .tabla{max-height:80vh}}
   td{padding:4px 5px;border:1px solid #cfe0d5;text-align:center;font-variant-numeric:tabular-nums}
   td.desc{text-align:left}
   tr.tot td{background:var(--tot);font-size:12.5px;font-weight:700;padding-block:6px;border-top:2px solid var(--head);border-bottom:2px solid var(--head)}
@@ -77,7 +84,7 @@
   .ing.cargando{color:#a3a8af}
   td.total{text-align:right;padding-right:10px}
   .col-borrar{width:34px;padding:2px 4px 0;vertical-align:top;background:#fff!important;border-color:#e6efe9!important}
-  th.col-borrar{background:#fff!important;border:0!important}
+  th.col-borrar{background:#fff!important;border:0!important;box-shadow:0 -2px 0 #fff!important}
   .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
   button.borrar{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border:1px solid transparent;border-radius:6px;background:none;color:#a3a8af;cursor:pointer}
   button.borrar svg{width:16px;height:16px}
@@ -114,6 +121,7 @@
       <button class="pdf" id="pdf" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg> Descargar PDF</button>
     </div>
     <p class="nota">Debajo de cada descripción va su traducción al <i>inglés</i>. Haz <b>clic</b> sobre una traducción para copiarla. Si alguna no es correcta, haz <b>doble clic</b> para corregirla: la próxima vez saldrá así.</p>
+    <div class="titref" id="titref"></div>
     <div class="tabla"><table id="tabla"></table></div>
   </section>
 </div>
@@ -206,6 +214,8 @@ async function leerArchivo(file) {
     $('dropTxt').textContent = file.name + ' · cambiar archivo';
     $('drop').classList.add('chico');
     $('res').hidden = false;
+    document.body.classList.add('con-reporte');
+    ajustarColumnas();
     traducir();
   } catch (e) {
     aviso(e.message || 'No pude leer el archivo.', 'err');
@@ -253,11 +263,12 @@ function recalcular() {
 function pintar() {
   const { grupos } = actual;
   $('pdf').disabled = !grupos.length;
-  let h = '<caption>Referencia : ' + esc($('ref').value) + '</caption><thead><tr>' + COLS.map(c => '<th>' + esc(c.t) + '</th>').join('') + '<th class="col-borrar"><span class="sr">Borrar</span></th></tr></thead><tbody>';
+  $('titref').textContent = 'Referencia : ' + $('ref').value;
+  let h = '<thead><tr>' + COLS.map(c => '<th>' + esc(c.t) + '</th>').join('') + '<th class="col-borrar"><span class="sr">Borrar</span></th></tr></thead><tbody>';
   grupos.forEach((g, gi) => {
     for (const b of g.bloques) {
       const p = b.fila;
-      h += `<tr class="dato con-en"><td>${esc(p.sec)}</td><td>${esc(p.frac)}</td><td class="desc">${esc(p.desc)}</td><td>${fmt(p.qty, 4)}</td><td>${esc(p.umc)}</td><td>${dinero(p.val)}</td><td>${fmt(p.peso, 4)}</td><td>${esc(p.prov)}</td><td class="col-borrar" rowspan="3"><button type="button" class="borrar" data-k="${esc(b.k)}" title="Borrar esta partida del reporte" aria-label="Borrar ${esc(p.desc)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4h6v3"/></svg></button></td></tr>`;
+      h += `<tr class="dato con-en"><td>${esc(p.sec)}</td><td>${esc(p.frac)}</td><td class="desc">${esc(p.desc)}</td><td>${fmt(p.qty, 4)}</td><td>${esc(p.umc)}</td><td>${dinero(p.val)}</td><td>${fmt(p.peso, 4)}</td><td class="prov">${esc(p.prov)}</td><td class="col-borrar" rowspan="3"><button type="button" class="borrar" data-k="${esc(b.k)}" title="Borrar esta partida del reporte" aria-label="Borrar ${esc(p.desc)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4h6v3"/></svg></button></td></tr>`;
       const en = ingles.get(b.clave);
       h += `<tr class="en"><td></td><td></td><td class="desc"><span class="ing${en === undefined ? ' cargando' : ''}" tabindex="0" title="Clic para copiar · doble clic para corregir" spellcheck="false" data-es="${esc(b.clave)}" data-vacio="${en === undefined ? 'Traduciendo…' : 'Escribe la traducción al inglés'}">${esc(en || '')}</span></td><td></td><td></td><td></td><td></td><td></td></tr>`;
       h += `<tr class="tot"><td></td><td></td><td class="total">TOTAL</td><td>${fmt(p.qty, 4)}</td><td>${esc(p.umc)}</td><td>${dinero(p.val)}</td><td>${fmt(p.peso, 4)}</td><td></td></tr>`;
@@ -274,6 +285,31 @@ function pintar() {
   $('resumen').innerHTML = `<b>${nP}</b> partidas en <b>${grupos.length}</b> fracciones · Valor <b>${dinero(redondear(valT))}</b> · Peso <b>${fmt(redondear(pesoT), 3)} kg</b>`;
   const mix = bloques.filter(b => b.umcs.length > 1).map(b => b.fila.frac + ' (' + b.fila.desc + ')');
   if (mix.length) aviso('Atención: ' + mix.join(', ') + ' tiene partidas con distinta UMC; su QTY UMC suma unidades diferentes.', 'warn');
+}
+
+// Descripción y proveedor: tan anchas como para que su texto más largo quepa en 2 renglones como máximo
+function ajustarColumnas() {
+  const tabla = $('tabla');
+  const medir = (sel) => {
+    let max = 0;
+    const m = document.createElement('span');
+    m.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap';
+    document.body.appendChild(m);
+    tabla.querySelectorAll(sel).forEach(el => {
+      const cs = getComputedStyle(el);
+      m.style.font = cs.font; m.style.letterSpacing = cs.letterSpacing;
+      m.textContent = el.textContent;
+      max = Math.max(max, m.getBoundingClientRect().width);
+    });
+    m.remove();
+    return max;
+  };
+  const anchoDesc = Math.max(medir('tr.dato td.desc'), medir('.ing'));
+  const anchoProv = medir('td.prov');
+  const ths = tabla.querySelectorAll('thead th');
+  // la mitad del texto más largo, más margen por cortes de palabra y relleno de la celda
+  if (ths[2]) ths[2].style.minWidth = Math.ceil(anchoDesc * 0.56 + 24) + 'px';
+  if (ths[7]) ths[7].style.minWidth = Math.ceil(anchoProv * 0.56 + 16) + 'px';
 }
 
 // Pide al servidor las traducciones (glosario guardado + traducción automática de lo nuevo)
@@ -297,6 +333,7 @@ async function traducir() {
     const en = ingles.get(el.dataset.es) || '';
     el.textContent = en; el.classList.remove('cargando'); el.dataset.vacio = 'Escribe la traducción al inglés';
   });
+  ajustarColumnas();
 }
 
 // Corrección manual de una traducción (doble clic): se guarda en el glosario del servidor
@@ -402,16 +439,16 @@ function descargarPDF() {
 
 $('tabla').addEventListener('click', ev => {
   const b = ev.target.closest?.('button.borrar'); if (!b) return;
-  actual.borradas.add(b.dataset.k); recalcular(); pintar();
+  actual.borradas.add(b.dataset.k); recalcular(); pintar(); ajustarColumnas();
 });
-$('restaurar').addEventListener('click', () => { actual.borradas.clear(); recalcular(); pintar(); });
+$('restaurar').addEventListener('click', () => { actual.borradas.clear(); recalcular(); pintar(); ajustarColumnas(); });
 const drop = $('drop');
 $('archivo').addEventListener('change', ev => { const f = ev.target.files[0]; if (f) leerArchivo(f); ev.target.value = ''; });
 drop.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); $('archivo').click(); } });
 ['dragenter', 'dragover'].forEach(t => drop.addEventListener(t, ev => { ev.preventDefault(); drop.classList.add('over'); }));
 ['dragleave', 'drop'].forEach(t => drop.addEventListener(t, ev => { ev.preventDefault(); drop.classList.remove('over'); }));
 drop.addEventListener('drop', ev => { const f = ev.dataTransfer.files[0]; if (f) leerArchivo(f); });
-$('ref').addEventListener('input', () => { if (actual) $('tabla').querySelector('caption').textContent = 'Referencia : ' + $('ref').value; });
+$('ref').addEventListener('input', () => { if (actual) $('titref').textContent = 'Referencia : ' + $('ref').value; });
 let tClic;
 $('tabla').addEventListener('click', ev => {
   const el = ev.target.closest?.('.ing');
