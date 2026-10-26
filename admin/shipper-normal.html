@@ -502,12 +502,12 @@ function editar(el) {
   const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
 }
 
-// PDF tamaño carta (horizontal) para imprimir: mismo orden, grupos, traducciones y totales que la pantalla
+// PDF tamaño carta (vertical) para imprimir: mismo orden, grupos, traducciones y totales que la pantalla
 function descargarPDF() {
   if (!window.jspdf || !window.jspdf.jsPDF) throw new Error('no se cargó el generador de PDF. Revisa tu conexión y recarga la página.');
   const { jsPDF } = window.jspdf;
   const ref = $('ref').value.trim();
-  const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'letter', compress: true });
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter', compress: true });
   const ancho = doc.internal.pageSize.getWidth();
 
   const VERDE = [46, 139, 87], TOT = [221, 239, 228], EN = [31, 102, 64], EN_FONDO = [225, 242, 231], TXT = [51, 51, 51], LINEA = [190, 214, 199];
@@ -523,18 +523,18 @@ function descargarPDF() {
   });
 
   doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.setTextColor(11, 26, 51);
-  doc.text('Referencia : ' + ref, ancho / 2, 46, { align: 'center' });
+  doc.text('Referencia : ' + ref, ancho / 2, 42, { align: 'center' });
 
   doc.autoTable({
-    startY: 58,
-    margin: { left: 30, right: 30, top: 40, bottom: 36 },
+    startY: 54,
+    margin: { left: 24, right: 24, top: 36, bottom: 34 },
     head: [COLS.map(c => c.t)],
     body: body.map(f => f.celdas),
     theme: 'grid',
     rowPageBreak: 'avoid',
-    styles: { font: 'helvetica', fontSize: 7.5, textColor: TXT, halign: 'center', valign: 'middle', cellPadding: 3, lineColor: LINEA, lineWidth: 0.4 },
-    headStyles: { fillColor: VERDE, textColor: 255, fontStyle: 'bold', lineColor: [111, 176, 139] },
-    columnStyles: { 0: { cellWidth: 52 }, 1: { cellWidth: 58 }, 2: { halign: 'left' }, 3: { cellWidth: 46 }, 4: { cellWidth: 32 }, 5: { cellWidth: 66 }, 6: { cellWidth: 62 }, 7: { cellWidth: 120 } },
+    styles: { font: 'helvetica', fontSize: 7, textColor: TXT, halign: 'center', valign: 'middle', cellPadding: 2.6, lineColor: LINEA, lineWidth: 0.4 },
+    headStyles: { fillColor: VERDE, textColor: 255, fontStyle: 'bold', lineColor: [111, 176, 139], fontSize: 6.8 },
+    columnStyles: { 0: { cellWidth: 48 }, 1: { cellWidth: 54 }, 2: { halign: 'left' }, 3: { cellWidth: 38 }, 4: { cellWidth: 28 }, 5: { cellWidth: 60 }, 6: { cellWidth: 48 }, 7: { cellWidth: 92 } },
     didParseCell: d => {
       if (d.section !== 'body') return;
       const f = body[d.row.index];
@@ -543,9 +543,9 @@ function descargarPDF() {
       if (f.tipo === 'en') {
         d.cell.styles.lineWidth = { top: 0, right: 0.4, bottom: 0.4, left: 0.4 };
         d.cell.styles.cellPadding = { top: 1, bottom: 3, left: 3, right: 3 };
-        if (d.column.index === 2) { d.cell.styles.fillColor = EN_FONDO; d.cell.styles.fontStyle = 'bold'; d.cell.styles.fontSize = 8.5; d.cell.styles.textColor = EN; }
+        if (d.column.index === 2) { d.cell.styles.fillColor = EN_FONDO; d.cell.styles.fontStyle = 'bold'; d.cell.styles.fontSize = 7.8; d.cell.styles.textColor = EN; }
       }
-      if (f.tipo === 'tot') { d.cell.styles.fillColor = TOT; d.cell.styles.fontStyle = 'bold'; d.cell.styles.textColor = [11, 26, 51]; d.cell.styles.fontSize = 8.5; if (d.column.index === 2) d.cell.styles.halign = 'right'; }
+      if (f.tipo === 'tot') { d.cell.styles.fillColor = TOT; d.cell.styles.fontStyle = 'bold'; d.cell.styles.textColor = [11, 26, 51]; d.cell.styles.fontSize = 7.8; if (d.column.index === 2) d.cell.styles.halign = 'right'; }
       if (f.tipo === 'sep') { d.cell.styles.fillColor = [255, 255, 255]; d.cell.styles.lineWidth = 0; d.cell.styles.minCellHeight = 8; d.cell.styles.cellPadding = 0; d.cell.text = ['']; }
     },
     didDrawCell: d => {
@@ -561,7 +561,7 @@ function descargarPDF() {
     didDrawPage: () => {
       const n = doc.internal.getNumberOfPages();
       doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(120);
-      doc.text('Referencia ' + ref + ' · Página ' + n, ancho - 30, doc.internal.pageSize.getHeight() - 18, { align: 'right' });
+      doc.text('Referencia ' + ref + ' · Página ' + n, ancho - 24, doc.internal.pageSize.getHeight() - 18, { align: 'right' });
     },
   });
   doc.save('REPORTE_PARA_SHIPPER_' + (ref.split('/')[0] || 'SIN_REF') + '.pdf');
