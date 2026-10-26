@@ -62,8 +62,9 @@
   table{border-collapse:collapse;width:100%;min-width:760px;font-family:Verdana,Geneva,sans-serif;font-size:11px;color:#333}
   .titref{text-align:center;font:700 17px Calibri,Carlito,system-ui,sans-serif;color:var(--ink);padding:10px;background:#fff;border:1px solid var(--line);border-bottom:0;border-radius:8px 8px 0 0}
   th{background:var(--head);color:#fff;font-weight:700;padding:6px 5px;border:1px solid #6fb08b;white-space:pre-line;position:sticky;top:-1px;z-index:2;box-shadow:0 -2px 0 var(--head)}
-  td:not(.desc):not(.prov){white-space:nowrap}
+  td:not(.desc):not(.prov):not(.sec){white-space:nowrap}
   td.prov{white-space:normal}
+  td.sec{white-space:normal;max-width:110px}
   body.con-reporte{height:100vh;overflow:hidden}
   body.con-reporte .wrap{height:100vh;display:flex;flex-direction:column;padding-bottom:14px}
   body.con-reporte .res{flex:1;min-height:0;display:flex;flex-direction:column}
@@ -268,7 +269,7 @@ function pintar() {
   grupos.forEach((g, gi) => {
     for (const b of g.bloques) {
       const p = b.fila;
-      h += `<tr class="dato con-en"><td>${esc(p.sec)}</td><td>${esc(p.frac)}</td><td class="desc">${esc(p.desc)}</td><td>${fmt(p.qty, 4)}</td><td>${esc(p.umc)}</td><td>${dinero(p.val)}</td><td>${fmt(p.peso, 4)}</td><td class="prov">${esc(p.prov)}</td><td class="col-borrar" rowspan="3"><button type="button" class="borrar" data-k="${esc(b.k)}" title="Borrar esta partida del reporte" aria-label="Borrar ${esc(p.desc)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4h6v3"/></svg></button></td></tr>`;
+      h += `<tr class="dato con-en"><td class="sec">${esc(p.sec)}</td><td>${esc(p.frac)}</td><td class="desc">${esc(p.desc)}</td><td>${fmt(p.qty, 4)}</td><td>${esc(p.umc)}</td><td>${dinero(p.val)}</td><td>${fmt(p.peso, 4)}</td><td class="prov">${esc(p.prov)}</td><td class="col-borrar" rowspan="3"><button type="button" class="borrar" data-k="${esc(b.k)}" title="Borrar esta partida del reporte" aria-label="Borrar ${esc(p.desc)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4h6v3"/></svg></button></td></tr>`;
       const en = ingles.get(b.clave);
       h += `<tr class="en"><td></td><td></td><td class="desc"><span class="ing${en === undefined ? ' cargando' : ''}" tabindex="0" title="Clic para copiar · doble clic para corregir" spellcheck="false" data-es="${esc(b.clave)}" data-vacio="${en === undefined ? 'Traduciendo…' : 'Escribe la traducción al inglés'}">${esc(en || '')}</span></td><td></td><td></td><td></td><td></td><td></td></tr>`;
       h += `<tr class="tot"><td></td><td></td><td class="total">TOTAL</td><td>${fmt(p.qty, 4)}</td><td>${esc(p.umc)}</td><td>${dinero(p.val)}</td><td>${fmt(p.peso, 4)}</td><td></td></tr>`;
@@ -307,10 +308,24 @@ function ajustarColumnas() {
   const anchoDesc = Math.max(medir('tr.dato td.desc'), medir('.ing'));
   const anchoProv = medir('td.prov');
   const ths = tabla.querySelectorAll('thead th');
-  // la mitad del texto más largo, más margen por cortes de palabra y relleno de la celda
-  if (ths[2]) ths[2].style.minWidth = Math.ceil(anchoDesc * 0.56 + 24) + 'px';
-  if (ths[7]) ths[7].style.minWidth = Math.ceil(anchoProv * 0.56 + 16) + 'px';
+  if (!ths[2] || !ths[7]) return;
+  // Lo ideal: la mitad del texto más largo (2 renglones), más margen por cortes de palabra y relleno
+  let desc = Math.ceil(anchoDesc * 0.56 + 24), prov = Math.ceil(anchoProv * 0.56 + 16);
+  ths[2].style.minWidth = desc + 'px'; ths[7].style.minWidth = prov + 'px';
+  // Si no cabe en la pantalla, se encogen (con más renglones) hasta que la tabla quepa a lo ancho
+  const caja = tabla.parentElement;
+  for (let i = 0; i < 3; i++) {
+    const sobra = caja.scrollWidth - caja.clientWidth;
+    if (sobra <= 0) break;
+    const total = (desc - 160) + (prov - 90);
+    if (total <= 0) break;
+    desc = Math.max(160, Math.floor(desc - sobra * (desc - 160) / total) - 1);
+    prov = Math.max(90, Math.floor(prov - sobra * (prov - 90) / total) - 1);
+    ths[2].style.minWidth = desc + 'px'; ths[7].style.minWidth = prov + 'px';
+  }
 }
+let tAjuste;
+addEventListener('resize', () => { clearTimeout(tAjuste); tAjuste = setTimeout(() => { if (actual) ajustarColumnas(); }, 150); });
 
 // Pide al servidor las traducciones (glosario guardado + traducción automática de lo nuevo)
 async function traducir() {
