@@ -49,7 +49,7 @@
   .resumen{flex:1;color:var(--muted);font-size:13px;min-width:200px}
   .resumen b{color:var(--ink)}
   .nota{margin:0 0 12px;color:var(--muted);font-size:12.5px}
-  .nota i{color:var(--en);font-style:italic;font-weight:600}
+  .nota i{color:var(--en);font-style:normal;font-weight:700;background:#e1f2e7;padding:0 4px;border-radius:3px}
   button.pdf{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border:0;border-radius:8px;background:var(--c);color:#fff;font:600 15px "Oswald","Arial Narrow",system-ui,sans-serif;letter-spacing:1px;text-transform:uppercase;cursor:pointer;box-shadow:0 3px 0 var(--c-osc)}
   button.pdf:hover{filter:brightness(1.07)}
   button.pdf:active{transform:translateY(2px);box-shadow:0 1px 0 var(--c-osc)}
@@ -64,16 +64,15 @@
   th{background:var(--head);color:#fff;font-weight:700;padding:6px 5px;border:1px solid #6fb08b;white-space:pre-line}
   td{padding:4px 5px;border:1px solid #cfe0d5;text-align:center;font-variant-numeric:tabular-nums}
   td.desc{text-align:left}
-  tr.alt td{background:var(--alt)}
   tr.tot td{background:var(--tot);font-size:12.5px;font-weight:700;padding-block:6px;border-top:2px solid var(--head);border-bottom:2px solid var(--head)}
   tr.sep td{border:0;height:14px;background:#fff}
   /* Renglón de la traducción: pegado a su descripción */
   tr.en td{border-top-color:transparent;padding-top:1px}
   tr.dato.con-en td{border-bottom-color:transparent}
-  .ing{display:block;min-height:1.4em;padding:2px 4px;margin:-1px -4px;border-radius:4px;color:var(--en);font-style:italic;outline:none;cursor:copy;transition:background .25s}
-  .ing:hover{background:#fff;box-shadow:inset 0 0 0 1px #b5dcc5}
-  .ing[contenteditable="true"]{cursor:text;background:#fff;box-shadow:inset 0 0 0 2px #4fc9ee;font-style:normal}
-  .ing.copiado{background:#c9ead6;box-shadow:inset 0 0 0 1px #8cc7a4}
+  .ing{display:block;min-height:1.5em;padding:3px 6px;margin:0 -2px;border-radius:4px;background:#e1f2e7;color:var(--en);font-size:12px;font-weight:700;outline:none;cursor:copy;transition:background .25s}
+  .ing:hover{background:#d3ecdc;box-shadow:inset 0 0 0 1px #9fd0b2}
+  .ing[contenteditable="true"]{cursor:text;background:#fff;box-shadow:inset 0 0 0 2px #4fc9ee}
+  .ing.copiado{background:#b6e0c6;box-shadow:inset 0 0 0 1px #6fb08b}
   .ing:empty::before{content:attr(data-vacio);color:#a3a8af}
   .ing.cargando{color:#a3a8af}
   td.total{text-align:right;padding-right:10px}
@@ -203,33 +202,35 @@ async function leerArchivo(file) {
   }
 }
 
-// Fracción de menor a mayor; dentro de la fracción, cada descripción con sus partidas juntas
+// Fracción de menor a mayor. Dentro de la fracción, las partidas con la misma descripción se juntan
+// en un solo renglón con cantidad, valor y peso sumados; cada descripción distinta lleva su propio total.
 function agrupar(partidas) {
   const porFrac = new Map();
   for (const p of partidas) { if (!porFrac.has(p.frac)) porFrac.set(p.frac, []); porFrac.get(p.frac).push(p); }
   const cmpSec = (a, b) => (typeof a.sec === 'number' && typeof b.sec === 'number') ? a.sec - b.sec : String(a.sec).localeCompare(String(b.sec), 'es', { numeric: true });
+  const unicos = xs => [...new Set(xs.filter(Boolean))];
   return [...porFrac.entries()]
     .sort((a, b) => a[0].localeCompare(b[0], 'es', { numeric: true }))
     .map(([frac, filas]) => {
-      // Orden de descripciones: según la primera secuencia en que aparece cada una
-      const primera = new Map();
-      [...filas].sort(cmpSec).forEach((p, i) => { if (!primera.has(norm(p.desc))) primera.set(norm(p.desc), i); });
-      filas.sort((a, b) => (primera.get(norm(a.desc)) - primera.get(norm(b.desc))) || cmpSec(a, b));
-      // Bloques de partidas con la misma descripción: la traducción va una vez, debajo del bloque
-      const bloques = [];
-      for (const p of filas) {
-        const ult = bloques[bloques.length - 1];
-        if (ult && ult.clave === norm(p.desc)) ult.filas.push(p); else bloques.push({ clave: norm(p.desc), filas: [p] });
-      }
-      const umcs = [...new Set(filas.map(p => p.umc))];
-      return {
-        frac, bloques, umcs, n: filas.length,
-        tot: {
-          qty: redondear(filas.reduce((s, p) => s + p.qty, 0)),
-          val: redondear(filas.reduce((s, p) => s + p.val, 0)),
-          peso: redondear(filas.reduce((s, p) => s + p.peso, 0)),
-        },
-      };
+      filas.sort(cmpSec);
+      // Una entrada por descripción, en el orden de la primera secuencia en que aparece
+      const porDesc = new Map();
+      for (const p of filas) { const k = norm(p.desc); if (!porDesc.has(k)) porDesc.set(k, []); porDesc.get(k).push(p); }
+      const bloques = [...porDesc.entries()].map(([clave, ps]) => {
+        const umcs = unicos(ps.map(p => p.umc));
+        const fila = {
+          sec: ps.map(p => p.sec).join(', '),
+          frac,
+          desc: ps[0].desc,
+          qty: redondear(ps.reduce((s, p) => s + p.qty, 0)),
+          umc: umcs.join(' / '),
+          val: redondear(ps.reduce((s, p) => s + p.val, 0)),
+          peso: redondear(ps.reduce((s, p) => s + p.peso, 0)),
+          prov: unicos(ps.map(p => p.prov)).join(' / '),
+        };
+        return { clave, fila, n: ps.length, umcs };
+      });
+      return { frac, bloques, n: filas.length };
     });
 }
 
@@ -237,24 +238,22 @@ function pintar() {
   const { grupos } = actual;
   let h = '<caption>Referencia : ' + esc($('ref').value) + '</caption><thead><tr>' + COLS.map(c => '<th>' + esc(c.t) + '</th>').join('') + '</tr></thead><tbody>';
   grupos.forEach((g, gi) => {
-    const cls = gi % 2 === 0 ? 'alt' : '';
     for (const b of g.bloques) {
-      b.filas.forEach((p, i) => {
-        const ultima = i === b.filas.length - 1;
-        h += `<tr class="dato ${cls}${ultima ? ' con-en' : ''}"><td>${esc(p.sec)}</td><td>${esc(p.frac)}</td><td class="desc">${esc(p.desc)}</td><td>${fmt(p.qty, 4)}</td><td>${esc(p.umc)}</td><td>${dinero(p.val)}</td><td>${fmt(p.peso, 4)}</td><td>${esc(p.prov)}</td></tr>`;
-      });
+      const p = b.fila;
+      h += `<tr class="dato con-en"><td>${esc(p.sec)}</td><td>${esc(p.frac)}</td><td class="desc">${esc(p.desc)}</td><td>${fmt(p.qty, 4)}</td><td>${esc(p.umc)}</td><td>${dinero(p.val)}</td><td>${fmt(p.peso, 4)}</td><td>${esc(p.prov)}</td></tr>`;
       const en = ingles.get(b.clave);
-      h += `<tr class="en ${cls}"><td></td><td></td><td class="desc"><span class="ing${en === undefined ? ' cargando' : ''}" tabindex="0" title="Clic para copiar · doble clic para corregir" spellcheck="false" data-es="${esc(b.clave)}" data-vacio="${en === undefined ? 'Traduciendo…' : 'Escribe la traducción al inglés'}">${esc(en || '')}</span></td><td></td><td></td><td></td><td></td><td></td></tr>`;
+      h += `<tr class="en"><td></td><td></td><td class="desc"><span class="ing${en === undefined ? ' cargando' : ''}" tabindex="0" title="Clic para copiar · doble clic para corregir" spellcheck="false" data-es="${esc(b.clave)}" data-vacio="${en === undefined ? 'Traduciendo…' : 'Escribe la traducción al inglés'}">${esc(en || '')}</span></td><td></td><td></td><td></td><td></td><td></td></tr>`;
+      h += `<tr class="tot"><td></td><td></td><td class="total">TOTAL</td><td>${fmt(p.qty, 4)}</td><td>${esc(p.umc)}</td><td>${dinero(p.val)}</td><td>${fmt(p.peso, 4)}</td><td></td></tr>`;
     }
-    h += `<tr class="tot"><td></td><td></td><td class="total">TOTAL</td><td>${fmt(g.tot.qty, 4)}</td><td>${esc(g.umcs.join(' / '))}</td><td>${dinero(g.tot.val)}</td><td>${fmt(g.tot.peso, 4)}</td><td></td></tr>`;
     if (gi < grupos.length - 1) h += '<tr class="sep"><td colspan="8"></td></tr>';
   });
   $('tabla').innerHTML = h + '</tbody>';
+  const bloques = grupos.flatMap(g => g.bloques);
   const nP = grupos.reduce((s, g) => s + g.n, 0);
-  const valT = grupos.reduce((s, g) => s + g.tot.val, 0), pesoT = grupos.reduce((s, g) => s + g.tot.peso, 0);
+  const valT = bloques.reduce((s, b) => s + b.fila.val, 0), pesoT = bloques.reduce((s, b) => s + b.fila.peso, 0);
   $('resumen').innerHTML = `<b>${nP}</b> partidas en <b>${grupos.length}</b> fracciones · Valor <b>${dinero(redondear(valT))}</b> · Peso <b>${fmt(redondear(pesoT), 3)} kg</b>`;
-  const mix = grupos.filter(g => g.umcs.length > 1).map(g => g.frac);
-  if (mix.length) aviso('Atención: la fracción ' + mix.join(', ') + ' tiene partidas con distinta UMC; su total de QTY UMC suma unidades diferentes.', 'warn');
+  const mix = bloques.filter(b => b.umcs.length > 1).map(b => b.fila.frac + ' (' + b.fila.desc + ')');
+  if (mix.length) aviso('Atención: ' + mix.join(', ') + ' tiene partidas con distinta UMC; su QTY UMC suma unidades diferentes.', 'warn');
 }
 
 // Pide al servidor las traducciones (glosario guardado + traducción automática de lo nuevo)
@@ -324,15 +323,15 @@ function descargarPDF() {
   const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'letter', compress: true });
   const ancho = doc.internal.pageSize.getWidth();
 
-  const VERDE = [46, 139, 87], ALT = [240, 248, 243], TOT = [221, 239, 228], EN = [31, 102, 64], TXT = [51, 51, 51], LINEA = [190, 214, 199];
+  const VERDE = [46, 139, 87], TOT = [221, 239, 228], EN = [31, 102, 64], EN_FONDO = [225, 242, 231], TXT = [51, 51, 51], LINEA = [190, 214, 199];
   const body = [];
   actual.grupos.forEach((g, gi) => {
-    const fondo = gi % 2 === 0 ? ALT : [255, 255, 255];
     for (const b of g.bloques) {
-      b.filas.forEach((p, i) => body.push({ tipo: 'dato', fondo, ultima: i === b.filas.length - 1, celdas: [String(p.sec), p.frac, p.desc, fmt(p.qty, 4), p.umc, dinero(p.val), fmt(p.peso, 4), p.prov] }));
-      body.push({ tipo: 'en', fondo, celdas: ['', '', ingles.get(b.clave) || '', '', '', '', '', ''] });
+      const p = b.fila;
+      body.push({ tipo: 'dato', celdas: [String(p.sec), p.frac, p.desc, fmt(p.qty, 4), p.umc, dinero(p.val), fmt(p.peso, 4), p.prov] });
+      body.push({ tipo: 'en', celdas: ['', '', ingles.get(b.clave) || '', '', '', '', '', ''] });
+      body.push({ tipo: 'tot', celdas: ['', '', 'TOTAL', fmt(p.qty, 4), p.umc, dinero(p.val), fmt(p.peso, 4), ''] });
     }
-    body.push({ tipo: 'tot', celdas: ['', '', 'TOTAL', fmt(g.tot.qty, 4), g.umcs.join(' / '), dinero(g.tot.val), fmt(g.tot.peso, 4), ''] });
     if (gi < actual.grupos.length - 1) body.push({ tipo: 'sep', celdas: ['', '', '', '', '', '', '', ''] });
   });
 
@@ -353,11 +352,11 @@ function descargarPDF() {
       if (d.section !== 'body') return;
       const f = body[d.row.index];
       // La traducción queda pegada a su descripción: sin línea entre ambas
-      if (f.tipo === 'dato') { d.cell.styles.fillColor = f.fondo; if (f.ultima) d.cell.styles.lineWidth = { top: 0.4, right: 0.4, bottom: 0, left: 0.4 }; }
+      if (f.tipo === 'dato') d.cell.styles.lineWidth = { top: 0.4, right: 0.4, bottom: 0, left: 0.4 };
       if (f.tipo === 'en') {
-        d.cell.styles.fillColor = f.fondo; d.cell.styles.fontStyle = 'italic'; d.cell.styles.textColor = EN;
         d.cell.styles.lineWidth = { top: 0, right: 0.4, bottom: 0.4, left: 0.4 };
         d.cell.styles.cellPadding = { top: 1, bottom: 3, left: 3, right: 3 };
+        if (d.column.index === 2) { d.cell.styles.fillColor = EN_FONDO; d.cell.styles.fontStyle = 'bold'; d.cell.styles.fontSize = 8.5; d.cell.styles.textColor = EN; }
       }
       if (f.tipo === 'tot') { d.cell.styles.fillColor = TOT; d.cell.styles.fontStyle = 'bold'; d.cell.styles.textColor = [11, 26, 51]; d.cell.styles.fontSize = 8.5; if (d.column.index === 2) d.cell.styles.halign = 'right'; }
       if (f.tipo === 'sep') { d.cell.styles.fillColor = [255, 255, 255]; d.cell.styles.lineWidth = 0; d.cell.styles.minCellHeight = 8; d.cell.styles.cellPadding = 0; d.cell.text = ['']; }
