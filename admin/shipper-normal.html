@@ -8,25 +8,399 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600&display=swap" rel="stylesheet">
 <style>
-    :root{--c:#2e8b57}
+  :root{--bg:#f4f8fb;--ink:#0b1a33;--muted:#5d6672;--line:#c9d4e0;--c:#2e8b57;--c-osc:#1f6640;--head:#507CD1;--alt:#EFF3FB;--tot:#DCE6F7;--en:#1f4e8c;--warn:#a86200;--warn-bg:#fcf0dc;--err:#c0262d;--err-bg:#fff5f5;--ok:#1e7a4c}
   *{box-sizing:border-box}
-  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f4f8fb;color:#0b1a33;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-  main{max-width:480px;padding:32px 20px;text-align:center}
-  img{width:min(180px,50%);height:auto;margin:0 auto 24px;display:block}
-  h1{margin:0 0 12px;font-family:"Oswald","Arial Narrow",system-ui,sans-serif;font-weight:600;font-size:28px;letter-spacing:1.2px;text-transform:uppercase;color:var(--c)}
-  p{margin:0 0 28px;color:#5d6672;font-size:17px}
-  a.volver{display:inline-flex;align-items:center;gap:6px;padding:10px 22px;border-radius:999px;background:var(--c);color:#fff;text-decoration:none;font-weight:700}
-  a.volver svg{width:18px;height:18px}
-  a.volver:hover{filter:brightness(1.08)}
-  a.volver:focus-visible{outline:3px solid #4fc9ee;outline-offset:3px}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:14px}
+  .wrap{max-width:1000px;margin:0 auto;padding:18px 16px 40px}
+  header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+  header img{width:120px;height:auto;display:block}
+  header .tit{flex:1;min-width:200px}
+  h1{margin:0;font-family:"Oswald","Arial Narrow",system-ui,sans-serif;font-weight:600;font-size:26px;letter-spacing:1.2px;text-transform:uppercase;color:var(--c)}
+  header small{color:var(--muted)}
+  a.volver{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border:1.5px solid var(--line);border-radius:999px;background:#fff;color:var(--muted);text-decoration:none;font-weight:700;font-size:13px}
+  a.volver:hover{color:var(--ink);border-color:var(--ink)}
+  a.volver svg{width:16px;height:16px}
+
+  .drop{display:flex;flex-direction:column;align-items:center;gap:8px;padding:26px 16px;border:2px dashed var(--line);border-radius:12px;background:#fff;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}
+  .drop:hover,.drop.over{border-color:var(--c);background:#f3faf6}
+  .drop.chico{flex-direction:row;justify-content:center;padding:12px 16px}
+  .drop.chico span{display:none}
+  .drop svg{width:40px;height:40px;color:var(--c)}
+  .drop.chico svg{width:24px;height:24px}
+  .drop b{font-size:16px}
+  .drop span{color:var(--muted);font-size:13px}
+  .drop input{display:none}
+  .msg{margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13.5px}
+  .msg.err{background:var(--err-bg);color:var(--err);border:1px solid #f1c4c6}
+  .msg.warn{background:var(--warn-bg);color:var(--warn);border:1px solid #f0d9b0}
+
+  .res{margin-top:18px}
+  .barra{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+  .barra label{font-weight:700;font-size:13px}
+  .barra input{font:inherit;padding:6px 10px;border:1.5px solid var(--line);border-radius:6px;width:130px}
+  .resumen{flex:1;color:var(--muted);font-size:13px;min-width:200px}
+  .resumen b{color:var(--ink)}
+  .nota{margin:0 0 12px;color:var(--muted);font-size:12.5px}
+  .nota i{color:var(--en);font-style:italic;font-weight:600}
+  button.pdf{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border:0;border-radius:8px;background:var(--c);color:#fff;font:600 15px "Oswald","Arial Narrow",system-ui,sans-serif;letter-spacing:1px;text-transform:uppercase;cursor:pointer;box-shadow:0 3px 0 var(--c-osc)}
+  button.pdf:hover{filter:brightness(1.07)}
+  button.pdf:active{transform:translateY(2px);box-shadow:0 1px 0 var(--c-osc)}
+  button.pdf:disabled{opacity:.6;cursor:wait}
+  button.pdf svg{width:18px;height:18px}
+  button:focus-visible,.drop:focus-visible,a:focus-visible{outline:3px solid #4fc9ee;outline-offset:3px}
+
+  /* Reporte */
+  .tabla{overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:8px}
+  table{border-collapse:collapse;width:100%;min-width:760px;font-family:Verdana,Geneva,sans-serif;font-size:11px;color:#333}
+  caption{caption-side:top;text-align:center;font:700 17px Calibri,Carlito,system-ui,sans-serif;color:var(--ink);padding:10px}
+  th{background:var(--head);color:#fff;font-weight:700;padding:6px 5px;border:1px solid #9aa9c4;white-space:pre-line}
+  td{padding:4px 5px;border:1px solid #c5ccd8;text-align:center;font-variant-numeric:tabular-nums}
+  td.desc{text-align:left}
+  tr.alt td{background:var(--alt)}
+  tr.tot td{background:var(--tot);font-weight:700;border-top:2px solid var(--head);border-bottom:2px solid var(--head)}
+  tr.sep td{border:0;height:14px;background:#fff}
+  /* Renglón de la traducción: pegado a su descripción */
+  tr.en td{border-top-color:transparent;padding-top:1px}
+  tr.dato.con-en td{border-bottom-color:transparent}
+  .ing{display:block;min-height:1.4em;padding:2px 4px;margin:-1px -4px;border-radius:4px;color:var(--en);font-style:italic;outline:none;cursor:copy;transition:background .25s}
+  .ing:hover{background:#fff;box-shadow:inset 0 0 0 1px #c9d4e0}
+  .ing[contenteditable="true"]{cursor:text;background:#fff;box-shadow:inset 0 0 0 2px #4fc9ee;font-style:normal}
+  .ing.copiado{background:#dff3e8;box-shadow:inset 0 0 0 1px #9fd3b5}
+  .ing:empty::before{content:attr(data-vacio);color:#a3a8af}
+  .ing.cargando{color:#a3a8af}
+  td.total{text-align:right;padding-right:10px}
 </style>
 </head>
 <body>
-<main>
-  <a href="/modulos"><img src="/mejanet-logo.png" alt="Grupo Meja"></a>
-  <h1>Reporte Shipper Normal</h1>
-  <p>Esta herramienta está en desarrollo.</p>
-  <a class="volver" href="/herramientas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg> Herramientas</a>
-</main>
+<div class="wrap">
+  <header>
+    <a href="/modulos"><img src="/mejanet-logo.png" alt="Grupo Meja"></a>
+    <div class="tit">
+      <h1>Reporte Shipper Normal</h1>
+      <small>Sube el reporte por renglón (.xls / .xlsx) y obtén el reporte agrupado por fracción.</small>
+    </div>
+    <a class="volver" href="/herramientas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg> Herramientas</a>
+  </header>
+
+  <label class="drop" id="drop" tabindex="0">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 17v-6"/><path d="M9.5 13.5L12 11l2.5 2.5"/></svg>
+    <b id="dropTxt">Selecciona o arrastra aquí el archivo de Excel</b>
+    <span>Reporte por renglón exportado del sistema (repclasxls)</span>
+    <input type="file" id="archivo" accept=".xls,.xlsx,.htm,.html">
+  </label>
+  <div id="msg" class="msg" hidden></div>
+
+  <section class="res" id="res" hidden>
+    <div class="barra">
+      <label for="ref">Referencia</label>
+      <input id="ref" type="text">
+      <div class="resumen" id="resumen"></div>
+      <button class="pdf" id="pdf" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg> Descargar PDF</button>
+    </div>
+    <p class="nota">Debajo de cada descripción va su traducción al <i>inglés</i>. Haz <b>clic</b> sobre una traducción para copiarla. Si alguna no es correcta, haz <b>doble clic</b> para corregirla: la próxima vez saldrá así.</p>
+    <div class="tabla"><table id="tabla"></table></div>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script>
+// Columnas del reporte (en este orden)
+const COLS = [
+  { k: 'sec',  t: 'SECUENCIA\nPEDIMENTO' },
+  { k: 'frac', t: 'FRACCION' },
+  { k: 'prov', t: 'PROVEEDOR' },
+  { k: 'desc', t: 'DESCRIPCION' },
+  { k: 'qty',  t: 'QTY UMC' },
+  { k: 'umc',  t: 'UMC' },
+  { k: 'val',  t: 'VALOR' },
+  { k: 'peso', t: 'PESO NETO_KGS' },
+];
+// Encabezados del archivo de entrada que se usan
+const ENTRADA = { sec: 'SECUENCIA PEDIMENTO', frac: 'FRACCION', prov: 'PROVEEDOR', desc: 'DESCRIPCION', qty: 'QTY UMC', umc: 'UMC', val: 'VALOR', peso: 'PESO NETO_KGS' };
+
+let actual = null;            // { ref, grupos }
+const ingles = new Map();     // descripción (mayúsculas) → traducción
+let traduciendo = false;
+const $ = id => document.getElementById(id);
+const norm = s => String(s ?? '').replace(/\s+/g, ' ').trim().toUpperCase();
+const num = v => { if (typeof v === 'number') return v; const n = parseFloat(String(v ?? '').replace(/,/g, '')); return isNaN(n) ? 0 : n; };
+const redondear = n => Math.round(n * 1e6) / 1e6; // evita 0.30000000000000004
+const fmt = (n, d) => n.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: d });
+const dinero = n => '$' + n.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+function aviso(texto, tipo) { const m = $('msg'); m.textContent = texto; m.className = 'msg ' + tipo; m.hidden = !texto; }
+
+async function leerArchivo(file) {
+  aviso('', 'err'); $('res').hidden = true;
+  try {
+    const buf = await file.arrayBuffer();
+    // La referencia viene en el encabezado del reporte ("Referencia : 1677/26")
+    let ref = '';
+    const texto = new TextDecoder('latin1').decode(new Uint8Array(buf).slice(0, 20000));
+    const m = texto.match(/Referencia\s*:\s*([0-9A-Za-z\/\-]+)/i);
+    if (m) ref = m[1];
+
+    let filas;
+    if (/<table/i.test(texto) || /<html/i.test(texto)) {
+      // El reporte del sistema es una página HTML con extensión .xls: se lee directo
+      const doc = new DOMParser().parseFromString(new TextDecoder('utf-8').decode(buf), 'text/html');
+      const tabla = [...doc.querySelectorAll('table')].find(t => /FRACCION/i.test(t.textContent)) || doc.querySelector('table');
+      if (!tabla) throw new Error('El archivo no contiene una tabla de partidas.');
+      filas = [...tabla.rows].map(tr => [...tr.cells].map(td => td.textContent.replace(/ /g, ' ').trim()));
+    } else {
+      if (typeof XLSX === 'undefined') throw new Error('No se pudo cargar el lector de Excel. Revisa tu conexión y recarga la página.');
+      const wb = XLSX.read(buf, { type: 'array', raw: true });
+      filas = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: false, defval: '' });
+    }
+    const iEnc = filas.findIndex(f => f.map(norm).includes('FRACCION') && f.map(norm).includes('DESCRIPCION'));
+    if (iEnc < 0) throw new Error('No encontré las columnas FRACCION y DESCRIPCION. Revisa que sea el reporte por renglón.');
+    const enc = filas[iEnc].map(norm);
+    const pos = {};
+    for (const [k, nombre] of Object.entries(ENTRADA)) {
+      pos[k] = enc.indexOf(nombre);
+      if (pos[k] < 0) throw new Error('Falta la columna "' + nombre + '" en el archivo.');
+    }
+    const iRef = enc.indexOf('REFERENCIA');
+
+    const partidas = [];
+    for (const f of filas.slice(iEnc + 1)) {
+      const frac = String(f[pos.frac] ?? '').trim();
+      if (!frac) continue;
+      if (!ref && iRef >= 0 && f[iRef]) ref = String(f[iRef]).trim();
+      partidas.push({
+        sec: num(f[pos.sec]) || String(f[pos.sec] ?? '').trim(),
+        frac,
+        prov: String(f[pos.prov] ?? '').replace(/\s+/g, ' ').trim(),
+        desc: String(f[pos.desc] ?? '').replace(/\s+/g, ' ').trim(),
+        qty: num(f[pos.qty]),
+        umc: String(f[pos.umc] ?? '').trim(),
+        val: num(f[pos.val]),
+        peso: num(f[pos.peso]),
+      });
+    }
+    if (!partidas.length) throw new Error('El archivo no tiene partidas con fracción.');
+
+    actual = { ref, grupos: agrupar(partidas) };
+    $('ref').value = ref;
+    pintar();
+    $('dropTxt').textContent = file.name + ' · cambiar archivo';
+    $('drop').classList.add('chico');
+    $('res').hidden = false;
+    traducir();
+  } catch (e) {
+    aviso(e.message || 'No pude leer el archivo.', 'err');
+  }
+}
+
+// Fracción de menor a mayor; dentro de la fracción, cada descripción con sus partidas juntas
+function agrupar(partidas) {
+  const porFrac = new Map();
+  for (const p of partidas) { if (!porFrac.has(p.frac)) porFrac.set(p.frac, []); porFrac.get(p.frac).push(p); }
+  const cmpSec = (a, b) => (typeof a.sec === 'number' && typeof b.sec === 'number') ? a.sec - b.sec : String(a.sec).localeCompare(String(b.sec), 'es', { numeric: true });
+  return [...porFrac.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0], 'es', { numeric: true }))
+    .map(([frac, filas]) => {
+      // Orden de descripciones: según la primera secuencia en que aparece cada una
+      const primera = new Map();
+      [...filas].sort(cmpSec).forEach((p, i) => { if (!primera.has(norm(p.desc))) primera.set(norm(p.desc), i); });
+      filas.sort((a, b) => (primera.get(norm(a.desc)) - primera.get(norm(b.desc))) || cmpSec(a, b));
+      // Bloques de partidas con la misma descripción: la traducción va una vez, debajo del bloque
+      const bloques = [];
+      for (const p of filas) {
+        const ult = bloques[bloques.length - 1];
+        if (ult && ult.clave === norm(p.desc)) ult.filas.push(p); else bloques.push({ clave: norm(p.desc), filas: [p] });
+      }
+      const umcs = [...new Set(filas.map(p => p.umc))];
+      return {
+        frac, bloques, umcs, n: filas.length,
+        tot: {
+          qty: redondear(filas.reduce((s, p) => s + p.qty, 0)),
+          val: redondear(filas.reduce((s, p) => s + p.val, 0)),
+          peso: redondear(filas.reduce((s, p) => s + p.peso, 0)),
+        },
+      };
+    });
+}
+
+function pintar() {
+  const { grupos } = actual;
+  let h = '<caption>Referencia : ' + esc($('ref').value) + '</caption><thead><tr>' + COLS.map(c => '<th>' + esc(c.t) + '</th>').join('') + '</tr></thead><tbody>';
+  grupos.forEach((g, gi) => {
+    const cls = gi % 2 === 0 ? 'alt' : '';
+    for (const b of g.bloques) {
+      b.filas.forEach((p, i) => {
+        const ultima = i === b.filas.length - 1;
+        h += `<tr class="dato ${cls}${ultima ? ' con-en' : ''}"><td>${esc(p.sec)}</td><td>${esc(p.frac)}</td><td>${esc(p.prov)}</td><td class="desc">${esc(p.desc)}</td><td>${fmt(p.qty, 4)}</td><td>${esc(p.umc)}</td><td>${dinero(p.val)}</td><td>${fmt(p.peso, 4)}</td></tr>`;
+      });
+      const en = ingles.get(b.clave);
+      h += `<tr class="en ${cls}"><td></td><td></td><td></td><td class="desc"><span class="ing${en === undefined ? ' cargando' : ''}" tabindex="0" title="Clic para copiar · doble clic para corregir" spellcheck="false" data-es="${esc(b.clave)}" data-vacio="${en === undefined ? 'Traduciendo…' : 'Escribe la traducción al inglés'}">${esc(en || '')}</span></td><td></td><td></td><td></td><td></td></tr>`;
+    }
+    h += `<tr class="tot"><td></td><td></td><td></td><td class="total">TOTAL</td><td>${fmt(g.tot.qty, 4)}</td><td>${esc(g.umcs.join(' / '))}</td><td>${dinero(g.tot.val)}</td><td>${fmt(g.tot.peso, 4)}</td></tr>`;
+    if (gi < grupos.length - 1) h += '<tr class="sep"><td colspan="8"></td></tr>';
+  });
+  $('tabla').innerHTML = h + '</tbody>';
+  const nP = grupos.reduce((s, g) => s + g.n, 0);
+  const valT = grupos.reduce((s, g) => s + g.tot.val, 0), pesoT = grupos.reduce((s, g) => s + g.tot.peso, 0);
+  $('resumen').innerHTML = `<b>${nP}</b> partidas en <b>${grupos.length}</b> fracciones · Valor <b>${dinero(redondear(valT))}</b> · Peso <b>${fmt(redondear(pesoT), 3)} kg</b>`;
+  const mix = grupos.filter(g => g.umcs.length > 1).map(g => g.frac);
+  if (mix.length) aviso('Atención: la fracción ' + mix.join(', ') + ' tiene partidas con distinta UMC; su total de QTY UMC suma unidades diferentes.', 'warn');
+}
+
+// Pide al servidor las traducciones (glosario guardado + traducción automática de lo nuevo)
+async function traducir() {
+  const faltan = [...new Set(actual.grupos.flatMap(g => g.bloques.map(b => b.clave)))].filter(k => !ingles.has(k));
+  if (!faltan.length) return;
+  traduciendo = true;
+  try {
+    const r = await fetch('/api/traducir', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ textos: faltan }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || 'el servidor respondió ' + r.status);
+    for (const t of j.traducciones || []) ingles.set(t.es, t.en || '');
+    if ((j.traducciones || []).some(t => !t.en)) aviso('Algunas descripciones no se pudieron traducir automáticamente. Escribe su traducción en el espacio vacío.', 'warn');
+  } catch (e) {
+    faltan.forEach(k => { if (!ingles.has(k)) ingles.set(k, ''); });
+    aviso('No se pudo traducir automáticamente (' + e.message + '). Puedes escribir las traducciones a mano.', 'warn');
+  }
+  traduciendo = false;
+  document.querySelectorAll('.ing').forEach(el => {
+    if (document.activeElement === el) return;
+    const en = ingles.get(el.dataset.es) || '';
+    el.textContent = en; el.classList.remove('cargando'); el.dataset.vacio = 'Escribe la traducción al inglés';
+  });
+}
+
+// Corrección manual de una traducción (doble clic): se guarda en el glosario del servidor
+async function guardarIngles(el) {
+  el.contentEditable = 'false';
+  const es = el.dataset.es;
+  const en = el.textContent.replace(/\s+/g, ' ').trim().toUpperCase();
+  el.textContent = en;
+  if (!en || en === (ingles.get(es) || '')) return;
+  ingles.set(es, en);
+  document.querySelectorAll('.ing').forEach(o => { if (o !== el && o.dataset.es === es) o.textContent = en; });
+  try {
+    const r = await fetch('/api/traducir', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ es, en }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || 'error ' + r.status);
+  } catch (e) {
+    aviso('La corrección de "' + es + '" no se guardó en el glosario (' + e.message + '). Sí aparece en este reporte y en el PDF.', 'warn');
+  }
+}
+
+// Clic sobre la traducción: se copia al portapapeles
+async function copiar(el) {
+  const t = el.textContent.trim();
+  if (!t) return;
+  try { await navigator.clipboard.writeText(t); }
+  catch {
+    const r = document.createRange(); r.selectNodeContents(el);
+    const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+    document.execCommand('copy'); sel.removeAllRanges();
+  }
+  el.classList.add('copiado'); setTimeout(() => el.classList.remove('copiado'), 700);
+}
+function editar(el) {
+  el.contentEditable = 'true'; el.focus();
+  const r = document.createRange(); r.selectNodeContents(el);
+  const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+}
+
+// PDF tamaño carta (horizontal) para imprimir: mismo orden, grupos, traducciones y totales que la pantalla
+function descargarPDF() {
+  if (!window.jspdf || !window.jspdf.jsPDF) throw new Error('no se cargó el generador de PDF. Revisa tu conexión y recarga la página.');
+  const { jsPDF } = window.jspdf;
+  const ref = $('ref').value.trim();
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'letter', compress: true });
+  const ancho = doc.internal.pageSize.getWidth();
+
+  const AZUL = [80, 124, 209], ALT = [239, 243, 251], TOT = [220, 230, 247], EN = [31, 78, 140], TXT = [51, 51, 51];
+  const body = [];
+  actual.grupos.forEach((g, gi) => {
+    const fondo = gi % 2 === 0 ? ALT : [255, 255, 255];
+    for (const b of g.bloques) {
+      b.filas.forEach((p, i) => body.push({ tipo: 'dato', fondo, ultima: i === b.filas.length - 1, celdas: [String(p.sec), p.frac, p.prov, p.desc, fmt(p.qty, 4), p.umc, dinero(p.val), fmt(p.peso, 4)] }));
+      body.push({ tipo: 'en', fondo, celdas: ['', '', '', ingles.get(b.clave) || '', '', '', '', ''] });
+    }
+    body.push({ tipo: 'tot', celdas: ['', '', '', 'TOTAL', fmt(g.tot.qty, 4), g.umcs.join(' / '), dinero(g.tot.val), fmt(g.tot.peso, 4)] });
+    if (gi < actual.grupos.length - 1) body.push({ tipo: 'sep', celdas: ['', '', '', '', '', '', '', ''] });
+  });
+
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.setTextColor(11, 26, 51);
+  doc.text('Referencia : ' + ref, ancho / 2, 46, { align: 'center' });
+
+  doc.autoTable({
+    startY: 58,
+    margin: { left: 30, right: 30, top: 40, bottom: 36 },
+    head: [COLS.map(c => c.t)],
+    body: body.map(f => f.celdas),
+    theme: 'grid',
+    rowPageBreak: 'avoid',
+    styles: { font: 'helvetica', fontSize: 7.5, textColor: TXT, halign: 'center', valign: 'middle', cellPadding: 3, lineColor: [150, 150, 150], lineWidth: 0.4 },
+    headStyles: { fillColor: AZUL, textColor: 255, fontStyle: 'bold', lineColor: [150, 150, 150] },
+    columnStyles: { 0: { cellWidth: 52 }, 1: { cellWidth: 58 }, 2: { cellWidth: 120 }, 3: { halign: 'left' }, 4: { cellWidth: 46 }, 5: { cellWidth: 32 }, 6: { cellWidth: 66 }, 7: { cellWidth: 62 } },
+    didParseCell: d => {
+      if (d.section !== 'body') return;
+      const f = body[d.row.index];
+      // La traducción queda pegada a su descripción: sin línea entre ambas
+      if (f.tipo === 'dato') { d.cell.styles.fillColor = f.fondo; if (f.ultima) d.cell.styles.lineWidth = { top: 0.4, right: 0.4, bottom: 0, left: 0.4 }; }
+      if (f.tipo === 'en') {
+        d.cell.styles.fillColor = f.fondo; d.cell.styles.fontStyle = 'italic'; d.cell.styles.textColor = EN;
+        d.cell.styles.lineWidth = { top: 0, right: 0.4, bottom: 0.4, left: 0.4 };
+        d.cell.styles.cellPadding = { top: 1, bottom: 3, left: 3, right: 3 };
+      }
+      if (f.tipo === 'tot') { d.cell.styles.fillColor = TOT; d.cell.styles.fontStyle = 'bold'; d.cell.styles.textColor = [11, 26, 51]; if (d.column.index === 3) d.cell.styles.halign = 'right'; }
+      if (f.tipo === 'sep') { d.cell.styles.fillColor = [255, 255, 255]; d.cell.styles.lineWidth = 0; d.cell.styles.minCellHeight = 8; d.cell.styles.cellPadding = 0; d.cell.text = ['']; }
+    },
+    didDrawCell: d => {
+      if (d.section !== 'body') return;
+      const f = body[d.row.index];
+      // Línea azul gruesa arriba y abajo del total de cada fracción
+      if (f.tipo === 'tot') {
+        doc.setDrawColor(...AZUL); doc.setLineWidth(1.4);
+        doc.line(d.cell.x, d.cell.y, d.cell.x + d.cell.width, d.cell.y);
+        doc.line(d.cell.x, d.cell.y + d.cell.height, d.cell.x + d.cell.width, d.cell.y + d.cell.height);
+      }
+    },
+    didDrawPage: () => {
+      const n = doc.internal.getNumberOfPages();
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(120);
+      doc.text('Referencia ' + ref + ' · Página ' + n, ancho - 30, doc.internal.pageSize.getHeight() - 18, { align: 'right' });
+    },
+  });
+  doc.save('REPORTE_PARA_SHIPPER_' + (ref.split('/')[0] || 'SIN_REF') + '.pdf');
+}
+
+const drop = $('drop');
+$('archivo').addEventListener('change', ev => { const f = ev.target.files[0]; if (f) leerArchivo(f); ev.target.value = ''; });
+drop.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); $('archivo').click(); } });
+['dragenter', 'dragover'].forEach(t => drop.addEventListener(t, ev => { ev.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach(t => drop.addEventListener(t, ev => { ev.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', ev => { const f = ev.dataTransfer.files[0]; if (f) leerArchivo(f); });
+$('ref').addEventListener('input', () => { if (actual) $('tabla').querySelector('caption').textContent = 'Referencia : ' + $('ref').value; });
+let tClic;
+$('tabla').addEventListener('click', ev => {
+  const el = ev.target.closest?.('.ing');
+  if (!el || el.isContentEditable || el.classList.contains('cargando')) return;
+  clearTimeout(tClic);
+  if (ev.detail > 1) return;                       // es parte de un doble clic
+  tClic = setTimeout(() => copiar(el), 250);
+});
+$('tabla').addEventListener('dblclick', ev => { const el = ev.target.closest?.('.ing'); if (el && !el.classList.contains('cargando')) { clearTimeout(tClic); editar(el); } });
+$('tabla').addEventListener('focusout', ev => { if (ev.target.classList?.contains('ing') && ev.target.isContentEditable) guardarIngles(ev.target); });
+$('tabla').addEventListener('keydown', ev => {
+  const el = ev.target.closest?.('.ing'); if (!el) return;
+  if (el.isContentEditable && ev.key === 'Enter') { ev.preventDefault(); el.blur(); }
+  else if (!el.isContentEditable && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); copiar(el); }
+});
+$('tabla').addEventListener('paste', ev => { if (ev.target.closest?.('.ing')) { ev.preventDefault(); document.execCommand('insertText', false, ev.clipboardData.getData('text/plain')); } });
+$('pdf').addEventListener('click', () => {
+  if (traduciendo) { aviso('Espera un momento: las traducciones todavía se están cargando.', 'warn'); return; }
+  document.activeElement?.blur?.();
+  try { descargarPDF(); } catch (e) { aviso('No pude generar el PDF: ' + e.message, 'err'); }
+});
+</script>
 </body>
 </html>

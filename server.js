@@ -8,6 +8,7 @@ const { formatoOC } = require('./oc');
 const { guardarEnDrive, enviarHojaEB, configurado: driveListo } = require('./drive');
 const cotizador = require('./cotizador');
 const opManzanillo = require('./opmanzanillo');
+const traducciones = require('./traducciones');
 
 const app = express();
 app.set('trust proxy', 1); // Render pasa por un proxy; así req.ip es la IP real del visitante
@@ -382,12 +383,16 @@ app.use(cotizador.rutas(admin));
 // --- OP Manzanillo (tablero /op-manzanillo y su API) ---
 app.use(opManzanillo.rutas(admin));
 
+// --- Traducciones español → inglés (Reporte Shipper) ---
+app.use(traducciones.rutas(admin));
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 const puerto = process.env.PORT || 3000;
 db.init().then(async (aplicadas) => {
   await cotizador.init();
   await opManzanillo.init();
+  await traducciones.init();
   app.listen(puerto, () => console.log('Escuchando en puerto', puerto));
   // Si un cambio de datos se aplicó al arrancar, se actualiza la hoja de Google completa
   if (Array.isArray(aplicadas) && aplicadas.length && driveListo()) {
