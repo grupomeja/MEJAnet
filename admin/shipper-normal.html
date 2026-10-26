@@ -65,12 +65,14 @@
   td:not(.desc):not(.prov):not(.sec){white-space:nowrap}
   td.prov{white-space:normal}
   td.sec{white-space:normal;max-width:110px}
+  /* Columnas de datos al ancho de su texto; el espacio que sobra va a descripción y proveedor */
+  th.ajusta{width:1%;padding-inline:10px}
   body.con-reporte{height:100vh;overflow:hidden}
   body.con-reporte .wrap{height:100vh;display:flex;flex-direction:column;padding-bottom:14px}
   body.con-reporte .res{flex:1;min-height:0;display:flex;flex-direction:column}
   body.con-reporte .tabla{flex:1;min-height:0}
   @media (max-width:760px),(max-height:560px){body.con-reporte{height:auto;overflow:visible}body.con-reporte .wrap{height:auto;display:block}body.con-reporte .tabla{max-height:80vh}}
-  td{padding:4px 5px;border:1px solid #cfe0d5;text-align:center;font-variant-numeric:tabular-nums}
+  td{padding:4px 8px;border:1px solid #cfe0d5;text-align:center;font-variant-numeric:tabular-nums}
   td.desc{text-align:left}
   tr.tot td{background:var(--tot);font-size:12.5px;font-weight:700;padding-block:6px;border-top:2px solid var(--head);border-bottom:2px solid var(--head)}
   tr.sep td{border:0;height:14px;background:#fff}
@@ -265,7 +267,7 @@ function pintar() {
   const { grupos } = actual;
   $('pdf').disabled = !grupos.length;
   $('titref').textContent = 'Referencia : ' + $('ref').value;
-  let h = '<thead><tr>' + COLS.map(c => '<th>' + esc(c.t) + '</th>').join('') + '<th class="col-borrar"><span class="sr">Borrar</span></th></tr></thead><tbody>';
+  let h = '<thead><tr>' + COLS.map(c => '<th' + (c.k === 'desc' || c.k === 'prov' ? '' : ' class="ajusta"') + '>' + esc(c.t) + '</th>').join('') + '<th class="col-borrar"><span class="sr">Borrar</span></th></tr></thead><tbody>';
   grupos.forEach((g, gi) => {
     for (const b of g.bloques) {
       const p = b.fila;
