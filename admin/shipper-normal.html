@@ -6,11 +6,11 @@
 <title>Reporte Shipper Normal · MEJAnet v1.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600&family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{--bg:#f4f8fb;--ink:#0b1a33;--muted:#5d6672;--line:#c9d4e0;--c:#2e8b57;--c-osc:#1f6640;--head:#2e8b57;--alt:#f0f8f3;--tot:#ddefe4;--en:#1f6640;--warn:#a86200;--warn-bg:#fcf0dc;--err:#c0262d;--err-bg:#fff5f5;--ok:#1e7a4c}
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:14px}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px}
   .wrap{max-width:1800px;margin:0 auto;padding:18px max(16px,2vw) 40px}
   /* Encabezado como el resto de MEJAnet: logo en el color del módulo, título al centro con el ícono de su botón */
   header{display:grid;grid-template-columns:1fr auto 1fr;gap:10px 16px;align-items:center;margin-bottom:18px}
@@ -59,12 +59,23 @@
 
   /* Reporte */
   .tabla{overflow:auto;background:#fff;border:1px solid var(--line);border-top:0;border-radius:0 0 8px 8px}
-  table{border-collapse:collapse;width:100%;min-width:760px;font-family:Verdana,Geneva,sans-serif;font-size:11px;color:#333}
-  .titref{text-align:center;font:700 17px Calibri,Carlito,system-ui,sans-serif;color:var(--ink);padding:10px;background:#fff;border:1px solid var(--line);border-bottom:0;border-radius:8px 8px 0 0}
-  th{background:var(--head);color:#fff;font-weight:700;padding:6px 5px;border:1px solid #6fb08b;white-space:pre-line;position:sticky;top:-1px;z-index:2;box-shadow:0 -2px 0 var(--head)}
+  table{border-collapse:collapse;width:100%;min-width:760px;font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:12px;color:#2b3038}
+  .filtros{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 10px}
+  .filtros input,.filtros select{font:inherit;font-size:13px;padding:6px 10px;border:1.5px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);min-width:0}
+  .filtros input{flex:1 1 260px;max-width:420px}
+  .filtros select{flex:0 1 220px;max-width:280px}
+  .filtros input:focus,.filtros select:focus{outline:none;border-color:var(--c);box-shadow:0 0 0 3px #d6eee0}
+  .filtros .activo{border-color:var(--c);background:#f3faf6}
+  .filtros button{font:inherit;font-size:13px;font-weight:600;padding:6px 12px;border:1.5px solid var(--line);border-radius:6px;background:#fff;color:var(--muted);cursor:pointer}
+  .filtros button:hover{color:var(--ink);border-color:var(--ink)}
+  .filtros .cuenta{font-size:12.5px;color:var(--muted)}
+  .filtros .cuenta b{color:var(--c)}
+  tr.vacio td{padding:28px 10px;color:var(--muted);font-size:13px;white-space:normal}
+  .titref{text-align:center;font:600 21px "Barlow Condensed","Arial Narrow",system-ui,sans-serif;letter-spacing:.02em;color:var(--ink);padding:10px;background:#fff;border:1px solid var(--line);border-bottom:0;border-radius:8px 8px 0 0}
+  th{background:var(--head);color:#fff;font-weight:600;font-size:11px;letter-spacing:.04em;padding:6px 5px;border:1px solid #6fb08b;white-space:pre-line;position:sticky;top:-1px;z-index:2;box-shadow:0 -2px 0 var(--head)}
   td:not(.desc):not(.prov):not(.sec){white-space:nowrap}
   td.prov{white-space:normal}
-  td.sec{white-space:normal;max-width:110px}
+  td.sec{white-space:normal}
   /* Columnas de datos al ancho de su texto; el espacio que sobra va a descripción y proveedor */
   th.ajusta{width:1%;padding-inline:10px}
   body.con-reporte{height:100vh;overflow:hidden}
@@ -74,7 +85,7 @@
   @media (max-width:760px),(max-height:560px){body.con-reporte{height:auto;overflow:visible}body.con-reporte .wrap{height:auto;display:block}body.con-reporte .tabla{max-height:80vh}}
   td{padding:4px 8px;border:1px solid #cfe0d5;text-align:center;font-variant-numeric:tabular-nums}
   td.desc{text-align:left}
-  tr.tot td{background:var(--tot);font-size:12.5px;font-weight:700;padding-block:6px;border-top:2px solid var(--head);border-bottom:2px solid var(--head)}
+  tr.tot td{background:var(--tot);font-size:13px;font-weight:700;padding-block:6px;border-top:2px solid var(--head);border-bottom:2px solid var(--head)}
   tr.sep td{border:0;height:14px;background:#fff}
   /* Renglón de la traducción: pegado a su descripción */
   tr.en td{border-top-color:transparent;padding-top:1px}
@@ -124,6 +135,13 @@
       <button class="pdf" id="pdf" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg> Descargar PDF</button>
     </div>
     <p class="nota">Debajo de cada descripción va su traducción al <i>inglés</i>. Haz <b>clic</b> sobre una traducción para copiarla. Si alguna no es correcta, haz <b>doble clic</b> para corregirla: la próxima vez saldrá así.</p>
+    <div class="filtros" role="search" aria-label="Filtrar partidas">
+      <input id="fBuscar" type="search" placeholder="Buscar descripción, inglés, proveedor o secuencia…" aria-label="Buscar en el reporte">
+      <select id="fFrac" aria-label="Filtrar por fracción"><option value="">Todas las fracciones</option></select>
+      <select id="fProv" aria-label="Filtrar por proveedor"><option value="">Todos los proveedores</option></select>
+      <button type="button" id="fLimpiar" hidden>Quitar filtros</button>
+      <span class="cuenta" id="fCuenta"></span>
+    </div>
     <div class="titref" id="titref"></div>
     <div class="tabla"><table id="tabla"></table></div>
   </section>
@@ -210,6 +228,7 @@ async function leerArchivo(file) {
     }
     if (!partidas.length) throw new Error('El archivo no tiene partidas con fracción.');
 
+    $('fBuscar').value = ''; $('fFrac').value = ''; $('fProv').value = '';
     actual = { ref, partidas, borradas: new Set() };
     recalcular();
     $('ref').value = ref;
@@ -258,16 +277,38 @@ function agrupar(partidas) {
 }
 
 // Vuelve a armar el reporte sin las partidas borradas
+// Vuelve a armar el reporte sin las partidas borradas y con los filtros aplicados
 function recalcular() {
   const quedan = actual.partidas.filter(p => !actual.borradas.has(p.frac + '|' + norm(p.desc)));
-  actual.grupos = agrupar(quedan);
+  llenarFiltros(quedan);
+  const q = norm($('fBuscar').value), fr = $('fFrac').value, pr = $('fProv').value;
+  const visibles = quedan.filter(p =>
+    (!fr || p.frac === fr) && (!pr || p.prov === pr) &&
+    (!q || [p.desc, ingles.get(norm(p.desc)) || '', p.prov, p.frac, String(p.sec)].some(t => norm(t).includes(q))));
+  actual.grupos = agrupar(visibles);
+  actual.total = quedan.length;
+  const hay = !!(q || fr || pr);
+  $('fLimpiar').hidden = !hay;
+  $('fBuscar').classList.toggle('activo', !!q); $('fFrac').classList.toggle('activo', !!fr); $('fProv').classList.toggle('activo', !!pr);
+  $('fCuenta').innerHTML = hay ? `Mostrando <b>${visibles.length}</b> de ${quedan.length} partidas` : '';
+}
+// Opciones de los filtros según las partidas que quedan (conserva lo elegido)
+function llenarFiltros(ps) {
+  const llenar = (sel, vals, todos) => {
+    const actualV = sel.value;
+    const html = `<option value="">${todos}</option>` + vals.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+    if (sel.dataset.h !== html) { sel.innerHTML = html; sel.dataset.h = html; }
+    sel.value = vals.includes(actualV) ? actualV : '';
+  };
+  llenar($('fFrac'), [...new Set(ps.map(p => p.frac))].sort((a, b) => a.localeCompare(b, 'es', { numeric: true })), 'Todas las fracciones');
+  llenar($('fProv'), [...new Set(ps.map(p => p.prov).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es')), 'Todos los proveedores');
 }
 
 function pintar() {
   const { grupos } = actual;
   $('pdf').disabled = !grupos.length;
   $('titref').textContent = 'Referencia : ' + $('ref').value;
-  let h = '<thead><tr>' + COLS.map(c => '<th' + (c.k === 'desc' || c.k === 'prov' ? '' : ' class="ajusta"') + '>' + esc(c.t) + '</th>').join('') + '<th class="col-borrar"><span class="sr">Borrar</span></th></tr></thead><tbody>';
+  let h = '<thead><tr>' + COLS.map(c => '<th' + (c.k === 'desc' ? '' : ' class="ajusta"') + '>' + esc(c.t) + '</th>').join('') + '<th class="col-borrar"><span class="sr">Borrar</span></th></tr></thead><tbody>';
   grupos.forEach((g, gi) => {
     for (const b of g.bloques) {
       const p = b.fila;
@@ -278,6 +319,7 @@ function pintar() {
     }
     if (gi < grupos.length - 1) h += '<tr class="sep"><td colspan="9"></td></tr>';
   });
+  if (!grupos.length) h += `<tr class="vacio"><td colspan="9">${actual.total ? 'Ninguna partida coincide con los filtros.' : 'No quedan partidas en el reporte.'}</td></tr>`;
   $('tabla').innerHTML = h + '</tbody>';
   const nb = actual.borradas.size;
   $('borradas').hidden = !nb;
@@ -293,37 +335,46 @@ function pintar() {
 // Descripción y proveedor: tan anchas como para que su texto más largo quepa en 2 renglones como máximo
 function ajustarColumnas() {
   const tabla = $('tabla');
-  const medir = (sel) => {
-    let max = 0;
+  // Se mide con todas las partidas del archivo (no solo las filtradas), para que las columnas no cambien al filtrar
+  const muestra = (sel) => tabla.querySelector(sel);
+  const medir = (textos, ref) => {
+    if (!ref) return 0;
+    const cs = getComputedStyle(ref);
     const m = document.createElement('span');
     m.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap';
+    m.style.font = cs.font; m.style.letterSpacing = cs.letterSpacing;
     document.body.appendChild(m);
-    tabla.querySelectorAll(sel).forEach(el => {
-      const cs = getComputedStyle(el);
-      m.style.font = cs.font; m.style.letterSpacing = cs.letterSpacing;
-      m.textContent = el.textContent;
-      max = Math.max(max, m.getBoundingClientRect().width);
-    });
+    let max = 0;
+    for (const t of textos) { m.textContent = t; max = Math.max(max, m.getBoundingClientRect().width); }
     m.remove();
     return max;
   };
-  const anchoDesc = Math.max(medir('tr.dato td.desc'), medir('.ing'));
-  const anchoProv = medir('td.prov');
+  const vivas = actual.partidas.filter(p => !actual.borradas.has(p.frac + '|' + norm(p.desc)));
+  const todos = agrupar(vivas).flatMap(g => g.bloques);
+  const anchoDesc = Math.max(medir(todos.map(b => b.fila.desc), muestra('tr.dato td.desc')), medir(todos.map(b => ingles.get(b.clave) || ''), muestra('.ing')));
+  const anchoProv = medir(todos.map(b => b.fila.prov), muestra('td.prov'));
+  const anchoSec = medir(todos.map(b => String(b.fila.sec)), muestra('tr.dato td.sec'));
   const ths = tabla.querySelectorAll('thead th');
   if (!ths[2] || !ths[7]) return;
-  // Lo ideal: la mitad del texto más largo (2 renglones), más margen por cortes de palabra y relleno
-  let desc = Math.ceil(anchoDesc * 0.56 + 24), prov = Math.ceil(anchoProv * 0.56 + 16);
-  ths[2].style.minWidth = desc + 'px'; ths[7].style.minWidth = prov + 'px';
+  // Secuencia: en una línea si cabe (hasta 220 px), para que no se vaya hacia abajo
+  let sec = Math.min(220, Math.ceil(anchoSec + 20));
+  // Proveedor: lo justo para que su texto más largo quepa en 2 renglones
+  let prov = Math.ceil(anchoProv * 0.55 + 20);
+  // Descripción: lo ideal son 2 renglones; además se lleva el espacio que sobre
+  let desc = Math.ceil(anchoDesc * 0.56 + 24);
+  const poner = () => { ths[0].style.minWidth = sec + 'px'; ths[2].style.minWidth = desc + 'px'; ths[7].style.minWidth = prov + 'px'; };
+  poner();
   // Si no cabe en la pantalla, se encogen (con más renglones) hasta que la tabla quepa a lo ancho
   const caja = tabla.parentElement;
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 4; i++) {
     const sobra = caja.scrollWidth - caja.clientWidth;
     if (sobra <= 0) break;
-    const total = (desc - 160) + (prov - 90);
+    const total = (desc - 160) + (prov - 90) + (sec - 80);
     if (total <= 0) break;
     desc = Math.max(160, Math.floor(desc - sobra * (desc - 160) / total) - 1);
     prov = Math.max(90, Math.floor(prov - sobra * (prov - 90) / total) - 1);
-    ths[2].style.minWidth = desc + 'px'; ths[7].style.minWidth = prov + 'px';
+    sec = Math.max(80, Math.floor(sec - sobra * (sec - 80) / total) - 1);
+    poner();
   }
 }
 let tAjuste;
@@ -331,7 +382,7 @@ addEventListener('resize', () => { clearTimeout(tAjuste); tAjuste = setTimeout((
 
 // Pide al servidor las traducciones (glosario guardado + traducción automática de lo nuevo)
 async function traducir() {
-  const faltan = [...new Set(actual.grupos.flatMap(g => g.bloques.map(b => b.clave)))].filter(k => !ingles.has(k));
+  const faltan = [...new Set(actual.partidas.map(p => norm(p.desc)))].filter(k => !ingles.has(k));
   if (!faltan.length) return;
   traduciendo = true;
   try {
@@ -459,6 +510,12 @@ $('tabla').addEventListener('click', ev => {
   actual.borradas.add(b.dataset.k); recalcular(); pintar(); ajustarColumnas();
 });
 $('restaurar').addEventListener('click', () => { actual.borradas.clear(); recalcular(); pintar(); ajustarColumnas(); });
+let tFiltro;
+const filtrar = () => { if (!actual) return; recalcular(); pintar(); ajustarColumnas(); };
+$('fBuscar').addEventListener('input', () => { clearTimeout(tFiltro); tFiltro = setTimeout(filtrar, 150); });
+$('fFrac').addEventListener('change', filtrar);
+$('fProv').addEventListener('change', filtrar);
+$('fLimpiar').addEventListener('click', () => { $('fBuscar').value = ''; $('fFrac').value = ''; $('fProv').value = ''; filtrar(); });
 const drop = $('drop');
 $('archivo').addEventListener('change', ev => { const f = ev.target.files[0]; if (f) leerArchivo(f); ev.target.value = ''; });
 drop.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); $('archivo').click(); } });
