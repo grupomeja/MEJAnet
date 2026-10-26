@@ -76,6 +76,14 @@
   .ing:empty::before{content:attr(data-vacio);color:#a3a8af}
   .ing.cargando{color:#a3a8af}
   td.total{text-align:right;padding-right:10px}
+  .col-borrar{width:34px;padding:2px 4px 0;vertical-align:top;background:#fff!important;border-color:#e6efe9!important}
+  th.col-borrar{background:#fff!important;border:0!important}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  button.borrar{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border:1px solid transparent;border-radius:6px;background:none;color:#a3a8af;cursor:pointer}
+  button.borrar svg{width:16px;height:16px}
+  button.borrar:hover{color:var(--err);background:var(--err-bg);border-color:#f1c4c6}
+  .borradas{font-size:12.5px;color:var(--muted)}
+  .borradas button{border:0;background:none;padding:0;color:var(--c);font:inherit;font-weight:700;text-decoration:underline;cursor:pointer}
 </style>
 </head>
 <body>
@@ -102,6 +110,7 @@
       <label for="ref">Referencia</label>
       <input id="ref" type="text">
       <div class="resumen" id="resumen"></div>
+      <span class="borradas" id="borradas" hidden><span id="borradasTxt"></span> · <button type="button" id="restaurar">Restaurar</button></span>
       <button class="pdf" id="pdf" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg> Descargar PDF</button>
     </div>
     <p class="nota">Debajo de cada descripción va su traducción al <i>inglés</i>. Haz <b>clic</b> sobre una traducción para copiarla. Si alguna no es correcta, haz <b>doble clic</b> para corregirla: la próxima vez saldrá así.</p>
@@ -190,7 +199,8 @@ async function leerArchivo(file) {
     }
     if (!partidas.length) throw new Error('El archivo no tiene partidas con fracción.');
 
-    actual = { ref, grupos: agrupar(partidas) };
+    actual = { ref, partidas, borradas: new Set() };
+    recalcular();
     $('ref').value = ref;
     pintar();
     $('dropTxt').textContent = file.name + ' · cambiar archivo';
@@ -228,26 +238,36 @@ function agrupar(partidas) {
           peso: redondear(ps.reduce((s, p) => s + p.peso, 0)),
           prov: unicos(ps.map(p => p.prov)).join(' / '),
         };
-        return { clave, fila, n: ps.length, umcs };
+        return { clave, k: frac + '|' + clave, fila, n: ps.length, umcs };
       });
       return { frac, bloques, n: filas.length };
     });
 }
 
+// Vuelve a armar el reporte sin las partidas borradas
+function recalcular() {
+  const quedan = actual.partidas.filter(p => !actual.borradas.has(p.frac + '|' + norm(p.desc)));
+  actual.grupos = agrupar(quedan);
+}
+
 function pintar() {
   const { grupos } = actual;
-  let h = '<caption>Referencia : ' + esc($('ref').value) + '</caption><thead><tr>' + COLS.map(c => '<th>' + esc(c.t) + '</th>').join('') + '</tr></thead><tbody>';
+  $('pdf').disabled = !grupos.length;
+  let h = '<caption>Referencia : ' + esc($('ref').value) + '</caption><thead><tr>' + COLS.map(c => '<th>' + esc(c.t) + '</th>').join('') + '<th class="col-borrar"><span class="sr">Borrar</span></th></tr></thead><tbody>';
   grupos.forEach((g, gi) => {
     for (const b of g.bloques) {
       const p = b.fila;
-      h += `<tr class="dato con-en"><td>${esc(p.sec)}</td><td>${esc(p.frac)}</td><td class="desc">${esc(p.desc)}</td><td>${fmt(p.qty, 4)}</td><td>${esc(p.umc)}</td><td>${dinero(p.val)}</td><td>${fmt(p.peso, 4)}</td><td>${esc(p.prov)}</td></tr>`;
+      h += `<tr class="dato con-en"><td>${esc(p.sec)}</td><td>${esc(p.frac)}</td><td class="desc">${esc(p.desc)}</td><td>${fmt(p.qty, 4)}</td><td>${esc(p.umc)}</td><td>${dinero(p.val)}</td><td>${fmt(p.peso, 4)}</td><td>${esc(p.prov)}</td><td class="col-borrar" rowspan="3"><button type="button" class="borrar" data-k="${esc(b.k)}" title="Borrar esta partida del reporte" aria-label="Borrar ${esc(p.desc)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4h6v3"/></svg></button></td></tr>`;
       const en = ingles.get(b.clave);
       h += `<tr class="en"><td></td><td></td><td class="desc"><span class="ing${en === undefined ? ' cargando' : ''}" tabindex="0" title="Clic para copiar · doble clic para corregir" spellcheck="false" data-es="${esc(b.clave)}" data-vacio="${en === undefined ? 'Traduciendo…' : 'Escribe la traducción al inglés'}">${esc(en || '')}</span></td><td></td><td></td><td></td><td></td><td></td></tr>`;
       h += `<tr class="tot"><td></td><td></td><td class="total">TOTAL</td><td>${fmt(p.qty, 4)}</td><td>${esc(p.umc)}</td><td>${dinero(p.val)}</td><td>${fmt(p.peso, 4)}</td><td></td></tr>`;
     }
-    if (gi < grupos.length - 1) h += '<tr class="sep"><td colspan="8"></td></tr>';
+    if (gi < grupos.length - 1) h += '<tr class="sep"><td colspan="9"></td></tr>';
   });
   $('tabla').innerHTML = h + '</tbody>';
+  const nb = actual.borradas.size;
+  $('borradas').hidden = !nb;
+  $('borradasTxt').textContent = nb === 1 ? '1 partida borrada' : nb + ' partidas borradas';
   const bloques = grupos.flatMap(g => g.bloques);
   const nP = grupos.reduce((s, g) => s + g.n, 0);
   const valT = bloques.reduce((s, b) => s + b.fila.val, 0), pesoT = bloques.reduce((s, b) => s + b.fila.peso, 0);
@@ -380,6 +400,11 @@ function descargarPDF() {
   doc.save('REPORTE_PARA_SHIPPER_' + (ref.split('/')[0] || 'SIN_REF') + '.pdf');
 }
 
+$('tabla').addEventListener('click', ev => {
+  const b = ev.target.closest?.('button.borrar'); if (!b) return;
+  actual.borradas.add(b.dataset.k); recalcular(); pintar();
+});
+$('restaurar').addEventListener('click', () => { actual.borradas.clear(); recalcular(); pintar(); });
 const drop = $('drop');
 $('archivo').addEventListener('change', ev => { const f = ev.target.files[0]; if (f) leerArchivo(f); ev.target.value = ''; });
 drop.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); $('archivo').click(); } });
