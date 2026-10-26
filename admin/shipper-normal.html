@@ -110,12 +110,12 @@
 const COLS = [
   { k: 'sec',  t: 'SECUENCIA\nPEDIMENTO' },
   { k: 'frac', t: 'FRACCION' },
-  { k: 'prov', t: 'PROVEEDOR' },
   { k: 'desc', t: 'DESCRIPCION' },
   { k: 'qty',  t: 'QTY UMC' },
   { k: 'umc',  t: 'UMC' },
   { k: 'val',  t: 'VALOR' },
   { k: 'peso', t: 'PESO NETO_KGS' },
+  { k: 'prov', t: 'PROVEEDOR' },
 ];
 // Encabezados del archivo de entrada que se usan
 const ENTRADA = { sec: 'SECUENCIA PEDIMENTO', frac: 'FRACCION', prov: 'PROVEEDOR', desc: 'DESCRIPCION', qty: 'QTY UMC', umc: 'UMC', val: 'VALOR', peso: 'PESO NETO_KGS' };
@@ -233,12 +233,12 @@ function pintar() {
     for (const b of g.bloques) {
       b.filas.forEach((p, i) => {
         const ultima = i === b.filas.length - 1;
-        h += `<tr class="dato ${cls}${ultima ? ' con-en' : ''}"><td>${esc(p.sec)}</td><td>${esc(p.frac)}</td><td>${esc(p.prov)}</td><td class="desc">${esc(p.desc)}</td><td>${fmt(p.qty, 4)}</td><td>${esc(p.umc)}</td><td>${dinero(p.val)}</td><td>${fmt(p.peso, 4)}</td></tr>`;
+        h += `<tr class="dato ${cls}${ultima ? ' con-en' : ''}"><td>${esc(p.sec)}</td><td>${esc(p.frac)}</td><td class="desc">${esc(p.desc)}</td><td>${fmt(p.qty, 4)}</td><td>${esc(p.umc)}</td><td>${dinero(p.val)}</td><td>${fmt(p.peso, 4)}</td><td>${esc(p.prov)}</td></tr>`;
       });
       const en = ingles.get(b.clave);
-      h += `<tr class="en ${cls}"><td></td><td></td><td></td><td class="desc"><span class="ing${en === undefined ? ' cargando' : ''}" tabindex="0" title="Clic para copiar · doble clic para corregir" spellcheck="false" data-es="${esc(b.clave)}" data-vacio="${en === undefined ? 'Traduciendo…' : 'Escribe la traducción al inglés'}">${esc(en || '')}</span></td><td></td><td></td><td></td><td></td></tr>`;
+      h += `<tr class="en ${cls}"><td></td><td></td><td class="desc"><span class="ing${en === undefined ? ' cargando' : ''}" tabindex="0" title="Clic para copiar · doble clic para corregir" spellcheck="false" data-es="${esc(b.clave)}" data-vacio="${en === undefined ? 'Traduciendo…' : 'Escribe la traducción al inglés'}">${esc(en || '')}</span></td><td></td><td></td><td></td><td></td><td></td></tr>`;
     }
-    h += `<tr class="tot"><td></td><td></td><td></td><td class="total">TOTAL</td><td>${fmt(g.tot.qty, 4)}</td><td>${esc(g.umcs.join(' / '))}</td><td>${dinero(g.tot.val)}</td><td>${fmt(g.tot.peso, 4)}</td></tr>`;
+    h += `<tr class="tot"><td></td><td></td><td class="total">TOTAL</td><td>${fmt(g.tot.qty, 4)}</td><td>${esc(g.umcs.join(' / '))}</td><td>${dinero(g.tot.val)}</td><td>${fmt(g.tot.peso, 4)}</td><td></td></tr>`;
     if (gi < grupos.length - 1) h += '<tr class="sep"><td colspan="8"></td></tr>';
   });
   $('tabla').innerHTML = h + '</tbody>';
@@ -321,10 +321,10 @@ function descargarPDF() {
   actual.grupos.forEach((g, gi) => {
     const fondo = gi % 2 === 0 ? ALT : [255, 255, 255];
     for (const b of g.bloques) {
-      b.filas.forEach((p, i) => body.push({ tipo: 'dato', fondo, ultima: i === b.filas.length - 1, celdas: [String(p.sec), p.frac, p.prov, p.desc, fmt(p.qty, 4), p.umc, dinero(p.val), fmt(p.peso, 4)] }));
-      body.push({ tipo: 'en', fondo, celdas: ['', '', '', ingles.get(b.clave) || '', '', '', '', ''] });
+      b.filas.forEach((p, i) => body.push({ tipo: 'dato', fondo, ultima: i === b.filas.length - 1, celdas: [String(p.sec), p.frac, p.desc, fmt(p.qty, 4), p.umc, dinero(p.val), fmt(p.peso, 4), p.prov] }));
+      body.push({ tipo: 'en', fondo, celdas: ['', '', ingles.get(b.clave) || '', '', '', '', '', ''] });
     }
-    body.push({ tipo: 'tot', celdas: ['', '', '', 'TOTAL', fmt(g.tot.qty, 4), g.umcs.join(' / '), dinero(g.tot.val), fmt(g.tot.peso, 4)] });
+    body.push({ tipo: 'tot', celdas: ['', '', 'TOTAL', fmt(g.tot.qty, 4), g.umcs.join(' / '), dinero(g.tot.val), fmt(g.tot.peso, 4), ''] });
     if (gi < actual.grupos.length - 1) body.push({ tipo: 'sep', celdas: ['', '', '', '', '', '', '', ''] });
   });
 
@@ -340,7 +340,7 @@ function descargarPDF() {
     rowPageBreak: 'avoid',
     styles: { font: 'helvetica', fontSize: 7.5, textColor: TXT, halign: 'center', valign: 'middle', cellPadding: 3, lineColor: [150, 150, 150], lineWidth: 0.4 },
     headStyles: { fillColor: AZUL, textColor: 255, fontStyle: 'bold', lineColor: [150, 150, 150] },
-    columnStyles: { 0: { cellWidth: 52 }, 1: { cellWidth: 58 }, 2: { cellWidth: 120 }, 3: { halign: 'left' }, 4: { cellWidth: 46 }, 5: { cellWidth: 32 }, 6: { cellWidth: 66 }, 7: { cellWidth: 62 } },
+    columnStyles: { 0: { cellWidth: 52 }, 1: { cellWidth: 58 }, 2: { halign: 'left' }, 3: { cellWidth: 46 }, 4: { cellWidth: 32 }, 5: { cellWidth: 66 }, 6: { cellWidth: 62 }, 7: { cellWidth: 120 } },
     didParseCell: d => {
       if (d.section !== 'body') return;
       const f = body[d.row.index];
@@ -351,7 +351,7 @@ function descargarPDF() {
         d.cell.styles.lineWidth = { top: 0, right: 0.4, bottom: 0.4, left: 0.4 };
         d.cell.styles.cellPadding = { top: 1, bottom: 3, left: 3, right: 3 };
       }
-      if (f.tipo === 'tot') { d.cell.styles.fillColor = TOT; d.cell.styles.fontStyle = 'bold'; d.cell.styles.textColor = [11, 26, 51]; if (d.column.index === 3) d.cell.styles.halign = 'right'; }
+      if (f.tipo === 'tot') { d.cell.styles.fillColor = TOT; d.cell.styles.fontStyle = 'bold'; d.cell.styles.textColor = [11, 26, 51]; if (d.column.index === 2) d.cell.styles.halign = 'right'; }
       if (f.tipo === 'sep') { d.cell.styles.fillColor = [255, 255, 255]; d.cell.styles.lineWidth = 0; d.cell.styles.minCellHeight = 8; d.cell.styles.cellPadding = 0; d.cell.text = ['']; }
     },
     didDrawCell: d => {
