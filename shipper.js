@@ -16,6 +16,17 @@ const txt = (v, max = 300) => String(v ?? '').replace(/\s+/g, ' ').trim().slice(
 const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
 const clave = (s) => txt(s).toUpperCase();
 
+// Igual que en la página: junta descripciones que solo cambian en singular/plural
+function singular(w) {
+  if (w.length < 4) return w;
+  if (/CES$/.test(w)) return w.slice(0, -3) + 'Z';
+  if (/[AEIOU]S$/.test(w)) w = w.slice(0, -1);
+  // MOTOR / MOTORES y BUJE / BUJES quedan igual quitando la E final tras R, L, N, D o J
+  if (/[RLNDJ]E$/.test(w)) w = w.slice(0, -1);
+  return w;
+}
+const claveGrupo = (s) => clave(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').split(/[^A-Z0-9Ñ]+/).filter(Boolean).map(singular).join(' ');
+
 class RefOcupada extends Error {}
 
 async function init() {
@@ -57,7 +68,7 @@ function limpiar(body) {
   for (const [k, v] of Object.entries(body?.ingles && typeof body.ingles === 'object' ? body.ingles : {}).slice(0, 3000)) ingles[clave(k).slice(0, 500)] = txt(v, 500).toUpperCase();
 
   // Resumen para la lista (sin las partidas borradas)
-  const vivas = partidas.filter((p) => !borradas.includes(p.frac + '|' + clave(p.desc)));
+  const vivas = partidas.filter((p) => !borradas.includes(p.frac + '|' + claveGrupo(p.desc)) && !borradas.includes(p.frac + '|' + clave(p.desc)));
   const r6 = (n) => Math.round(n * 1e6) / 1e6;
   const resumen = {
     partidas: vivas.length,

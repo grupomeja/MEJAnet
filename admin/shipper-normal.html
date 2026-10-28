@@ -104,6 +104,8 @@
   button.borrar svg{width:16px;height:16px}
   button.borrar:hover{color:var(--err);background:var(--err-bg);border-color:#f1c4c6}
   .borradas{font-size:12.5px;color:var(--muted)}
+  button.reintentar{font:inherit;font-size:13px;font-weight:600;padding:6px 12px;border:1.5px solid var(--warn);border-radius:6px;background:var(--warn-bg);color:var(--warn);cursor:pointer}
+  button.reintentar:hover{filter:brightness(.97)}
   .borradas button{border:0;background:none;padding:0;color:var(--c);font:inherit;font-weight:700;text-decoration:underline;cursor:pointer}
 </style>
 </head>
@@ -131,6 +133,7 @@
       <label for="ref">Referencia</label>
       <input id="ref" type="text">
       <div class="resumen" id="resumen"></div>
+      <button type="button" class="reintentar" id="reintentar" hidden>Traducir las que faltan</button>
       <span class="borradas" id="borradas" hidden><span id="borradasTxt"></span> · <button type="button" id="restaurar">Restaurar</button></span>
       <button class="pdf" id="pdf" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg> Descargar PDF</button>
     </div>
@@ -171,6 +174,19 @@ let traduciendo = false;
 const $ = id => document.getElementById(id);
 const norm = s => String(s ?? '').replace(/\s+/g, ' ').trim().toUpperCase();
 const num = v => { if (typeof v === 'number') return v; const n = parseFloat(String(v ?? '').replace(/,/g, '')); return isNaN(n) ? 0 : n; };
+// Clave para juntar descripciones que solo cambian en singular/plural (EMPAQUE DE CAUCHO = EMPAQUES DE CAUCHO).
+// Cada palabra se lleva a una forma común: ...CES → Z (LUCES → LUZ), se quita la S tras vocal (VALVULAS → VALVULA)
+// y la E final tras R/L/N/D/J (MOTORES y MOTOR → MOTOR; BUJES y BUJE → BUJ). También ignora acentos.
+function singular(w) {
+  if (w.length < 4) return w;
+  if (/CES$/.test(w)) return w.slice(0, -3) + 'Z';
+  if (/[AEIOU]S$/.test(w)) w = w.slice(0, -1);
+  // MOTOR / MOTORES y BUJE / BUJES quedan igual quitando la E final tras R, L, N, D o J
+  if (/[RLNDJ]E$/.test(w)) w = w.slice(0, -1);
+  return w;
+}
+const claveGrupo = s => norm(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').split(/[^A-Z0-9Ñ]+/).filter(Boolean).map(singular).join(' ');
+const borrada = p => actual.borradas.has(p.frac + '|' + claveGrupo(p.desc)) || actual.borradas.has(p.frac + '|' + norm(p.desc));
 const redondear = n => Math.round(n * 1e6) / 1e6; // evita 0.30000000000000004
 const fmt = (n, d) => n.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: d });
 const dinero = n => '$' + n.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
@@ -230,6 +246,7 @@ async function leerArchivo(file) {
 
     $('fBuscar').value = ''; $('fFrac').value = ''; $('fProv').value = '';
     actual = { id: null, ref, partidas, borradas: new Set(), archivo: file.name };
+    traduciendo = true;
     recalcular();
     $('ref').value = ref;
     pintar();
@@ -238,8 +255,8 @@ async function leerArchivo(file) {
     $('res').hidden = false;
     document.body.classList.add('con-reporte');
     ajustarColumnas();
-    await traducir();
     guardar();
+    await traducir();
   } catch (e) {
     aviso(e.message || 'No pude leer el archivo.', 'err');
   }
@@ -292,6 +309,7 @@ async function abrirGuardado(id, conPdf) {
     try { history.replaceState(null, '', '/herramientas/shipper-normal/reporte?id=' + j.id); } catch {}
     $('ref').value = j.referencia;
     recalcular();
+    traduciendo = actual.partidas.some(p => !ingles.get(norm(p.desc)));
     pintar();
     $('dropTxt').textContent = (j.archivo || 'Reporte guardado') + ' · subir otro archivo';
     $('drop').classList.add('chico');
@@ -318,8 +336,9 @@ function agrupar(partidas) {
       filas.sort(cmpSec);
       // Una entrada por descripción, en el orden de la primera secuencia en que aparece
       const porDesc = new Map();
-      for (const p of filas) { const k = norm(p.desc); if (!porDesc.has(k)) porDesc.set(k, []); porDesc.get(k).push(p); }
-      const bloques = [...porDesc.entries()].map(([clave, ps]) => {
+      for (const p of filas) { const k = claveGrupo(p.desc); if (!porDesc.has(k)) porDesc.set(k, []); porDesc.get(k).push(p); }
+      const bloques = [...porDesc.entries()].map(([grupo, ps]) => {
+        const clave = norm(ps[0].desc); // la traducción es la de la primera descripción del grupo
         const umcs = unicos(ps.map(p => p.umc));
         const fila = {
           sec: ps.map(p => p.sec).join(', '),
@@ -331,7 +350,7 @@ function agrupar(partidas) {
           peso: redondear(ps.reduce((s, p) => s + p.peso, 0)),
           prov: unicos(ps.map(p => p.prov)).join(' / '),
         };
-        return { clave, k: frac + '|' + clave, fila, n: ps.length, umcs };
+        return { clave, k: frac + '|' + grupo, fila, n: ps.length, umcs };
       });
       return { frac, bloques, n: filas.length };
     });
@@ -340,7 +359,7 @@ function agrupar(partidas) {
 // Vuelve a armar el reporte sin las partidas borradas
 // Vuelve a armar el reporte sin las partidas borradas y con los filtros aplicados
 function recalcular() {
-  const quedan = actual.partidas.filter(p => !actual.borradas.has(p.frac + '|' + norm(p.desc)));
+  const quedan = actual.partidas.filter(p => !borrada(p));
   llenarFiltros(quedan);
   const q = norm($('fBuscar').value), fr = $('fFrac').value, pr = $('fProv').value;
   const visibles = quedan.filter(p =>
@@ -375,7 +394,7 @@ function pintar() {
       const p = b.fila;
       h += `<tr class="dato con-en"><td class="sec">${esc(p.sec)}</td><td>${esc(p.frac)}</td><td class="desc">${esc(p.desc)}</td><td>${fmt(p.qty, 4)}</td><td>${esc(p.umc)}</td><td>${dinero(p.val)}</td><td>${fmt(p.peso, 4)}</td><td class="prov">${esc(p.prov)}</td><td class="col-borrar" rowspan="3"><button type="button" class="borrar" data-k="${esc(b.k)}" title="Borrar esta partida del reporte" aria-label="Borrar ${esc(p.desc)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4h6v3"/></svg></button></td></tr>`;
       const en = ingles.get(b.clave);
-      h += `<tr class="en"><td></td><td></td><td class="desc"><span class="ing${en === undefined ? ' cargando' : ''}" tabindex="0" title="Clic para copiar · doble clic para corregir" spellcheck="false" data-es="${esc(b.clave)}" data-vacio="${en === undefined ? 'Traduciendo…' : 'Escribe la traducción al inglés'}">${esc(en || '')}</span></td><td></td><td></td><td></td><td></td><td></td></tr>`;
+      h += `<tr class="en"><td></td><td></td><td class="desc"><span class="ing${!en && traduciendo ? ' cargando' : ''}" tabindex="0" title="Clic para copiar · doble clic para corregir" spellcheck="false" data-es="${esc(b.clave)}" data-vacio="${traduciendo ? 'Traduciendo…' : 'Sin traducción · doble clic para escribirla'}">${esc(en || '')}</span></td><td></td><td></td><td></td><td></td><td></td></tr>`;
       h += `<tr class="tot"><td></td><td></td><td class="total">TOTAL</td><td>${fmt(p.qty, 4)}</td><td>${esc(p.umc)}</td><td>${dinero(p.val)}</td><td>${fmt(p.peso, 4)}</td><td></td></tr>`;
     }
     if (gi < grupos.length - 1) h += '<tr class="sep"><td colspan="9"></td></tr>';
@@ -442,25 +461,35 @@ let tAjuste;
 addEventListener('resize', () => { clearTimeout(tAjuste); tAjuste = setTimeout(() => { if (actual) ajustarColumnas(); }, 150); });
 
 // Pide al servidor las traducciones (glosario guardado + traducción automática de lo nuevo)
-async function traducir() {
-  const faltan = [...new Set(actual.partidas.map(p => norm(p.desc)))].filter(k => !ingles.has(k));
-  if (!faltan.length) return;
+async function traducir(reintento = 0) {
+  const faltan = [...new Set(actual.partidas.map(p => norm(p.desc)))].filter(k => !ingles.get(k));
+  if (!faltan.length) { traduciendo = false; pintarIngles(); return; }
   traduciendo = true;
   try {
     const r = await fetch('/api/traducir', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ textos: faltan }) });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(j.error || 'el servidor respondió ' + r.status);
-    for (const t of j.traducciones || []) ingles.set(t.es, t.en || '');
-    if ((j.traducciones || []).some(t => !t.en)) aviso('Algunas descripciones no se pudieron traducir automáticamente. Escribe su traducción en el espacio vacío.', 'warn');
-  } catch (e) {
-    faltan.forEach(k => { if (!ingles.has(k)) ingles.set(k, ''); });
-    aviso('No se pudo traducir automáticamente (' + e.message + '). Puedes escribir las traducciones a mano.', 'warn');
+    for (const t of j.traducciones || []) if (t.en) ingles.set(t.es, t.en);
+  } catch (e) { /* se avisa abajo si quedan sin traducir */ }
+  const sinTraducir = faltan.filter(k => !ingles.get(k)).length;
+  $('reintentar').hidden = !sinTraducir;
+  if (sinTraducir && reintento < 1) {
+    // El traductor a veces pide esperar: se reintenta solo una vez a los pocos segundos
+    pintarIngles();
+    await new Promise(z => setTimeout(z, 6000));
+    return traducir(reintento + 1);
   }
+  if (sinTraducir) aviso(sinTraducir + (sinTraducir === 1 ? ' descripción no se pudo' : ' descripciones no se pudieron') + ' traducir por ahora. Usa "Traducir las que faltan" en unos minutos, o escríbelas con doble clic.', 'warn');
+  else if ($('msg').textContent.includes('traducir')) aviso('', 'warn');
+  if (faltan.some(k => ingles.get(k))) guardar();
   traduciendo = false;
+  pintarIngles();
+}
+function pintarIngles() {
   document.querySelectorAll('.ing').forEach(el => {
     if (document.activeElement === el) return;
     const en = ingles.get(el.dataset.es) || '';
-    el.textContent = en; el.classList.remove('cargando'); el.dataset.vacio = 'Escribe la traducción al inglés';
+    el.textContent = en; el.classList.remove('cargando'); el.dataset.vacio = traduciendo ? 'Traduciendo…' : 'Sin traducción · doble clic para escribirla';
   });
   ajustarColumnas();
 }
@@ -578,6 +607,7 @@ $('fBuscar').addEventListener('input', () => { clearTimeout(tFiltro); tFiltro = 
 $('fFrac').addEventListener('change', filtrar);
 $('fProv').addEventListener('change', filtrar);
 $('fLimpiar').addEventListener('click', () => { $('fBuscar').value = ''; $('fFrac').value = ''; $('fProv').value = ''; filtrar(); });
+$('reintentar').addEventListener('click', async ev => { ev.target.disabled = true; await traducir(1); ev.target.disabled = false; });
 const drop = $('drop');
 $('archivo').addEventListener('change', ev => { const f = ev.target.files[0]; if (f) leerArchivo(f); ev.target.value = ''; });
 drop.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); $('archivo').click(); } });
