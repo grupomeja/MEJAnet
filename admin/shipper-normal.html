@@ -76,6 +76,7 @@
   td:not(.desc):not(.prov):not(.sec){white-space:nowrap}
   td.prov{white-space:normal}
   td.sec{white-space:normal}
+  td.num{font-weight:700;color:var(--c-osc)}
   /* Columnas de datos al ancho de su texto; el espacio que sobra va a descripción y proveedor */
   th.ajusta{width:1%;padding-inline:10px}
   body.con-reporte{height:100vh;overflow:hidden}
@@ -169,6 +170,7 @@
 <script>
 // Columnas del reporte (en este orden)
 const COLS = [
+  { k: 'num',  t: 'No.' },
   { k: 'sec',  t: 'SECUENCIA\nPEDIMENTO' },
   { k: 'frac', t: 'FRACCION' },
   { k: 'desc', t: 'DESCRIPCION' },
@@ -405,17 +407,19 @@ function pintar() {
   $('pdf').disabled = !grupos.length;
   $('titref').textContent = 'Referencia : ' + $('ref').value;
   let h = '<thead><tr>' + COLS.map(c => '<th' + (c.k === 'desc' ? '' : ' class="ajusta"') + '>' + esc(c.t) + '</th>').join('') + '<th class="col-borrar"><span class="sr">Borrar</span></th></tr></thead><tbody>';
+  let num = 0;
   grupos.forEach((g, gi) => {
     for (const b of g.bloques) {
+      num++;
       const p = b.fila;
-      h += `<tr class="dato con-en"><td class="sec">${esc(p.sec)}</td><td>${esc(p.frac)}</td><td class="desc">${esc(p.desc)}</td><td>${fmt(p.qty, 4)}</td><td>${esc(p.umc)}</td><td>${dinero(p.val)}</td><td>${fmt(p.peso, 4)}</td><td class="prov">${esc(p.prov)}</td><td class="col-borrar" rowspan="3"><button type="button" class="borrar" data-k="${esc(b.k)}" data-n="${b.n}" title="Borrar esta partida del reporte" aria-label="Borrar ${esc(p.desc)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4h6v3"/></svg></button></td></tr>`;
+      h += `<tr class="dato con-en"><td class="num">${num}</td><td class="sec">${esc(p.sec)}</td><td>${esc(p.frac)}</td><td class="desc">${esc(p.desc)}</td><td>${fmt(p.qty, 4)}</td><td>${esc(p.umc)}</td><td>${dinero(p.val)}</td><td>${fmt(p.peso, 4)}</td><td class="prov">${esc(p.prov)}</td><td class="col-borrar" rowspan="3"><button type="button" class="borrar" data-k="${esc(b.k)}" data-n="${b.n}" title="Borrar esta partida del reporte" aria-label="Borrar ${esc(p.desc)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4h6v3"/></svg></button></td></tr>`;
       const en = ingles.get(b.clave);
-      h += `<tr class="en"><td></td><td></td><td class="desc"><span class="ing${!en && traduciendo ? ' cargando' : ''}" tabindex="0" title="Clic para copiar · doble clic para corregir" spellcheck="false" data-es="${esc(b.clave)}" data-vacio="${traduciendo ? 'Traduciendo…' : 'Sin traducción · doble clic para escribirla'}">${esc(en || '')}</span></td><td></td><td></td><td></td><td></td><td></td></tr>`;
-      h += `<tr class="tot"><td></td><td></td><td class="total">TOTAL</td><td>${fmt(p.qty, 4)}</td><td>${esc(p.umc)}</td><td>${dinero(p.val)}</td><td>${fmt(p.peso, 4)}</td><td></td></tr>`;
+      h += `<tr class="en"><td></td><td></td><td></td><td class="desc"><span class="ing${!en && traduciendo ? ' cargando' : ''}" tabindex="0" title="Clic para copiar · doble clic para corregir" spellcheck="false" data-es="${esc(b.clave)}" data-vacio="${traduciendo ? 'Traduciendo…' : 'Sin traducción · doble clic para escribirla'}">${esc(en || '')}</span></td><td></td><td></td><td></td><td></td><td></td></tr>`;
+      h += `<tr class="tot"><td></td><td></td><td></td><td class="total">TOTAL</td><td>${fmt(p.qty, 4)}</td><td>${esc(p.umc)}</td><td>${dinero(p.val)}</td><td>${fmt(p.peso, 4)}</td><td></td></tr>`;
     }
-    if (gi < grupos.length - 1) h += '<tr class="sep"><td colspan="9"></td></tr>';
+    if (gi < grupos.length - 1) h += '<tr class="sep"><td colspan="10"></td></tr>';
   });
-  if (!grupos.length) h += `<tr class="vacio"><td colspan="9">${actual.total ? 'Ninguna partida coincide con los filtros.' : 'No quedan partidas en el reporte.'}</td></tr>`;
+  if (!grupos.length) h += `<tr class="vacio"><td colspan="10">${actual.total ? 'Ninguna partida coincide con los filtros.' : 'No quedan partidas en el reporte.'}</td></tr>`;
   $('tabla').innerHTML = h + '</tbody>';
   const nb = actual.partidas.filter((p, i) => borrada(p, i)).length;
   $('borradas').hidden = !nb;
@@ -451,14 +455,14 @@ function ajustarColumnas() {
   const anchoProv = medir(todos.map(b => b.fila.prov), muestra('td.prov'));
   const anchoSec = medir(todos.map(b => String(b.fila.sec)), muestra('tr.dato td.sec'));
   const ths = tabla.querySelectorAll('thead th');
-  if (!ths[2] || !ths[7]) return;
+  if (!ths[3] || !ths[8]) return;
   // Secuencia: en una línea si cabe (hasta 220 px), para que no se vaya hacia abajo
   let sec = Math.min(220, Math.ceil(anchoSec + 20));
   // Proveedor: lo justo para que su texto más largo quepa en 2 renglones
   let prov = Math.ceil(anchoProv * 0.55 + 20);
   // Descripción: lo ideal son 2 renglones; además se lleva el espacio que sobre
   let desc = Math.ceil(anchoDesc * 0.56 + 24);
-  const poner = () => { ths[0].style.minWidth = sec + 'px'; ths[2].style.minWidth = desc + 'px'; ths[7].style.minWidth = prov + 'px'; };
+  const poner = () => { ths[1].style.minWidth = sec + 'px'; ths[3].style.minWidth = desc + 'px'; ths[8].style.minWidth = prov + 'px'; };
   poner();
   // Si no cabe en la pantalla, se encogen (con más renglones) hasta que la tabla quepa a lo ancho
   const caja = tabla.parentElement;
@@ -557,14 +561,16 @@ function descargarPDF() {
 
   const VERDE = [46, 139, 87], TOT = [221, 239, 228], EN = [31, 102, 64], EN_FONDO = [225, 242, 231], TXT = [51, 51, 51], LINEA = [190, 214, 199];
   const body = [];
+  let num = 0;
   actual.grupos.forEach((g, gi) => {
     for (const b of g.bloques) {
       const p = b.fila;
-      body.push({ tipo: 'dato', celdas: [String(p.sec), p.frac, p.desc, fmt(p.qty, 4), p.umc, dinero(p.val), fmt(p.peso, 4), p.prov] });
-      body.push({ tipo: 'en', celdas: ['', '', ingles.get(b.clave) || '', '', '', '', '', ''] });
-      body.push({ tipo: 'tot', celdas: ['', '', 'TOTAL', fmt(p.qty, 4), p.umc, dinero(p.val), fmt(p.peso, 4), ''] });
+      num++;
+      body.push({ tipo: 'dato', celdas: [String(num), String(p.sec), p.frac, p.desc, fmt(p.qty, 4), p.umc, dinero(p.val), fmt(p.peso, 4), p.prov] });
+      body.push({ tipo: 'en', celdas: ['', '', '', ingles.get(b.clave) || '', '', '', '', '', ''] });
+      body.push({ tipo: 'tot', celdas: ['', '', '', 'TOTAL', fmt(p.qty, 4), p.umc, dinero(p.val), fmt(p.peso, 4), ''] });
     }
-    if (gi < actual.grupos.length - 1) body.push({ tipo: 'sep', celdas: ['', '', '', '', '', '', '', ''] });
+    if (gi < actual.grupos.length - 1) body.push({ tipo: 'sep', celdas: ['', '', '', '', '', '', '', '', ''] });
   });
 
   doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.setTextColor(11, 26, 51);
@@ -579,7 +585,7 @@ function descargarPDF() {
     rowPageBreak: 'avoid',
     styles: { font: 'helvetica', fontSize: 7, textColor: TXT, halign: 'center', valign: 'middle', cellPadding: 2.6, lineColor: LINEA, lineWidth: 0.4 },
     headStyles: { fillColor: VERDE, textColor: 255, fontStyle: 'bold', lineColor: [111, 176, 139], fontSize: 6.8 },
-    columnStyles: { 0: { cellWidth: 48 }, 1: { cellWidth: 54 }, 2: { halign: 'left' }, 3: { cellWidth: 38 }, 4: { cellWidth: 28 }, 5: { cellWidth: 60 }, 6: { cellWidth: 48 }, 7: { cellWidth: 92 } },
+    columnStyles: { 0: { cellWidth: 22 }, 1: { cellWidth: 46 }, 2: { cellWidth: 52 }, 3: { halign: 'left' }, 4: { cellWidth: 36 }, 5: { cellWidth: 26 }, 6: { cellWidth: 58 }, 7: { cellWidth: 46 }, 8: { cellWidth: 88 } },
     didParseCell: d => {
       if (d.section !== 'body') return;
       const f = body[d.row.index];
@@ -588,9 +594,9 @@ function descargarPDF() {
       if (f.tipo === 'en') {
         d.cell.styles.lineWidth = { top: 0, right: 0.4, bottom: 0.4, left: 0.4 };
         d.cell.styles.cellPadding = { top: 1, bottom: 3, left: 3, right: 3 };
-        if (d.column.index === 2) { d.cell.styles.fillColor = EN_FONDO; d.cell.styles.fontStyle = 'bold'; d.cell.styles.fontSize = 7.8; d.cell.styles.textColor = EN; }
+        if (d.column.index === 3) { d.cell.styles.fillColor = EN_FONDO; d.cell.styles.fontStyle = 'bold'; d.cell.styles.fontSize = 7.8; d.cell.styles.textColor = EN; }
       }
-      if (f.tipo === 'tot') { d.cell.styles.fillColor = TOT; d.cell.styles.fontStyle = 'bold'; d.cell.styles.textColor = [11, 26, 51]; d.cell.styles.fontSize = 7.8; if (d.column.index === 2) d.cell.styles.halign = 'right'; }
+      if (f.tipo === 'tot') { d.cell.styles.fillColor = TOT; d.cell.styles.fontStyle = 'bold'; d.cell.styles.textColor = [11, 26, 51]; d.cell.styles.fontSize = 7.8; if (d.column.index === 3) d.cell.styles.halign = 'right'; }
       if (f.tipo === 'sep') { d.cell.styles.fillColor = [255, 255, 255]; d.cell.styles.lineWidth = 0; d.cell.styles.minCellHeight = 8; d.cell.styles.cellPadding = 0; d.cell.text = ['']; }
     },
     didDrawCell: d => {
