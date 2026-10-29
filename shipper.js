@@ -68,7 +68,8 @@ function limpiar(body) {
   for (const [k, v] of Object.entries(body?.ingles && typeof body.ingles === 'object' ? body.ingles : {}).slice(0, 3000)) ingles[clave(k).slice(0, 500)] = txt(v, 500).toUpperCase();
 
   // Resumen para la lista (sin las partidas borradas)
-  const vivas = partidas.filter((p) => !borradas.includes(p.frac + '|' + claveGrupo(p.desc)) && !borradas.includes(p.frac + '|' + clave(p.desc)));
+  // Se borra el renglón completo (fracción|descripción) o una sola partida ("i:<número de partida>")
+  const vivas = partidas.filter((p, i) => !borradas.includes(p.frac + '|' + claveGrupo(p.desc)) && !borradas.includes(p.frac + '|' + clave(p.desc)) && !borradas.includes('i:' + i));
   const r6 = (n) => Math.round(n * 1e6) / 1e6;
   const resumen = {
     partidas: vivas.length,
