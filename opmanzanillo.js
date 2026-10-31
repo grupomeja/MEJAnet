@@ -39,6 +39,61 @@ async function init() {
   }
   await sinConfirmada();
   await hitosNuevos();
+  await importar('2026-10-31', path.join(__dirname, 'seed', 'actualizacion_2026-10-31.json'));
+}
+
+// ---------- Actualizaciones desde el Excel "REPORTE DE DESPACHOS" ----------
+// Se aplican una sola vez (quedan registradas). Reglas:
+//  · referencia nueva → se crea el embarque;
+//  · datos generales (cliente, buque, BL, forwarder, terminal…) → solo se llenan si están vacíos;
+//  · estatus, ETA y fechas de previo/despacho del reporte → se actualizan;
+//  · "CUMPLIDO" → despacho real y semáforo (si no tiene). Sigue en Activas (verde) hasta que se capture el retiro.
+const GENERALES = ['cliente', 'buque', 'viaje', 'hbl', 'mbl', 'ff', 'tipo', 'mercancia', 'terminal', 'previo', 'operacion', 'pedimento'];
+async function yaAplicada(nombre) {
+  if (pool) {
+    await pool.query('CREATE TABLE IF NOT EXISTS opm_importaciones (nombre TEXT PRIMARY KEY, aplicada TIMESTAMPTZ NOT NULL DEFAULT now())');
+    return (await pool.query('SELECT 1 FROM opm_importaciones WHERE nombre = $1', [nombre])).rowCount > 0;
+  }
+  return fs.existsSync(path.join(db.DIR, `opm_import_${nombre}.ok`));
+}
+async function marcarAplicada(nombre) {
+  if (pool) await pool.query('INSERT INTO opm_importaciones (nombre) VALUES ($1) ON CONFLICT DO NOTHING', [nombre]);
+  else { fs.mkdirSync(db.DIR, { recursive: true }); fs.writeFileSync(path.join(db.DIR, `opm_import_${nombre}.ok`), new Date().toISOString()); }
+}
+async function importar(nombre, archivo) {
+  if (!fs.existsSync(archivo) || await yaAplicada(nombre)) return;
+  const lista = JSON.parse(fs.readFileSync(archivo, 'utf8'));
+  const actuales = Object.fromEntries((await listar()).map((x) => [x.id, x]));
+  let nuevos = 0, cambiados = 0;
+  for (const u of Object.values(lista)) {
+    const id = u.ref.replace(/\//g, '-');
+    const hitos = JSON.parse(JSON.stringify(u.hitos || {}));
+    if (u.eta) hitos.arribo = { ...(hitos.arribo || {}), e: u.eta };
+    const e = actuales[id];
+    if (!e) {
+      const doc = { ref: u.ref, operacion: u.operacion || '', bandera: '', marca: '', factura: '', peso: null, bultos: '', contenedores: '',
+        claveCR: '', pedimento: '', semaforo: u.semaforo || '', diasLibres: null, gastos: [], ...Object.fromEntries(GENERALES.filter((k) => u[k]).map((k) => [k, u[k]])),
+        nota: u.nota || '', hitos, estado: 'activa', origen: `Excel REPORTE DE DESPACHOS ${nombre}`, creado: new Date().toISOString() };
+      if (await crear(id, doc)) { nuevos++; console.log(`OP Manzanillo [${nombre}]: nuevo ${u.ref}`); }
+      continue;
+    }
+    const cambio = {}, que = [];
+    for (const k of GENERALES) if (u[k] && !String(e[k] ?? '').trim()) { cambio[k] = u[k]; que.push(k); }
+    if (u.nota && u.nota !== e.nota) { cambio.nota = u.nota; que.push('estatus'); }
+    const h = {};
+    for (const [k, v] of Object.entries(hitos)) {
+      const act = (e.hitos && e.hitos[k]) || {}, n = {};
+      if (v.e && v.e !== act.e) n.e = v.e;
+      if (v.hora && v.hora !== act.hora) n.hora = v.hora;
+      if (v.r && !act.r) n.r = v.r;
+      if (Object.keys(n).length) { h[k] = n; que.push(k); }
+    }
+    if (Object.keys(h).length) cambio.hitos = h;
+    if (u.semaforo && !e.semaforo) { cambio.semaforo = u.semaforo; que.push('semáforo'); }
+    if (que.length) { await cambiar(id, cambio); cambiados++; console.log(`OP Manzanillo [${nombre}]: ${u.ref} → ${que.join(', ')}`); }
+  }
+  await marcarAplicada(nombre);
+  console.log(`OP Manzanillo [${nombre}]: ${nuevos} embarques nuevos y ${cambiados} actualizados desde el Excel`);
 }
 
 // Hitos de 6 pasos: zarpe, arribo, revalidación, previo, despacho y retiro.
