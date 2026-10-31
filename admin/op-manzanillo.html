@@ -153,6 +153,27 @@ button.kpi:hover{border-color:var(--ink-3)}
 .li:hover .t{text-decoration:underline}
 .li .t{font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .li .s{font-size:12.5px;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Ejecutivo con el formato del título «OPERACIONES MANZANILLO» */
+#v-ejec .kpi,#v-ejec .card{background:linear-gradient(180deg,var(--cel-bg1),var(--cel-bg2));border:1px solid var(--cel-line);box-shadow:0 2px 0 var(--cel-line),0 6px 16px rgba(140,117,83,.10)}
+#v-ejec .kpi .lbl{color:var(--cel-ico);font-weight:700}
+#v-ejec .kpi .val{font-family:"Oswald","Arial Narrow",system-ui,sans-serif;color:var(--cel-ink)}
+#v-ejec .kpi .sub{color:var(--cel-ink);opacity:.8}
+#v-ejec .card h2{font-family:"Oswald","Arial Narrow",system-ui,sans-serif;color:var(--cel-ink);letter-spacing:1px}
+#v-ejec .card h2 .muted{color:var(--cel-ico)}
+#v-ejec .li{border-top-color:var(--cel-line)}
+#v-ejec .hb .track{background:rgba(140,117,83,.12)}
+#v-ejec{--bar:#8C7553}
+#v-ejec .date-chip{background:var(--surface);border-color:var(--cel-line)}
+/* Colores de estatus (avance) */
+.li-st{position:relative;padding-left:10px}
+.li-st::before{content:"";position:absolute;left:0;top:6px;bottom:6px;width:4px;border-radius:2px;background:var(--st-no)}
+.li-st.st-gr::before{background:var(--st-gr)} .li-st.st-ye::before{background:var(--st-ye)} .li-st.st-az::before{background:var(--st-az)} .li-st.st-or::before{background:var(--st-or)} .li-st.st-no::before{background:#C9CDD5}
+.fill-st{height:100%;display:flex;gap:1px}
+.seg{display:inline-block;height:100%}
+.seg.st-gr{background:var(--st-gr)} .seg.st-ye{background:var(--st-ye)} .seg.st-az{background:var(--st-az)} .seg.st-or{background:var(--st-or)} .seg.st-no{background:#C9CDD5}
+.mini-ley{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:12px;font-size:11.5px;color:var(--cel-ink);font-weight:600}
+.mini-ley span{display:inline-flex;align-items:center;gap:5px}
+.mini-ley .seg{width:12px;height:12px;border-radius:2px}
 .date-chip{min-width:104px;padding:4px 8px;border:1px solid var(--line);border-radius:4px;background:var(--surface-2)}
 .date-chip small{display:block;font-size:10.5px;color:var(--ink-3);text-transform:uppercase;font-family:var(--f-body);font-weight:500;margin-top:2px}
 .empty{color:var(--ink-3);padding:18px 0;text-align:center}
@@ -617,6 +638,7 @@ const STATUS={no:"Pendiente ETA y revalidación",or:"Revalidado",az:"Previo prog
 // Azul: hay fecha de previo. Naranja: hay fecha de revalidación. Sin color: lo demás.
 // Con fecha real de retiro de puerto la operación sale de la lista de activas (cuenta como cerrada)
 function estadoEf(e){const st=e.estado||"activa";return st==="activa"&&hit(e,"retiro").r?"cerrada":st}
+const ST_CORTO={gr:"Desaduanado",ye:"Ped. pagado / desp. prog.",az:"Previo programado",or:"Revalidado",no:"Pendiente"};
 function status(e){
   const di=hit(e,"despacho"),pv=hit(e,"previo"),rv=hit(e,"revalidacion");
   // Verde solo si ya tiene resultado de semáforo (libre o reconocimiento) o la operación está cerrada
@@ -665,7 +687,7 @@ function renderEjec(){
   const maxM=Math.max(1,...months.map(m=>m.n));
 
   // stages
-  const stMap={};act.forEach(x=>{stMap[x.a.stage]=(stMap[x.a.stage]||0)+1});
+  const stMap={},stCol={};act.forEach(x=>{stMap[x.a.stage]=(stMap[x.a.stage]||0)+1;const c=stCol[x.a.stage]||(stCol[x.a.stage]={});const k=status(x.e);c[k]=(c[k]||0)+1});
   const stOrder=HITOS.map(h=>h.st).concat(["Por cerrar"]).filter(s=>stMap[s]);
   const maxS=Math.max(1,...Object.values(stMap));
   const byCli={};act.forEach(x=>{const c=x.e.cliente||"Sin cliente";byCli[c]=(byCli[c]||0)+1});
@@ -696,7 +718,8 @@ function renderEjec(){
       <div class="months">${months.map(m=>`<div class="mcol ${m.m===curM?"cur":""}"><div class="b" style="height:${m.n/maxM*130}px"><span>${m.n||""}</span></div><div class="m">${MES[m.m]}</div><div class="d">${m.avg===null?"·":m.avg.toFixed(1)+" d"}</div></div>`).join("")}</div>
     </div>
     <div class="card"><h2>Activas por etapa <span class="muted">siguiente hito pendiente</span></h2>
-      ${stOrder.length?`<div class="hbars">${stOrder.map(s=>`<div class="hb"><span title="${esc(s)}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink-2)">${esc(s)}</span><div class="track"><div class="fill" style="width:${stMap[s]/maxS*100}%"></div></div><div class="n">${stMap[s]}</div></div>`).join("")}</div>`:`<div class="empty">Sin operaciones activas</div>`}
+      ${stOrder.length?`<div class="hbars">${stOrder.map(s=>`<div class="hb"><span title="${esc(s)}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink-2)">${esc(s)}</span><div class="track"><div class="fill-st" style="width:${stMap[s]/maxS*100}%">${["gr","ye","az","or","no"].filter(k=>stCol[s][k]).map(k=>`<i class="seg st-${k}" style="flex:${stCol[s][k]}" title="${esc(STATUS[k])}: ${stCol[s][k]}"></i>`).join("")}</div></div><div class="n">${stMap[s]}</div></div>`).join("")}</div>
+      <div class="mini-ley">${["gr","ye","az","or","no"].map(k=>`<span><i class="seg st-${k}"></i>${esc(ST_CORTO[k])}</span>`).join("")}</div>`:`<div class="empty">Sin operaciones activas</div>`}
     </div>
   </div>
   <div class="two">
@@ -704,7 +727,7 @@ function renderEjec(){
       <div class="list">${alertas.slice(0,12).map(({x,a})=>`<button type="button" class="li" data-open="${esc(x.id)}"><span class="pill ${a.lvl}">${esc(a.short)}</span><span style="min-width:0"><div class="t"><span class="ref">${esc(x.e.ref)}</span> · ${esc(x.e.buque)}</div><div class="s">${esc(a.txt)} · ${esc(x.e.cliente)}</div></span><span class="muted" style="font-size:12px">${esc(x.e.terminal||"")}</span></button>`).join("")||`<div class="empty">Todo al corriente</div>`}</div>
     </div>
     <div class="card"><h2>Próximos 14 días <span class="muted">hitos programados</span></h2>
-      <div class="list">${up.slice(0,12).map(u=>`<button type="button" class="li" data-open="${esc(u.x.id)}"><span class="date-chip">${fd2(u.d)}</span><span style="min-width:0"><div class="t">${esc(u.h.l)} · <span class="ref">${esc(u.x.e.ref)}</span></div><div class="s">${esc(u.x.e.buque)} ${esc(u.x.e.viaje||"")} · ${esc(u.x.e.cliente)}</div></span><span class="pill">Estimada</span></button>`).join("")||`<div class="empty">Sin hitos en las próximas dos semanas</div>`}</div>
+      <div class="list">${up.slice(0,12).map(u=>`<button type="button" class="li li-st st-${status(u.x.e)}" data-open="${esc(u.x.id)}"><span class="date-chip">${fd2(u.d)}</span><span style="min-width:0"><div class="t">${esc(u.h.l)} · <span class="ref">${esc(u.x.e.ref)}</span></div><div class="s">${esc(u.x.e.buque)} ${esc(u.x.e.viaje||"")} · ${esc(u.x.e.cliente)}</div></span><span class="st-pill s-${status(u.x.e)}">${ST_CORTO[status(u.x.e)]}</span></button>`).join("")||`<div class="empty">Sin hitos en las próximas dos semanas</div>`}</div>
     </div>
   </div>
   <div class="two">
