@@ -432,5 +432,6 @@ fetch('/api/admin/entradas-bodega').then((r) => { if (!r.ok) throw new Error(); 
   })
   .catch(() => { $('filas').innerHTML = '<tr><td colspan="15" class="vacio">No se pudieron cargar los registros.</td></tr>'; });
 </script>
+<script src="/solo-lectura.js"></script>
 </body>
 </html>

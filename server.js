@@ -84,12 +84,21 @@ function sesionValida(req) {
   const clave = usuarios().get(usuario);
   return clave && igual(f, firma(usuario, clave, `${u}.${vence}`)) ? usuario : null;
 }
+// Usuarios de solo lectura (variable SOLO_LECTURA en Render, separados por coma): pueden ver todo,
+// pero el servidor rechaza cualquier cambio (crear, editar, borrar). Generar un PDF sí se permite.
+const soloLectura = (usuario) => String(process.env.SOLO_LECTURA || '').split(',').map((x) => x.trim()).filter(Boolean).includes(usuario);
+const esCambio = (req) => !['GET', 'HEAD', 'OPTIONS'].includes(req.method) && !/\.pdf$/i.test(req.path);
+// Páginas que solo sirven para crear algo nuevo: un usuario de solo lectura regresa al tablero
+const PAGINAS_NUEVO = { '/nueva-orden': '/orden-de-carga', '/entradas-bodega/nueva': '/entradas-bodega', '/cotizador/nueva': '/cotizador' };
 function admin(req, res, next) {
   if (!usuarios().size) return res.status(503).send('Falta definir ADMIN_PASSWORD en el servidor.');
   const usuario = sesionValida(req);
   if (usuario) {
     req.usuario = usuario;
+    req.soloLectura = soloLectura(usuario);
     crearSesion(res, usuario, usuarios().get(usuario)); // renueva el año de vigencia
+    if (req.soloLectura && esCambio(req)) return res.status(403).json({ error: 'Tu usuario es solo de consulta: puedes ver la información, pero no guardar cambios.' });
+    if (req.soloLectura && req.method === 'GET' && PAGINAS_NUEVO[req.path]) return res.redirect(PAGINAS_NUEVO[req.path]);
     return next();
   }
   // Páginas: se manda a la pantalla de inicio de sesión; API: error 401
@@ -125,6 +134,8 @@ app.post('/api/login', (req, res) => {
   else reg.n++;
   res.status(401).json({ error: 'Usuario o contraseña incorrectos.' });
 });
+// Quién inició sesión y si es solo de consulta (lo usan las páginas para ocultar botones de edición)
+app.get('/api/sesion', admin, (req, res) => res.set('Cache-Control', 'no-store').json({ usuario: req.usuario, soloLectura: !!req.soloLectura }));
 app.get('/logout', (_req, res) => {
   res.clearCookie(COOKIE, { path: '/' });
   res.redirect('/');

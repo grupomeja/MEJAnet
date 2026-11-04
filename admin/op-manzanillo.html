@@ -592,6 +592,9 @@ function money(n){return(n||0).toLocaleString("es-MX",{minimumFractionDigits:2,m
 $("#hoy").textContent="Puerto de Manzanillo · "+fd(TODAY);
 
 let canWrite=true;
+// Usuario de solo consulta (lo avisa /solo-lectura.js): todo se muestra bloqueado
+function modoConsulta(){if(!canWrite)return;canWrite=false;if(typeof refresh==="function"&&loaded)refresh()}
+if(window.MEJA_SOLO_LECTURA)modoConsulta();document.addEventListener("meja:solo-lectura",modoConsulta);
 let EMB={};            // id -> doc
 let loaded=false;
 const ui={view:"ejec",cliente:"",terminal:"",q:"",estado:"activa",tipo:"",orden:"estatus",open:null,newMode:false,confirmDel:false};
@@ -1043,6 +1046,7 @@ function bajar(nombre,lineas){
 /* ---------- writes ---------- */
 const queues={};
 function write(id,patch){
+  if(!canWrite){toast("Tu usuario es solo de consulta");return}
   if(EMB[id])EMB[id]=merge(EMB[id],patch); // se ve el cambio de inmediato
   const run=()=>api("PATCH","/api/admin/opm/embarques/"+encodeURIComponent(id),patch).then(r=>{if(r&&r.datos&&EMB[id])EMB[id]=r.datos;flash("Guardado");refresh()}).catch(err=>{toast("No se pudo guardar: "+err.message);load()});
   queues[id]=(queues[id]||Promise.resolve()).then(run,run);return queues[id];
@@ -1274,5 +1278,6 @@ document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!isEditin
 })();
 </script>
 
+<script src="/solo-lectura.js"></script>
 </body>
 </html>
