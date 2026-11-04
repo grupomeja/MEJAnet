@@ -41,14 +41,16 @@ function limpiar(body) {
 // --- Inicio de sesión (página principal /) y protección de todas las secciones ---
 // Al entrar con usuario y contraseña se guarda una cookie firmada que dura 1 año
 // (se renueva sola en cada visita), así que el navegador ya no vuelve a pedir credenciales.
-// Usuarios: ADMIN_USER / ADMIN_PASSWORD, más los de la variable USUARIOS en Render,
+// Usuarios: ADMIN_USER / ADMIN_PASSWORD, más los de la variable USUARIOS en Render
+// (y de cualquier otra cuyo nombre empiece con USUARIOS, p. ej. USUARIOS_INVITADO),
 // con el formato  usuario:contraseña,usuario2:contraseña2  (el usuario distingue mayúsculas).
 // Si se cambia la contraseña de un usuario, sus sesiones abiertas se cierran; SESSION_SECRET las cierra todas.
 const COOKIE = 'mejanet_sesion';
 const DURACION_SESION = 365 * 24 * 60 * 60 * 1000; // 1 año
 function usuarios() {
   const lista = new Map();
-  for (const par of String(process.env.USUARIOS || '').split(/[,\n]/)) {
+  const texto = Object.keys(process.env).filter((k) => /^USUARIOS(_|$)/.test(k)).map((k) => process.env[k]).join(',');
+  for (const par of texto.split(/[,\n]/)) {
     const i = par.indexOf(':');
     const u = par.slice(0, i).trim(), c = par.slice(i + 1).trim();
     if (i > 0 && u && c) lista.set(u, c);
