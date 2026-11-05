@@ -253,7 +253,9 @@ async function generarPDFCotizacion(reg, calc, folio) {
   const equiv = calc.granMXN !== null && calc.totalUSD && calc.totalMXN;
   const anchoTot = 250, xT = W - M - anchoTot;
   const hResumen = resumen.reduce((h, r) => h + (r[2] ? 20 : 13), 0);
-  const hTotal = totLin.length ? hResumen + 4 + 14 + totLin.length * 16 + (equiv ? 25 : 0) + 4 : 0;
+  // Con equivalente: SUBTOTAL (dos líneas chicas) arriba y TOTAL ESTIMADO (equivalente, en amarillo) abajo
+  const altoTot = equiv ? 72 : 14 + totLin.length * 16;
+  const hTotal = totLin.length ? hResumen + 4 + altoTot + 4 : 0;
   const notas = vacio(d.notas) ? [] : renglones(d.notas, xT - M - 40, F, 7.5).filter((l) => l.trim());
   const hNotas = notas.length ? 20 + notas.length * 10.5 : 0;
   const hBloque = Math.max(hTotal, hNotas);
@@ -281,15 +283,23 @@ async function generarPDFCotizacion(reg, calc, folio) {
         yy -= h;
       }
       yy -= 4;
-      const hT = 14 + totLin.length * 16 + (equiv ? 25 : 0);
+      const hT = altoTot;
       caja(xT, yy - hT, anchoTot, hT, NAVY);
-      texto('TOTAL ESTIMADO', xT + 8, yy - 12, { f: FB, size: 6.6, color: CLARO, espacio: 1.2 });
-      totLin.forEach((t, i) => texto(t, W - M - 8, yy - 15 - i * 16, { f: FB, size: 12.5, color: ORO, align: 'right' }));
-      // Equivalente: mismo formato que TOTAL ESTIMADO (negrita, espaciado, mismo color), en dos renglones
+      const et = { f: FB, size: 6.6, color: CLARO, espacio: 1.2 };
       if (equiv) {
-        const eq = { f: FB, size: 7.2, color: CLARO, align: 'right', espacio: 0.9 };
-        texto(`Equivalente (T.C. ${d.tc}):`, W - M - 8, yy - hT + 17, eq);
-        texto(`MXN $ ${dinero(calc.granMXN)} | USD $ ${dinero(calc.granUSD)}`, W - M - 8, yy - hT + 6, eq);
+        // SUBTOTAL: lo que se cobra en cada moneda, chico y en el color del título
+        const chico = { f: FB, size: 7.2, color: CLARO, align: 'right', espacio: 0.9 };
+        texto('SUBTOTAL', xT + 8, yy - 12, et);
+        totLin.forEach((t, i) => texto(t, W - M - 8, yy - 12 - i * 11, chico));
+        page.drawLine({ start: { x: xT + 8, y: yy - 30 }, end: { x: W - M - 8, y: yy - 30 }, thickness: 0.5, color: hex('#2a4068') });
+        // TOTAL ESTIMADO: todo convertido a cada moneda con el tipo de cambio
+        texto('TOTAL ESTIMADO', xT + 8, yy - 44, et);
+        texto(`T.C. ${d.tc}`, xT + 8, yy - 53, { f: FB, size: 5.4, color: CLARO, espacio: 0.9 });
+        [`MXN $ ${dinero(calc.granMXN)}`, `USD $ ${dinero(calc.granUSD)}`]
+          .forEach((t, i) => texto(t, W - M - 8, yy - 47 - i * 16, { f: FB, size: 12.5, color: ORO, align: 'right' }));
+      } else {
+        texto('TOTAL ESTIMADO', xT + 8, yy - 12, et);
+        totLin.forEach((t, i) => texto(t, W - M - 8, yy - 15 - i * 16, { f: FB, size: 12.5, color: ORO, align: 'right' }));
       }
     }
     y = y0 - hBloque - 8;
