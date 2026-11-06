@@ -6,28 +6,414 @@
 <title>Reporte Shipper SM · MEJAnet v1.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600&family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-    :root{--c:#0e7c86}
+  :root{--bg:#f4f8fb;--ink:#0b1a33;--muted:#5d6672;--line:#c9d4e0;--c:#2e8b57;--c-osc:#1f6640;--head:#2e8b57;--alt:#f0f8f3;--tot:#ddefe4;--en:#1f6640;--warn:#a86200;--warn-bg:#fcf0dc;--err:#c0262d;--err-bg:#fff5f5;--ok:#1e7a4c}
   *{box-sizing:border-box}
-  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f4f8fb;color:#0b1a33;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-  main{max-width:480px;padding:32px 20px;text-align:center}
-  img{width:min(180px,50%);height:auto;margin:0 auto 24px;display:block}
-  h1{margin:0 0 12px;font-family:"Oswald","Arial Narrow",system-ui,sans-serif;font-weight:600;font-size:28px;letter-spacing:1.2px;text-transform:uppercase;color:var(--c)}
-  p{margin:0 0 28px;color:#5d6672;font-size:17px}
-  a.volver{display:inline-flex;align-items:center;gap:6px;padding:10px 22px;border-radius:999px;background:var(--c);color:#fff;text-decoration:none;font-weight:700}
-  a.volver svg{width:18px;height:18px}
-  a.volver:hover{filter:brightness(1.08)}
-  a.volver:focus-visible{outline:3px solid #4fc9ee;outline-offset:3px}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px}
+  .wrap{max-width:1800px;margin:0 auto;padding:18px max(16px,2vw) 40px}
+  /* Encabezado como el resto de MEJAnet: logo en el color del módulo, título al centro con el ícono de su botón */
+  header{display:grid;grid-template-columns:1fr auto 1fr;gap:10px 16px;align-items:center;margin-bottom:18px}
+  header .logo{justify-self:start}
+  header .marca{display:block;width:162px;height:40px;background:var(--c);-webkit-mask:url(/logo.png) left center/contain no-repeat;mask:url(/logo.png) left center/contain no-repeat}
+  header .tit{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+  h1.titulo{display:inline-flex;align-items:center;gap:12px;margin:0;padding:6px 22px 6px 6px;border-radius:14px;
+    background:linear-gradient(180deg,#eef8f2,#dcf0e4);border:1px solid #b5dcc5;box-shadow:0 2px 0 #a9d3ba,0 6px 16px rgba(46,139,87,.16);
+    color:var(--c);font-family:"Oswald","Arial Narrow",system-ui,sans-serif;font-weight:600;font-size:27px;letter-spacing:1.2px;line-height:1.1;white-space:nowrap;text-transform:uppercase}
+  h1.titulo .ico{flex:0 0 44px;height:44px;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:10px;color:var(--c);box-shadow:inset 0 -3px 6px rgba(0,0,0,.05)}
+  h1.titulo .ico svg{width:34px;height:34px}
+  header small{color:var(--muted)}
+  header .volver{justify-self:end}
+  @media (max-width:760px){header{grid-template-columns:1fr;justify-items:center}header .logo,header .volver{justify-self:center}h1.titulo{font-size:21px;white-space:normal}}
+  a.volver{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border:1.5px solid var(--line);border-radius:999px;background:#fff;color:var(--muted);text-decoration:none;font-weight:700;font-size:13px}
+  a.volver:hover{color:var(--ink);border-color:var(--ink)}
+  a.volver svg{width:16px;height:16px}
+
+  .drop{display:flex;flex-direction:column;align-items:center;gap:8px;padding:26px 16px;border:2px dashed var(--line);border-radius:12px;background:#fff;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}
+  .drop:hover,.drop.over{border-color:var(--c);background:#f3faf6}
+  .drop.chico{flex-direction:row;justify-content:center;padding:12px 16px}
+  .drop.chico span{display:none}
+  .drop svg{width:40px;height:40px;color:var(--c)}
+  .drop.chico svg{width:24px;height:24px}
+  .drop b{font-size:16px}
+  .drop span{color:var(--muted);font-size:13px}
+  .drop input{display:none}
+  .msg{margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13.5px}
+  .msg.err{background:var(--err-bg);color:var(--err);border:1px solid #f1c4c6}
+  .msg.warn{background:var(--warn-bg);color:var(--warn);border:1px solid #f0d9b0}
+
+  .res{margin-top:18px}
+  .barra{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+  .barra label{font-weight:700;font-size:13px}
+  .barra input{font:inherit;padding:6px 10px;border:1.5px solid var(--line);border-radius:6px;width:130px}
+  .resumen{flex:1;color:var(--muted);font-size:13px;min-width:200px}
+  .resumen b{color:var(--ink)}
+  .nota{margin:0 0 12px;color:var(--muted);font-size:12.5px}
+  button.pdf{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border:0;border-radius:8px;background:var(--c);color:#fff;font:600 15px "Oswald","Arial Narrow",system-ui,sans-serif;letter-spacing:1px;text-transform:uppercase;cursor:pointer;box-shadow:0 3px 0 var(--c-osc)}
+  button.pdf:hover{filter:brightness(1.07)}
+  button.pdf:active{transform:translateY(2px);box-shadow:0 1px 0 var(--c-osc)}
+  button.pdf:disabled{opacity:.6;cursor:wait}
+  button.pdf svg{width:18px;height:18px}
+  button:focus-visible,.drop:focus-visible,a:focus-visible{outline:3px solid #4fc9ee;outline-offset:3px}
+
+  /* Reporte */
+  .tabla{overflow:auto;background:#fff;border:1px solid var(--line);border-top:0;border-radius:0 0 8px 8px}
+  table{border-collapse:collapse;width:100%;min-width:760px;font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:12px;color:#2b3038}
+  .filtros{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 10px}
+  .filtros input,.filtros select{font:inherit;font-size:13px;padding:6px 10px;border:1.5px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);min-width:0}
+  .filtros input{flex:1 1 260px;max-width:420px}
+  .filtros select{flex:0 1 220px;max-width:280px}
+  .filtros input:focus,.filtros select:focus{outline:none;border-color:var(--c);box-shadow:0 0 0 3px #d6eee0}
+  .filtros .activo{border-color:var(--c);background:#f3faf6}
+  .filtros button{font:inherit;font-size:13px;font-weight:600;padding:6px 12px;border:1.5px solid var(--line);border-radius:6px;background:#fff;color:var(--muted);cursor:pointer}
+  .filtros button:hover{color:var(--ink);border-color:var(--ink)}
+  .filtros .cuenta{font-size:12.5px;color:var(--muted)}
+  .filtros .cuenta b{color:var(--c)}
+  tr.vacio td{padding:28px 10px;color:var(--muted);font-size:13px;white-space:normal}
+  .titref{text-align:center;font:600 21px "Barlow Condensed","Arial Narrow",system-ui,sans-serif;letter-spacing:.02em;color:var(--ink);padding:10px;background:#fff;border:1px solid var(--line);border-bottom:0;border-radius:8px 8px 0 0}
+  th{background:var(--head);color:#fff;font-weight:600;font-size:11px;letter-spacing:.04em;padding:6px 5px;border:1px solid #6fb08b;white-space:pre-line;position:sticky;top:-1px;z-index:2;box-shadow:0 -2px 0 var(--head)}
+  td:not(.desc):not(.prov){white-space:nowrap}
+  td.prov{white-space:normal}
+  td.sec{white-space:normal}
+  td.num{font-weight:700;color:var(--c-osc)}
+  /* Columnas de datos al ancho de su texto; el espacio que sobra va a descripción y proveedor */
+  th.ajusta{width:1%;padding-inline:10px}
+  body.con-reporte{height:100vh;overflow:hidden}
+  body.con-reporte .wrap{height:100vh;display:flex;flex-direction:column;padding-bottom:14px}
+  body.con-reporte .res{flex:1;min-height:0;display:flex;flex-direction:column}
+  body.con-reporte .tabla{flex:1;min-height:0}
+  @media (max-width:760px),(max-height:560px){body.con-reporte{height:auto;overflow:visible}body.con-reporte .wrap{height:auto;display:block}body.con-reporte .tabla{max-height:80vh}}
+  td{padding:4px 8px;border:1px solid #cfe0d5;text-align:center;font-variant-numeric:tabular-nums}
+  td.desc{text-align:left}
+  tr.tot td{background:var(--tot);font-size:13px;font-weight:700;padding-block:6px;border-top:2px solid var(--head);border-bottom:2px solid var(--head)}
+  tr.sep td{border:0;height:14px;background:#fff}
+  td.total{text-align:right;padding-right:10px}
+  .col-borrar{width:34px;padding:0 4px;background:#fff!important;border-color:#e6efe9!important}
+  th.col-borrar{background:#fff!important;border:0!important;box-shadow:0 -2px 0 #fff!important}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  button.borrar{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border:1px solid transparent;border-radius:6px;background:none;color:#a3a8af;cursor:pointer}
+  button.borrar svg{width:16px;height:16px}
+  button.borrar:hover{color:var(--err);background:var(--err-bg);border-color:#f1c4c6}
+  .borradas{font-size:12.5px;color:var(--muted)}
+  .borradas button{border:0;background:none;padding:0;color:var(--c);font:inherit;font-weight:700;text-decoration:underline;cursor:pointer}
+  td.n{text-align:right}
+  td.parte{font-variant-numeric:tabular-nums;letter-spacing:.01em}
+  td.ref{font-weight:600;color:var(--c-osc)}
+  tr.dato:hover td:not(.col-borrar){background:#f6fbf8}
 </style>
 </head>
 <body>
-<main>
-  <a href="/modulos"><img src="/mejanet-logo.png" alt="Grupo Meja"></a>
-  <h1>Reporte Shipper SM</h1>
-  <p>Esta herramienta está en desarrollo.</p>
-  <a class="volver" href="/herramientas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg> Herramientas</a>
-</main>
+<div class="wrap">
+  <header>
+    <a class="logo" href="/modulos" aria-label="MEJAnet"><span class="marca" role="img" aria-label="Grupo Meja"></span></a>
+    <div class="tit">
+      <h1 class="titulo"><span class="ico" aria-hidden="true"><svg viewBox="0 0 64 64"> <path d="M14 4h26l12 12v44a2 2 0 0 1-2 2H14a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" fill="currentColor"/> <path d="M40 4v12h12z" fill="#fff" opacity=".55"/> <g fill="#fff"><rect x="18" y="12" width="16" height="3"/><rect x="18" y="19" width="26" height="2.4"/><rect x="18" y="24" width="22" height="2.4"/></g> <rect x="17" y="33" width="30" height="20" rx="3" fill="#fff"/> <text x="32" y="48.5" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="800" font-size="14" fill="currentColor">SM</text> </svg></span>Reporte Shipper SM</h1>
+      <small>Sube el reporte por renglón (.xls / .xlsx) y obtén las partidas ordenadas por fracción.</small>
+    </div>
+    <a class="volver" href="/herramientas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg> Herramientas</a>
+  </header>
+
+  <label class="drop" id="drop" tabindex="0">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 17v-6"/><path d="M9.5 13.5L12 11l2.5 2.5"/></svg>
+    <b id="dropTxt">Selecciona o arrastra aquí el archivo de Excel</b>
+    <span>Reporte por renglón exportado del sistema (repclasxls)</span>
+    <input type="file" id="archivo" accept=".xls,.xlsx,.htm,.html">
+  </label>
+  <div id="msg" class="msg" hidden></div>
+
+  <section class="res" id="res" hidden>
+    <div class="barra">
+      <label for="ref">Referencia</label>
+      <input id="ref" type="text">
+      <div class="resumen" id="resumen"></div>
+      <span class="borradas" id="borradas" hidden><span id="borradasTxt"></span> · <button type="button" id="restaurar">Restaurar</button></span>
+      <button class="pdf" id="pdf" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg> Descargar PDF</button>
+    </div>
+    <p class="nota">El PDF lleva solo fracción, descripción, cantidad, UMC, precio unitario, valor, moneda, número de parte y proveedor.</p>
+    <div class="filtros" role="search" aria-label="Filtrar partidas">
+      <input id="fBuscar" type="search" placeholder="Buscar descripción, número de parte, proveedor, secuencia o referencia…" aria-label="Buscar en el reporte">
+      <select id="fFrac" aria-label="Filtrar por fracción"><option value="">Todas las fracciones</option></select>
+      <select id="fProv" aria-label="Filtrar por proveedor"><option value="">Todos los proveedores</option></select>
+      <select id="fRef" aria-label="Filtrar por referencia"><option value="">Todas las referencias</option></select>
+      <button type="button" id="fLimpiar" hidden>Quitar filtros</button>
+      <span class="cuenta" id="fCuenta"></span>
+    </div>
+    <div class="titref" id="titref"></div>
+    <div class="tabla"><table id="tabla"></table></div>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script>
+// Columnas en pantalla (como el formato del Shipper SM) y las que van al PDF
+const COLS = [
+  { k: 'num',   t: 'No.' },
+  { k: 'frac',  t: 'FRACCION' },
+  { k: 'desc',  t: 'DESCRIPCION' },
+  { k: 'qty',   t: 'QTY\nUMC' },
+  { k: 'umc',   t: 'UMC' },
+  { k: 'pu',    t: 'PRECIO\nUNITARIO' },
+  { k: 'val',   t: 'VALOR' },
+  { k: 'mon',   t: 'MONEDA' },
+  { k: 'parte', t: 'NUMERO PARTE' },
+  { k: 'prov',  t: 'PROVEEDOR' },
+  { k: 'sec',   t: 'SECUENCIA\nPEDIMENTO' },
+  { k: 'ref',   t: 'REFERENCIA' },
+];
+const COLS_PDF = ['frac', 'desc', 'qty', 'umc', 'pu', 'val', 'mon', 'parte', 'prov'];
+// Encabezados del archivo de entrada
+const ENTRADA = { frac: 'FRACCION', desc: 'DESCRIPCION', qty: 'QTY UMC', umc: 'UMC', pu: 'PRECIO UNITARIO', val: 'VALOR', mon: 'MONEDA', parte: 'NUMERO PARTE', prov: 'PROVEEDOR', sec: 'SECUENCIA PEDIMENTO', ref: 'REFERENCIA' };
+
+let actual = null; // { ref, partidas, borradas:Set<índice>, grupos }
+const $ = id => document.getElementById(id);
+const norm = s => String(s ?? '').replace(/\s+/g, ' ').trim().toUpperCase();
+const num = v => { if (typeof v === 'number') return v; const n = parseFloat(String(v ?? '').replace(/[,$\s]/g, '')); return isNaN(n) ? 0 : n; };
+const redondear = n => Math.round(n * 1e6) / 1e6;
+const fmt = (n, d) => n.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: d });
+const dinero = n => '$' + n.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const cmpTxt = (a, b) => String(a).localeCompare(String(b), 'es', { numeric: true });
+// Igual que en el Shipper Normal: descripciones que solo cambian en singular/plural se acomodan juntas
+function singular(w) {
+  if (w.length < 4) return w;
+  if (/CES$/.test(w)) return w.slice(0, -3) + 'Z';
+  if (/[AEIOU]S$/.test(w)) w = w.slice(0, -1);
+  if (/[RLNDJ]E$/.test(w)) w = w.slice(0, -1);
+  return w;
+}
+const claveGrupo = s => norm(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').split(/[^A-Z0-9Ñ]+/).filter(Boolean).map(singular).join(' ');
+
+function aviso(texto, tipo) { const m = $('msg'); m.textContent = texto; m.className = 'msg ' + tipo; m.hidden = !texto; }
+
+async function leerArchivo(file) {
+  aviso('', 'err');
+  try {
+    const buf = await file.arrayBuffer();
+    let ref = '';
+    const texto = new TextDecoder('latin1').decode(new Uint8Array(buf).slice(0, 20000));
+    const m = texto.match(/Referencia\s*:\s*([0-9A-Za-z\/\-]+)/i);
+    if (m) ref = m[1];
+    let filas;
+    if (/<table/i.test(texto) || /<html/i.test(texto)) {
+      // El reporte del sistema es una página HTML con extensión .xls
+      const doc = new DOMParser().parseFromString(new TextDecoder('utf-8').decode(buf), 'text/html');
+      const tabla = [...doc.querySelectorAll('table')].find(t => /FRACCION/i.test(t.textContent)) || doc.querySelector('table');
+      if (!tabla) throw new Error('El archivo no contiene una tabla de partidas.');
+      filas = [...tabla.rows].map(tr => [...tr.cells].map(td => td.textContent.replace(/\u00a0/g, ' ').trim()));
+    } else {
+      if (typeof XLSX === 'undefined') throw new Error('No se pudo cargar el lector de Excel. Revisa tu conexión y recarga la página.');
+      const wb = XLSX.read(buf, { type: 'array', raw: true });
+      filas = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: false, defval: '' });
+    }
+    const iEnc = filas.findIndex(f => f.map(norm).includes('FRACCION') && f.map(norm).includes('DESCRIPCION'));
+    if (iEnc < 0) throw new Error('No encontré las columnas FRACCION y DESCRIPCION. Revisa que sea el reporte por renglón.');
+    const enc = filas[iEnc].map(norm);
+    const pos = {};
+    for (const [k, nombre] of Object.entries(ENTRADA)) {
+      pos[k] = enc.indexOf(nombre);
+      if (pos[k] < 0) throw new Error('Falta la columna "' + nombre + '" en el archivo.');
+    }
+    const t = (f, k) => String(f[pos[k]] ?? '').replace(/\s+/g, ' ').trim();
+    const partidas = [];
+    for (const f of filas.slice(iEnc + 1)) {
+      if (!t(f, 'frac')) continue;
+      partidas.push({
+        frac: t(f, 'frac'), desc: t(f, 'desc'), qty: num(f[pos.qty]), umc: t(f, 'umc'), pu: num(f[pos.pu]),
+        val: num(f[pos.val]), mon: t(f, 'mon'), parte: t(f, 'parte'), prov: t(f, 'prov'), sec: t(f, 'sec'), ref: t(f, 'ref'),
+      });
+    }
+    if (!partidas.length) throw new Error('El archivo no tiene partidas con fracción.');
+    partidas.forEach((p, i) => { p.i = i; });
+    if (!ref) ref = partidas[0].ref;
+    $('fBuscar').value = ''; $('fFrac').value = ''; $('fProv').value = ''; $('fRef').value = '';
+    actual = { ref, partidas, borradas: new Set(), archivo: file.name };
+    $('ref').value = ref;
+    recalcular();
+    pintar();
+    $('dropTxt').textContent = file.name + ' · cambiar archivo';
+    $('drop').classList.add('chico');
+    $('res').hidden = false;
+    document.body.classList.add('con-reporte');
+    ajustarColumnas();
+  } catch (e) {
+    aviso(e.message || 'No pude leer el archivo.', 'err');
+  }
+}
+
+// Fracción de menor a mayor. Dentro de la fracción, las partidas con la misma descripción van juntas
+// (en el orden en que aparece cada descripción) y cada descripción lleva su TOTAL.
+// Cada partida sigue en su propio renglón, en el orden del archivo.
+function agrupar(partidas) {
+  const porFrac = new Map();
+  for (const p of partidas) { if (!porFrac.has(p.frac)) porFrac.set(p.frac, []); porFrac.get(p.frac).push(p); }
+  return [...porFrac.entries()].sort((a, b) => cmpTxt(a[0], b[0])).map(([frac, ps]) => {
+    const porDesc = new Map();
+    for (const p of ps) { const k = claveGrupo(p.desc); if (!porDesc.has(k)) porDesc.set(k, []); porDesc.get(k).push(p); }
+    const bloques = [...porDesc.values()].map(filas => ({
+      filas,
+      tot: {
+        qty: redondear(filas.reduce((s, p) => s + p.qty, 0)),
+        val: redondear(filas.reduce((s, p) => s + p.val, 0)),
+        umc: [...new Set(filas.map(p => p.umc).filter(Boolean))].join(' / '),
+        mon: [...new Set(filas.map(p => p.mon).filter(Boolean))].join(' / '),
+      },
+    }));
+    return { frac, bloques };
+  });
+}
+
+function recalcular() {
+  const quedan = actual.partidas.filter(p => !actual.borradas.has(p.i));
+  llenarFiltros(quedan);
+  const q = norm($('fBuscar').value), fr = $('fFrac').value, pr = $('fProv').value, rf = $('fRef').value;
+  const visibles = quedan.filter(p =>
+    (!fr || p.frac === fr) && (!pr || p.prov === pr) && (!rf || p.ref === rf) &&
+    (!q || [p.desc, p.parte, p.prov, p.frac, p.sec, p.ref].some(x => norm(x).includes(q))));
+  actual.grupos = agrupar(visibles);
+  actual.total = quedan.length;
+  const hay = !!(q || fr || pr || rf);
+  $('fLimpiar').hidden = !hay;
+  [['fBuscar', q], ['fFrac', fr], ['fProv', pr], ['fRef', rf]].forEach(([id, v]) => $(id).classList.toggle('activo', !!v));
+  $('fCuenta').innerHTML = hay ? `Mostrando <b>${visibles.length}</b> de ${quedan.length} partidas` : '';
+}
+function llenarFiltros(ps) {
+  const llenar = (sel, vals, todos) => {
+    const v = sel.value;
+    const html = `<option value="">${todos}</option>` + vals.map(x => `<option value="${esc(x)}">${esc(x)}</option>`).join('');
+    if (sel.dataset.h !== html) { sel.innerHTML = html; sel.dataset.h = html; }
+    sel.value = vals.includes(v) ? v : '';
+  };
+  const unicos = k => [...new Set(ps.map(p => p[k]).filter(Boolean))].sort(cmpTxt);
+  llenar($('fFrac'), unicos('frac'), 'Todas las fracciones');
+  llenar($('fProv'), unicos('prov'), 'Todos los proveedores');
+  llenar($('fRef'), unicos('ref'), 'Todas las referencias');
+}
+
+const BORRAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4h6v3"/></svg>';
+function pintar() {
+  const { grupos } = actual;
+  $('pdf').disabled = !grupos.length;
+  $('titref').textContent = 'Referencia : ' + $('ref').value;
+  let h = '<thead><tr>' + COLS.map(c => '<th' + (c.k === 'desc' ? '' : ' class="ajusta"') + '>' + esc(c.t) + '</th>').join('') + '<th class="col-borrar"><span class="sr">Borrar</span></th></tr></thead><tbody>';
+  let n = 0;
+  grupos.forEach((g, gi) => {
+    for (const b of g.bloques) {
+      for (const p of b.filas) {
+        n++;
+        h += `<tr class="dato"><td class="num">${n}</td><td>${esc(p.frac)}</td><td class="desc">${esc(p.desc)}</td><td class="n">${fmt(p.qty, 4)}</td><td>${esc(p.umc)}</td><td class="n">${dinero(p.pu)}</td><td class="n">${dinero(p.val)}</td><td>${esc(p.mon)}</td><td class="parte">${esc(p.parte)}</td><td class="prov">${esc(p.prov)}</td><td>${esc(p.sec)}</td><td class="ref">${esc(p.ref)}</td><td class="col-borrar"><button type="button" class="borrar" data-i="${p.i}" title="Borrar esta partida del reporte" aria-label="Borrar partida ${n}">${BORRAR}</button></td></tr>`;
+      }
+      h += `<tr class="tot"><td></td><td></td><td class="total">TOTAL</td><td class="n">${fmt(b.tot.qty, 4)}</td><td>${esc(b.tot.umc)}</td><td></td><td class="n">${dinero(b.tot.val)}</td><td>${esc(b.tot.mon)}</td><td></td><td></td><td></td><td></td><td class="col-borrar"></td></tr>`;
+    }
+    if (gi < grupos.length - 1) h += '<tr class="sep"><td colspan="13"></td></tr>';
+  });
+  if (!grupos.length) h += `<tr class="vacio"><td colspan="13">${actual.total ? 'Ninguna partida coincide con los filtros.' : 'No quedan partidas en el reporte.'}</td></tr>`;
+  $('tabla').innerHTML = h + '</tbody>';
+  const vis = grupos.flatMap(g => g.bloques.flatMap(b => b.filas));
+  const valT = vis.reduce((s, p) => s + p.val, 0);
+  const mon = [...new Set(vis.map(p => p.mon).filter(Boolean))].join(' / ');
+  const refs = new Set(vis.map(p => p.ref)).size;
+  $('resumen').innerHTML = `<b>${vis.length}</b> partidas en <b>${grupos.length}</b> fracciones · <b>${refs}</b> referencia${refs === 1 ? '' : 's'} · Valor <b>${dinero(redondear(valT))}</b> ${esc(mon)}`;
+  const nb = actual.borradas.size;
+  $('borradas').hidden = !nb;
+  $('borradasTxt').textContent = nb === 1 ? '1 partida borrada' : nb + ' partidas borradas';
+}
+
+// Descripción y proveedor: tan anchas como para que quepan en 2 renglones; si la pantalla no alcanza, se encogen
+function ajustarColumnas() {
+  const tabla = $('tabla'), ths = tabla.querySelectorAll('thead th'), caja = tabla.parentElement;
+  const ref = tabla.querySelector('tr.dato td.desc'); if (!ref || !ths[2] || !ths[9]) return;
+  const cs = getComputedStyle(ref), m = document.createElement('span');
+  m.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap'; m.style.font = cs.font;
+  document.body.appendChild(m);
+  const medir = xs => { let mx = 0; for (const x of xs) { m.textContent = x; mx = Math.max(mx, m.getBoundingClientRect().width); } return mx; };
+  const vivas = actual.partidas.filter(p => !actual.borradas.has(p.i));
+  let desc = Math.ceil(medir(vivas.map(p => p.desc)) * 0.56 + 24), prov = Math.ceil(medir(vivas.map(p => p.prov)) * 0.55 + 20);
+  m.remove();
+  const poner = () => { ths[2].style.minWidth = desc + 'px'; ths[9].style.minWidth = prov + 'px'; };
+  poner();
+  for (let i = 0; i < 4; i++) {
+    const sobra = caja.scrollWidth - caja.clientWidth; if (sobra <= 0) break;
+    const total = (desc - 160) + (prov - 90); if (total <= 0) break;
+    desc = Math.max(160, Math.floor(desc - sobra * (desc - 160) / total) - 1);
+    prov = Math.max(90, Math.floor(prov - sobra * (prov - 90) / total) - 1);
+    poner();
+  }
+}
+let tAjuste;
+addEventListener('resize', () => { clearTimeout(tAjuste); tAjuste = setTimeout(() => { if (actual) ajustarColumnas(); }, 150); });
+
+// PDF carta horizontal: solo las columnas del formato para el cliente
+function descargarPDF() {
+  if (!window.jspdf || !window.jspdf.jsPDF) throw new Error('no se cargó el generador de PDF. Revisa tu conexión y recarga la página.');
+  const { jsPDF } = window.jspdf;
+  const ref = $('ref').value.trim();
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'letter', compress: true });
+  const ancho = doc.internal.pageSize.getWidth();
+  const VERDE = [46, 139, 87], TOT = [221, 239, 228], TXT = [51, 51, 51], LINEA = [190, 214, 199];
+  const titulos = COLS_PDF.map(k => COLS.find(c => c.k === k).t);
+  const body = [];
+  actual.grupos.forEach((g, gi) => {
+    for (const b of g.bloques) {
+      for (const p of b.filas) body.push({ tipo: 'dato', celdas: [p.frac, p.desc, fmt(p.qty, 4), p.umc, dinero(p.pu), dinero(p.val), p.mon, p.parte, p.prov] });
+      body.push({ tipo: 'tot', celdas: ['', 'TOTAL', fmt(b.tot.qty, 4), b.tot.umc, '', dinero(b.tot.val), b.tot.mon, '', ''] });
+    }
+    if (gi < actual.grupos.length - 1) body.push({ tipo: 'sep', celdas: COLS_PDF.map(() => '') });
+  });
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.setTextColor(11, 26, 51);
+  doc.text('Referencia : ' + ref, ancho / 2, 40, { align: 'center' });
+  doc.autoTable({
+    startY: 52,
+    margin: { left: 24, right: 24, top: 34, bottom: 32 },
+    head: [titulos],
+    body: body.map(f => f.celdas),
+    theme: 'grid',
+    rowPageBreak: 'avoid',
+    styles: { font: 'helvetica', fontSize: 7.5, textColor: TXT, halign: 'center', valign: 'middle', cellPadding: 2.8, lineColor: LINEA, lineWidth: 0.4 },
+    headStyles: { fillColor: VERDE, textColor: 255, fontStyle: 'bold', lineColor: [111, 176, 139], fontSize: 7.2 },
+    // Ancho útil 744 pt: fracción 62, cantidad 46, UMC 34, precio 68, valor 74, moneda 48, parte 84, proveedor 130; la descripción toma el resto
+    columnStyles: { 0: { cellWidth: 62 }, 1: { halign: 'left' }, 2: { cellWidth: 46, halign: 'right' }, 3: { cellWidth: 34 }, 4: { cellWidth: 68, halign: 'right' }, 5: { cellWidth: 74, halign: 'right' }, 6: { cellWidth: 48 }, 7: { cellWidth: 84 }, 8: { cellWidth: 130 } },
+    didParseCell: d => {
+      if (d.section !== 'body') return;
+      const f = body[d.row.index];
+      if (f.tipo === 'tot') { d.cell.styles.fillColor = TOT; d.cell.styles.fontStyle = 'bold'; d.cell.styles.textColor = [11, 26, 51]; d.cell.styles.fontSize = 8; if (d.column.index === 1) d.cell.styles.halign = 'right'; }
+      if (f.tipo === 'sep') { d.cell.styles.fillColor = [255, 255, 255]; d.cell.styles.lineWidth = 0; d.cell.styles.minCellHeight = 8; d.cell.styles.cellPadding = 0; d.cell.text = ['']; }
+    },
+    didDrawCell: d => {
+      if (d.section !== 'body' || body[d.row.index].tipo !== 'tot') return;
+      doc.setDrawColor(...VERDE); doc.setLineWidth(1.4);
+      doc.line(d.cell.x, d.cell.y, d.cell.x + d.cell.width, d.cell.y);
+      doc.line(d.cell.x, d.cell.y + d.cell.height, d.cell.x + d.cell.width, d.cell.y + d.cell.height);
+    },
+    didDrawPage: () => {
+      const n = doc.internal.getNumberOfPages();
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(120);
+      doc.text('Referencia ' + ref + ' · Página ' + n, ancho - 24, doc.internal.pageSize.getHeight() - 16, { align: 'right' });
+    },
+  });
+  doc.save('REPORTE_SHIPPER_SM_' + (ref.split('/')[0] || 'SIN_REF') + '.pdf');
+}
+
+$('tabla').addEventListener('click', ev => {
+  const b = ev.target.closest?.('button.borrar'); if (!b) return;
+  actual.borradas.add(Number(b.dataset.i)); recalcular(); pintar(); ajustarColumnas();
+});
+$('restaurar').addEventListener('click', () => { actual.borradas.clear(); recalcular(); pintar(); ajustarColumnas(); });
+let tFiltro;
+const filtrar = () => { if (!actual) return; recalcular(); pintar(); ajustarColumnas(); };
+$('fBuscar').addEventListener('input', () => { clearTimeout(tFiltro); tFiltro = setTimeout(filtrar, 150); });
+['fFrac', 'fProv', 'fRef'].forEach(id => $(id).addEventListener('change', filtrar));
+$('fLimpiar').addEventListener('click', () => { ['fBuscar', 'fFrac', 'fProv', 'fRef'].forEach(id => { $(id).value = ''; }); filtrar(); });
+const drop = $('drop');
+$('archivo').addEventListener('change', ev => { const f = ev.target.files[0]; if (f) leerArchivo(f); ev.target.value = ''; });
+drop.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); $('archivo').click(); } });
+['dragenter', 'dragover'].forEach(t => drop.addEventListener(t, ev => { ev.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach(t => drop.addEventListener(t, ev => { ev.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', ev => { const f = ev.dataTransfer.files[0]; if (f) leerArchivo(f); });
+$('ref').addEventListener('input', () => { if (actual) $('titref').textContent = 'Referencia : ' + $('ref').value; });
+$('pdf').addEventListener('click', () => { try { descargarPDF(); } catch (e) { aviso('No pude generar el PDF: ' + e.message, 'err'); } });
+</script>
 <script src="/solo-lectura.js"></script>
 </body>
 </html>
