@@ -1,4 +1,4 @@
-// Reportes Shipper Normal guardados: uno por referencia.
+// Reportes Shipper guardados (Normal y SM, cada uno en su propia lista): uno por referencia.
 // Se guardan solos al generarse y se actualizan con cada cambio (partidas borradas, traducciones, referencia).
 // Si se vuelve a convertir una referencia que ya existe, se actualiza ese mismo reporte.
 // Se guarda en Postgres (si hay DATABASE_URL) o en un archivo JSON local, igual que el resto de MEJAnet.
@@ -8,10 +8,6 @@ const express = require('express');
 const db = require('./db');
 
 const pool = db.pool;
-const FILE = path.join(db.DIR, 'shipper_reportes.json');
-
-const leer = () => { try { return JSON.parse(fs.readFileSync(FILE, 'utf8')); } catch { return []; } };
-const escribir = (x) => { fs.mkdirSync(db.DIR, { recursive: true }); fs.writeFileSync(FILE, JSON.stringify(x)); };
 const txt = (v, max = 300) => String(v ?? '').replace(/\s+/g, ' ').trim().slice(0, max);
 const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
 const clave = (s) => txt(s).toUpperCase();
@@ -28,10 +24,77 @@ function singular(w) {
 const claveGrupo = (s) => clave(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').split(/[^A-Z0-9Ñ]+/).filter(Boolean).map(singular).join(' ');
 
 class RefOcupada extends Error {}
+const r6 = (n) => Math.round(n * 1e6) / 1e6;
+const unicos = (xs, max = 20) => [...new Set(xs.filter(Boolean))].slice(0, max);
+
+// --- Shipper Normal: partidas, borradas por renglón (fracción|descripción) o por partida ("i:N"), traducciones ---
+function datosNormal(body) {
+  const partidas = (Array.isArray(body?.partidas) ? body.partidas : []).slice(0, 3000).map((p) => ({
+    sec: typeof p?.sec === 'number' ? p.sec : txt(p?.sec, 40),
+    frac: txt(p?.frac, 20),
+    prov: txt(p?.prov, 200),
+    desc: txt(p?.desc, 500),
+    qty: num(p?.qty),
+    umc: txt(p?.umc, 20),
+    val: num(p?.val),
+    peso: num(p?.peso),
+  })).filter((p) => p.frac);
+  if (!partidas.length) throw new Error('El reporte no tiene partidas.');
+  const borradas = [...new Set((Array.isArray(body?.borradas) ? body.borradas : []).map((b) => txt(b, 600)))].slice(0, 3000);
+  const ingles = {};
+  for (const [k, v] of Object.entries(body?.ingles && typeof body.ingles === 'object' ? body.ingles : {}).slice(0, 3000)) ingles[clave(k).slice(0, 500)] = txt(v, 500).toUpperCase();
+  // Resumen para la lista (sin las partidas borradas)
+  const vivas = partidas.filter((p, i) => !borradas.includes(p.frac + '|' + claveGrupo(p.desc)) && !borradas.includes(p.frac + '|' + clave(p.desc)) && !borradas.includes('i:' + i));
+  const resumen = {
+    partidas: vivas.length,
+    borradas: partidas.length - vivas.length,
+    fracciones: new Set(vivas.map((p) => p.frac)).size,
+    valor: r6(vivas.reduce((s, p) => s + p.val, 0)),
+    peso: r6(vivas.reduce((s, p) => s + p.peso, 0)),
+    proveedores: unicos(vivas.map((p) => p.prov)),
+  };
+  return { datos: { partidas, borradas, ingles }, resumen };
+}
+
+// --- Shipper SM: cada partida en su renglón (con precio, moneda, número de parte y referencia); borradas por partida ("i:N") ---
+function datosSM(body) {
+  const partidas = (Array.isArray(body?.partidas) ? body.partidas : []).slice(0, 5000).map((p) => ({
+    frac: txt(p?.frac, 20),
+    desc: txt(p?.desc, 500),
+    qty: num(p?.qty),
+    umc: txt(p?.umc, 20),
+    pu: num(p?.pu),
+    val: num(p?.val),
+    mon: txt(p?.mon, 10),
+    parte: txt(p?.parte, 80),
+    prov: txt(p?.prov, 200),
+    sec: txt(p?.sec, 40),
+    ref: txt(p?.ref, 40),
+  })).filter((p) => p.frac);
+  if (!partidas.length) throw new Error('El reporte no tiene partidas.');
+  const borradas = [...new Set((Array.isArray(body?.borradas) ? body.borradas : []).map((b) => txt(b, 40)))].filter((b) => /^i:\d+$/.test(b)).slice(0, 5000);
+  const vivas = partidas.filter((_p, i) => !borradas.includes('i:' + i));
+  const resumen = {
+    partidas: vivas.length,
+    borradas: partidas.length - vivas.length,
+    fracciones: new Set(vivas.map((p) => p.frac)).size,
+    referencias: new Set(vivas.map((p) => p.ref).filter(Boolean)).size,
+    valor: r6(vivas.reduce((s, p) => s + p.val, 0)),
+    monedas: unicos(vivas.map((p) => p.mon), 5),
+    proveedores: unicos(vivas.map((p) => p.prov)),
+  };
+  return { datos: { partidas, borradas }, resumen };
+}
+
+// Una lista de reportes guardados (tabla en Postgres o archivo JSON) con sus rutas /api/...
+function crearLista({ tabla, archivo, api, armar }) {
+const FILE = path.join(db.DIR, archivo);
+const leer = () => { try { return JSON.parse(fs.readFileSync(FILE, 'utf8')); } catch { return []; } };
+const escribir = (x) => { fs.mkdirSync(db.DIR, { recursive: true }); fs.writeFileSync(FILE, JSON.stringify(x)); };
 
 async function init() {
   if (pool) {
-    await pool.query(`CREATE TABLE IF NOT EXISTS shipper_reportes (
+    await pool.query(`CREATE TABLE IF NOT EXISTS ${tabla} (
       id SERIAL PRIMARY KEY,
       referencia TEXT NOT NULL,
       ref_clave TEXT NOT NULL UNIQUE,
@@ -52,45 +115,18 @@ async function init() {
 function limpiar(body) {
   const referencia = txt(body?.referencia, 60);
   if (!referencia) throw new Error('Falta la referencia del reporte.');
-  const partidas = (Array.isArray(body?.partidas) ? body.partidas : []).slice(0, 3000).map((p) => ({
-    sec: typeof p?.sec === 'number' ? p.sec : txt(p?.sec, 40),
-    frac: txt(p?.frac, 20),
-    prov: txt(p?.prov, 200),
-    desc: txt(p?.desc, 500),
-    qty: num(p?.qty),
-    umc: txt(p?.umc, 20),
-    val: num(p?.val),
-    peso: num(p?.peso),
-  })).filter((p) => p.frac);
-  if (!partidas.length) throw new Error('El reporte no tiene partidas.');
-  const borradas = [...new Set((Array.isArray(body?.borradas) ? body.borradas : []).map((b) => txt(b, 600)))].slice(0, 3000);
-  const ingles = {};
-  for (const [k, v] of Object.entries(body?.ingles && typeof body.ingles === 'object' ? body.ingles : {}).slice(0, 3000)) ingles[clave(k).slice(0, 500)] = txt(v, 500).toUpperCase();
-
-  // Resumen para la lista (sin las partidas borradas)
-  // Se borra el renglón completo (fracción|descripción) o una sola partida ("i:<número de partida>")
-  const vivas = partidas.filter((p, i) => !borradas.includes(p.frac + '|' + claveGrupo(p.desc)) && !borradas.includes(p.frac + '|' + clave(p.desc)) && !borradas.includes('i:' + i));
-  const r6 = (n) => Math.round(n * 1e6) / 1e6;
-  const resumen = {
-    partidas: vivas.length,
-    borradas: partidas.length - vivas.length,
-    fracciones: new Set(vivas.map((p) => p.frac)).size,
-    valor: r6(vivas.reduce((s, p) => s + p.val, 0)),
-    peso: r6(vivas.reduce((s, p) => s + p.peso, 0)),
-    proveedores: [...new Set(vivas.map((p) => p.prov).filter(Boolean))].slice(0, 20),
-  };
-  return { referencia, ref_clave: clave(referencia), archivo: txt(body?.archivo, 200), datos: { partidas, borradas, ingles }, resumen };
+  return { referencia, ref_clave: clave(referencia), archivo: txt(body?.archivo, 200), ...armar(body) };
 }
 
 const COLS_LISTA = 'id, referencia, archivo, resumen, creado, actualizado, creado_por, actualizado_por';
 
 async function listar() {
-  if (pool) return (await pool.query(`SELECT ${COLS_LISTA} FROM shipper_reportes ORDER BY actualizado DESC LIMIT 2000`)).rows;
+  if (pool) return (await pool.query(`SELECT ${COLS_LISTA} FROM ${tabla} ORDER BY actualizado DESC LIMIT 2000`)).rows;
   return leer().map(({ datos, ref_clave, ...r }) => r).sort((a, b) => String(b.actualizado).localeCompare(String(a.actualizado)));
 }
 
 async function obtener(id) {
-  if (pool) return (await pool.query(`SELECT ${COLS_LISTA}, datos FROM shipper_reportes WHERE id = $1`, [id])).rows[0] || null;
+  if (pool) return (await pool.query(`SELECT ${COLS_LISTA}, datos FROM ${tabla} WHERE id = $1`, [id])).rows[0] || null;
   return leer().find((x) => x.id === id) || null;
 }
 
@@ -98,7 +134,7 @@ async function obtener(id) {
 async function guardarPorReferencia(r, usuario) {
   if (pool) {
     const q = await pool.query(
-      `INSERT INTO shipper_reportes (referencia, ref_clave, archivo, datos, resumen, creado_por, actualizado_por)
+      `INSERT INTO ${tabla} (referencia, ref_clave, archivo, datos, resumen, creado_por, actualizado_por)
        VALUES ($1, $2, $3, $4, $5, $6, $6)
        ON CONFLICT (ref_clave) DO UPDATE SET referencia = EXCLUDED.referencia, archivo = EXCLUDED.archivo, datos = EXCLUDED.datos,
          resumen = EXCLUDED.resumen, actualizado = now(), actualizado_por = EXCLUDED.actualizado_por
@@ -122,7 +158,7 @@ async function actualizar(id, r, usuario) {
   if (pool) {
     try {
       const q = await pool.query(
-        `UPDATE shipper_reportes SET referencia = $2, ref_clave = $3, archivo = COALESCE(NULLIF($4, ''), archivo), datos = $5, resumen = $6,
+        `UPDATE ${tabla} SET referencia = $2, ref_clave = $3, archivo = COALESCE(NULLIF($4, ''), archivo), datos = $5, resumen = $6,
            actualizado = now(), actualizado_por = $7 WHERE id = $1 RETURNING id`,
         [id, r.referencia, r.ref_clave, r.archivo, r.datos, r.resumen, usuario || null]
       );
@@ -142,7 +178,7 @@ async function actualizar(id, r, usuario) {
 }
 
 async function borrar(id) {
-  if (pool) return (await pool.query('DELETE FROM shipper_reportes WHERE id = $1', [id])).rowCount > 0;
+  if (pool) return (await pool.query(`DELETE FROM ${tabla} WHERE id = $1`, [id])).rowCount > 0;
   const lista = leer(), i = lista.findIndex((x) => x.id === id);
   if (i < 0) return false;
   lista.splice(i, 1); escribir(lista); return true;
@@ -154,18 +190,18 @@ function rutas(admin) {
   const idDe = (req) => { const n = Number(req.params.id); return Number.isInteger(n) && n > 0 ? n : null; };
   const fallo = (res, e) => { console.error(e); res.status(500).json({ error: 'No se pudo completar. Intenta de nuevo.' }); };
 
-  r.get('/api/shipper', admin, async (_req, res) => {
+  r.get(api, admin, async (_req, res) => {
     try { res.json({ reportes: await listar() }); } catch (e) { fallo(res, e); }
   });
-  r.get('/api/shipper/:id', admin, async (req, res) => {
+  r.get(api + '/:id', admin, async (req, res) => {
     const id = idDe(req); if (!id) return res.status(404).json({ error: 'Ese reporte no existe.' });
     try { const x = await obtener(id); x ? res.json(x) : res.status(404).json({ error: 'Ese reporte ya no existe; quizá alguien lo borró.' }); } catch (e) { fallo(res, e); }
   });
-  r.post('/api/shipper', admin, json, async (req, res) => {
+  r.post(api, admin, json, async (req, res) => {
     let d; try { d = limpiar(req.body); } catch (e) { return res.status(400).json({ error: e.message }); }
     try { res.json(await guardarPorReferencia(d, req.usuario)); } catch (e) { fallo(res, e); }
   });
-  r.put('/api/shipper/:id', admin, json, async (req, res) => {
+  r.put(api + '/:id', admin, json, async (req, res) => {
     const id = idDe(req); if (!id) return res.status(404).json({ error: 'Ese reporte no existe.' });
     let d; try { d = limpiar(req.body); } catch (e) { return res.status(400).json({ error: e.message }); }
     try {
@@ -175,11 +211,20 @@ function rutas(admin) {
       fallo(res, e);
     }
   });
-  r.delete('/api/shipper/:id', admin, async (req, res) => {
+  r.delete(api + '/:id', admin, async (req, res) => {
     const id = idDe(req); if (!id) return res.status(404).json({ error: 'Ese reporte no existe.' });
     try { (await borrar(id)) ? res.json({ ok: true }) : res.status(404).json({ error: 'Ese reporte ya no existe.' }); } catch (e) { fallo(res, e); }
   });
   return r;
 }
 
-module.exports = { init, rutas };
+return { init, rutas };
+}
+
+const normal = crearLista({ tabla: 'shipper_reportes', archivo: 'shipper_reportes.json', api: '/api/shipper', armar: datosNormal });
+const sm = crearLista({ tabla: 'shipper_sm_reportes', archivo: 'shipper_sm_reportes.json', api: '/api/shipper-sm', armar: datosSM });
+
+module.exports = {
+  init: async () => { await normal.init(); await sm.init(); },
+  rutas: (admin) => { const r = express.Router(); r.use(normal.rutas(admin)); r.use(sm.rutas(admin)); return r; },
+};

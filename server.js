@@ -148,7 +148,10 @@ app.get('/herramientas', admin, (_req, res) => res.sendFile(path.join(__dirname,
 // Reporte Shipper Normal: lista de reportes guardados y convertidor
 app.get('/herramientas/shipper-normal', admin, (_req, res) => res.set('Cache-Control', 'no-store').sendFile(path.join(__dirname, 'admin', 'shipper-lista.html')));
 app.get('/herramientas/shipper-normal/reporte', admin, (_req, res) => res.set('Cache-Control', 'no-store').sendFile(path.join(__dirname, 'admin', 'shipper-normal.html')));
-for (const h of ['shipper-sm', 'conversion-unidades']) {
+// Reporte Shipper SM: lista de reportes guardados y convertidor
+app.get('/herramientas/shipper-sm', admin, (_req, res) => res.set('Cache-Control', 'no-store').sendFile(path.join(__dirname, 'admin', 'shipper-sm-lista.html')));
+app.get('/herramientas/shipper-sm/reporte', admin, (_req, res) => res.set('Cache-Control', 'no-store').sendFile(path.join(__dirname, 'admin', 'shipper-sm.html')));
+for (const h of ['conversion-unidades']) {
   app.get('/herramientas/' + h, admin, (_req, res) => res.sendFile(path.join(__dirname, 'admin', h + '.html')));
 }
 
@@ -405,7 +408,7 @@ app.use(opManzanillo.rutas(admin));
 // --- Traducciones español → inglés (Reporte Shipper) ---
 app.use(traducciones.rutas(admin));
 
-// --- Reportes Shipper Normal guardados ---
+// --- Reportes Shipper guardados (Normal y SM) ---
 app.use(shipper.rutas(admin));
 
 app.use(express.static(path.join(__dirname, 'public')));

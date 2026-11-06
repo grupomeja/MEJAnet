@@ -114,7 +114,7 @@
       <h1 class="titulo"><span class="ico" aria-hidden="true"><svg viewBox="0 0 64 64"> <path d="M14 4h26l12 12v44a2 2 0 0 1-2 2H14a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" fill="currentColor"/> <path d="M40 4v12h12z" fill="#fff" opacity=".55"/> <g fill="#fff"><rect x="18" y="12" width="16" height="3"/><rect x="18" y="19" width="26" height="2.4"/><rect x="18" y="24" width="22" height="2.4"/></g> <rect x="17" y="33" width="30" height="20" rx="3" fill="#fff"/> <text x="32" y="48.5" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="800" font-size="14" fill="currentColor">SM</text> </svg></span>Reporte Shipper SM</h1>
       <small>Sube el reporte por renglón (.xls / .xlsx) y obtén las partidas ordenadas por fracción.</small>
     </div>
-    <a class="volver" href="/herramientas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg> Herramientas</a>
+    <a class="volver" href="/herramientas/shipper-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg> Reportes</a>
   </header>
 
   <label class="drop" id="drop" tabindex="0">
@@ -232,7 +232,7 @@ async function leerArchivo(file) {
     partidas.forEach((p, i) => { p.i = i; });
     if (!ref) ref = partidas[0].ref;
     $('fBuscar').value = ''; $('fFrac').value = ''; $('fProv').value = ''; $('fRef').value = '';
-    actual = { ref, partidas, borradas: new Set(), archivo: file.name };
+    actual = { id: null, ref, partidas, borradas: new Set(), archivo: file.name };
     $('ref').value = ref;
     recalcular();
     pintar();
@@ -241,8 +241,68 @@ async function leerArchivo(file) {
     $('res').hidden = false;
     document.body.classList.add('con-reporte');
     ajustarColumnas();
+    guardar();
   } catch (e) {
     aviso(e.message || 'No pude leer el archivo.', 'err');
+  }
+}
+
+// --- Guardado automático en la lista de reportes Shipper SM ---
+// Se guarda al generarse y con cada cambio. La primera vez se busca por referencia (si ya existe, se actualiza esa).
+let colaGuardar = Promise.resolve(), tGuardar;
+function guardar(espera = 0) {
+  if (!actual) return;
+  clearTimeout(tGuardar);
+  tGuardar = setTimeout(() => { colaGuardar = colaGuardar.then(enviarGuardado, enviarGuardado); }, espera);
+}
+async function enviarGuardado() {
+  if (!actual) return;
+  const referencia = $('ref').value.trim();
+  if (!referencia) { aviso('Escribe la referencia para que el reporte se guarde en la lista.', 'warn'); return; }
+  const cuerpo = {
+    referencia, archivo: actual.archivo || '',
+    partidas: actual.partidas.map(({ i, ...p }) => p),
+    borradas: [...actual.borradas].map(i => 'i:' + i),
+  };
+  try {
+    const r = await fetch(actual.id ? '/api/shipper-sm/' + actual.id : '/api/shipper-sm', {
+      method: actual.id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (r.status === 404 && actual.id) { actual.id = null; return enviarGuardado(); } // lo borraron desde la lista: se vuelve a crear
+    if (!r.ok) throw new Error(j.error || 'el servidor respondió ' + r.status);
+    if (!actual.id && j.id) {
+      actual.id = j.id;
+      try { history.replaceState(null, '', '/herramientas/shipper-sm/reporte?id=' + j.id); } catch {}
+    }
+    if ($('msg').dataset.guardado === '1') { aviso('', 'warn'); $('msg').dataset.guardado = ''; }
+  } catch (e) {
+    aviso('El reporte no se pudo guardar en la lista: ' + e.message, 'warn');
+    $('msg').dataset.guardado = '1';
+  }
+}
+
+// Abre un reporte guardado (desde la lista)
+async function abrirGuardado(id, conPdf) {
+  try {
+    const r = await fetch('/api/shipper-sm/' + encodeURIComponent(id));
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || 'el servidor respondió ' + r.status);
+    const partidas = (j.datos.partidas || []).map((p, i) => ({ ...p, i }));
+    const borradas = new Set((j.datos.borradas || []).map(b => Number(String(b).replace('i:', ''))).filter(n => Number.isInteger(n)));
+    actual = { id: j.id, ref: j.referencia, partidas, borradas, archivo: j.archivo || '' };
+    try { history.replaceState(null, '', '/herramientas/shipper-sm/reporte?id=' + j.id); } catch {}
+    $('ref').value = j.referencia;
+    recalcular();
+    pintar();
+    $('dropTxt').textContent = (j.archivo || 'Reporte guardado') + ' · subir otro archivo';
+    $('drop').classList.add('chico');
+    $('res').hidden = false;
+    document.body.classList.add('con-reporte');
+    ajustarColumnas();
+    if (conPdf) { try { descargarPDF(); } catch (e) { aviso('No pude generar el PDF: ' + e.message, 'err'); } }
+  } catch (e) {
+    aviso('No pude abrir el reporte: ' + e.message, 'err');
   }
 }
 
@@ -407,9 +467,9 @@ function descargarPDF() {
 
 $('tabla').addEventListener('click', ev => {
   const b = ev.target.closest?.('button.borrar'); if (!b) return;
-  actual.borradas.add(Number(b.dataset.i)); recalcular(); pintar(); ajustarColumnas();
+  actual.borradas.add(Number(b.dataset.i)); recalcular(); pintar(); ajustarColumnas(); guardar();
 });
-$('restaurar').addEventListener('click', () => { actual.borradas.clear(); recalcular(); pintar(); ajustarColumnas(); });
+$('restaurar').addEventListener('click', () => { actual.borradas.clear(); recalcular(); pintar(); ajustarColumnas(); guardar(); });
 let tFiltro;
 const filtrar = () => { if (!actual) return; recalcular(); pintar(); ajustarColumnas(); };
 $('fBuscar').addEventListener('input', () => { clearTimeout(tFiltro); tFiltro = setTimeout(filtrar, 150); });
@@ -421,8 +481,9 @@ drop.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' 
 ['dragenter', 'dragover'].forEach(t => drop.addEventListener(t, ev => { ev.preventDefault(); drop.classList.add('over'); }));
 ['dragleave', 'drop'].forEach(t => drop.addEventListener(t, ev => { ev.preventDefault(); drop.classList.remove('over'); }));
 drop.addEventListener('drop', ev => { const f = ev.dataTransfer.files[0]; if (f) leerArchivo(f); });
-$('ref').addEventListener('input', () => { if (actual) $('titref').textContent = 'Referencia : ' + $('ref').value; });
+$('ref').addEventListener('input', () => { if (actual) { $('titref').textContent = 'Referencia : ' + $('ref').value; guardar(900); } });
 $('pdf').addEventListener('click', () => { try { descargarPDF(); } catch (e) { aviso('No pude generar el PDF: ' + e.message, 'err'); } });
+{ const q = new URLSearchParams(location.search); if (q.get('id')) abrirGuardado(q.get('id'), q.get('pdf') === '1'); }
 </script>
 <script src="/solo-lectura.js"></script>
 </body>
