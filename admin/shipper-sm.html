@@ -98,7 +98,9 @@
   .borradas button{border:0;background:none;padding:0;color:var(--c);font:inherit;font-weight:700;text-decoration:underline;cursor:pointer}
   td.n{text-align:right}
   td.prov{white-space:nowrap!important;font-size:var(--prov-tam,12px)}
-  tr.sep.desc-sep td{height:7px}
+  #tabla td.desc,#tabla td.n{text-align:center}
+  #tabla tr.sep td{height:24px;border-top:1px solid #cfe0d5!important;border-left:0;border-right:0;border-bottom:0}
+  #tabla tr.sep.desc-sep td{height:14px}
   td.parte{font-variant-numeric:tabular-nums;letter-spacing:.01em}
   td.ref{font-weight:600;color:var(--c-osc)}
   tr.dato:hover td:not(.col-borrar){background:#f6fbf8}
@@ -354,7 +356,7 @@ function descargarPDF() {
   actual.grupos.forEach((g, gi) => {
     g.bloques.forEach((b, bi) => {
       for (const p of b.filas) body.push({ tipo: 'dato', celdas: [p.frac, p.desc, fmt(p.qty, 4), p.umc, dinero(p.pu), dinero(p.val), p.mon, p.parte, p.prov] });
-      if (bi < g.bloques.length - 1) body.push({ tipo: 'sep', alto: 5, celdas: COLS_PDF.map(() => '') });
+      if (bi < g.bloques.length - 1) body.push({ tipo: 'sep', alto: 10, celdas: COLS_PDF.map(() => '') });
     });
     if (gi < actual.grupos.length - 1) body.push({ tipo: 'sep', celdas: COLS_PDF.map(() => '') });
   });
@@ -375,11 +377,11 @@ function descargarPDF() {
     styles: { font: 'helvetica', fontSize: 7.5, textColor: TXT, halign: 'center', valign: 'middle', cellPadding: 2.8, lineColor: LINEA, lineWidth: 0.4 },
     headStyles: { fillColor: VERDE, textColor: 255, fontStyle: 'bold', lineColor: [111, 176, 139], fontSize: 7.2 },
     // Ancho útil 744 pt: fracción 62, cantidad 46, UMC 34, precio 68, valor 74, moneda 48, parte 84, proveedor según su texto; la descripción toma el resto
-    columnStyles: { 0: { cellWidth: 62 }, 1: { halign: 'left' }, 2: { cellWidth: 46, halign: 'right' }, 3: { cellWidth: 34 }, 4: { cellWidth: 68, halign: 'right' }, 5: { cellWidth: 74, halign: 'right' }, 6: { cellWidth: 48 }, 7: { cellWidth: 84 }, 8: { cellWidth: anchoProv, overflow: 'hidden' } },
+    columnStyles: { 0: { cellWidth: 62 }, 1: {}, 2: { cellWidth: 46 }, 3: { cellWidth: 34 }, 4: { cellWidth: 68 }, 5: { cellWidth: 74 }, 6: { cellWidth: 48 }, 7: { cellWidth: 84 }, 8: { cellWidth: anchoProv, overflow: 'hidden' } },
     didParseCell: d => {
       if (d.section !== 'body') return;
       const f = body[d.row.index];
-      if (f.tipo === 'sep') { d.cell.styles.fillColor = [255, 255, 255]; d.cell.styles.lineWidth = 0; d.cell.styles.minCellHeight = f.alto || 9; d.cell.styles.cellPadding = 0; d.cell.text = ['']; }
+      if (f.tipo === 'sep') { d.cell.styles.fillColor = [255, 255, 255]; d.cell.styles.lineWidth = 0; d.cell.styles.minCellHeight = f.alto || 16; d.cell.styles.cellPadding = 0; d.cell.text = ['']; }
       // Proveedor siempre en una línea: si no cabe, la letra se hace más chica
       if (f.tipo === 'dato' && d.column.index === 8) {
         const disp = anchoProv - 6, tam = 7.5;
@@ -387,6 +389,12 @@ function descargarPDF() {
         const w = doc.getTextWidth(String(d.cell.raw || ''));
         if (w > disp) d.cell.styles.fontSize = Math.max(3.5, tam * disp / w * 0.98);
       }
+    },
+    didDrawCell: d => {
+      // Cierra cada sección: línea en la orilla de arriba del espacio (se dibuja después de su fondo blanco)
+      if (d.section !== 'body' || body[d.row.index].tipo !== 'sep') return;
+      doc.setDrawColor(...LINEA); doc.setLineWidth(0.6);
+      doc.line(d.cell.x, d.cell.y + 0.3, d.cell.x + d.cell.width, d.cell.y + 0.3);
     },
     didDrawPage: () => {
       const n = doc.internal.getNumberOfPages();
