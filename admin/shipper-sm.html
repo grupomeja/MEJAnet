@@ -97,6 +97,8 @@
   .borradas{font-size:12.5px;color:var(--muted)}
   .borradas button{border:0;background:none;padding:0;color:var(--c);font:inherit;font-weight:700;text-decoration:underline;cursor:pointer}
   td.n{text-align:right}
+  td.prov{white-space:nowrap!important;font-size:var(--prov-tam,12px)}
+  tr.sep.desc-sep td{height:7px}
   td.parte{font-variant-numeric:tabular-nums;letter-spacing:.01em}
   td.ref{font-weight:600;color:var(--c-osc)}
   tr.dato:hover td:not(.col-borrar){background:#f6fbf8}
@@ -243,7 +245,7 @@ async function leerArchivo(file) {
 }
 
 // Fracción de menor a mayor. Dentro de la fracción, las partidas con la misma descripción van juntas
-// (en el orden en que aparece cada descripción) y cada descripción lleva su TOTAL.
+// (en el orden en que aparece cada descripción), con un espacio entre descripciones distintas.
 // Cada partida sigue en su propio renglón, en el orden del archivo.
 function agrupar(partidas) {
   const porFrac = new Map();
@@ -251,15 +253,7 @@ function agrupar(partidas) {
   return [...porFrac.entries()].sort((a, b) => cmpTxt(a[0], b[0])).map(([frac, ps]) => {
     const porDesc = new Map();
     for (const p of ps) { const k = claveGrupo(p.desc); if (!porDesc.has(k)) porDesc.set(k, []); porDesc.get(k).push(p); }
-    const bloques = [...porDesc.values()].map(filas => ({
-      filas,
-      tot: {
-        qty: redondear(filas.reduce((s, p) => s + p.qty, 0)),
-        val: redondear(filas.reduce((s, p) => s + p.val, 0)),
-        umc: [...new Set(filas.map(p => p.umc).filter(Boolean))].join(' / '),
-        mon: [...new Set(filas.map(p => p.mon).filter(Boolean))].join(' / '),
-      },
-    }));
+    const bloques = [...porDesc.values()].map(filas => ({ filas }));
     return { frac, bloques };
   });
 }
@@ -299,13 +293,14 @@ function pintar() {
   let h = '<thead><tr>' + COLS.map(c => '<th' + (c.k === 'desc' ? '' : ' class="ajusta"') + '>' + esc(c.t) + '</th>').join('') + '<th class="col-borrar"><span class="sr">Borrar</span></th></tr></thead><tbody>';
   let n = 0;
   grupos.forEach((g, gi) => {
-    for (const b of g.bloques) {
+    g.bloques.forEach((b, bi) => {
       for (const p of b.filas) {
         n++;
         h += `<tr class="dato"><td class="num">${n}</td><td>${esc(p.frac)}</td><td class="desc">${esc(p.desc)}</td><td class="n">${fmt(p.qty, 4)}</td><td>${esc(p.umc)}</td><td class="n">${dinero(p.pu)}</td><td class="n">${dinero(p.val)}</td><td>${esc(p.mon)}</td><td class="parte">${esc(p.parte)}</td><td class="prov">${esc(p.prov)}</td><td>${esc(p.sec)}</td><td class="ref">${esc(p.ref)}</td><td class="col-borrar"><button type="button" class="borrar" data-i="${p.i}" title="Borrar esta partida del reporte" aria-label="Borrar partida ${n}">${BORRAR}</button></td></tr>`;
       }
-      h += `<tr class="tot"><td></td><td></td><td class="total">TOTAL</td><td class="n">${fmt(b.tot.qty, 4)}</td><td>${esc(b.tot.umc)}</td><td></td><td class="n">${dinero(b.tot.val)}</td><td>${esc(b.tot.mon)}</td><td></td><td></td><td></td><td></td><td class="col-borrar"></td></tr>`;
-    }
+      // Espacio entre descripciones distintas de la misma fracción
+      if (bi < g.bloques.length - 1) h += '<tr class="sep desc-sep"><td colspan="13"></td></tr>';
+    });
     if (gi < grupos.length - 1) h += '<tr class="sep"><td colspan="13"></td></tr>';
   });
   if (!grupos.length) h += `<tr class="vacio"><td colspan="13">${actual.total ? 'Ninguna partida coincide con los filtros.' : 'No quedan partidas en el reporte.'}</td></tr>`;
@@ -320,26 +315,28 @@ function pintar() {
   $('borradasTxt').textContent = nb === 1 ? '1 partida borrada' : nb + ' partidas borradas';
 }
 
-// Descripción y proveedor: tan anchas como para que quepan en 2 renglones; si la pantalla no alcanza, se encogen
+// Proveedor siempre en una línea (a su ancho); la descripción toma el resto y busca quedar en 2 renglones.
+// Si la pantalla no alcanza, primero se angosta la descripción y luego se achica la letra del proveedor.
 function ajustarColumnas() {
   const tabla = $('tabla'), ths = tabla.querySelectorAll('thead th'), caja = tabla.parentElement;
   const ref = tabla.querySelector('tr.dato td.desc'); if (!ref || !ths[2] || !ths[9]) return;
+  tabla.style.setProperty('--prov-tam', '12px');
   const cs = getComputedStyle(ref), m = document.createElement('span');
   m.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap'; m.style.font = cs.font;
   document.body.appendChild(m);
   const medir = xs => { let mx = 0; for (const x of xs) { m.textContent = x; mx = Math.max(mx, m.getBoundingClientRect().width); } return mx; };
   const vivas = actual.partidas.filter(p => !actual.borradas.has(p.i));
-  let desc = Math.ceil(medir(vivas.map(p => p.desc)) * 0.56 + 24), prov = Math.ceil(medir(vivas.map(p => p.prov)) * 0.55 + 20);
+  let desc = Math.ceil(medir(vivas.map(p => p.desc)) * 0.56 + 24);
   m.remove();
-  const poner = () => { ths[2].style.minWidth = desc + 'px'; ths[9].style.minWidth = prov + 'px'; };
+  ths[9].style.minWidth = '';
+  const poner = () => { ths[2].style.minWidth = desc + 'px'; };
   poner();
   for (let i = 0; i < 4; i++) {
     const sobra = caja.scrollWidth - caja.clientWidth; if (sobra <= 0) break;
-    const total = (desc - 160) + (prov - 90); if (total <= 0) break;
-    desc = Math.max(160, Math.floor(desc - sobra * (desc - 160) / total) - 1);
-    prov = Math.max(90, Math.floor(prov - sobra * (prov - 90) / total) - 1);
-    poner();
+    if (desc <= 160) break;
+    desc = Math.max(160, desc - sobra - 1); poner();
   }
+  for (let tam = 11.5; caja.scrollWidth > caja.clientWidth && tam >= 8; tam -= 0.5) tabla.style.setProperty('--prov-tam', tam + 'px');
 }
 let tAjuste;
 addEventListener('resize', () => { clearTimeout(tAjuste); tAjuste = setTimeout(() => { if (actual) ajustarColumnas(); }, 150); });
@@ -351,16 +348,21 @@ function descargarPDF() {
   const ref = $('ref').value.trim();
   const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'letter', compress: true });
   const ancho = doc.internal.pageSize.getWidth();
-  const VERDE = [46, 139, 87], TOT = [221, 239, 228], TXT = [51, 51, 51], LINEA = [190, 214, 199];
+  const VERDE = [46, 139, 87], TXT = [51, 51, 51], LINEA = [190, 214, 199];
   const titulos = COLS_PDF.map(k => COLS.find(c => c.k === k).t);
   const body = [];
   actual.grupos.forEach((g, gi) => {
-    for (const b of g.bloques) {
+    g.bloques.forEach((b, bi) => {
       for (const p of b.filas) body.push({ tipo: 'dato', celdas: [p.frac, p.desc, fmt(p.qty, 4), p.umc, dinero(p.pu), dinero(p.val), p.mon, p.parte, p.prov] });
-      body.push({ tipo: 'tot', celdas: ['', 'TOTAL', fmt(b.tot.qty, 4), b.tot.umc, '', dinero(b.tot.val), b.tot.mon, '', ''] });
-    }
+      if (bi < g.bloques.length - 1) body.push({ tipo: 'sep', alto: 5, celdas: COLS_PDF.map(() => '') });
+    });
     if (gi < actual.grupos.length - 1) body.push({ tipo: 'sep', celdas: COLS_PDF.map(() => '') });
   });
+  // Proveedor en una sola línea: la columna toma el ancho del proveedor más largo (de 90 a 190 pt);
+  // si aun así no cabe, la letra de esa celda se hace más chica
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5);
+  const provMax = Math.max(0, ...actual.grupos.flatMap(g => g.bloques.flatMap(b => b.filas.map(p => doc.getTextWidth(p.prov)))));
+  const anchoProv = Math.min(190, Math.max(90, Math.ceil(provMax + 8)));
   doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.setTextColor(11, 26, 51);
   doc.text('Referencia : ' + ref, ancho / 2, 40, { align: 'center' });
   doc.autoTable({
@@ -372,19 +374,19 @@ function descargarPDF() {
     rowPageBreak: 'avoid',
     styles: { font: 'helvetica', fontSize: 7.5, textColor: TXT, halign: 'center', valign: 'middle', cellPadding: 2.8, lineColor: LINEA, lineWidth: 0.4 },
     headStyles: { fillColor: VERDE, textColor: 255, fontStyle: 'bold', lineColor: [111, 176, 139], fontSize: 7.2 },
-    // Ancho útil 744 pt: fracción 62, cantidad 46, UMC 34, precio 68, valor 74, moneda 48, parte 84, proveedor 130; la descripción toma el resto
-    columnStyles: { 0: { cellWidth: 62 }, 1: { halign: 'left' }, 2: { cellWidth: 46, halign: 'right' }, 3: { cellWidth: 34 }, 4: { cellWidth: 68, halign: 'right' }, 5: { cellWidth: 74, halign: 'right' }, 6: { cellWidth: 48 }, 7: { cellWidth: 84 }, 8: { cellWidth: 130 } },
+    // Ancho útil 744 pt: fracción 62, cantidad 46, UMC 34, precio 68, valor 74, moneda 48, parte 84, proveedor según su texto; la descripción toma el resto
+    columnStyles: { 0: { cellWidth: 62 }, 1: { halign: 'left' }, 2: { cellWidth: 46, halign: 'right' }, 3: { cellWidth: 34 }, 4: { cellWidth: 68, halign: 'right' }, 5: { cellWidth: 74, halign: 'right' }, 6: { cellWidth: 48 }, 7: { cellWidth: 84 }, 8: { cellWidth: anchoProv, overflow: 'hidden' } },
     didParseCell: d => {
       if (d.section !== 'body') return;
       const f = body[d.row.index];
-      if (f.tipo === 'tot') { d.cell.styles.fillColor = TOT; d.cell.styles.fontStyle = 'bold'; d.cell.styles.textColor = [11, 26, 51]; d.cell.styles.fontSize = 8; if (d.column.index === 1) d.cell.styles.halign = 'right'; }
-      if (f.tipo === 'sep') { d.cell.styles.fillColor = [255, 255, 255]; d.cell.styles.lineWidth = 0; d.cell.styles.minCellHeight = 8; d.cell.styles.cellPadding = 0; d.cell.text = ['']; }
-    },
-    didDrawCell: d => {
-      if (d.section !== 'body' || body[d.row.index].tipo !== 'tot') return;
-      doc.setDrawColor(...VERDE); doc.setLineWidth(1.4);
-      doc.line(d.cell.x, d.cell.y, d.cell.x + d.cell.width, d.cell.y);
-      doc.line(d.cell.x, d.cell.y + d.cell.height, d.cell.x + d.cell.width, d.cell.y + d.cell.height);
+      if (f.tipo === 'sep') { d.cell.styles.fillColor = [255, 255, 255]; d.cell.styles.lineWidth = 0; d.cell.styles.minCellHeight = f.alto || 9; d.cell.styles.cellPadding = 0; d.cell.text = ['']; }
+      // Proveedor siempre en una línea: si no cabe, la letra se hace más chica
+      if (f.tipo === 'dato' && d.column.index === 8) {
+        const disp = anchoProv - 6, tam = 7.5;
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(tam);
+        const w = doc.getTextWidth(String(d.cell.raw || ''));
+        if (w > disp) d.cell.styles.fontSize = Math.max(3.5, tam * disp / w * 0.98);
+      }
     },
     didDrawPage: () => {
       const n = doc.internal.getNumberOfPages();
