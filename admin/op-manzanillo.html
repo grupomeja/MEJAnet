@@ -356,7 +356,19 @@ aside.drawer{position:fixed;top:0;right:0;bottom:0;width:min(820px,100%);backgro
 #drawer .dh .refbig{font-size:17px}
 #drawer .dh .cli{font-size:14.5px;font-weight:700;color:var(--brand)}
 #drawer .dh .cli.nota-nuevo{font-size:12px;font-weight:500;color:var(--ink-2)}
-#drawer .dh .meta{gap:6px;margin-top:6px}
+#drawer .dh .meta{gap:6px;margin-top:5px}
+/* Encabezado de la ficha compacto: datos a la izquierda; título y reporte de previo a la derecha */
+#drawer .dh{padding-top:calc(8px + env(safe-area-inset-top,0px));padding-bottom:8px}
+#drawer .dh .id{flex:1;min-width:0}
+.dh-grid{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 14px;align-items:start}
+.dh-izq{min-width:0}
+.dh-der{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+#drawer .dh .refbig{font-size:16px;line-height:1.2}
+#drawer .dh .cli{font-size:13.5px;line-height:1.25}
+#drawer .dh-der .ficha-tit{font-size:14px;padding:3px 12px}
+#drawer .dh-der .btn-previo{font-size:11.5px;padding:3px 10px}
+#drawer .dh-der .saved{margin:0;font-size:11px;min-height:0}
+@media (max-width:560px){.dh-grid{grid-template-columns:1fr}.dh-der{align-items:flex-start;flex-direction:row;flex-wrap:wrap}}
 #drawer .dh .meta select,#drawer .mini-select{font-size:11px;padding:1px 6px}
 #drawer .pill{font-size:10.5px;padding:1px 7px}
 #drawer .db{gap:10px;padding-top:12px}
@@ -369,7 +381,7 @@ aside.drawer{position:fixed;top:0;right:0;bottom:0;width:min(820px,100%);backgro
   background:transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%238C7553' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 2px center}
 #drawer .datos-head h2{font-size:15.5px}
 .ref-fila{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.ref-fila .ficha-tit{font-family:"Oswald","Arial Narrow",system-ui,sans-serif;font-weight:600;font-size:16px;letter-spacing:1px;text-transform:uppercase;color:var(--cel-ink);margin:0;white-space:nowrap;
+.ficha-tit{font-family:"Oswald","Arial Narrow",system-ui,sans-serif;font-weight:600;font-size:16px;letter-spacing:1px;text-transform:uppercase;color:var(--cel-ink);margin:0;white-space:nowrap;
   padding:4px 14px;border-radius:10px;background:linear-gradient(180deg,var(--cel-bg1),var(--cel-bg2));border:1px solid var(--cel-line);box-shadow:0 2px 0 var(--cel-line),0 4px 10px rgba(140,117,83,.12);align-self:center}
 /* Seguimiento de embarque con el mismo formato que Datos del embarque */
 .card-seg .seg-tit{text-align:center;font-size:15.5px!important;margin:2px 0 10px!important}
@@ -922,7 +934,8 @@ function renderDrawerInner(){
   const gt={MXN:0,USD:0};(e.gastos||[]).forEach(g=>gt[g.moneda||"MXN"]+=+g.importe||0);
   d.innerHTML=`
   <div class="dh"><div class="id">
-    <div class="ref-fila"><div class="refbig">${esc(e.ref)}</div><h2 class="ficha-tit">Ficha de embarque</h2></div><div class="cli">${esc(e.cliente||"Sin cliente")}</div>
+    <div class="dh-grid"><div class="dh-izq">
+    <div class="refbig">${esc(e.ref)}</div><div class="cli">${esc(e.cliente||"Sin cliente")}</div>
     <div class="meta">
       <select class="mini-select" data-f="estado" aria-label="Estado" ${dis}>${["activa","cerrada","cancelada"].map(s=>`<option value="${s}" ${e.estado===s?"selected":""}>${s[0].toUpperCase()+s.slice(1)}</option>`).join("")}</select>
       <span class="st-pill s-${status(e)}">${esc(status(e)==="ye"?(e.pedimento&&e.pedimentoPagado?"Pedimento pagado":"Despacho programado"):STATUS[status(e)])}</span>
@@ -931,8 +944,11 @@ function renderDrawerInner(){
       ${a.diasPuerto!==null?`<span class="pill">${a.diasPuerto} d en puerto</span>`:""}
       ${a.libres?`<span class="pill ${a.libres.rest<0?"bad":a.libres.rest<=3?"warn":""}">Libres hasta ${fd(a.libres.vence)}</span>`:""}
     </div>
-    <div style="margin-top:14px"><button class="btn sm btn-previo" type="button" id="b-previo">Reporte de previo</button></div>
+    </div><div class="dh-der">
+    <h2 class="ficha-tit">Ficha de embarque</h2>
+    <button class="btn sm btn-previo" type="button" id="b-previo">Reporte de previo</button>
     <div class="saved" id="saved"></div>
+    </div></div>
   </div><button class="x" type="button" data-close aria-label="Cerrar">×</button></div>
   <div class="db">
     <div class="card card-seg"><h2 class="seg-tit">Seguimiento de embarque</h2>
