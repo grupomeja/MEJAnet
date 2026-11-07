@@ -56,10 +56,10 @@
   td{cursor:text;font-variant-numeric:tabular-nums}
   td:hover{outline:1px dashed var(--accent);outline-offset:-3px}
   td[data-c=cliente],td[data-c=linea],td[data-c=po],td[data-c=proveedor],td[data-c=descripcion]{white-space:normal;min-width:64px}
-  td[data-c=tracking],td[data-c=po],td[data-c=linea]{white-space:normal;overflow-wrap:anywhere;max-width:120px}
+  td[data-c=linea]{white-space:normal;overflow-wrap:anywhere;max-width:120px}
   td[data-c=cliente]{white-space:normal;overflow-wrap:normal;max-width:130px}
   td[data-c=bultos],td[data-c=peso_lbs],td[data-c=peso_kgs],td[data-c=pedimento]{white-space:normal;overflow-wrap:anywhere}
-  td[data-c=tracking]{min-width:96px}
+  td[data-c=tracking],td[data-c=po]{white-space:nowrap;min-width:96px} /* tracking y P.O. siempre en un solo renglón */
   td[data-c=fecha]{min-width:74px}
   th[data-c=notas],td[data-c=notas]{white-space:normal;text-align:center;min-width:140px;width:20%;overflow-wrap:anywhere}
   th{white-space:normal}
