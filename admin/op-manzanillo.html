@@ -550,8 +550,8 @@ main{padding-bottom:40px}
 .gt2 td.n{color:var(--cel-ico);font-weight:700;text-align:center;width:22px}
 .gt2 .r{text-align:right}.gt2 .c{text-align:center}
 .gt2 tfoot td{border-bottom:0;padding-top:6px}
-.gt2 tfoot td.tot{font-family:var(--f-body);font-size:13.5px;font-weight:800;color:var(--cel-ink);white-space:nowrap;padding:8px 9px 4px 4px;vertical-align:middle;line-height:1.2;font-variant-numeric:tabular-nums;text-align:right}
-.gt2 tfoot td.tot-l{font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--cel-ico);vertical-align:middle;line-height:1.2;padding:8px 6px 4px}
+.gt2 tfoot td.tot{font-family:var(--f-body);font-size:13.5px;font-weight:800;color:var(--cel-ink);white-space:nowrap;padding:8px 9px 4px 4px;vertical-align:baseline;line-height:1.2;font-variant-numeric:tabular-nums;text-align:right}
+.gt2 tfoot td.tot-l{font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--cel-ico);vertical-align:baseline;line-height:1.2;padding:8px 6px 4px}
 .gi{width:100%;box-sizing:border-box;border:1px solid transparent;background:transparent;border-radius:4px;padding:4px 5px;font:inherit;font-size:12px;color:var(--ink)}
 .gi:hover{border-color:var(--line)} .gi:focus{border-color:var(--cel-ico);background:var(--surface);outline:none}
 select.gi{min-width:0;text-overflow:ellipsis}
@@ -1010,7 +1010,7 @@ function renderGas(){
         <span class="tot">$${money(t.MXN)}</span></button>
       ${open?`<div class="gref-b"><div class="scroll"><table class="gt2"><colgroup><col style="width:26px"><col style="width:105px"><col style="width:165px"><col style="width:180px"><col><col style="width:108px"><col style="width:122px"><col style="width:84px"><col style="width:72px"><col style="width:72px"><col style="width:78px"><col style="width:26px"></colgroup><thead><tr><th>#</th><th>Factura</th><th>Proveedor</th><th>Concepto</th><th>Detalle</th><th class="r">Importe</th><th>Fecha transf.</th><th class="c">Método</th><th class="c">PDF</th><th class="c">XML</th><th class="c">Pago</th><th></th></tr></thead>
         <tbody>${(x.e.gastos||[]).map((g,i)=>fila(x,g,i)).join("")}</tbody>
-        <tfoot><tr><td colspan="4">${canWrite?`<button type="button" class="btn sm" data-gnew="${esc(x.id)}">+ Agregar factura</button>`:""}</td><td class="r tot-l">Total de la referencia</td><td class="r tot">$${money(t.MXN)}</td><td colspan="6"></td></tr></tfoot></table></div>
+        <tfoot><tr><td colspan="4" style="vertical-align:middle">${canWrite?`<button type="button" class="btn sm" data-gnew="${esc(x.id)}">+ Agregar factura</button>`:""}</td><td class="r tot-l">Total de la referencia</td><td class="r tot">$${money(t.MXN)}</td><td colspan="6"></td></tr></tfoot></table></div>
         <div class="gref-acc">${canWrite?(x.e.gastosCerrada?`<button type="button" class="btn sm" data-greopen="${esc(x.id)}">Reabrir referencia</button>`:`<button type="button" class="btn sm cerrar-ref" data-gclose="${esc(x.id)}">Cerrar referencia</button>`):""}<button type="button" class="btn sm" data-open="${esc(x.id)}">Ver ficha del embarque</button></div></div>`:""}
     </div>`};
   $("#v-gas").innerHTML=`
