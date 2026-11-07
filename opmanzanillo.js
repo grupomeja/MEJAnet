@@ -6,6 +6,7 @@ const path = require('path');
 const express = require('express');
 const db = require('./db');
 const { limpiarPrevio, generarPrevio } = require('./previo-pdf');
+const drive = require('./drive-gastos');
 
 const pool = db.pool;
 const FILE = path.join(db.DIR, 'op_manzanillo.json');
@@ -44,6 +45,32 @@ async function init() {
       id TEXT PRIMARY KEY, embarque TEXT NOT NULL, nombre TEXT NOT NULL, tipo TEXT NOT NULL,
       datos BYTEA NOT NULL, creado TIMESTAMPTZ NOT NULL DEFAULT now())`);
   await importarGastos('gastos-2026-11-06', path.join(__dirname, 'seed', 'gastos_2026-11-06.json'));
+  if (pool) await pool.query('CREATE TABLE IF NOT EXISTS opm_drive (archivo TEXT PRIMARY KEY, drive_id TEXT NOT NULL)');
+  // Primera vez que se conecta Google Drive: copia lo que ya existe (archivos y resúmenes)
+  if (drive.activo() && !(await yaAplicada('drive-inicial'))) {
+    await marcarAplicada('drive-inicial');
+    (async () => { for (const e of await listar()) if ((e.gastos || []).length) await drive.sincronizar(null, e, ARCH); console.log('OP Manzanillo: copia inicial a Google Drive enviada'); })().catch((e) => console.error('Drive inicial:', e.message));
+  }
+}
+
+// ---------- Archivos (para la copia en Google Drive) ----------
+const ARCH = {
+  async leerArchivo(id) {
+    if (pool) return (await pool.query('SELECT nombre, tipo, datos FROM opm_archivos WHERE id = $1', [id])).rows[0] || null;
+    const dir = path.join(db.DIR, 'opm_archivos'); if (!fs.existsSync(path.join(dir, id))) return null;
+    return { ...JSON.parse(fs.readFileSync(path.join(dir, id + '.json'), 'utf8')), datos: fs.readFileSync(path.join(dir, id)) };
+  },
+  async guardarDriveId(id, did) {
+    if (pool) await pool.query('INSERT INTO opm_drive (archivo, drive_id) VALUES ($1,$2) ON CONFLICT (archivo) DO UPDATE SET drive_id = $2', [id, did]);
+  },
+  async leerDriveId(id) {
+    if (pool) { const q = await pool.query('SELECT drive_id FROM opm_drive WHERE archivo = $1', [id]); return q.rows[0] && q.rows[0].drive_id; }
+    return null;
+  },
+};
+async function obtener(id) {
+  if (pool) { const q = await pool.query('SELECT datos FROM op_manzanillo WHERE id = $1', [id]); return q.rows[0] ? q.rows[0].datos : null; }
+  return leer()[id] || null;
 }
 
 // ---------- Gastos capturados de las tablas de pagos (se agregan una sola vez, sin duplicar) ----------
@@ -279,8 +306,11 @@ function rutas(admin) {
       } catch (e) { return err(res, e, 'No se pudo guardar'); }
     }
     try {
+      const tocaGastos = drive.activo() && ('gastos' in cambio || 'gastosCerrada' in cambio || 'ref' in cambio || 'cliente' in cambio);
+      const antes = tocaGastos ? await obtener(req.params.id) : null;
       const d = await cambiar(req.params.id, cambio);
       d ? res.json({ ok: true, datos: d }) : res.status(404).json({ error: 'No encontrado' });
+      if (d && tocaGastos) drive.sincronizar(antes, d, ARCH).catch((e) => console.error('Drive:', e.message));
     } catch (e) { err(res, e, 'No se pudo guardar'); }
   });
   // Reporte de previo: arma el PDF con lo que está en pantalla (ya editado)
