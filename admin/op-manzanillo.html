@@ -576,7 +576,7 @@ body.vista-gas .filters,body.vista-gas #b-nuevo{display:none}
 .doc-x{border:0;background:none;color:var(--bad);font-size:13px;line-height:1;padding:0 2px;cursor:pointer;opacity:.45}.doc-x:hover{opacity:1}
 .doc.ok{background:#E2F2E8;color:#1F6B41;border:1px solid #BFE3CC}
 .doc.falta{background:transparent;color:var(--cel-ico);border:1px dashed var(--cel-ico)}
-.x-g{border:0;background:none;color:var(--bad);font-size:16px;cursor:pointer;opacity:.5}.x-g:hover{opacity:1}
+.x-g{border:0;background:none;color:var(--bad);cursor:pointer;opacity:.7;padding:3px;border-radius:5px;display:inline-flex;vertical-align:middle}.x-g:hover{opacity:1;background:var(--bad-soft)}
 .gref-acc{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
 .btn.cerrar-ref{background:#4A3826;border-color:#4A3826;color:#EAE1D3}
 
@@ -1071,7 +1071,7 @@ function renderGas(){
       <td><input class="gi" type="date" data-gf="fecha" value="${esc(g.fecha||"")}" ${dis}></td>
       <td class="c"><div class="seg2">${["PUE","PPD"].map(m=>`<button type="button" class="${g.metodo===m?"on "+m.toLowerCase():""}" data-gmet="${m}" ${dis}>${m}</button>`).join("")}</div></td>
       <td class="c">${doc(g,"pdf")}</td><td class="c">${doc(g,"xml")}</td><td class="c">${doc(g,"pago")}</td>
-      <td class="c">${canWrite?`<button type="button" class="x-g" data-gdel2="${esc(g.id)}" title="Quitar gasto" aria-label="Quitar gasto">×</button>`:""}</td></tr>`;
+      <td class="c">${canWrite?`<button type="button" class="x-g" data-gdel2="${esc(g.id)}" title="Eliminar este gasto" aria-label="Eliminar este gasto"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>`:""}</td></tr>`;
   const bloque=x=>{const t=totGastos(x.e),open=abiertos.has(x.id);
     const vacia=canWrite&&(x.e.gastos||[]).every(gastoVacio);
     return `<div class="gref ${open?"open":""}" data-gref="${esc(x.id)}">
@@ -1123,7 +1123,8 @@ function renderGas(){
     if(t.dataset.gquitar){const q=t.dataset.gquitar;if(ui.gasAdd===q)ui.gasAdd=null;(ui.gasOpen||new Set()).delete(q);guardarG(q,[]);toast(EMB[q].ref+" se quitó de Gastos");renderGas();return}
     if(t.dataset.gmet){ev.preventDefault();guardarG(id,gs().map(x=>x.id===g?{...x,metodo:x.metodo===t.dataset.gmet?"":t.dataset.gmet}:x));renderGas();return}
     if(t.dataset.gnew){guardarG(id,gs().concat([{id:"g"+Date.now().toString(36),moneda:"MXN",fecha:"",metodo:""}]));renderGas();return}
-    if(t.dataset.gdel2){const x0=gs().find(x=>x.id===g);if(!(x0&&gastoVacio(x0))&&!confirm("¿Quitar este gasto?"))return;const r=gs().filter(x=>x.id!==g);if(!r.length&&ui.gasAdd===id)ui.gasAdd=null;guardarG(id,r);renderGas();return}
+    if(t.dataset.gdel2){const x0=gs().find(x=>x.id===g)||{};const qu=[x0.factura&&"factura "+x0.factura,x0.proveedor,+x0.importe?"$"+money(+x0.importe):""].filter(Boolean).join(" · ");
+      if(!confirm("¿Eliminar este gasto por completo?"+(qu?"\n\n"+qu:"")+((x0.pdf||x0.xml||x0.pago)?"\n\nTambién se quitarán sus archivos (PDF / XML / PAGO).":"")))return;const r=gs().filter(x=>x.id!==g);if(!r.length&&ui.gasAdd===id)ui.gasAdd=null;guardarG(id,r);["pdf","xml","pago"].forEach(k=>{if(x0[k]&&x0[k].id)api("DELETE","/api/admin/opm/archivos/"+encodeURIComponent(x0[k].id)).catch(()=>{})});renderGas();return}
     if(t.dataset.gclose){write(id,{gastosCerrada:true});ui.gasOpen.delete(id);toast(EMB[id].ref+" pasó a Cerradas");renderGas();return}
     if(t.dataset.greopen){write(id,{gastosCerrada:false});toast(EMB[id].ref+" regresó a Abiertas");renderGas();return}
     if(t.dataset.gdocx){const k=t.dataset.k,x=gs().find(z=>z.id===g);if(!x||!x[k])return;if(!confirm("¿Quitar el "+DOC_ET[k]+" «"+(x[k].nombre||"")+"» de esta factura?"))return;
