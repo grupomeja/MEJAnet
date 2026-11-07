@@ -384,6 +384,14 @@ aside.drawer{position:fixed;top:0;right:0;bottom:0;width:min(820px,100%);backgro
 #drawer .op-sel{margin-left:0;padding:3px 16px 3px 0;font-size:11px;width:auto;flex:none;-webkit-appearance:none;appearance:none;letter-spacing:.02em;
   background:transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%238C7553' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 2px center}
 #drawer .datos-head h2{font-size:15.5px}
+/* Gastos con el mismo formato que las demás secciones de la ficha */
+.card-gastos .sec+.sec{margin-top:8px}
+.card-gastos .sec-in{padding:8px 10px 10px}
+.card-gastos .sec-in>.muted{font-size:12px}
+.card-gastos .gt th{background:var(--cel-bg1);color:var(--cel-ink);font-weight:800;font-size:10.5px;letter-spacing:.04em;border-bottom:2px solid var(--cel-line)}
+.card-gastos .gt td{border-bottom:1px solid var(--cel-line)}
+.card-gastos .gform{margin-top:0}
+.card-gastos .tot{color:var(--cel-ink)}
 .ref-fila{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .ficha-tit{font-family:"Oswald","Arial Narrow",system-ui,sans-serif;font-weight:600;font-size:16px;letter-spacing:1px;text-transform:uppercase;color:var(--cel-ink);margin:0;white-space:nowrap;
   padding:4px 14px;border-radius:10px;background:linear-gradient(180deg,var(--cel-bg1),var(--cel-bg2));border:1px solid var(--cel-line);box-shadow:0 2px 0 var(--cel-line),0 4px 10px rgba(140,117,83,.12);align-self:center}
@@ -993,13 +1001,15 @@ function renderDrawerInner(){
       </div></section>
       </div>
     </div>
-    <div class="card"><h2>Gastos de la referencia</h2>
+    <div class="card card-seg card-gastos"><h2 class="seg-tit">Gastos de la referencia</h2>
+      <section class="sec"><h3>Gastos registrados</h3><div class="sec-in">
       ${(e.gastos||[]).length?`<div class="scroll"><table class="gt"><thead><tr><th>Fecha</th><th>Concepto</th><th>Proveedor</th><th class="r">Importe</th><th>Mon.</th><th>Estado</th><th></th></tr></thead><tbody>
       ${(e.gastos||[]).map(g=>`<tr><td class="num">${fd2(g.fecha)}</td><td>${esc(g.concepto)}</td><td>${esc(g.proveedor||"")}</td><td class="r">${money(+g.importe)}</td><td>${esc(g.moneda||"MXN")}</td>
         <td><button type="button" class="pill ${g.pagado?"ok":"warn"}" data-gpay="${esc(g.id)}" ${dis} title="Cambiar estado">${g.pagado?"Pagado":"Pendiente"}</button></td>
         <td><button type="button" class="btn sm" data-gdel="${esc(g.id)}" ${dis} aria-label="Eliminar gasto">Quitar</button></td></tr>`).join("")}
       </tbody></table></div><div class="tot"><span>Total MXN <b>$${money(gt.MXN)}</b></span>${gt.USD?`<span>Total USD <b>$${money(gt.USD)}</b></span>`:""}</div>`:`<div class="muted">Sin gastos registrados para esta referencia.</div>`}
-      ${canWrite?`<form class="gform" id="gform">
+      </div></section>
+      ${canWrite?`<section class="sec"><h3>Agregar gasto</h3><div class="sec-in"><form class="gform" id="gform">
         <label>Fecha<input type="date" id="g-fecha" value="${TODAY}" required></label>
         <label>Concepto<select id="g-concepto">${CONCEPTOS.map(c=>`<option>${c}</option>`).join("")}</select></label>
         <label>Proveedor<input id="g-prov" placeholder="TIMSA, naviera…"></label>
@@ -1007,7 +1017,7 @@ function renderDrawerInner(){
         <label>Moneda<select id="g-mon"><option>MXN</option><option>USD</option></select></label>
         <label>Estado<select id="g-pag"><option value="0">Pendiente</option><option value="1">Pagado</option></select></label>
         <button class="btn primary" type="submit">Agregar</button>
-      </form>`:""}
+      </form></div></section>`:""}
     </div>
     ${canWrite?`<div class="confirm">${ui.confirmDel?`<span>¿Eliminar ${esc(e.ref)} con sus hitos y gastos?</span><button class="btn danger" type="button" id="del-yes">Sí, eliminar</button><button class="btn" type="button" id="del-no">Cancelar</button>`:`<button class="btn danger sm" type="button" id="del-ask">Eliminar embarque</button>`}</div>`:""}
   </div>
