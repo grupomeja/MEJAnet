@@ -12,7 +12,15 @@ const CAT = Object.fromEntries(JSON.parse(fs.readFileSync(path.join(__dirname, '
 const carpetaDe = (ref) => String(ref || '').replace(/\//g, '-').replace(/[^\w.\- ]+/g, '').trim() || 'SIN REFERENCIA';
 const limpioNombre = (s) => String(s || '').replace(/[\\/:*?"<>|]+/g, '-').replace(/\s+/g, ' ').trim();
 
-async function enviar(datos) {
+// Las llamadas a una misma carpeta van en fila, para que Drive no cree la carpeta dos veces
+const colas = new Map();
+function enviar(datos) {
+  const k = datos.carpeta || '_';
+  const p = (colas.get(k) || Promise.resolve()).then(() => enviarYa(datos), () => enviarYa(datos));
+  colas.set(k, p.catch(() => {}));
+  return p;
+}
+async function enviarYa(datos) {
   const r = await fetch(URL_(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: TOKEN(), ...datos }), redirect: 'follow' });
   const txt = await r.text();
   let j; try { j = JSON.parse(txt); } catch { throw new Error(`Drive respondió ${r.status}: ${txt.slice(0, 120)}`); }
