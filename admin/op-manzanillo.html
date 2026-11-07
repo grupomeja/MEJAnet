@@ -538,6 +538,9 @@ main{padding-bottom:40px}
 .gref{border:1px solid var(--cel-line);border-radius:8px;background:var(--surface);overflow:hidden}
 .gref-h{display:flex;align-items:center;gap:10px;width:100%;border:0;background:linear-gradient(180deg,var(--cel-bg1),var(--cel-bg2));padding:7px 12px;font:inherit;font-size:12.5px;cursor:pointer;text-align:left;color:var(--ink)}
 .gref-h:hover{filter:brightness(.98)}
+.gref-hw{display:flex;align-items:stretch;background:linear-gradient(180deg,var(--cel-bg1),var(--cel-bg2))}.gref-hw .gref-h{flex:1;min-width:0}
+.gref-x{border:0;border-left:1px solid var(--cel-line);background:transparent;color:var(--bad);font:inherit;font-size:12px;font-weight:700;padding:0 14px;cursor:pointer;white-space:nowrap}
+.gref-x:hover{background:var(--bad-soft)}
 .gref-h .car{color:var(--cel-ico);width:12px}
 .gref-h .ref{font-weight:800;min-width:72px}
 .gref-h .cli{color:var(--ink-2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1041,6 +1044,7 @@ function leerCFDI(txt){
   return{factura:folio.toUpperCase(),proveedor:a(em,"Nombre").toUpperCase(),importe:isFinite(tot)?tot:"",moneda:a(c,"Moneda")==="USD"?"USD":"",
     metodo:/^(PUE|PPD)$/.test(a(c,"MetodoPago"))?a(c,"MetodoPago"):"",uuid:a(tf,"UUID").toUpperCase(),fecha:(a(c,"Fecha")||"").slice(0,10)}
 }
+function gastoVacio(g){return !["factura","proveedor","concepto","detalle","uuid","fecha"].some(k=>String(g[k]||"").trim())&&!(+g.importe)&&!g.pdf&&!g.xml&&!g.pago}
 function renderGas(){
   if(document.activeElement&&document.activeElement.closest&&document.activeElement.closest("#v-gas .gref")&&/INPUT|SELECT/.test(document.activeElement.tagName)){ui.gasPend=true;return}
   ui.gasPend=false;contarUso();
@@ -1069,17 +1073,18 @@ function renderGas(){
       <td class="c">${doc(g,"pdf")}</td><td class="c">${doc(g,"xml")}</td><td class="c">${doc(g,"pago")}</td>
       <td class="c">${canWrite?`<button type="button" class="x-g" data-gdel2="${esc(g.id)}" title="Quitar gasto" aria-label="Quitar gasto">×</button>`:""}</td></tr>`;
   const bloque=x=>{const t=totGastos(x.e),open=abiertos.has(x.id);
+    const vacia=canWrite&&(x.e.gastos||[]).every(gastoVacio);
     return `<div class="gref ${open?"open":""}" data-gref="${esc(x.id)}">
-      <button type="button" class="gref-h" data-gtog="${esc(x.id)}">
+      <div class="gref-hw"><button type="button" class="gref-h" data-gtog="${esc(x.id)}">
         <span class="car">${open?"▾":"▸"}</span><span class="ref">${esc(x.e.ref)}</span><span class="cli">${esc(x.e.cliente||"")}</span>
         <span class="chip">${t.n} factura${t.n===1?"":"s"}</span>
         <span class="chip ${t.pdf<t.n?"warn":"ok"}">PDF ${t.pdf}/${t.n}</span><span class="chip ${t.xml<t.n?"warn":"ok"}">XML ${t.xml}/${t.n}</span><span class="chip ${t.pago<t.n?"warn":"ok"}">PAGO ${t.pago}/${t.n}</span>
         ${t.ppd?`<span class="chip ppd">${t.ppd} PPD</span>`:""}${t.sinFac?`<span class="chip bad">${t.sinFac} sin factura</span>`:""}
-        <span class="tot">$${money(t.MXN)}</span></button>
+        <span class="tot">$${money(t.MXN)}</span></button>${vacia?`<button type="button" class="gref-x" data-gquitar="${esc(x.id)}" title="Quitar esta referencia de Gastos (no tiene datos capturados)">× Quitar</button>`:""}</div>
       ${open?`<div class="gref-b"><div class="scroll"><table class="gt2"><colgroup><col style="width:26px"><col style="width:105px"><col style="width:165px"><col style="width:180px"><col><col style="width:108px"><col style="width:122px"><col style="width:84px"><col style="width:72px"><col style="width:72px"><col style="width:78px"><col style="width:26px"></colgroup><thead><tr><th>#</th><th>Factura</th><th>Proveedor</th><th>Concepto</th><th>Detalle</th><th class="r">Importe</th><th>Fecha transf.</th><th class="c">Método</th><th class="c">PDF</th><th class="c">XML</th><th class="c">Pago</th><th></th></tr></thead>
         <tbody>${(x.e.gastos||[]).map((g,i)=>fila(x,g,i)).join("")}</tbody>
         <tfoot><tr><td colspan="4" style="vertical-align:middle">${canWrite?`<button type="button" class="btn sm" data-gnew="${esc(x.id)}">+ Agregar factura</button>`:""}</td><td class="r tot-l">Total de la referencia</td><td class="r tot">$${money(t.MXN)}</td><td colspan="6"></td></tr></tfoot></table></div>
-        <div class="gref-acc">${canWrite?(x.e.gastosCerrada?`<button type="button" class="btn sm" data-greopen="${esc(x.id)}">Reabrir referencia</button>`:`<button type="button" class="btn sm cerrar-ref" data-gclose="${esc(x.id)}">Cerrar referencia</button>`):""}<button type="button" class="btn sm" data-open="${esc(x.id)}">Ver ficha del embarque</button></div></div>`:""}
+        <div class="gref-acc">${vacia?`<button type="button" class="btn sm" data-gquitar="${esc(x.id)}" style="color:var(--bad);margin-right:auto">× Quitar referencia de Gastos</button>`:""}${canWrite?(x.e.gastosCerrada?`<button type="button" class="btn sm" data-greopen="${esc(x.id)}">Reabrir referencia</button>`:`<button type="button" class="btn sm cerrar-ref" data-gclose="${esc(x.id)}">Cerrar referencia</button>`):""}<button type="button" class="btn sm" data-open="${esc(x.id)}">Ver ficha del embarque</button></div></div>`:""}
     </div>`};
   $("#v-gas").innerHTML=`
   <h2 class="g-titulo">Control de gastos por referencia</h2>
@@ -1113,11 +1118,12 @@ function renderGas(){
     const gs=(EMB[id].gastos||[]).map(x=>{if(x.id!==g)return x;let v=el.value;if(el.dataset.gf==="importe")v=numero(v)||0;else if(el.dataset.gf!=="concepto"&&el.dataset.gf!=="fecha")v=v.toUpperCase();return{...x,[el.dataset.gf]:v}});
     guardarG(id,gs)});
   document.addEventListener("focusout",ev=>{if(!ev.target.closest||!ev.target.closest("#v-gas"))return;setTimeout(()=>{const a=document.activeElement;if(ui.gasPend&&!(a&&a.closest&&a.closest("#v-gas .gref")&&/INPUT|SELECT/.test(a.tagName)))renderGas()},50)});
-  document.addEventListener("click",async ev=>{const t=ev.target.closest("[data-gmet],[data-gnew],[data-gdel2],[data-gclose],[data-greopen],[data-gup],[data-gdoc],[data-gdocx]");if(!t||!t.closest("#v-gas"))return;
+  document.addEventListener("click",async ev=>{const t=ev.target.closest("[data-gquitar],[data-gmet],[data-gnew],[data-gdel2],[data-gclose],[data-greopen],[data-gup],[data-gdoc],[data-gdocx]");if(!t||!t.closest("#v-gas"))return;
     const {id,g}=gid(t);const gs=()=>(EMB[id].gastos||[]).slice();
+    if(t.dataset.gquitar){const q=t.dataset.gquitar;if(ui.gasAdd===q)ui.gasAdd=null;(ui.gasOpen||new Set()).delete(q);guardarG(q,[]);toast(EMB[q].ref+" se quitó de Gastos");renderGas();return}
     if(t.dataset.gmet){ev.preventDefault();guardarG(id,gs().map(x=>x.id===g?{...x,metodo:x.metodo===t.dataset.gmet?"":t.dataset.gmet}:x));renderGas();return}
     if(t.dataset.gnew){guardarG(id,gs().concat([{id:"g"+Date.now().toString(36),moneda:"MXN",fecha:"",metodo:""}]));renderGas();return}
-    if(t.dataset.gdel2){if(!confirm("¿Quitar este gasto?"))return;guardarG(id,gs().filter(x=>x.id!==g));renderGas();return}
+    if(t.dataset.gdel2){const x0=gs().find(x=>x.id===g);if(!(x0&&gastoVacio(x0))&&!confirm("¿Quitar este gasto?"))return;const r=gs().filter(x=>x.id!==g);if(!r.length&&ui.gasAdd===id)ui.gasAdd=null;guardarG(id,r);renderGas();return}
     if(t.dataset.gclose){write(id,{gastosCerrada:true});ui.gasOpen.delete(id);toast(EMB[id].ref+" pasó a Cerradas");renderGas();return}
     if(t.dataset.greopen){write(id,{gastosCerrada:false});toast(EMB[id].ref+" regresó a Abiertas");renderGas();return}
     if(t.dataset.gdocx){const k=t.dataset.k,x=gs().find(z=>z.id===g);if(!x||!x[k])return;if(!confirm("¿Quitar el "+DOC_ET[k]+" «"+(x[k].nombre||"")+"» de esta factura?"))return;
