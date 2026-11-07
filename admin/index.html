@@ -59,6 +59,10 @@
   .aviso{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:13px;display:none}
   .vacio{padding:30px;text-align:center;color:var(--muted)}
   @media (max-width:760px){.kpis{grid-template-columns:repeat(2,1fr)}.filters{grid-template-columns:1fr 1fr}.filters .q{grid-column:1/-1}}
+
+  /* Botón MEJAnet (regresa a Módulos): fondo coral, letra blanca */
+  a.btn-mejanet,a.btn-mejanet:visited{background:#FF6B5B!important;color:#fff!important;border-color:#FF6B5B!important;text-shadow:none!important}
+  a.btn-mejanet:hover{background:#F2574A!important;border-color:#F2574A!important;color:#fff!important}
 </style>
 </head>
 <body>
@@ -107,9 +111,9 @@ let todas = [], ordenes = [], vista = 'orden';
   if (COMPLETADAS) {
     document.getElementById('titulo').textContent = 'ORDENES DE CARGA COMPLETADAS';
     document.title = 'Ordenes de Carga Completadas';
-    acc.innerHTML = '<a class="inicio" href="/orden-de-carga">← Tablero de Ordenes de Carga</a><a class="inicio" href="/modulos">MEJAnet</a>';
+    acc.innerHTML = '<a class="inicio" href="/orden-de-carga">← Tablero de Ordenes de Carga</a><a class="inicio btn-mejanet" href="/modulos">MEJAnet</a>';
   } else {
-    acc.innerHTML = '<a class="nuevo" href="/nueva-orden">+ Crear Nueva Orden de Carga</a><a class="inicio" href="/ordenes-completadas">Ordenes de Carga Completadas</a><a class="inicio" href="/modulos">MEJAnet</a>';
+    acc.innerHTML = '<a class="nuevo" href="/nueva-orden">+ Crear Nueva Orden de Carga</a><a class="inicio" href="/ordenes-completadas">Ordenes de Carga Completadas</a><a class="inicio btn-mejanet" href="/modulos">MEJAnet</a>';
   }
 }
 const esHoy = (iso) => { const d = new Date(iso), h = new Date(); return d.getFullYear() === h.getFullYear() && d.getMonth() === h.getMonth() && d.getDate() === h.getDate(); };

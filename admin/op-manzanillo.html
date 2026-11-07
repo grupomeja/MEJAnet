@@ -573,6 +573,10 @@ body.vista-gas .filters,body.vista-gas #b-nuevo{display:none}
 .x-g{border:0;background:none;color:var(--bad);font-size:16px;cursor:pointer;opacity:.5}.x-g:hover{opacity:1}
 .gref-acc{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
 .btn.cerrar-ref{background:#4A3826;border-color:#4A3826;color:#EAE1D3}
+
+  /* Botón MEJAnet (regresa a Módulos): fondo coral, letra blanca */
+  a.btn-mejanet,a.btn-mejanet:visited{background:#FF6B5B!important;color:#fff!important;border-color:#FF6B5B!important;text-shadow:none!important}
+  a.btn-mejanet:hover{background:#F2574A!important;border-color:#F2574A!important;color:#fff!important}
 </style>
 </head>
 <body>
@@ -602,7 +606,7 @@ body.vista-gas .filters,body.vista-gas #b-nuevo{display:none}
       <div class="actions">
         <button class="btn" id="b-export" type="button">Exportar CSV</button>
         <button class="btn primary" id="b-nuevo" type="button">+ Embarque</button>
-        <a class="btn" href="/modulos">MEJAnet</a>
+        <a class="btn btn-mejanet" href="/modulos">MEJAnet</a>
       </div>
     </div>
   </div>
