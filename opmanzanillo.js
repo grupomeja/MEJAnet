@@ -219,7 +219,7 @@ function limpiarGasto(g) {
     fecha: fecha(g.fecha), concepto: t(g.concepto, 120), proveedor: t(g.proveedor, 160),
     importe: Number.isFinite(imp) ? imp : 0, moneda: g.moneda === 'USD' ? 'USD' : 'MXN', pagado: !!g.pagado,
     factura: t(g.factura, 60), detalle: t(g.detalle, 400), metodo: g.metodo === 'PUE' || g.metodo === 'PPD' ? g.metodo : '',
-    uuid: t(g.uuid, 60), pdf: archivoRef(g.pdf), xml: archivoRef(g.xml), pago: archivoRef(g.pago),
+    uuid: t(g.uuid, 60), pdf: archivoRef(g.pdf), xml: archivoRef(g.xml), pago: archivoRef(g.pago), cpdf: archivoRef(g.cpdf), cxml: archivoRef(g.cxml),
   };
 }
 // Solo pasan los campos conocidos; sirve para altas completas y para cambios parciales.
@@ -325,7 +325,7 @@ function rutas(admin) {
     } catch (e) { err(res, e, 'No se pudo generar el PDF'); }
   });
   // PDF / XML de las facturas de gastos (se guardan en la base de datos)
-  const TIPOS_ARCH = { pdf: 'application/pdf', xml: 'application/xml', pago: 'application/pdf' };
+  const TIPOS_ARCH = { pdf: 'application/pdf', xml: 'application/xml', pago: 'application/pdf', cpdf: 'application/pdf', cxml: 'application/xml' };
   r.post('/api/admin/opm/archivos', admin, express.raw({ type: () => true, limit: '12mb' }), async (req, res) => {
     try {
       const emb = String(req.query.emb || ''), tipo = String(req.query.tipo || '');
