@@ -542,15 +542,16 @@ main{padding-bottom:40px}
 .gref-h .chip.warn{background:#FDF5D2;border-color:#F0DE95;color:#7A5B00}
 .gref-h .chip.bad{background:var(--bad-soft);border-color:#F2C2C2;color:var(--bad)}
 .gref-h .chip.ppd{background:#E3EDFB;border-color:#BCD2F4;color:#1E4F99}
-.gref-h .tot{font-family:"Oswald","Arial Narrow",system-ui,sans-serif;font-size:17px;font-weight:600;color:var(--cel-ink);min-width:130px;display:flex;align-items:center;justify-content:center;align-self:stretch;line-height:1;font-variant-numeric:tabular-nums}
+.gref-h .tot{font-family:"Oswald","Arial Narrow",system-ui,sans-serif;font-size:17px;font-weight:600;color:var(--cel-ink);min-width:130px;display:flex;align-items:center;justify-content:center;align-self:stretch;line-height:1;padding-bottom:3px;font-variant-numeric:tabular-nums}
 .gref-b{padding:6px 10px 10px;border-top:1px solid var(--cel-line);background:var(--sec-body,#FDFBF8)}
-.gt2{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;min-width:1040px}
+.gt2{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;min-width:1120px}
 .gt2 th{font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--cel-ink);background:var(--cel-bg1);padding:5px 6px;text-align:left;border-bottom:2px solid var(--cel-line);white-space:nowrap}
 .gt2 td{padding:3px 4px;border-bottom:1px solid var(--cel-line);vertical-align:middle}
 .gt2 td.n{color:var(--cel-ico);font-weight:700;text-align:center;width:22px}
 .gt2 .r{text-align:right}.gt2 .c{text-align:center}
 .gt2 tfoot td{border-bottom:0;padding-top:6px}
-.gt2 tfoot .tot{font-family:"Oswald","Arial Narrow",system-ui,sans-serif;font-size:17px;font-weight:600;color:var(--cel-ink)}
+.gt2 tfoot .tot{font-family:"Oswald","Arial Narrow",system-ui,sans-serif;font-size:15px;font-weight:600;color:var(--cel-ink);white-space:nowrap;padding-right:9px}
+.gt2 tfoot .tot-l{font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--cel-ico)}
 .gi{width:100%;box-sizing:border-box;border:1px solid transparent;background:transparent;border-radius:4px;padding:4px 5px;font:inherit;font-size:12px;color:var(--ink)}
 .gi:hover{border-color:var(--line)} .gi:focus{border-color:var(--cel-ico);background:var(--surface);outline:none}
 select.gi{min-width:0;text-overflow:ellipsis}
@@ -948,6 +949,7 @@ if(document.fonts){document.fonts.ready.then(reajustar);document.fonts.addEventL
 // Catálogo de conceptos «Pagos hechos por cuenta de clientes» (programa de facturación)
 const CAT_GASTOS=[["020001", "IMPUESTOS ADUANALES"], ["020002", "SERVICIO EXTRAORDINARIO DE ADUANA"], ["020003", "FLETE"], ["020004", "CRUCE"], ["020005", "CERTIFICACION"], ["020007", "PRIMAS DE SEGUROS O FIANZAS"], ["020009", "VELADORES"], ["020026", "CERTIFICADOS"], ["020028", "MULTAS"], ["020029", "CUSTODIA"], ["020035", "TOMA DE MUESTRA"], ["020037", "SEMARNAP"], ["020050", "DEV. DE SALDOS"], ["020078", "PER DIEM"], ["020079", "DEMORAS"], ["020084", "MANIOBRAS"], ["020086", "ALMACENAJES"], ["020091", "R1 RECTIFICACION AL PEDIMENTO"], ["020092", "FLETE AEREO"], ["020098", "DIAGNOSTICO FITOSANITARIO"], ["020100", "PREVALIDACION POR PEDTO"], ["020102", "MANIOBRAS DE CARGA Y DESCARGA"], ["020108", "MONTACARGAS"], ["020110", "DERECHO DE MUELLAJE"], ["020111", "TRASLADO"], ["020113", "ELABORACION DE ETIQUETAS"], ["020114", "DIVERSOS"], ["020115", "SEGURO DE MERCANCIA"], ["020116", "INSPECCION"], ["020117", "DEMORAS"], ["020118", "LAVADO DE CONTENEDOR"], ["020121", "VALIDACION"], ["020122", "REVALIDACION DOCUMENTOS"], ["020125", "SEGUNDO PREVIO"], ["020127", "ANTICIPOS"], ["020128", "SUBROGACION DE FACTURA NO."], ["020129", "DERECHO DE PISO"], ["020130", "DERECHO DE PISO"], ["020132", "ALMACENAJES"], ["020133", "SERVICIO EXTRAORDINARIO"], ["020143", "CONECTIVIDAD"], ["020144", "SELLOS FISCALES"], ["020147", "FUMIGACION"], ["020150", "PALETAS"], ["020151", "MEJA FORWARDING"], ["020165", "PAGOS DE DERECHOS PRODUCTOS Y APROVECHAMIENTO"], ["020166", "PREVIO"], ["020167", "SEGURIDAD Y MUELLAJE"], ["020168", "DESYCON"]];
 const CAT_NOM=Object.fromEntries(CAT_GASTOS);
+const DOC_ET={pdf:"PDF",xml:"XML",pago:"PAGO"};
 const nomConcepto=c=>CAT_NOM[c]||c||"";
 // Conceptos más usados primero (según los gastos ya capturados), luego el resto en orden alfabético
 let USO_CONC={};
@@ -959,7 +961,7 @@ function opcionesConcepto(sel){
   return (usados.length?`<optgroup label="Más usados">${usados.map(([c,n])=>o(c,n)).join("")}</optgroup><optgroup label="Todos los conceptos">`:"")+resto.map(([c,n])=>o(c,n)).join("")+(usados.length?"</optgroup>":"")
     +(sel&&!CAT_NOM[sel]?`<option selected>${esc(sel)}</option>`:"");
 }
-function totGastos(e){const t={MXN:0,USD:0,n:0,pdf:0,xml:0,ppd:0,sinFac:0};(e.gastos||[]).forEach(g=>{t[g.moneda||"MXN"]+=+g.importe||0;t.n++;if(g.pdf)t.pdf++;if(g.xml)t.xml++;if(g.metodo==="PPD")t.ppd++;if(!g.factura||/pendiente/i.test(g.factura))t.sinFac++});return t}
+function totGastos(e){const t={MXN:0,USD:0,n:0,pdf:0,xml:0,pago:0,ppd:0,sinFac:0};(e.gastos||[]).forEach(g=>{t[g.moneda||"MXN"]+=+g.importe||0;t.n++;if(g.pdf)t.pdf++;if(g.xml)t.xml++;if(g.pago)t.pago++;if(g.metodo==="PPD")t.ppd++;if(!g.factura||/pendiente/i.test(g.factura))t.sinFac++});return t}
 // Lee un XML de CFDI (3.3 / 4.0) y regresa los datos que sirven para el gasto
 function leerCFDI(txt){
   const d=new DOMParser().parseFromString(txt,"application/xml");
@@ -981,12 +983,12 @@ function renderGas(){
   const lista=xs.filter(x=>(tab==="cerradas")===!!x.e.gastosCerrada).filter(x=>!q||[x.e.ref,x.e.cliente,...(x.e.gastos||[]).flatMap(g=>[g.factura,g.proveedor,g.detalle,nomConcepto(g.concepto)])].join(" ").toUpperCase().includes(q))
     .sort((a,b)=>(b.e.ref||"").localeCompare(a.e.ref||""));
   const abiertas=xs.filter(x=>!x.e.gastosCerrada),cerradas=xs.filter(x=>x.e.gastosCerrada);
-  const T={MXN:0,n:0,pdf:0,xml:0,ppd:0,sinFac:0};abiertas.forEach(x=>{const t=totGastos(x.e);for(const k in T)T[k]+=t[k]||0});
+  const T={MXN:0,n:0,pdf:0,xml:0,pago:0,ppd:0,sinFac:0};abiertas.forEach(x=>{const t=totGastos(x.e);for(const k in T)T[k]+=t[k]||0});
   const byC={};abiertas.forEach(x=>(x.e.gastos||[]).forEach(g=>{const k=nomConcepto(g.concepto)||"Sin concepto";byC[k]=(byC[k]||0)+(+g.importe||0)}));
   const cEnt=Object.entries(byC).sort((a,b)=>b[1]-a[1]);
   const abiertos=ui.gasOpen||(ui.gasOpen=new Set());
   const dis=canWrite?"":"disabled";
-  const doc=(g,k)=>g[k]?`<span class="doc-w"><a class="doc ok" href="#" data-gdoc="${esc(g.id)}" data-k="${k}" title="Abrir ${esc(g[k].nombre||"")}">${k.toUpperCase()} ✓</a>${canWrite?`<button type="button" class="doc-x" data-gdocx="${esc(g.id)}" data-k="${k}" title="Quitar ${k.toUpperCase()}" aria-label="Quitar ${k.toUpperCase()}">×</button>`:""}</span>`:`<button type="button" class="doc falta" data-gup="${esc(g.id)}" data-k="${k}" ${dis}>Subir ${k.toUpperCase()}</button>`;
+  const doc=(g,k)=>g[k]?`<span class="doc-w"><a class="doc ok" href="#" data-gdoc="${esc(g.id)}" data-k="${k}" title="Abrir ${esc(g[k].nombre||"")}">${DOC_ET[k]} ✓</a>${canWrite?`<button type="button" class="doc-x" data-gdocx="${esc(g.id)}" data-k="${k}" title="Quitar ${DOC_ET[k]}" aria-label="Quitar ${DOC_ET[k]}">×</button>`:""}</span>`:`<button type="button" class="doc falta" data-gup="${esc(g.id)}" data-k="${k}" ${dis}>Subir ${DOC_ET[k]}</button>`;
   const fila=(x,g,i)=>`<tr data-g="${esc(g.id)}">
       <td class="n">${i+1}</td>
       <td><input class="gi mono ${!g.factura||/pendiente/i.test(g.factura)?"pend":""}" data-gf="factura" value="${esc(g.factura||"")}" placeholder="Pendiente" ${dis}></td>
@@ -996,19 +998,19 @@ function renderGas(){
       <td class="r"><input class="gi r num" data-gf="importe" value="${g.importe!=null?money(+g.importe):""}" inputmode="decimal" ${dis}></td>
       <td><input class="gi" type="date" data-gf="fecha" value="${esc(g.fecha||"")}" ${dis}></td>
       <td class="c"><div class="seg2">${["PUE","PPD"].map(m=>`<button type="button" class="${g.metodo===m?"on "+m.toLowerCase():""}" data-gmet="${m}" ${dis}>${m}</button>`).join("")}</div></td>
-      <td class="c">${doc(g,"pdf")}</td><td class="c">${doc(g,"xml")}</td>
+      <td class="c">${doc(g,"pdf")}</td><td class="c">${doc(g,"xml")}</td><td class="c">${doc(g,"pago")}</td>
       <td class="c">${canWrite?`<button type="button" class="x-g" data-gdel2="${esc(g.id)}" title="Quitar gasto" aria-label="Quitar gasto">×</button>`:""}</td></tr>`;
   const bloque=x=>{const t=totGastos(x.e),open=abiertos.has(x.id);
     return `<div class="gref ${open?"open":""}" data-gref="${esc(x.id)}">
       <button type="button" class="gref-h" data-gtog="${esc(x.id)}">
         <span class="car">${open?"▾":"▸"}</span><span class="ref">${esc(x.e.ref)}</span><span class="cli">${esc(x.e.cliente||"")}</span>
         <span class="chip">${t.n} factura${t.n===1?"":"s"}</span>
-        <span class="chip ${t.pdf<t.n?"warn":"ok"}">PDF ${t.pdf}/${t.n}</span><span class="chip ${t.xml<t.n?"warn":"ok"}">XML ${t.xml}/${t.n}</span>
+        <span class="chip ${t.pdf<t.n?"warn":"ok"}">PDF ${t.pdf}/${t.n}</span><span class="chip ${t.xml<t.n?"warn":"ok"}">XML ${t.xml}/${t.n}</span><span class="chip ${t.pago<t.n?"warn":"ok"}">PAGO ${t.pago}/${t.n}</span>
         ${t.ppd?`<span class="chip ppd">${t.ppd} PPD</span>`:""}${t.sinFac?`<span class="chip bad">${t.sinFac} sin factura</span>`:""}
         <span class="tot">$${money(t.MXN)}</span></button>
-      ${open?`<div class="gref-b"><div class="scroll"><table class="gt2"><colgroup><col style="width:26px"><col style="width:105px"><col style="width:165px"><col style="width:180px"><col><col style="width:95px"><col style="width:122px"><col style="width:84px"><col style="width:72px"><col style="width:72px"><col style="width:26px"></colgroup><thead><tr><th>#</th><th>Factura</th><th>Proveedor</th><th>Concepto</th><th>Detalle</th><th class="r">Importe</th><th>Fecha transf.</th><th class="c">Método</th><th class="c">PDF</th><th class="c">XML</th><th></th></tr></thead>
+      ${open?`<div class="gref-b"><div class="scroll"><table class="gt2"><colgroup><col style="width:26px"><col style="width:105px"><col style="width:165px"><col style="width:180px"><col><col style="width:95px"><col style="width:122px"><col style="width:84px"><col style="width:72px"><col style="width:72px"><col style="width:78px"><col style="width:26px"></colgroup><thead><tr><th>#</th><th>Factura</th><th>Proveedor</th><th>Concepto</th><th>Detalle</th><th class="r">Importe</th><th>Fecha transf.</th><th class="c">Método</th><th class="c">PDF</th><th class="c">XML</th><th class="c">Pago</th><th></th></tr></thead>
         <tbody>${(x.e.gastos||[]).map((g,i)=>fila(x,g,i)).join("")}</tbody>
-        <tfoot><tr><td colspan="5">${canWrite?`<button type="button" class="btn sm" data-gnew="${esc(x.id)}">+ Agregar factura</button>`:""}</td><td class="r tot">$${money(t.MXN)}</td><td colspan="5"></td></tr></tfoot></table></div>
+        <tfoot><tr><td colspan="4">${canWrite?`<button type="button" class="btn sm" data-gnew="${esc(x.id)}">+ Agregar factura</button>`:""}</td><td class="r tot-l">Total de la referencia</td><td class="r tot">$${money(t.MXN)}</td><td colspan="6"></td></tr></tfoot></table></div>
         <div class="gref-acc">${canWrite?(x.e.gastosCerrada?`<button type="button" class="btn sm" data-greopen="${esc(x.id)}">Reabrir referencia</button>`:`<button type="button" class="btn sm cerrar-ref" data-gclose="${esc(x.id)}">Cerrar referencia</button>`):""}<button type="button" class="btn sm" data-open="${esc(x.id)}">Ver ficha del embarque</button></div></div>`:""}
     </div>`};
   $("#v-gas").innerHTML=`
@@ -1017,6 +1019,7 @@ function renderGas(){
     <div><span>Referencias abiertas</span><b>${abiertas.length}</b></div>
     <div><span>Total abiertas</span><b>$${money(T.MXN)}</b></div>
     <div class="${T.n-T.pdf||T.n-T.xml?"warn":""}"><span>Faltan PDF / XML</span><b>${T.n-T.pdf} / ${T.n-T.xml}</b></div>
+    <div class="${T.n-T.pago?"warn":""}"><span>Faltan pagos</span><b>${T.n-T.pago}</b></div>
     <div><span>Facturas PPD</span><b>${T.ppd}</b></div>
     <div class="${T.sinFac?"warn":""}"><span>Sin número de factura</span><b>${T.sinFac}</b></div>
     <details class="g-conc"><summary>Por concepto</summary><div>${cEnt.map(([k,v])=>`<span>${esc(k)} <b>$${money(v)}</b></span>`).join("")||"—"}</div></details>
@@ -1049,17 +1052,17 @@ function renderGas(){
     if(t.dataset.gdel2){if(!confirm("¿Quitar este gasto?"))return;guardarG(id,gs().filter(x=>x.id!==g));renderGas();return}
     if(t.dataset.gclose){write(id,{gastosCerrada:true});ui.gasOpen.delete(id);toast(EMB[id].ref+" pasó a Cerradas");renderGas();return}
     if(t.dataset.greopen){write(id,{gastosCerrada:false});toast(EMB[id].ref+" regresó a Abiertas");renderGas();return}
-    if(t.dataset.gdocx){const k=t.dataset.k,x=gs().find(z=>z.id===g);if(!x||!x[k])return;if(!confirm("¿Quitar el "+k.toUpperCase()+" «"+(x[k].nombre||"")+"» de esta factura?"))return;
-      const aid=x[k].id;guardarG(id,gs().map(z=>z.id===g?{...z,[k]:null}:z));api("DELETE","/api/admin/opm/archivos/"+encodeURIComponent(aid)).catch(()=>{});toast(k.toUpperCase()+" quitado");renderGas();return}
+    if(t.dataset.gdocx){const k=t.dataset.k,x=gs().find(z=>z.id===g);if(!x||!x[k])return;if(!confirm("¿Quitar el "+DOC_ET[k]+" «"+(x[k].nombre||"")+"» de esta factura?"))return;
+      const aid=x[k].id;guardarG(id,gs().map(z=>z.id===g?{...z,[k]:null}:z));api("DELETE","/api/admin/opm/archivos/"+encodeURIComponent(aid)).catch(()=>{});toast(DOC_ET[k]+" quitado");renderGas();return}
     if(t.dataset.gdoc){ev.preventDefault();window.open("/api/admin/opm/archivos/"+encodeURIComponent(gs().find(x=>x.id===g)[t.dataset.k].id),"_blank");return}
-    if(t.dataset.gup){const k=t.dataset.k;const inp=document.createElement("input");inp.type="file";inp.accept=k==="pdf"?".pdf,application/pdf":".xml,text/xml,application/xml";
+    if(t.dataset.gup){const k=t.dataset.k;const inp=document.createElement("input");inp.type="file";inp.accept=k==="xml"?".xml,text/xml,application/xml":".pdf,application/pdf";
       inp.onchange=async()=>{const f=inp.files[0];if(!f)return;if(f.size>12e6){toast("El archivo pesa más de 12 MB");return}
         t.textContent="Subiendo…";try{
           const r=await fetch("/api/admin/opm/archivos?emb="+encodeURIComponent(id)+"&tipo="+k,{method:"POST",headers:{"Content-Type":"application/octet-stream","x-nombre":encodeURIComponent(f.name)},body:f,credentials:"same-origin"});
           if(!r.ok)throw new Error("Error "+r.status);const ref=await r.json();
           let extra={};if(k==="xml"){try{extra=leerCFDI(await f.text())}catch(e){}}
           guardarG(id,gs().map(x=>{if(x.id!==g)return x;const n={...x,[k]:ref};for(const[c,v]of Object.entries(extra))if(v&&!String(x[c]||"").trim())n[c]=v;if(extra.metodo&&!x.metodo)n.metodo=extra.metodo;return n}));
-          toast(k.toUpperCase()+" guardado"+(Object.keys(extra).length?" · datos tomados del XML":""));renderGas();
+          toast(DOC_ET[k]+" guardado"+(Object.keys(extra).length?" · datos tomados del XML":""));renderGas();
         }catch(e){toast("No se pudo subir: "+e.message);renderGas()}};inp.click();return}
   });
   document.addEventListener("input",ev=>{if(ev.target.id==="g-q"){ui.gasQ=ev.target.value;const pos=ev.target.selectionStart;renderGas();const q=$("#g-q");q.focus();q.setSelectionRange(pos,pos)}});

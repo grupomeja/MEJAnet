@@ -52,7 +52,7 @@ async function resumenPDF(e) {
     pg.drawText(limpio(r), { x: M + AN - 12 - ancho(r, 10.5, FB), y: y - 38, size: 10.5, font: FB, color: GUINDA });
     y -= 62;
   };
-  const COLS = [['#', 18, 'c'], ['FACTURA', 70], ['PROVEEDOR', 120], ['CONCEPTO', 110], ['DETALLE', 0], ['IMPORTE', 74, 'r'], ['FECHA TRANSF.', 66, 'c'], ['METODO', 42, 'c'], ['PDF', 26, 'c'], ['XML', 26, 'c']];
+  const COLS = [['#', 18, 'c'], ['FACTURA', 70], ['PROVEEDOR', 120], ['CONCEPTO', 110], ['DETALLE', 0], ['IMPORTE', 74, 'r'], ['FECHA TRANSF.', 66, 'c'], ['METODO', 42, 'c'], ['PDF', 26, 'c'], ['XML', 26, 'c'], ['PAGO', 30, 'c']];
   const fijo = COLS.reduce((a, c) => a + c[1], 0); COLS[4][1] = AN - fijo;
   const encab = () => {
     pg.drawRectangle({ x: M, y: y - 16, width: AN, height: 16, color: BEIGE });
@@ -63,7 +63,7 @@ async function resumenPDF(e) {
   let tot = 0;
   (e.gastos || []).forEach((g, i) => {
     if (y - 18 < M + 40) { pg = pdf.addPage([W, H]); y = H - M; cab(); encab(); }
-    const vals = [String(i + 1), g.factura || 'PENDIENTE', g.proveedor, CAT[g.concepto] || g.concepto, g.detalle, money(g.importe), fec(g.fecha), g.metodo || '-', g.pdf ? 'SI' : '-', g.xml ? 'SI' : '-'];
+    const vals = [String(i + 1), g.factura || 'PENDIENTE', g.proveedor, CAT[g.concepto] || g.concepto, g.detalle, money(g.importe), fec(g.fecha), g.metodo || '-', g.pdf ? 'SI' : '-', g.xml ? 'SI' : '-', g.pago ? 'SI' : '-'];
     let x = M;
     COLS.forEach(([, w, al], k) => {
       const s = corta(vals[k] || '', 7.5, w - 8, k === 1 ? FB : F);
@@ -102,7 +102,7 @@ function programarResumen(e, log = console) {
 // Compara los gastos antes y después del cambio: sube los archivos nuevos y manda a la papelera los quitados
 async function sincronizar(antes, despues, { leerArchivo, guardarDriveId, leerDriveId }) {
   if (!activo() || !despues) return;
-  const lista = (d) => { const m = new Map(); (d && d.gastos || []).forEach((g) => ['pdf', 'xml'].forEach((k) => { if (g[k] && g[k].id) m.set(g[k].id, { g, k }); })); return m; };
+  const lista = (d) => { const m = new Map(); (d && d.gastos || []).forEach((g) => ['pdf', 'xml', 'pago'].forEach((k) => { if (g[k] && g[k].id) m.set(g[k].id, { g, k }); })); return m; };
   const A = lista(antes), D = lista(despues);
   const carpeta = carpetaDe(despues.ref);
   for (const [aid, { g, k }] of D) {
@@ -110,7 +110,7 @@ async function sincronizar(antes, despues, { leerArchivo, guardarDriveId, leerDr
     try {
       const f = await leerArchivo(aid); if (!f) continue;
       const base = limpioNombre(g.factura) || limpioNombre(String(f.nombre || '').replace(/\.(pdf|xml)$/i, '')) || 'SIN FACTURA';
-      const r = await enviar({ accion: 'subir', carpeta, nombre: `${base}${g.proveedor ? ' - ' + limpioNombre(g.proveedor) : ''}.${k}`, tipo: f.tipo, base64: Buffer.from(f.datos).toString('base64') });
+      const r = await enviar({ accion: 'subir', carpeta, nombre: `${base}${g.proveedor ? ' - ' + limpioNombre(g.proveedor) : ''}${k === 'pago' ? ' - PAGO' : ''}.${k === 'xml' ? 'xml' : 'pdf'}`, tipo: f.tipo, base64: Buffer.from(f.datos).toString('base64') });
       if (r.id) await guardarDriveId(aid, r.id);
     } catch (err) { console.error('Drive (subir ' + aid + '):', err.message); }
   }
