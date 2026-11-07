@@ -1,0 +1,378 @@
+{
+ "MA129/26": {
+  "ref": "MA129/26",
+  "buque": "SAPPHIRE TOWER",
+  "viaje": "005W",
+  "cliente": "NYX MEXICO PLASTICS",
+  "hbl": "YY202609607",
+  "ff": "IFS NEUTRAL MARITIME SERVICES DE MEXICO",
+  "tipo": "FCL",
+  "mercancia": "BISELES PARA CONSOLA AUTOMOTRIZ",
+  "previo": "NO PREVIO",
+  "eta": "2026-11-05",
+  "nota": "REVALIDACION (NO PREVIO)"
+ },
+ "MA130/26": {
+  "ref": "MA130/26",
+  "buque": "RIO DE JANEIRO EXPRESS",
+  "viaje": "2637E",
+  "cliente": "NYX MEXICO PLASTICS",
+  "hbl": "HBL: 7560MX395419 - MBL: NBMZL26054959",
+  "mbl": "HLCUHKG2608ASYO5",
+  "ff": "RHENUS LOGISTICS",
+  "tipo": "LCL",
+  "mercancia": "PARTES PARA CARROCERIA",
+  "terminal": "TIMSA",
+  "eta": "2026-10-26",
+  "nota": "CUMPLIDO EL JUEVES 05 DE NOVIEMBRE 2026",
+  "semaforo": "verde",
+  "hitos": {
+   "despacho": {
+    "r": "2026-11-05"
+   }
+  }
+ },
+ "MA131/26": {
+  "ref": "MA131/26",
+  "buque": "TIAN XIANG HE",
+  "viaje": "158E",
+  "cliente": "NYX MEXICO PLASTICS",
+  "hbl": "BJHSC2609015",
+  "mbl": "COSU6466533500",
+  "ff": "ECU WOELDWIDE",
+  "tipo": "LCL",
+  "mercancia": "MOLDE DE METAL PARA INYECCION DE PLASTICO",
+  "terminal": "HAZESA",
+  "eta": "2026-10-27",
+  "nota": "CUMPLIDO EL MARTES 03 DE NOVIEMBRE 2026",
+  "semaforo": "verde",
+  "hitos": {
+   "despacho": {
+    "r": "2026-11-03"
+   }
+  }
+ },
+ "MA132/26": {
+  "ref": "MA132/26",
+  "buque": "TIAN XIANG HE",
+  "viaje": "158E",
+  "cliente": "NYX MEXICO PLASTICS",
+  "hbl": "SHAZLOQ90036",
+  "mbl": "COSU6466429010",
+  "ff": "IFS (NEUTRAL MARITIME SER",
+  "mercancia": "ALTAVOZ (TWEETER)",
+  "terminal": "SSA MEXICO",
+  "eta": "2026-10-22",
+  "nota": "CUMPLIDO EL SABADO 07 DE NOVIEMBRE 2026 (LE TOCO RECONOCIMIENTO ADUANERO )",
+  "semaforo": "rojo",
+  "hitos": {
+   "despacho": {
+    "r": "2026-11-07"
+   }
+  }
+ },
+ "MA137/26": {
+  "ref": "MA137/26",
+  "buque": "REN JIAN 27",
+  "viaje": "2606E",
+  "cliente": "NYX MEXICO PLASTICS",
+  "hbl": "YY202609648 // SHMAN26261911F",
+  "ff": "ECU WORLDWIDE MEXICO",
+  "tipo": "LCL",
+  "mercancia": "BISELES PARA CONSOLA AUTOMOTRIZ",
+  "eta": "2026-11-03",
+  "nota": "PENDIENTE ETA Y REVALIDACION ( NO PREVIO)"
+ },
+ "MA138/26": {
+  "ref": "MA138/26",
+  "buque": "ITAJAI EXPRESS",
+  "viaje": "2636E",
+  "cliente": "NYX MEXICO PLASTICS",
+  "hbl": "SCMF260512 // SHMZL26198331",
+  "mbl": "HLCUHKG2607AXFT3",
+  "ff": "CTL LOGISTICS MEXICO S.A. DE C.V.",
+  "tipo": "LCL",
+  "mercancia": "PROTECTOR PLASTICO DE USO AUTOMOTRIZ",
+  "terminal": "COMERCIALIZADORA LA JUNTA",
+  "previo": "NO PREVIO",
+  "eta": "2026-10-19",
+  "nota": "PENDIENTE REPROGRMACION DE CARGA"
+ },
+ "MA142/26": {
+  "ref": "MA142/26",
+  "buque": "COSCO PACIFIC",
+  "viaje": "100E",
+  "cliente": "NYX MEXICO PLASTICS",
+  "hbl": "ACNGB26090096",
+  "mbl": "COSU6464788480",
+  "ff": "NEWTRAL MEXICO SA DE CV",
+  "tipo": "LCL",
+  "mercancia": "IMANES DE METAL",
+  "terminal": "CORPORACION MULTIMODAL",
+  "eta": "2026-10-29",
+  "nota": "CUMPLIDO EL VIERNES 06 DE NOVIEMBRE 2026",
+  "semaforo": "verde",
+  "hitos": {
+   "despacho": {
+    "r": "2026-11-06"
+   }
+  }
+ },
+ "MA146/26": {
+  "ref": "MA146/26",
+  "buque": "OOCL CHANCAY",
+  "viaje": "002E",
+  "cliente": "NYX MEXICO PLASTICS",
+  "hbl": "DFS067196530 // CCFSHMAN26334766",
+  "ff": "SCHRYVER TRANSPORTES Y LOGISTICA",
+  "tipo": "LCL",
+  "mercancia": "BISELES PARA CONSOLA AUTOMOTRIZ",
+  "eta": "2026-11-09",
+  "nota": "PENDIENTE ETA Y REVALIDACION"
+ },
+ "MA147/26": {
+  "ref": "MA147/26",
+  "buque": "SUNNY ACACIA",
+  "viaje": "2616N",
+  "cliente": "NYX MEXICO PLASTICS",
+  "hbl": "ASHAN26A0063",
+  "ff": "TIBA MEXICO",
+  "tipo": "LCL",
+  "mercancia": "MONITOR",
+  "eta": "2026-11-18",
+  "nota": "PENDIENTE ETA Y REVALIDACION"
+ },
+ "MA118/26": {
+  "ref": "MA118/26",
+  "buque": "HUMBLDT EXPRESS",
+  "viaje": "2641E",
+  "cliente": "NYX MEXICO PLASTICS",
+  "hbl": "7560MX410451 // MBL: NBMZL26061541",
+  "ff": "RHENUS LOGISTICS",
+  "tipo": "LCL",
+  "mercancia": "PARTES PARA CARROCERIA",
+  "eta": "2026-11-11",
+  "nota": "PENDIETE ETA Y REVALIDACION"
+ },
+ "MA148/26": {
+  "ref": "MA148/26",
+  "buque": "WAN HAI 711",
+  "viaje": "W004",
+  "cliente": "NYX MEXICO PLASTICS",
+  "hbl": "EIP2680008FZLO",
+  "mbl": "PKG600500100",
+  "tipo": "LCL",
+  "mercancia": "BOCINAS",
+  "terminal": "COMERCIALIZADORA LA JUNTA",
+  "previo": "NO PREVIO",
+  "eta": "2026-11-01",
+  "nota": "CUMPLIDO EL SABADO 07 DE NOVIEMBRE 2026 (LE TOCO RECONOCIMIENTO ADUANERO ) (NO PREVIO)",
+  "semaforo": "rojo",
+  "hitos": {
+   "despacho": {
+    "r": "2026-11-07"
+   }
+  }
+ },
+ "MA149/26": {
+  "ref": "MA149/26",
+  "buque": "REN JIAN 27",
+  "viaje": "2606E",
+  "cliente": "NYX MEXICO PLASTICS",
+  "hbl": "SCMF260550",
+  "ff": "AMASS GLOBAL NETWORK MEXICO",
+  "tipo": "LCL",
+  "mercancia": "PROTECTOR PLASTICO DE USO AUTOMOTRIZ",
+  "eta": "2026-11-03",
+  "nota": "PENDIENTE ETA Y REVALIDACION"
+ },
+ "MA150/26": {
+  "ref": "MA150/26",
+  "buque": "EVER FRONT",
+  "viaje": "0802-040E/0802-040W",
+  "cliente": "NYX MEXICO PLASTICS",
+  "hbl": "1077133976 // KEEZLO2609105",
+  "mbl": "EGLV003601203912",
+  "ff": "KUEHNE NAGEL FORWARDING",
+  "tipo": "LCL",
+  "mercancia": "CLIP DE PLASTICO DE USO AUTOMOTRIZ",
+  "eta": "2026-11-02",
+  "nota": "RECONOCIMIENTO ADUANERO PROGRAMADO PARA EL LUNES 09 DE NOVIEMBRE 2026 A LAS 10:00 HRS",
+  "hitos": {
+   "despacho": {
+    "e": "2026-11-09",
+    "hora": "10:00"
+   }
+  }
+ },
+ "MA151/26": {
+  "ref": "MA151/26",
+  "buque": "LAUST MAERSK",
+  "viaje": "642E",
+  "cliente": "NYX MEXICO PLASTICS",
+  "hbl": "MBL LE00SH261000117H // HBL LE00SH261000117H",
+  "ff": "RHENUS LOGISTICS",
+  "tipo": "LCL",
+  "eta": "2026-11-11",
+  "nota": "PENDIENTE ETA Y REVALIDACION"
+ },
+ "MA153/26": {
+  "ref": "MA153/26",
+  "buque": "CSCL ASIA",
+  "viaje": "174E",
+  "cliente": "NYX MEXICO PLASTICS",
+  "hbl": "SE REVALIDA EN MICA NBGZLO6734549V",
+  "ff": "RHENUS LOGISTICS",
+  "tipo": "LCL",
+  "eta": "2026-11-07",
+  "nota": "PENDIENTE ETA Y REVALIDACION"
+ },
+ "MA156/26": {
+  "ref": "MA156/26",
+  "buque": "LAUST MAERSK",
+  "viaje": "642E",
+  "cliente": "NYX MEXICO PLASTICS",
+  "hbl": "SCMF260582",
+  "ff": "CTL LOGISTICS MEXICO S.A. DE C.V.",
+  "tipo": "LCL",
+  "eta": "2026-11-11",
+  "nota": "PENDIENTE ETA Y REVALIDACION"
+ },
+ "MA140/26": {
+  "ref": "MA140/26",
+  "buque": "RIO DE JANEIRO EXPRESS",
+  "viaje": "2637E",
+  "cliente": "INNOVACION PROACTIVA COMERCIAL",
+  "hbl": "GLSL26090283",
+  "mbl": "HLCUSZX2608CYLI1",
+  "ff": "FAST FORWARD CONSOLIDATORS",
+  "tipo": "LCL",
+  "terminal": "COMERCIALIZADORA LA JUNTA",
+  "eta": "2026-10-29",
+  "nota": "PENDIENTE QUE EL ALMACEN NOS ASIGNE ESPACIO PARA EL RECONOCIMIENTO PREVIO"
+ },
+ "MA133/26": {
+  "ref": "MA133/26",
+  "buque": "MSC NOA ARIELA",
+  "viaje": "FA637A",
+  "cliente": "FREUDENBERG PRODUCTOS DEL HOGAR",
+  "hbl": "1076251682 // FOLIO DE CLIENTE 2592",
+  "mbl": "ONEYPKGG54816800",
+  "tipo": "FCL",
+  "terminal": "CONTECON",
+  "eta": "2026-11-04",
+  "nota": "PENDIENTE PAGO DE PEDIMENTO"
+ },
+ "MA134/26": {
+  "ref": "MA134/26",
+  "buque": "COSCO AMERICA",
+  "viaje": "099E",
+  "cliente": "FREUDENBERG PRODUCTOS DEL HOGAR",
+  "hbl": "6731111445 // FOLIO DE CLIENTE 2650",
+  "tipo": "FCL",
+  "eta": "2026-11-11",
+  "nota": "PENDIENTE ETA Y REVALIDACION"
+ },
+ "MA135/26": {
+  "ref": "MA135/26",
+  "buque": "MSC VIVIANNE",
+  "viaje": "FA642A",
+  "cliente": "FREUDENBERG PRODUCTOS DEL HOGAR",
+  "hbl": "1076903287 // FOLO DE CLIENTE 2616",
+  "tipo": "FCL",
+  "eta": "2026-11-11",
+  "nota": "PENDIENTE ETA Y REVALIDACION"
+ },
+ "MA152/26": {
+  "ref": "MA152/26",
+  "buque": "MATHILDE MAERSK",
+  "viaje": "633E",
+  "cliente": "FREUDENBERG PRODUCTOS DEL HOGAR",
+  "hbl": "1075826045 // FOLIO DE CLIENTE 2599",
+  "mbl": "274493329",
+  "tipo": "FCL",
+  "terminal": "SSA MEXICO",
+  "eta": "2026-11-10",
+  "nota": "PENDIENTE ETA Y REVALIDACION"
+ },
+ "MA154/26": {
+  "ref": "MA154/26",
+  "cliente": "FREUDENBERG PRODUCTOS DEL HOGAR",
+  "nota": ""
+ },
+ "MA155/26": {
+  "ref": "MA155/26",
+  "buque": "MSC VALENTINA V-:FA639A",
+  "cliente": "FREUDENBERG PRODUCTOS DEL HOGAR",
+  "hbl": "1077630759 // FOLIO DE CLIENTE 2624",
+  "tipo": "LCL",
+  "nota": "PENDIENTE ETA Y REVALIDACION"
+ },
+ "MA098/26": {
+  "ref": "MA098/26",
+  "buque": "DYROS",
+  "viaje": "638E",
+  "cliente": "JAMES INDUSTRIES MEXICO S.A. DE C.V.",
+  "hbl": "SZX02940818",
+  "mbl": "276222832",
+  "tipo": "FCL",
+  "terminal": "SSA MEXICO",
+  "eta": "2026-10-22",
+  "nota": "CUMPLIDO EL 28 DE OCTUBRE DEL 2026",
+  "semaforo": "verde",
+  "hitos": {
+   "despacho": {
+    "r": "2026-10-28"
+   }
+  }
+ },
+ "MA107/26": {
+  "ref": "MA107/26",
+  "buque": "RIO DE JANEIRO EXPRESS",
+  "viaje": "2637E",
+  "cliente": "JAMES INDUSTRIES MEXICO S.A. DE C.V.",
+  "hbl": "SH2KEEZLO269001",
+  "mbl": "HDMUKHHM98873000",
+  "tipo": "FCL",
+  "terminal": "SSA MEXICO",
+  "eta": "2026-10-27",
+  "nota": "CUMPLIDO EL JUEVES 05 DE NOVIEMBRE 2026",
+  "semaforo": "verde",
+  "hitos": {
+   "despacho": {
+    "r": "2026-11-05"
+   }
+  }
+ },
+ "MA108/26": {
+  "ref": "MA108/26",
+  "buque": "RIO DE JANEIRO EXPRESS",
+  "viaje": "2637E",
+  "cliente": "JAMES INDUSTRIES MEXICO S.A. DE C.V.",
+  "hbl": "HBL: BL: SH2KEEZLO269002 / BL: SH2KEEZLO269003",
+  "mbl": "HDMUKHHM78158900",
+  "tipo": "FCL",
+  "terminal": "SSA MEXICO",
+  "eta": "2026-10-20",
+  "nota": "CUMPLIDO EL MIERCOLES 04 DE NOVIEMBRE 2026",
+  "semaforo": "verde",
+  "hitos": {
+   "despacho": {
+    "r": "2026-11-04"
+   }
+  }
+ },
+ "MA144/26": {
+  "ref": "MA144/26",
+  "buque": "EVER FOND",
+  "viaje": "0803-024E",
+  "cliente": "INDUSTRIAS TROFOS",
+  "hbl": "NBCFF26090539",
+  "mbl": "027G794167",
+  "tipo": "FCL",
+  "mercancia": "MEZCLADORA DE AGUA Y ACEITE",
+  "terminal": "TIMSA",
+  "eta": "2026-11-08",
+  "nota": "PENDIENTE ETA Y REVALIDACION"
+ }
+}

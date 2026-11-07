@@ -41,6 +41,7 @@ async function init() {
   await sinConfirmada();
   await hitosNuevos();
   await importar('2026-10-31', path.join(__dirname, 'seed', 'actualizacion_2026-10-31.json'));
+  await importar('2026-11-07', path.join(__dirname, 'seed', 'actualizacion_2026-11-07.json'));
   if (pool) await pool.query(`CREATE TABLE IF NOT EXISTS opm_archivos (
       id TEXT PRIMARY KEY, embarque TEXT NOT NULL, nombre TEXT NOT NULL, tipo TEXT NOT NULL,
       datos BYTEA NOT NULL, creado TIMESTAMPTZ NOT NULL DEFAULT now())`);
