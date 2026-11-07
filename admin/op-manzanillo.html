@@ -550,7 +550,7 @@ main{padding-bottom:40px}
 .gt2 td.n{color:var(--cel-ico);font-weight:700;text-align:center;width:22px}
 .gt2 .r{text-align:right}.gt2 .c{text-align:center}
 .gt2 tfoot td{border-bottom:0;padding-top:6px}
-.gt2 tfoot td.tot{font-family:var(--f-body);font-size:13.5px;font-weight:800;color:var(--cel-ink);white-space:nowrap;padding:8px 9px 4px 4px;vertical-align:baseline;line-height:1.2;font-variant-numeric:tabular-nums;text-align:right}
+.gt2 tfoot td.tot{display:table-cell;font-family:var(--f-body);font-size:13.5px;font-weight:800;color:var(--cel-ink);white-space:nowrap;padding:8px 10px 4px 4px;vertical-align:baseline;line-height:1.2;font-variant-numeric:tabular-nums;text-align:right}
 .gt2 tfoot td.tot-l{font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--cel-ico);vertical-align:baseline;line-height:1.2;padding:8px 6px 4px}
 .gi{width:100%;box-sizing:border-box;border:1px solid transparent;background:transparent;border-radius:4px;padding:4px 5px;font:inherit;font-size:12px;color:var(--ink)}
 .gi:hover{border-color:var(--line)} .gi:focus{border-color:var(--cel-ico);background:var(--surface);outline:none}
@@ -995,7 +995,7 @@ function renderGas(){
       <td><input class="gi" data-gf="proveedor" value="${esc(g.proveedor||"")}" list="dl-prov" ${dis}></td>
       <td><select class="gi" data-gf="concepto" ${dis}><option value="">—</option>${opcionesConcepto(g.concepto)}</select></td>
       <td><input class="gi det" data-gf="detalle" value="${esc(g.detalle||"")}" title="${esc(g.detalle||"")}" ${dis}></td>
-      <td class="r"><input class="gi r num" data-gf="importe" value="${g.importe!=null?money(+g.importe):""}" inputmode="decimal" ${dis}></td>
+      <td class="r"><input class="gi r num" data-gf="importe" value="${g.importe!=null?"$"+money(+g.importe):""}" inputmode="decimal" ${dis}></td>
       <td><input class="gi" type="date" data-gf="fecha" value="${esc(g.fecha||"")}" ${dis}></td>
       <td class="c"><div class="seg2">${["PUE","PPD"].map(m=>`<button type="button" class="${g.metodo===m?"on "+m.toLowerCase():""}" data-gmet="${m}" ${dis}>${m}</button>`).join("")}</div></td>
       <td class="c">${doc(g,"pdf")}</td><td class="c">${doc(g,"xml")}</td><td class="c">${doc(g,"pago")}</td>
@@ -1070,7 +1070,7 @@ function renderGas(){
 
 /* ---------- drawer: ficha ---------- */
 const LB=2.20462;
-function numero(v){v=String(v==null?"":v).replace(/,/g,"").trim();if(v==="")return null;const n=Number(v);return Number.isFinite(n)&&n>=0?n:null}
+function numero(v){v=String(v==null?"":v).replace(/[$,\s]/g,"").trim();if(v==="")return null;const n=Number(v);return Number.isFinite(n)&&n>=0?n:null}
 const dos=n=>n==null?"":String(Math.round(n*100)/100);
 /* Peso: al escribir kg se calcula lbs y al revés */
 document.addEventListener("input",ev=>{const el=ev.target;if(!el.closest||!el.closest("#drawer"))return;
