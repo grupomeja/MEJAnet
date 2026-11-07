@@ -15,7 +15,7 @@ const HITOS = ['zarpe', 'arribo', 'revalidacion', 'previo', 'despacho', 'retiro'
 const TEXTO = ['ref', 'operacion', 'cliente', 'semaforoFecha', 'bultos', 'tipoCont', 'buque', 'viaje', 'bandera', 'hbl', 'mbl', 'ff', 'tipo', 'previo', 'mercancia', 'marca', 'factura',
   'contenedores', 'terminal', 'claveCR', 'pedimento', 'semaforo', 'estado', 'nota', 'origen', 'origen_puerto', 'creado'];
 const NUM = ['peso', 'diasLibres'];
-const BOOL = ['pedimentoPagado'];
+const BOOL = ['pedimentoPagado', 'gastosCerrada'];
 
 const leer = () => { try { return JSON.parse(fs.readFileSync(FILE, 'utf8')); } catch { return {}; } };
 const escribir = (o) => { fs.mkdirSync(db.DIR, { recursive: true }); fs.writeFileSync(FILE, JSON.stringify(o)); };
@@ -40,6 +40,29 @@ async function init() {
   await sinConfirmada();
   await hitosNuevos();
   await importar('2026-10-31', path.join(__dirname, 'seed', 'actualizacion_2026-10-31.json'));
+  if (pool) await pool.query(`CREATE TABLE IF NOT EXISTS opm_archivos (
+      id TEXT PRIMARY KEY, embarque TEXT NOT NULL, nombre TEXT NOT NULL, tipo TEXT NOT NULL,
+      datos BYTEA NOT NULL, creado TIMESTAMPTZ NOT NULL DEFAULT now())`);
+  await importarGastos('gastos-2026-11-06', path.join(__dirname, 'seed', 'gastos_2026-11-06.json'));
+}
+
+// ---------- Gastos capturados de las tablas de pagos (se agregan una sola vez, sin duplicar) ----------
+async function importarGastos(nombre, archivo) {
+  if (!fs.existsSync(archivo) || await yaAplicada(nombre)) return;
+  const lista = JSON.parse(fs.readFileSync(archivo, 'utf8'));
+  const actuales = Object.fromEntries((await listar()).map((x) => [x.id, x]));
+  let n = 0;
+  for (const [id, filas] of Object.entries(lista)) {
+    const e = actuales[id]; if (!e) { console.log(`OP Manzanillo [${nombre}]: ${id} no existe, se omite`); continue; }
+    const ya = e.gastos || [];
+    const nuevos = filas.filter((f) => !ya.some((g) => (g.factura || '') === f.factura && Math.abs((+g.importe || 0) - f.importe) < 0.01))
+      .map((f, i) => limpiarGasto({ ...f, id: 'g' + Date.now().toString(36) + i + Math.random().toString(36).slice(2, 6), moneda: 'MXN' }));
+    if (!nuevos.length) continue;
+    await cambiar(id, { gastos: ya.concat(nuevos) }); n += nuevos.length;
+    console.log(`OP Manzanillo [${nombre}]: ${e.ref} → ${nuevos.length} gastos`);
+  }
+  await marcarAplicada(nombre);
+  console.log(`OP Manzanillo [${nombre}]: ${n} gastos agregados`);
 }
 
 // ---------- Actualizaciones desde el Excel "REPORTE DE DESPACHOS" ----------
@@ -156,12 +179,19 @@ function limpiarHito(h) {
   if ('hora' in h) o.hora = t(h.hora, 10);
   return o;
 }
+// Referencia a un archivo guardado (PDF o XML de la factura)
+function archivoRef(a) {
+  if (!a || typeof a !== 'object' || !/^[a-z0-9]{8,40}$/i.test(String(a.id || ''))) return null;
+  return { id: String(a.id), nombre: t(a.nombre, 160) };
+}
 function limpiarGasto(g) {
   const imp = parseFloat(String(g.importe ?? '').replace(/,/g, ''));
   return {
     id: t(g.id, 40) || 'g' + Date.now().toString(36),
-    fecha: fecha(g.fecha), concepto: t(g.concepto, 120), proveedor: t(g.proveedor, 120),
+    fecha: fecha(g.fecha), concepto: t(g.concepto, 120), proveedor: t(g.proveedor, 160),
     importe: Number.isFinite(imp) ? imp : 0, moneda: g.moneda === 'USD' ? 'USD' : 'MXN', pagado: !!g.pagado,
+    factura: t(g.factura, 60), detalle: t(g.detalle, 400), metodo: g.metodo === 'PUE' || g.metodo === 'PPD' ? g.metodo : '',
+    uuid: t(g.uuid, 60), pdf: archivoRef(g.pdf), xml: archivoRef(g.xml),
   };
 }
 // Solo pasan los campos conocidos; sirve para altas completas y para cambios parciales.
@@ -262,6 +292,29 @@ function rutas(admin) {
       const nombre = `Reporte de previo ${ref}`.replace(/[\/\\:*?"<>|]+/g, '-') + '.pdf';
       res.set({ 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="${nombre}"`, 'Cache-Control': 'no-store' }).send(buf);
     } catch (e) { err(res, e, 'No se pudo generar el PDF'); }
+  });
+  // PDF / XML de las facturas de gastos (se guardan en la base de datos)
+  const TIPOS_ARCH = { pdf: 'application/pdf', xml: 'application/xml' };
+  r.post('/api/admin/opm/archivos', admin, express.raw({ type: () => true, limit: '12mb' }), async (req, res) => {
+    try {
+      const emb = String(req.query.emb || ''), tipo = String(req.query.tipo || '');
+      if (!idValido(emb) || !TIPOS_ARCH[tipo] || !Buffer.isBuffer(req.body) || !req.body.length) return res.status(400).json({ error: 'Archivo inválido' });
+      const nombre = t(decodeURIComponent(String(req.get('x-nombre') || tipo)), 160) || tipo;
+      const id = Date.now().toString(36) + require('crypto').randomBytes(6).toString('hex');
+      if (pool) await pool.query('INSERT INTO opm_archivos (id, embarque, nombre, tipo, datos) VALUES ($1,$2,$3,$4,$5)', [id, emb, nombre, TIPOS_ARCH[tipo], req.body]);
+      else { const dir = path.join(db.DIR, 'opm_archivos'); fs.mkdirSync(dir, { recursive: true }); fs.writeFileSync(path.join(dir, id), req.body); fs.writeFileSync(path.join(dir, id + '.json'), JSON.stringify({ nombre, tipo: TIPOS_ARCH[tipo] })); }
+      res.json({ id, nombre });
+    } catch (e) { err(res, e, 'No se pudo guardar el archivo'); }
+  });
+  r.get('/api/admin/opm/archivos/:id', admin, async (req, res) => {
+    try {
+      const id = String(req.params.id); if (!/^[a-z0-9]{8,40}$/i.test(id)) return res.status(400).end();
+      let f = null;
+      if (pool) { const q = await pool.query('SELECT nombre, tipo, datos FROM opm_archivos WHERE id = $1', [id]); f = q.rows[0]; }
+      else { const dir = path.join(db.DIR, 'opm_archivos'); if (fs.existsSync(path.join(dir, id))) f = { ...JSON.parse(fs.readFileSync(path.join(dir, id + '.json'), 'utf8')), datos: fs.readFileSync(path.join(dir, id)) }; }
+      if (!f) return res.status(404).json({ error: 'No encontrado' });
+      res.set({ 'Content-Type': f.tipo, 'Content-Disposition': `inline; filename="${String(f.nombre).replace(/[^\w.\- ]+/g, '_')}"`, 'Cache-Control': 'private, max-age=3600' }).send(f.datos);
+    } catch (e) { err(res, e, 'No se pudo leer el archivo'); }
   });
   r.delete('/api/admin/opm/embarques/:id', admin, async (req, res) => {
     if (!idValido(req.params.id)) return res.status(400).json({ error: 'Datos inválidos' });

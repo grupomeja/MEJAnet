@@ -528,6 +528,7 @@ main{padding-bottom:40px}
 .g-bar .seg-tabs button{border:0;background:var(--surface);padding:6px 14px;font:inherit;font-size:13px;cursor:pointer;color:var(--ink-2)}
 .g-bar .seg-tabs button.on{background:var(--ink);color:var(--surface);font-weight:600}
 .g-bar .seg-tabs small{opacity:.7;margin-left:4px}
+.g-addsel{padding:6px 8px;border:1px solid var(--brand);border-radius:6px;background:var(--brand);color:#fff;font:inherit;font-size:12.5px;font-weight:600;max-width:260px}
 .g-q{flex:1;min-width:220px;padding:6px 10px;border:1px solid var(--line);border-radius:6px;font:inherit;font-size:13px;background:var(--surface);color:var(--ink)}
 .g-list{display:flex;flex-direction:column;gap:6px}
 .gref{border:1px solid var(--cel-line);border-radius:8px;background:var(--surface);overflow:hidden}
@@ -944,8 +945,31 @@ if(document.fonts){document.fonts.ready.then(reajustar);document.fonts.addEventL
 const CAT_GASTOS=[["020001", "IMPUESTOS ADUANALES"], ["020002", "SERVICIO EXTRAORDINARIO DE ADUANA"], ["020003", "FLETE"], ["020004", "CRUCE"], ["020005", "CERTIFICACION"], ["020007", "PRIMAS DE SEGUROS O FIANZAS"], ["020009", "VELADORES"], ["020026", "CERTIFICADOS"], ["020028", "MULTAS"], ["020029", "CUSTODIA"], ["020035", "TOMA DE MUESTRA"], ["020037", "SEMARNAP"], ["020050", "DEV. DE SALDOS"], ["020078", "PER DIEM"], ["020079", "DEMORAS"], ["020084", "MANIOBRAS"], ["020086", "ALMACENAJES"], ["020091", "R1 RECTIFICACION AL PEDIMENTO"], ["020092", "FLETE AEREO"], ["020098", "DIAGNOSTICO FITOSANITARIO"], ["020100", "PREVALIDACION POR PEDTO"], ["020102", "MANIOBRAS DE CARGA Y DESCARGA"], ["020108", "MONTACARGAS"], ["020110", "DERECHO DE MUELLAJE"], ["020111", "TRASLADO"], ["020113", "ELABORACION DE ETIQUETAS"], ["020114", "DIVERSOS"], ["020115", "SEGURO DE MERCANCIA"], ["020116", "INSPECCION"], ["020117", "DEMORAS"], ["020118", "LAVADO DE CONTENEDOR"], ["020121", "VALIDACION"], ["020122", "REVALIDACION DOCUMENTOS"], ["020125", "SEGUNDO PREVIO"], ["020127", "ANTICIPOS"], ["020128", "SUBROGACION DE FACTURA NO."], ["020129", "DERECHO DE PISO"], ["020130", "DERECHO DE PISO"], ["020132", "ALMACENAJES"], ["020133", "SERVICIO EXTRAORDINARIO"], ["020143", "CONECTIVIDAD"], ["020144", "SELLOS FISCALES"], ["020147", "FUMIGACION"], ["020150", "PALETAS"], ["020151", "MEJA FORWARDING"], ["020165", "PAGOS DE DERECHOS PRODUCTOS Y APROVECHAMIENTO"], ["020166", "PREVIO"], ["020167", "SEGURIDAD Y MUELLAJE"], ["020168", "DESYCON"]];
 const CAT_NOM=Object.fromEntries(CAT_GASTOS);
 const nomConcepto=c=>CAT_NOM[c]||c||"";
+// Conceptos más usados primero (según los gastos ya capturados), luego el resto en orden alfabético
+let USO_CONC={};
+function contarUso(){USO_CONC={};Object.values(EMB).forEach(e=>(e.gastos||[]).forEach(g=>{if(g.concepto)USO_CONC[g.concepto]=(USO_CONC[g.concepto]||0)+1}))}
+function opcionesConcepto(sel){
+  const o=(c,n)=>`<option value="${esc(c)}" ${sel===c?"selected":""}>${esc(n)}</option>`;
+  const usados=CAT_GASTOS.filter(([c])=>USO_CONC[c]).sort((a,b)=>USO_CONC[b[0]]-USO_CONC[a[0]]).slice(0,10);
+  const resto=CAT_GASTOS.filter(([c])=>!usados.some(u=>u[0]===c)).sort((a,b)=>a[1].localeCompare(b[1],"es"));
+  return (usados.length?`<optgroup label="Más usados">${usados.map(([c,n])=>o(c,n)).join("")}</optgroup><optgroup label="Todos los conceptos">`:"")+resto.map(([c,n])=>o(c,n)).join("")+(usados.length?"</optgroup>":"")
+    +(sel&&!CAT_NOM[sel]?`<option selected>${esc(sel)}</option>`:"");
+}
 function totGastos(e){const t={MXN:0,USD:0,n:0,pdf:0,xml:0,ppd:0,sinFac:0};(e.gastos||[]).forEach(g=>{t[g.moneda||"MXN"]+=+g.importe||0;t.n++;if(g.pdf)t.pdf++;if(g.xml)t.xml++;if(g.metodo==="PPD")t.ppd++;if(!g.factura||/pendiente/i.test(g.factura))t.sinFac++});return t}
+// Lee un XML de CFDI (3.3 / 4.0) y regresa los datos que sirven para el gasto
+function leerCFDI(txt){
+  const d=new DOMParser().parseFromString(txt,"application/xml");
+  const c=d.getElementsByTagNameNS("*","Comprobante")[0];if(!c)return{};
+  const em=d.getElementsByTagNameNS("*","Emisor")[0],tf=d.getElementsByTagNameNS("*","TimbreFiscalDigital")[0];
+  const a=(n,k)=>n&&n.getAttribute(k)||"";
+  const folio=[a(c,"Serie"),a(c,"Folio")].filter(Boolean).join(" ");
+  const tot=parseFloat(a(c,"Total"));
+  return{factura:folio.toUpperCase(),proveedor:a(em,"Nombre").toUpperCase(),importe:isFinite(tot)?tot:"",moneda:a(c,"Moneda")==="USD"?"USD":"",
+    metodo:/^(PUE|PPD)$/.test(a(c,"MetodoPago"))?a(c,"MetodoPago"):"",uuid:a(tf,"UUID").toUpperCase(),fecha:(a(c,"Fecha")||"").slice(0,10)}
+}
 function renderGas(){
+  if(document.activeElement&&document.activeElement.closest&&document.activeElement.closest("#v-gas .gref")&&/INPUT|SELECT/.test(document.activeElement.tagName)){ui.gasPend=true;return}
+  ui.gasPend=false;contarUso();
   const xs=filtered({ignoreEstado:true}).filter(x=>(x.e.gastos||[]).length||ui.gasAdd===x.id);
   const q=(ui.gasQ||"").toUpperCase();
   const tab=ui.gasTab||"abiertas";
@@ -962,7 +986,7 @@ function renderGas(){
       <td class="n">${i+1}</td>
       <td><input class="gi mono ${!g.factura||/pendiente/i.test(g.factura)?"pend":""}" data-gf="factura" value="${esc(g.factura||"")}" placeholder="Pendiente" ${dis}></td>
       <td><input class="gi" data-gf="proveedor" value="${esc(g.proveedor||"")}" list="dl-prov" ${dis}></td>
-      <td><select class="gi" data-gf="concepto" ${dis}><option value="">—</option>${CAT_GASTOS.map(([c,n])=>`<option value="${c}" ${g.concepto===c?"selected":""}>${esc(n)}</option>`).join("")}${g.concepto&&!CAT_NOM[g.concepto]?`<option selected>${esc(g.concepto)}</option>`:""}</select></td>
+      <td><select class="gi" data-gf="concepto" ${dis}><option value="">—</option>${opcionesConcepto(g.concepto)}</select></td>
       <td><input class="gi det" data-gf="detalle" value="${esc(g.detalle||"")}" title="${esc(g.detalle||"")}" ${dis}></td>
       <td class="r"><input class="gi r num" data-gf="importe" value="${g.importe!=null?money(+g.importe):""}" inputmode="decimal" ${dis}></td>
       <td><input class="gi" type="date" data-gf="fecha" value="${esc(g.fecha||"")}" ${dis}></td>
@@ -994,7 +1018,7 @@ function renderGas(){
   <div class="g-bar">
     <div class="seg-tabs"><button type="button" class="${tab==="abiertas"?"on":""}" data-gtab="abiertas">Abiertas <small>${abiertas.length}</small></button><button type="button" class="${tab==="cerradas"?"on":""}" data-gtab="cerradas">Cerradas <small>${cerradas.length}</small></button></div>
     <input class="g-q" id="g-q" placeholder="Buscar referencia, factura, proveedor…" value="${esc(ui.gasQ||"")}">
-    ${canWrite?`<button type="button" class="btn primary sm" id="g-addref">+ Gastos a una referencia</button>`:""}
+    ${canWrite?`<select class="g-addsel" id="g-addref"><option value="">+ Gastos a una referencia…</option>${Object.entries(EMB).filter(([i,e])=>!(e.gastos||[]).length).sort((a,b)=>(b[1].ref||"").localeCompare(a[1].ref||"")).map(([i,e])=>`<option value="${esc(i)}">${esc(e.ref)} · ${esc(e.cliente||"")}</option>`).join("")}</select>`:""}
     <button type="button" class="btn sm" id="g-expand">${lista.every(x=>abiertos.has(x.id))&&lista.length?"Contraer todo":"Expandir todo"}</button>
   </div>
   <div class="g-list">${lista.map(bloque).join("")||`<div class="empty">${tab==="cerradas"?"No hay referencias cerradas.":"No hay referencias con gastos abiertas."}</div>`}</div>`;
@@ -1004,6 +1028,32 @@ function renderGas(){
     if(t.dataset.gtog){const s=ui.gasOpen||(ui.gasOpen=new Set());s.has(t.dataset.gtog)?s.delete(t.dataset.gtog):s.add(t.dataset.gtog);renderGas();return}
     if(t.dataset.gtab){ui.gasTab=t.dataset.gtab;renderGas();return}
     if(t.id==="g-expand"){const s=ui.gasOpen||(ui.gasOpen=new Set());const ids=[...document.querySelectorAll("#v-gas [data-gref]")].map(x=>x.dataset.gref);const all=ids.every(i=>s.has(i));ids.forEach(i=>all?s.delete(i):s.add(i));renderGas()}});
+  const gid=el=>{const tr=el.closest("tr[data-g]"),ref=el.closest("[data-gref]");return{id:ref&&ref.dataset.gref,g:tr&&tr.dataset.g}};
+  const guardarG=(id,gs)=>write(id,{gastos:gs});
+  document.addEventListener("change",ev=>{const el=ev.target;
+    if(el.id==="g-addref"&&el.value){const id=el.value;const gs=(EMB[id].gastos||[]).concat([{id:"g"+Date.now().toString(36),moneda:"MXN",fecha:"",metodo:""}]);(ui.gasOpen||(ui.gasOpen=new Set())).add(id);ui.gasTab="abiertas";guardarG(id,gs);renderGas();return}
+    if(!el.dataset.gf||!el.closest("#v-gas"))return;const {id,g}=gid(el);if(!id)return;
+    const gs=(EMB[id].gastos||[]).map(x=>{if(x.id!==g)return x;let v=el.value;if(el.dataset.gf==="importe")v=numero(v)||0;else if(el.dataset.gf!=="concepto"&&el.dataset.gf!=="fecha")v=v.toUpperCase();return{...x,[el.dataset.gf]:v}});
+    guardarG(id,gs)});
+  document.addEventListener("focusout",ev=>{if(!ev.target.closest||!ev.target.closest("#v-gas"))return;setTimeout(()=>{const a=document.activeElement;if(ui.gasPend&&!(a&&a.closest&&a.closest("#v-gas .gref")&&/INPUT|SELECT/.test(a.tagName)))renderGas()},50)});
+  document.addEventListener("click",async ev=>{const t=ev.target.closest("[data-gmet],[data-gnew],[data-gdel2],[data-gclose],[data-greopen],[data-gup],[data-gdoc]");if(!t||!t.closest("#v-gas"))return;
+    const {id,g}=gid(t);const gs=()=>(EMB[id].gastos||[]).slice();
+    if(t.dataset.gmet){ev.preventDefault();guardarG(id,gs().map(x=>x.id===g?{...x,metodo:x.metodo===t.dataset.gmet?"":t.dataset.gmet}:x));renderGas();return}
+    if(t.dataset.gnew){guardarG(id,gs().concat([{id:"g"+Date.now().toString(36),moneda:"MXN",fecha:"",metodo:""}]));renderGas();return}
+    if(t.dataset.gdel2){if(!confirm("¿Quitar este gasto?"))return;guardarG(id,gs().filter(x=>x.id!==g));renderGas();return}
+    if(t.dataset.gclose){write(id,{gastosCerrada:true});ui.gasOpen.delete(id);toast(EMB[id].ref+" pasó a Cerradas");renderGas();return}
+    if(t.dataset.greopen){write(id,{gastosCerrada:false});toast(EMB[id].ref+" regresó a Abiertas");renderGas();return}
+    if(t.dataset.gdoc){ev.preventDefault();window.open("/api/admin/opm/archivos/"+encodeURIComponent(gs().find(x=>x.id===g)[t.dataset.k].id),"_blank");return}
+    if(t.dataset.gup){const k=t.dataset.k;const inp=document.createElement("input");inp.type="file";inp.accept=k==="pdf"?".pdf,application/pdf":".xml,text/xml,application/xml";
+      inp.onchange=async()=>{const f=inp.files[0];if(!f)return;if(f.size>12e6){toast("El archivo pesa más de 12 MB");return}
+        t.textContent="Subiendo…";try{
+          const r=await fetch("/api/admin/opm/archivos?emb="+encodeURIComponent(id)+"&tipo="+k,{method:"POST",headers:{"Content-Type":"application/octet-stream","x-nombre":encodeURIComponent(f.name)},body:f,credentials:"same-origin"});
+          if(!r.ok)throw new Error("Error "+r.status);const ref=await r.json();
+          let extra={};if(k==="xml"){try{extra=leerCFDI(await f.text())}catch(e){}}
+          guardarG(id,gs().map(x=>{if(x.id!==g)return x;const n={...x,[k]:ref};for(const[c,v]of Object.entries(extra))if(v&&!String(x[c]||"").trim())n[c]=v;if(extra.metodo&&!x.metodo)n.metodo=extra.metodo;return n}));
+          toast(k.toUpperCase()+" guardado"+(Object.keys(extra).length?" · datos tomados del XML":""));renderGas();
+        }catch(e){toast("No se pudo subir: "+e.message);renderGas()}};inp.click();return}
+  });
   document.addEventListener("input",ev=>{if(ev.target.id==="g-q"){ui.gasQ=ev.target.value;const pos=ev.target.selectionStart;renderGas();const q=$("#g-q");q.focus();q.setSelectionRange(pos,pos)}});
 })();
 

@@ -1,0 +1,324 @@
+{
+ "MA122-26": [
+  {
+   "factura": "F 422990",
+   "proveedor": "TIMSA",
+   "concepto": "020122",
+   "detalle": "REVALIDACION Y ENTREGA DE CARGA",
+   "importe": 15636.8,
+   "fecha": "2026-10-30"
+  },
+  {
+   "factura": "F 423277",
+   "proveedor": "TIMSA",
+   "concepto": "020133",
+   "detalle": "RECARGO POR CANCELACION DE CITA DE MERCANCIA",
+   "importe": 3132.0,
+   "fecha": "2026-11-04"
+  },
+  {
+   "factura": "CMS 6326",
+   "proveedor": "CARGO MILLAN SOLUTIONS",
+   "concepto": "020111",
+   "detalle": "TRASLADO LOCAL",
+   "importe": 4816.0,
+   "fecha": "2026-11-05"
+  }
+ ],
+ "MA130-26": [
+  {
+   "factura": "F95540",
+   "proveedor": "LCL PORTS",
+   "concepto": "020121",
+   "detalle": "VALIDACION DE SERVICIO DE DESCONSOLIDACION / NBMZL26054959",
+   "importe": 1160.0,
+   "fecha": "2026-10-30"
+  },
+  {
+   "factura": "F423487",
+   "proveedor": "TIMSA",
+   "concepto": "020122",
+   "detalle": "REVALIDACION Y SALIDA",
+   "importe": 14189.12,
+   "fecha": "2026-11-05"
+  }
+ ],
+ "MA098-26": [
+  {
+   "factura": "9174551",
+   "proveedor": "SSA MEXICO HOLDINGS",
+   "concepto": "020168",
+   "detalle": "PREPROGRAMACION DESYCON AA, IMPO, MRKU9209398",
+   "importe": 9179.61,
+   "fecha": "2026-10-21"
+  },
+  {
+   "factura": "9186699",
+   "proveedor": "SSA MEXICO HOLDINGS",
+   "concepto": "020167",
+   "detalle": "CONTROL ELECTRONICO Y DOCUMENTAL, RECARGO SEGURIDAD, ENTREGA LLENO CAMION 20', MUELLE - PATIO 20', MRKU9209398",
+   "importe": 11637.9,
+   "fecha": "2026-10-27"
+  },
+  {
+   "factura": "9188284",
+   "proveedor": "SSA MEXICO HOLDINGS",
+   "concepto": "020133",
+   "detalle": "PERSONAL ADICIONAL TURNO 1 (8-16)",
+   "importe": 3454.27,
+   "fecha": "2026-10-29"
+  },
+  {
+   "factura": "MNZ 54108",
+   "proveedor": "SERMEL",
+   "concepto": "020084",
+   "detalle": "MANIOBRAS 1ER. RECON. ADUANERO-DESCARGA",
+   "importe": 2455.5,
+   "fecha": "2026-11-03"
+  },
+  {
+   "factura": "",
+   "proveedor": "DAMCO LOGISTICS MEXICO",
+   "concepto": "020102",
+   "detalle": "DESCARGA DE CONTENEDOR VACIO (DE CAMION A PISO)",
+   "importe": 5916.0,
+   "fecha": "2026-10-31"
+  }
+ ],
+ "MA143-26": [
+  {
+   "factura": "461782",
+   "proveedor": "FRIGORIFICO DE MANZANILLO",
+   "concepto": "020121",
+   "detalle": "VALIDACION ELECTRONICA DE DATOS",
+   "importe": 1200.6,
+   "fecha": "2026-10-30"
+  },
+  {
+   "factura": "461810",
+   "proveedor": "FRIGORIFICO DE MANZANILLO",
+   "concepto": "020121",
+   "detalle": "CONTROL ELECTRONICO Y DOCUMENTAL LCL IMPO, ENTREGA LCL",
+   "importe": 7330.04,
+   "fecha": ""
+  }
+ ],
+ "MA139-26": [
+  {
+   "factura": "CM - 5094506",
+   "proveedor": "CONTECON",
+   "concepto": "020166",
+   "detalle": "PREVIO Y SALIDA",
+   "importe": 11795.34,
+   "fecha": "2026-10-27"
+  },
+  {
+   "factura": "PTDP 192076",
+   "proveedor": "PTD LOGISTICS",
+   "concepto": "020102",
+   "detalle": "MANIOBRA DE ENTREGA DE VACIO DFOU1005114 20OT",
+   "importe": 6322.0,
+   "fecha": "2026-10-27"
+  }
+ ],
+ "MA124-26": [
+  {
+   "factura": "F420382",
+   "proveedor": "TIMSA",
+   "concepto": "020166",
+   "detalle": "REVALIDACION PREVIO Y SALIDA",
+   "importe": 14189.12,
+   "fecha": "2026-10-12"
+  },
+  {
+   "factura": "F420742",
+   "proveedor": "TIMSA",
+   "concepto": "020133",
+   "detalle": "RECARGO POR CAMBIO DE HORARIO DE MANIOBRA",
+   "importe": 3607.6,
+   "fecha": "2026-10-14"
+  }
+ ],
+ "MA125-26": [
+  {
+   "factura": "RFE212527",
+   "proveedor": "MANIOBRISTA LA JUNTA",
+   "concepto": "020121",
+   "detalle": "VALIDACION ELECTRONICA DE HBL CS, CONTROL DOCUMENTAL Y DE INFORMACION ELECTRONICA HBL RAF0513837 - HLCUNG12607RPEG2",
+   "importe": 2210.5,
+   "fecha": "2026-10-06"
+  },
+  {
+   "factura": "RFE212845",
+   "proveedor": "MANIOBRISTA LA JUNTA",
+   "concepto": "020166",
+   "detalle": "PREVIO OCULAR CS IMPORTACION, RAF0513837 - HLCUNG12607RPEG2",
+   "importe": 12127.8,
+   "fecha": "2026-10-06"
+  },
+  {
+   "factura": "RFE214641",
+   "proveedor": "MANIOBRISTA LA JUNTA",
+   "concepto": "020102",
+   "detalle": "DE ALMACEN A CAMION CARGA GENERAL, RAF0513837 - HLCUNG12607RPEG2",
+   "importe": 12127.8,
+   "fecha": "2026-10-08"
+  }
+ ],
+ "MA113-26": [
+  {
+   "factura": "BLM-4744",
+   "proveedor": "INTEGRADORA DE APOYOS AL COMERCIO EXTERIOR",
+   "concepto": "020122",
+   "detalle": "LIBERACION DE B/L KEEZLO2608059 Y COSTO DE REPRESENTACION",
+   "importe": 1566.0,
+   "fecha": "2026-09-30"
+  },
+  {
+   "factura": "F419681",
+   "proveedor": "TERMINAL INTERNACIONAL DE MANZANILLO",
+   "concepto": "020166",
+   "detalle": "REVALIDADO, PREVIO, SALIDA Y ALMACENAJE",
+   "importe": 15911.72,
+   "fecha": "2026-10-08"
+  }
+ ],
+ "MA099-26": [
+  {
+   "factura": "F92649",
+   "proveedor": "LCL PORTS",
+   "concepto": "020121",
+   "detalle": "VALIDACION DE SERVICIO DE DESCONSOLIDACION / NBMZL26045894",
+   "importe": 1160.0,
+   "fecha": "2026-10-02"
+  },
+  {
+   "factura": "RFE211100",
+   "proveedor": "MANIOBRISTA LA JUNTA",
+   "concepto": "020121",
+   "detalle": "VALIDACION ELECTRONICA DE HBL CS, CONTROL DOCUMENTAL Y DE INFORMACION ELECTRONICA HBL NBMZL26045894 - HDMUNBOZCWH30100",
+   "importe": 2210.5,
+   "fecha": "2026-10-02"
+  },
+  {
+   "factura": "RFE211677",
+   "proveedor": "MANIOBRISTA LA JUNTA",
+   "concepto": "020166",
+   "detalle": "PREVIO OCULAR CS IMPORTACION, NBMZL26045894 - HDMUNBOZCWH30100",
+   "importe": 12127.8,
+   "fecha": "2026-10-02"
+  },
+  {
+   "factura": "RFE212864",
+   "proveedor": "MANIOBRISTA LA JUNTA",
+   "concepto": "020102",
+   "detalle": "DE ALMACEN A CAMION CARGA GENERAL, NBMZL26045894 - HDMUNBOZCWH30100",
+   "importe": 12127.8,
+   "fecha": "2026-10-06"
+  }
+ ],
+ "MA101-26": [
+  {
+   "factura": "F0018857",
+   "proveedor": "LCL INTERNATIONAL FORWARDING",
+   "concepto": "020121",
+   "detalle": "VALIDACION DE SERVICIOS DE DESCONSOLIDACION / CCFSHMAN26301597",
+   "importe": 1160.0,
+   "fecha": "2026-09-26"
+  },
+  {
+   "factura": "220789",
+   "proveedor": "LOGISTICA PORTUARIA DE MANZANILLO",
+   "concepto": "020122",
+   "detalle": "LIBERACION DOCUMENTAL DE CARGA",
+   "importe": 1160.0,
+   "fecha": "2026-09-28"
+  },
+  {
+   "factura": "A451226",
+   "proveedor": "LOGISTICA PORTUARIA DE MANZANILLO",
+   "concepto": "020084",
+   "detalle": "COORDINACION DE SERVICIOS LOGISTICOS PARA ENTREGA, SERVICIOS LOGISTICOS EN VALIDACION ELECTRONICA POR HOUSE BL",
+   "importe": 24390.16,
+   "fecha": "2026-10-02"
+  },
+  {
+   "factura": "A451413",
+   "proveedor": "LOGISTICA PORTUARIA DE MANZANILLO",
+   "concepto": "020084",
+   "detalle": "COORDINACION DE SERVICIOS LOGISTICOS PARA ENTREGA, SERVICIOS LOGISTICOS POR RESGUARDO PALETIZADA, SERVICIOS LOGISTICOS EN VALIDACION ELECTRONICA POR HOUSE BL",
+   "importe": 44455.84,
+   "fecha": "2026-10-05"
+  }
+ ],
+ "MA114-26": [
+  {
+   "factura": "CM - 5054019",
+   "proveedor": "CONTECON MANZANILLO",
+   "concepto": "020166",
+   "detalle": "RECONOCIMIENTO PREVIO, SALIDA Y ALMACENAJES",
+   "importe": 25921.84,
+   "fecha": "2026-10-02"
+  },
+  {
+   "factura": "MZO26066778",
+   "proveedor": "ISL TRANSPORTES",
+   "concepto": "020102",
+   "detalle": "DESCARGA DE CONTENEDOR VACIO",
+   "importe": 5916.0,
+   "fecha": "2026-10-01"
+  }
+ ],
+ "MA126-26": [
+  {
+   "factura": "460791",
+   "proveedor": "FRIGORIFICO DE MANZANILLO",
+   "concepto": "020121",
+   "detalle": "VALIDACION ELECTRONICA DE DATOS",
+   "importe": 1200.6,
+   "fecha": "2026-10-02"
+  },
+  {
+   "factura": "460822",
+   "proveedor": "FRIGORIFICO DE MANZANILLO",
+   "concepto": "020166",
+   "detalle": "PREVIO OCULAR LCL IMPO",
+   "importe": 6692.04,
+   "fecha": ""
+  },
+  {
+   "factura": "460874",
+   "proveedor": "FRIGORIFICO DE MANZANILLO",
+   "concepto": "020121",
+   "detalle": "CONTROL ELECTRONICO Y DOCUMENTAL LCL IMPO, IVA ENTREGA LCL",
+   "importe": 7330.04,
+   "fecha": ""
+  }
+ ],
+ "MA121-26": [
+  {
+   "factura": "011291354 N",
+   "proveedor": "ASIPONA MANZANILLO",
+   "concepto": "020110",
+   "detalle": "MUELLAJE",
+   "importe": 186.38,
+   "fecha": "2026-10-09"
+  },
+  {
+   "factura": "D1458938",
+   "proveedor": "TIMSA",
+   "concepto": "020166",
+   "detalle": "PREVIO Y DESPACHO",
+   "importe": 18460.0,
+   "fecha": "2026-10-12"
+  },
+  {
+   "factura": "FV 60088",
+   "proveedor": "IMPALA",
+   "concepto": "020102",
+   "detalle": "MANIOBRA DE CAMION A PISO EGSU3170305",
+   "importe": 5862.0,
+   "fecha": "2026-10-14"
+  }
+ ]
+}
