@@ -231,6 +231,9 @@ button.kpi:hover{border-color:var(--ink-3)}
 .tr.s-ye{background:var(--st-ye-soft)} .tr.s-ye>.c-ref{background:var(--st-ye);color:var(--st-ye-ink)}
 .tr.s-az{background:var(--st-az-soft)} .tr.s-az>.c-ref{background:var(--st-az);color:var(--st-az-ink)}
 .tr.s-gr{background:var(--st-gr-soft)} .tr.s-gr.sem-r{background:var(--bad-soft)} .tr.s-gr>.c-ref{background:var(--st-gr);color:var(--st-gr-ink)}
+/* Separación entre filas con color: blanca en Referencia/Cliente y café grisáceo tenue en el resto de la fila */
+.tr.s-or,.tr.s-ye,.tr.s-az,.tr.s-gr{border-top:1px solid var(--sep-fila,rgba(94,78,55,.28))}
+.tr.s-or>.c-ref,.tr.s-ye>.c-ref,.tr.s-az>.c-ref,.tr.s-gr>.c-ref{box-shadow:inset 0 1.5px 0 #fff}
 .tr[class*=" s-"]>.c-ref .b{color:inherit;opacity:.85}
 .swatch{display:inline-block;width:30px;height:16px;border-radius:3px;vertical-align:middle;margin-right:6px;border:1px solid var(--line)}
 .st-pill{display:inline-flex;align-items:center;font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;white-space:nowrap}
