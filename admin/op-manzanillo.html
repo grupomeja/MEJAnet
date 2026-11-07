@@ -562,6 +562,10 @@ td>.gi[type=date]{min-width:118px}
 .seg2 button{border:0;background:var(--surface);font:inherit;font-size:10.5px;font-weight:700;padding:2px 8px;cursor:pointer;color:var(--ink-3)}
 .seg2 button.on.pue{background:#2E8B57;color:#fff} .seg2 button.on.ppd{background:#2F6FD0;color:#fff}
 .doc{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap;text-decoration:none;cursor:pointer;font-family:inherit}
+body.vista-gas .filters{display:none}
+.g-titulo{margin:4px 0 2px;font-family:var(--f-display);font-weight:600;font-size:18px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2)}
+.doc-w{display:inline-flex;align-items:center;gap:2px}
+.doc-x{border:0;background:none;color:var(--bad);font-size:13px;line-height:1;padding:0 2px;cursor:pointer;opacity:.45}.doc-x:hover{opacity:1}
 .doc.ok{background:#E2F2E8;color:#1F6B41;border:1px solid #BFE3CC}
 .doc.falta{background:transparent;color:var(--cel-ico);border:1px dashed var(--cel-ico)}
 .x-g{border:0;background:none;color:var(--bad);font-size:16px;cursor:pointer;opacity:.5}.x-g:hover{opacity:1}
@@ -970,7 +974,8 @@ function leerCFDI(txt){
 function renderGas(){
   if(document.activeElement&&document.activeElement.closest&&document.activeElement.closest("#v-gas .gref")&&/INPUT|SELECT/.test(document.activeElement.tagName)){ui.gasPend=true;return}
   ui.gasPend=false;contarUso();
-  const xs=filtered({ignoreEstado:true}).filter(x=>(x.e.gastos||[]).length||ui.gasAdd===x.id);
+  // Gastos no usa los filtros del tablero: muestra todas las referencias con gastos
+  const xs=Object.entries(EMB).map(([id,e])=>({id,e})).filter(x=>(x.e.gastos||[]).length||ui.gasAdd===x.id);
   const q=(ui.gasQ||"").toUpperCase();
   const tab=ui.gasTab||"abiertas";
   const lista=xs.filter(x=>(tab==="cerradas")===!!x.e.gastosCerrada).filter(x=>!q||[x.e.ref,x.e.cliente,...(x.e.gastos||[]).flatMap(g=>[g.factura,g.proveedor,g.detalle,nomConcepto(g.concepto)])].join(" ").toUpperCase().includes(q))
@@ -981,7 +986,7 @@ function renderGas(){
   const cEnt=Object.entries(byC).sort((a,b)=>b[1]-a[1]);
   const abiertos=ui.gasOpen||(ui.gasOpen=new Set());
   const dis=canWrite?"":"disabled";
-  const doc=(g,k)=>g[k]?`<a class="doc ok" href="#" data-gdoc="${esc(g.id)}" data-k="${k}" title="${esc(g[k].nombre||"")}">${k.toUpperCase()} ✓</a>`:`<button type="button" class="doc falta" data-gup="${esc(g.id)}" data-k="${k}" ${dis}>Subir ${k.toUpperCase()}</button>`;
+  const doc=(g,k)=>g[k]?`<span class="doc-w"><a class="doc ok" href="#" data-gdoc="${esc(g.id)}" data-k="${k}" title="Abrir ${esc(g[k].nombre||"")}">${k.toUpperCase()} ✓</a>${canWrite?`<button type="button" class="doc-x" data-gdocx="${esc(g.id)}" data-k="${k}" title="Quitar ${k.toUpperCase()}" aria-label="Quitar ${k.toUpperCase()}">×</button>`:""}</span>`:`<button type="button" class="doc falta" data-gup="${esc(g.id)}" data-k="${k}" ${dis}>Subir ${k.toUpperCase()}</button>`;
   const fila=(x,g,i)=>`<tr data-g="${esc(g.id)}">
       <td class="n">${i+1}</td>
       <td><input class="gi mono ${!g.factura||/pendiente/i.test(g.factura)?"pend":""}" data-gf="factura" value="${esc(g.factura||"")}" placeholder="Pendiente" ${dis}></td>
@@ -1007,6 +1012,7 @@ function renderGas(){
         <div class="gref-acc">${canWrite?(x.e.gastosCerrada?`<button type="button" class="btn sm" data-greopen="${esc(x.id)}">Reabrir referencia</button>`:`<button type="button" class="btn sm cerrar-ref" data-gclose="${esc(x.id)}">Cerrar referencia</button>`):""}<button type="button" class="btn sm" data-open="${esc(x.id)}">Ver ficha del embarque</button></div></div>`:""}
     </div>`};
   $("#v-gas").innerHTML=`
+  <h2 class="g-titulo">Control de gastos por referencia</h2>
   <div class="g-res">
     <div><span>Referencias abiertas</span><b>${abiertas.length}</b></div>
     <div><span>Total abiertas</span><b>$${money(T.MXN)}</b></div>
@@ -1018,7 +1024,7 @@ function renderGas(){
   <div class="g-bar">
     <div class="seg-tabs"><button type="button" class="${tab==="abiertas"?"on":""}" data-gtab="abiertas">Abiertas <small>${abiertas.length}</small></button><button type="button" class="${tab==="cerradas"?"on":""}" data-gtab="cerradas">Cerradas <small>${cerradas.length}</small></button></div>
     <input class="g-q" id="g-q" placeholder="Buscar referencia, factura, proveedor…" value="${esc(ui.gasQ||"")}">
-    ${canWrite?`<select class="g-addsel" id="g-addref"><option value="">+ Gastos a una referencia…</option>${Object.entries(EMB).filter(([i,e])=>!(e.gastos||[]).length).sort((a,b)=>(b[1].ref||"").localeCompare(a[1].ref||"")).map(([i,e])=>`<option value="${esc(i)}">${esc(e.ref)} · ${esc(e.cliente||"")}</option>`).join("")}</select>`:""}
+    ${canWrite?`<select class="g-addsel" id="g-addref"><option value="">Agregar gasto a una referencia…</option>${Object.entries(EMB).filter(([i,e])=>!(e.gastos||[]).length).sort((a,b)=>(b[1].ref||"").localeCompare(a[1].ref||"")).map(([i,e])=>`<option value="${esc(i)}">${esc(e.ref)} · ${esc(e.cliente||"")}</option>`).join("")}</select>`:""}
     <button type="button" class="btn sm" id="g-expand">${lista.every(x=>abiertos.has(x.id))&&lista.length?"Contraer todo":"Expandir todo"}</button>
   </div>
   <div class="g-list">${lista.map(bloque).join("")||`<div class="empty">${tab==="cerradas"?"No hay referencias cerradas.":"No hay referencias con gastos abiertas."}</div>`}</div>`;
@@ -1036,13 +1042,15 @@ function renderGas(){
     const gs=(EMB[id].gastos||[]).map(x=>{if(x.id!==g)return x;let v=el.value;if(el.dataset.gf==="importe")v=numero(v)||0;else if(el.dataset.gf!=="concepto"&&el.dataset.gf!=="fecha")v=v.toUpperCase();return{...x,[el.dataset.gf]:v}});
     guardarG(id,gs)});
   document.addEventListener("focusout",ev=>{if(!ev.target.closest||!ev.target.closest("#v-gas"))return;setTimeout(()=>{const a=document.activeElement;if(ui.gasPend&&!(a&&a.closest&&a.closest("#v-gas .gref")&&/INPUT|SELECT/.test(a.tagName)))renderGas()},50)});
-  document.addEventListener("click",async ev=>{const t=ev.target.closest("[data-gmet],[data-gnew],[data-gdel2],[data-gclose],[data-greopen],[data-gup],[data-gdoc]");if(!t||!t.closest("#v-gas"))return;
+  document.addEventListener("click",async ev=>{const t=ev.target.closest("[data-gmet],[data-gnew],[data-gdel2],[data-gclose],[data-greopen],[data-gup],[data-gdoc],[data-gdocx]");if(!t||!t.closest("#v-gas"))return;
     const {id,g}=gid(t);const gs=()=>(EMB[id].gastos||[]).slice();
     if(t.dataset.gmet){ev.preventDefault();guardarG(id,gs().map(x=>x.id===g?{...x,metodo:x.metodo===t.dataset.gmet?"":t.dataset.gmet}:x));renderGas();return}
     if(t.dataset.gnew){guardarG(id,gs().concat([{id:"g"+Date.now().toString(36),moneda:"MXN",fecha:"",metodo:""}]));renderGas();return}
     if(t.dataset.gdel2){if(!confirm("¿Quitar este gasto?"))return;guardarG(id,gs().filter(x=>x.id!==g));renderGas();return}
     if(t.dataset.gclose){write(id,{gastosCerrada:true});ui.gasOpen.delete(id);toast(EMB[id].ref+" pasó a Cerradas");renderGas();return}
     if(t.dataset.greopen){write(id,{gastosCerrada:false});toast(EMB[id].ref+" regresó a Abiertas");renderGas();return}
+    if(t.dataset.gdocx){const k=t.dataset.k,x=gs().find(z=>z.id===g);if(!x||!x[k])return;if(!confirm("¿Quitar el "+k.toUpperCase()+" «"+(x[k].nombre||"")+"» de esta factura?"))return;
+      const aid=x[k].id;guardarG(id,gs().map(z=>z.id===g?{...z,[k]:null}:z));api("DELETE","/api/admin/opm/archivos/"+encodeURIComponent(aid)).catch(()=>{});toast(k.toUpperCase()+" quitado");renderGas();return}
     if(t.dataset.gdoc){ev.preventDefault();window.open("/api/admin/opm/archivos/"+encodeURIComponent(gs().find(x=>x.id===g)[t.dataset.k].id),"_blank");return}
     if(t.dataset.gup){const k=t.dataset.k;const inp=document.createElement("input");inp.type="file";inp.accept=k==="pdf"?".pdf,application/pdf":".xml,text/xml,application/xml";
       inp.onchange=async()=>{const f=inp.files[0];if(!f)return;if(f.size>12e6){toast("El archivo pesa más de 12 MB");return}
@@ -1399,7 +1407,8 @@ function syncSeg(){
 function setView(v){ui.view=v;try{localStorage.setItem("om.view",v)}catch(e){}
   document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.v===v)));
   $("#v-ejec").hidden=v!=="ejec";$("#v-seg").hidden=v!=="seg";$("#v-gas").hidden=v!=="gas";
-  $("#f-estado").hidden=v==="ejec";$("#f-orden-w").hidden=v!=="seg";renderAll();}
+  $("#f-estado").hidden=v==="ejec";$("#f-orden-w").hidden=v!=="seg";
+  document.body.classList.toggle("vista-gas",v==="gas");renderAll();}
 function fillSelect(id,vals,cur,all){const s=$(id);const html=`<option value="">${all}</option>`+vals.map(v=>`<option ${v===cur?"selected":""}>${esc(v)}</option>`).join("");if(s.dataset.h!==html){s.innerHTML=html;s.dataset.h=html}s.value=cur}
 function renderAll(){
   fillSelect("#f-cliente",clientes(),ui.cliente,"Todos los clientes");

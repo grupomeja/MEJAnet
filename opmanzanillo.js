@@ -316,6 +316,14 @@ function rutas(admin) {
       res.set({ 'Content-Type': f.tipo, 'Content-Disposition': `inline; filename="${String(f.nombre).replace(/[^\w.\- ]+/g, '_')}"`, 'Cache-Control': 'private, max-age=3600' }).send(f.datos);
     } catch (e) { err(res, e, 'No se pudo leer el archivo'); }
   });
+  r.delete('/api/admin/opm/archivos/:id', admin, async (req, res) => {
+    try {
+      const id = String(req.params.id); if (!/^[a-z0-9]{8,40}$/i.test(id)) return res.status(400).end();
+      if (pool) await pool.query('DELETE FROM opm_archivos WHERE id = $1', [id]);
+      else { const dir = path.join(db.DIR, 'opm_archivos'); for (const f of [id, id + '.json']) if (fs.existsSync(path.join(dir, f))) fs.unlinkSync(path.join(dir, f)); }
+      res.json({ ok: true });
+    } catch (e) { err(res, e, 'No se pudo quitar el archivo'); }
+  });
   r.delete('/api/admin/opm/embarques/:id', admin, async (req, res) => {
     if (!idValido(req.params.id)) return res.status(400).json({ error: 'Datos inválidos' });
     try { (await borrar(req.params.id)) ? res.json({ ok: true }) : res.status(404).json({ error: 'No encontrado' }); }
