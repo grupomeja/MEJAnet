@@ -119,28 +119,16 @@ async function reporteEjecutivo(embs) {
     D.texto(D.corta(s, 7.5, kw - 18), x + 9, y - 40, 7.5, F, GRIS);
   });
   D.y -= 2 * kh + 8 + 16;
-  // Pendientes
-  D.seccion('PENDIENTES DE DOCUMENTACION  (referencias abiertas)');
-  const P = [['Facturas sin PDF', R.pend.pdf, R.nAb], ['Facturas sin XML', R.pend.xml, R.nAb], ['Sin comprobante de pago', R.pend.pago, R.nAb], ['Facturas PPD', R.pend.ppd, null], ['PPD sin complemento', R.pend.comp, R.pend.ppd], ['Sin numero de factura', R.pend.sinFac, R.nAb]];
-  const pw = (AN - 25) / 6;
-  P.forEach(([l, n, de], i) => {
-    const x = M + i * (pw + 5);
-    D.pg.drawRectangle({ x, y: D.y - 40, width: pw, height: 40, borderColor: LIN2, borderWidth: 1 });
-    const s = String(n); D.texto(s, x + (pw - D.ancho(s, 15, FB)) / 2, D.y - 17, 15, FB, n && i !== 3 ? ROJO : OSCURO);
-    const l2 = D.corta(l, 6.8, pw - 6); D.texto(l2, x + (pw - D.ancho(l2, 6.8)) / 2, D.y - 27, 6.8, F, INK);
-    if (de != null) { const d = `de ${de}`; D.texto(d, x + (pw - D.ancho(d, 6.3)) / 2, D.y - 35.5, 6.3, F, GRIS); }
-  });
-  D.y -= 54;
+  const meses = Object.entries(R.mes).sort((a, b) => a[0].localeCompare(b[0])); const mMax = Math.max(1, ...meses.map((m) => m[1]));
+  D.seccion('GASTO POR MES  (fecha de transferencia)');
+  D.tabla([['MES', 0], ['TOTAL', 96, 'r', true], ['', 200]],
+    meses.map(([m, v]) => [m === 'Sin fecha' ? m : `${MESES[+m.slice(5) - 1]} ${m.slice(0, 4)}`, '$' + money(v), '']), { barra: { col: 2, frac: (i) => meses[i][1] / mMax } });
   D.seccion('GASTO POR CLIENTE');
   D.tabla([['CLIENTE', 0], ['REFS', 40, 'c'], ['FACTURAS', 54, 'c'], ['TOTAL', 84, 'r', true], ['%', 44, 'r'], ['', 100]],
     cli.map(([k, o]) => [k, o.refs.size, o.n, '$' + money(o.v), pct(o.v, R.tot).toFixed(1) + '%', '']), { barra: { col: 5, frac: (i) => cli[i][1].v / (cli[0][1].v || 1) } });
   D.seccion('GASTO POR CONCEPTO');
   D.tabla([['CONCEPTO', 0], ['VECES', 44, 'c'], ['TOTAL', 84, 'r', true], ['PROMEDIO', 76, 'r'], ['%', 44, 'r'], ['', 100]],
     con.map(([k, o]) => [k, o.n, '$' + money(o.v), '$' + money(o.v / o.n), pct(o.v, R.tot).toFixed(1) + '%', '']), { barra: { col: 5, frac: (i) => con[i][1].v / (con[0][1].v || 1) } });
-  const meses = Object.entries(R.mes).sort((a, b) => a[0].localeCompare(b[0])); const mMax = Math.max(1, ...meses.map((m) => m[1]));
-  D.seccion('GASTO POR MES  (fecha de transferencia)');
-  D.tabla([['MES', 0], ['TOTAL', 96, 'r', true], ['', 200]],
-    meses.map(([m, v]) => [m === 'Sin fecha' ? m : `${MESES[+m.slice(5) - 1]} ${m.slice(0, 4)}`, '$' + money(v), '']), { barra: { col: 2, frac: (i) => meses[i][1] / mMax } });
   return D.fin();
 }
 
