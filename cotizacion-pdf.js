@@ -186,7 +186,7 @@ async function generarPDFCotizacion(reg, calc, folio) {
       const base = (k) => y - 10.2 - ((n - k) * LH) / 2;   // centra verticalmente columnas con menos renglones
       lc.forEach((l, i) => texto(l, centro(C1, C2), base(lc.length) - i * LH, { size: 7.3, color: GRIS, align: 'center' }));
       ld.forEach((l, i) => texto(l, centro(C2, C3), base(ld.length) - i * LH, { size: 7, color: GRIS, align: 'center' }));
-      texto(`$ ${dinero(p.monto)}`, C4 - 8, base(1), { f: FB, size: 8.3, color: mon === 'USD' ? AZUL : VERDE, align: 'right' });
+      texto(`$ ${dinero(p.monto)}`, C4 - 8, base(1), { f: FB, size: 8.3, color: AZUL, align: 'right' });
       linea(C2, y, C2, y - h); linea(C3, y, C3, y - h);
       y -= h;
       linea(M, y, W - M, y);
@@ -203,7 +203,7 @@ async function generarPDFCotizacion(reg, calc, folio) {
       const x = x0 + i * (anchoSub + 4);
       caja(x, y - 14, anchoSub, 14, SUAVE);
       texto(`Subtotal ${m}`, x + 7, y - 9.8, { size: 7.2, color: GRIS });
-      texto(`${m} $ ${dinero(calc.cargos[m])}`, x + anchoSub - 7, y - 9.8, { f: FB, size: 8.3, align: 'right' });
+      texto(`${m} $ ${dinero(calc.cargos[m])}`, x + anchoSub - 7, y - 9.8, { f: FB, size: 8.3, color: AZUL, align: 'right' });
     });
     y -= 14;
   }
