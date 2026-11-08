@@ -205,34 +205,35 @@ async function fichaEmbarque(e) {
   D.texto(est, M + AN - D.ancho(est, 9.5, FB), D.y - 18, 9.5, FB, CAFE);
   D.y -= 48;
   // Bloques de datos en dos columnas
-  // Cada sección en su propio recuadro con franja de título, para distinguir Datos del embarque y Despacho
+  // Cada sección en su recuadro con franja café; los datos en tabla, igual que Seguimiento y Gastos
   const bloque = (titulo, pares) => {
-    const cw = (AN - 20) / 2, filas = Math.ceil(pares.length / 2);
-    const RH = 22, HH = 18, alto = HH + 8 + filas * RH + 4;
+    const filas = Math.ceil(pares.length / 2), HH = 18, RA = 15, alto = HH + 15 + filas * RA;
     D.espacio(alto + 12);
-    D.pg.drawRectangle({ x: M, y: D.y - alto, width: AN, height: alto, color: SUAVE, borderColor: LIN, borderWidth: 1 });
-    D.pg.drawRectangle({ x: M, y: D.y - HH, width: AN, height: HH, color: OSCURO });
-    D.texto(titulo, M + 10, D.y - 12.5, 9.5, FB, BEIGE);
-    const yIni = D.y; D.y -= HH + 8;
-    const M0 = M + 10;
-    pares.forEach(([l, v], i) => {
-      const x = M0 + (i % 2) * cw, y = D.y - Math.floor(i / 2) * RH;
-      D.texto(l.toUpperCase(), x, y - 7, 6.5, FB, BARRA);
-      D.texto(D.corta(v == null || v === '' ? '-' : String(v), 9.5, cw - 14), x, y - 17.5, 9.5, F, INK);
-      D.pg.drawLine({ start: { x, y: y - 20.5 }, end: { x: x + cw - 12, y: y - 20.5 }, thickness: 0.5, color: LIN2 });
-    });
-    D.y = yIni - alto - 14;
+    const y0 = D.y;
+    D.pg.drawRectangle({ x: M, y: y0 - HH, width: AN, height: HH, color: OSCURO });
+    D.texto(titulo, M + 10, y0 - 12.5, 9.5, FB, BEIGE);
+    D.y -= HH;
+    const filasT = [];
+    for (let i = 0; i < pares.length; i += 2) {
+      const [l1, v1] = pares[i], [l2, v2] = pares[i + 1] || ['', ''];
+      const val = (v) => (v == null || v === '' ? '-' : String(v));
+      filasT.push([l1.toUpperCase(), val(v1), l2 ? l2.toUpperCase() : '', l2 ? val(v2) : '']);
+    }
+    D.tabla([['DATO', 104, '', true], ['VALOR', 0], ['DATO', 104, '', true], ['VALOR', 0]].map((c) => (c[1] ? c : [c[0], (AN - 208) / 2])), filasT, { z: 8.5, alto: RA });
+    D.y += 10; // la tabla deja 10 de margen
+    D.pg.drawRectangle({ x: M, y: D.y, width: AN, height: y0 - D.y, borderColor: LIN, borderWidth: 1 });
+    D.y -= 14;
   };
   const kg = +e.peso || 0;
   bloque('DATOS DEL EMBARQUE', [
-    ['Buque', e.buque], ['Viaje', e.viaje], ['Bandera', e.bandera], ['Terminal / operadora', e.terminal],
-    ['Clave CR', e.claveCR], ['Forwarder / consolidador', e.ff], ['House B/L', e.hbl], ['Master B/L', e.mbl],
-    ['Contenedor no.', e.contenedores], ['Tipo de contenedor', TCONT[e.tipoCont] || e.tipoCont], ['Tipo de operacion', e.operacion], ['Tipo de carga', e.tipo],
+    ['Buque', e.buque], ['Viaje', e.viaje], ['Bandera', e.bandera], ['Terminal', e.terminal],
+    ['Clave CR', e.claveCR], ['Forwarder', e.ff], ['House B/L', e.hbl], ['Master B/L', e.mbl],
+    ['Contenedor no.', e.contenedores], ['Tipo contenedor', TCONT[e.tipoCont] || e.tipoCont], ['Tipo de operacion', e.operacion], ['Tipo de carga', e.tipo],
     ['Mercancia', e.mercancia], ['Bultos', e.bultos], ['Peso (kg)', kg ? kg.toLocaleString('en-US', { maximumFractionDigits: 2 }) : ''], ['Peso (lbs)', kg ? (kg * 2.20462).toLocaleString('en-US', { maximumFractionDigits: 2 }) : ''],
   ]);
   bloque('DESPACHO', [
     ['Pedimento', e.pedimento], ['Pedimento pagado', e.pedimentoPagado ? 'SI' : 'NO'], ['Marca', e.marca], ['Factura', e.factura],
-    ['Dias libres almacenaje', e.diasLibres], ['Tipo de previo', e.previo], ['Semaforo', e.semaforo ? String(e.semaforo).toUpperCase() + (h('despacho').r ? '  ·  ' + fec(h('despacho').r) : '') : ''],
+    ['Dias libres', e.diasLibres], ['Tipo de previo', e.previo], ['Semaforo', e.semaforo ? String(e.semaforo).toUpperCase() + (h('despacho').r ? '  ·  ' + fec(h('despacho').r) : '') : ''],
   ]);
   D.seccion('SEGUIMIENTO DE EMBARQUE');
   D.tabla([['HITO', 0, '', true], ['ESTIMADA', 110, 'c'], ['REAL', 110, 'c'], ['ESTADO', 130, 'c']],
