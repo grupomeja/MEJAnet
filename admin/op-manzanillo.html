@@ -1203,7 +1203,7 @@ function renderDrawerInner(){
       ${HITOS.map((h,i)=>{const hh=hit(e,h.k);const na=!applicable(e,h.k);const isN=a.next===h;
         let st=na?`<span class="muted">No aplica</span>`:hh.r?`<span class="pill ok">Cumplido</span>`:isN?(a.late?`<span class="pill bad">Vencido ${diff(TODAY,a.nd)} d</span>`:`<span class="pill info">Siguiente</span>`):"";
         if(hh.r&&due(hh)&&hh.r>due(hh))st+=` <span class="muted" style="font-size:11.5px">+${diff(hh.r,due(hh))} d</span>`;
-        return `<tr class="${na?"na":""} ${isN?"isnext":""} ${isN&&a.late?"late":""}"><td class="h"><span class="n">${i+1}</span>${esc(h.l)}${hh.hora?` <span class="muted mono">${esc(hh.hora)}</span>`:""}</td>
+        return `<tr class="${na?"na":""} ${isN?"isnext":""} ${isN&&a.late?"late":""}"><td class="h"><span class="n">${i+1}</span>${esc(h.l)}</td>
         ${["e","r"].map(k=>`<td><input type="date" id="h-${h.k}-${k}" data-h="${h.k}" data-k="${k}" value="${esc(hh[k]||"")}" class="${k==="r"&&hh.r?"real":""}" aria-label="${esc(h.l)} ${k==="e"?"estimada":"real"}" ${dis}></td>`).join("")}
         <td class="st">${st}</td></tr>`}).join("")}
       </tbody></table></div></section>
