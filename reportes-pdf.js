@@ -189,3 +189,65 @@ async function reporteReferencias(embs, modo = 'des') {
 }
 
 module.exports = { reporteEjecutivo, reporteReferencias };
+
+// ---------- Ficha de embarque (PDF de una sola referencia) ----------
+const HITOS = [['zarpe', 'Zarpe en origen'], ['arribo', 'Arribo a Manzanillo'], ['revalidacion', 'Revalidacion'], ['previo', 'Previo'], ['despacho', 'Despacho'], ['retiro', 'Retiro de puerto']];
+const TCONT = { '20DC': "20' DC", '20OT': "20' OT", '40DC': "40' DC", '40HC': "40' HC", REEFER: 'REEFER', SUELTA: 'Carga suelta' };
+async function fichaEmbarque(e) {
+  const D = await base('FICHA DE EMBARQUE', `${e.ref || ''}  ·  ${String(e.cliente || 'SIN CLIENTE').toUpperCase()}`, false);
+  const { M, AN, FB, F } = D;
+  const h = (k) => (e.hitos && e.hitos[k]) || {};
+  const noPrevio = /^NO/i.test(e.previo || '');
+  // Encabezado: referencia, cliente, estado
+  D.texto(e.ref || '', M, D.y - 18, 20, FB, OSCURO);
+  D.texto(D.corta(e.cliente || 'Sin cliente', 12, AN - 170, FB), M, D.y - 34, 12, FB, GUINDA);
+  const est = `${String(e.estado || 'activa').toUpperCase()}${e.tipo ? '  ·  ' + e.tipo : ''}${e.operacion ? '  ·  ' + e.operacion : ''}`;
+  D.texto(est, M + AN - D.ancho(est, 9.5, FB), D.y - 18, 9.5, FB, CAFE);
+  D.y -= 48;
+  // Bloques de datos en dos columnas
+  const bloque = (titulo, pares) => {
+    D.seccion(titulo);
+    const cw = AN / 2, filas = Math.ceil(pares.length / 2);
+    const RH = 22;
+    D.espacio(filas * RH);
+    pares.forEach(([l, v], i) => {
+      const x = M + (i % 2) * cw, y = D.y - Math.floor(i / 2) * RH;
+      D.texto(l.toUpperCase(), x, y - 7, 6.5, FB, BARRA);
+      D.texto(D.corta(v == null || v === '' ? '-' : String(v), 9.5, cw - 14), x, y - 17.5, 9.5, F, INK);
+      D.pg.drawLine({ start: { x, y: y - 20.5 }, end: { x: x + cw - 12, y: y - 20.5 }, thickness: 0.5, color: LIN2 });
+    });
+    D.y -= filas * RH + 6;
+  };
+  const kg = +e.peso || 0;
+  bloque('DATOS DEL EMBARQUE', [
+    ['Buque', e.buque], ['Viaje', e.viaje], ['Bandera', e.bandera], ['Terminal / operadora', e.terminal],
+    ['Clave CR', e.claveCR], ['Forwarder / consolidador', e.ff], ['House B/L', e.hbl], ['Master B/L', e.mbl],
+    ['Contenedor no.', e.contenedores], ['Tipo de contenedor', TCONT[e.tipoCont] || e.tipoCont], ['Tipo de operacion', e.operacion], ['Tipo de carga', e.tipo],
+    ['Mercancia', e.mercancia], ['Bultos', e.bultos], ['Peso (kg)', kg ? kg.toLocaleString('en-US', { maximumFractionDigits: 2 }) : ''], ['Peso (lbs)', kg ? (kg * 2.20462).toLocaleString('en-US', { maximumFractionDigits: 2 }) : ''],
+  ]);
+  bloque('DESPACHO', [
+    ['Pedimento', e.pedimento], ['Pedimento pagado', e.pedimentoPagado ? 'SI' : 'NO'], ['Marca', e.marca], ['Factura', e.factura],
+    ['Dias libres almacenaje', e.diasLibres], ['Tipo de previo', e.previo], ['Semaforo', e.semaforo ? String(e.semaforo).toUpperCase() + (h('despacho').r ? '  ·  ' + fec(h('despacho').r) : '') : ''],
+  ]);
+  D.seccion('SEGUIMIENTO DE EMBARQUE');
+  D.tabla([['HITO', 0, '', true], ['ESTIMADA', 110, 'c'], ['REAL', 110, 'c'], ['ESTADO', 130, 'c']],
+    HITOS.map(([k, l]) => {
+      const x = h(k), na = k === 'previo' && noPrevio;
+      return [l, na ? 'No aplica' : fec(x.e) || '-', na ? 'No aplica' : fec(x.r) || '-', na ? 'CUMPLIDO (NO APLICA)' : x.r ? 'CUMPLIDO' : (x.e ? 'PROGRAMADO' : 'PENDIENTE')];
+    }), { z: 8.5, alto: 15, color: (i, k) => (k === 3 ? (HITOS[i][0] === 'previo' && noPrevio) || h(HITOS[i][0]).r ? VERDE : GRIS : null) });
+  if ((e.gastos || []).length) {
+    const tot = e.gastos.reduce((s, g) => s + (+g.importe || 0), 0);
+    D.seccion(`GASTOS  ·  ${e.gastos.length} factura${e.gastos.length === 1 ? '' : 's'}  ·  $${money(tot)}`);
+    D.tabla([['FACTURA', 80, '', true], ['PROVEEDOR', 130], ['CONCEPTO', 0], ['FECHA', 70, 'c'], ['IMPORTE', 80, 'r', true]],
+      e.gastos.map((g) => [g.factura || 'PENDIENTE', g.proveedor, nomC(g.concepto), fec(g.fecha), '$' + money(g.importe)]), { z: 8 });
+  }
+  if (String(e.nota || '').trim()) {
+    D.seccion('NOTAS');
+    const palabras = limpio(e.nota).replace(/\s+/g, ' ').split(' '); let linea = '';
+    const salida = (t) => { D.espacio(14); D.texto(t, M, D.y - 10, 9.5, F, INK); D.y -= 13; };
+    palabras.forEach((p) => { if (D.ancho(linea + ' ' + p, 9.5) > AN && linea) { salida(linea); linea = p; } else linea = linea ? linea + ' ' + p : p; });
+    if (linea) salida(linea);
+  }
+  return D.fin();
+}
+module.exports.fichaEmbarque = fichaEmbarque;

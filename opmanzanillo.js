@@ -285,6 +285,16 @@ function rutas(admin) {
 
   r.get('/op-manzanillo', admin, (_req, res) => res.set('Cache-Control', 'no-store').sendFile(path.join(__dirname, 'admin', 'op-manzanillo.html')));
 
+  // PDF de la ficha de un embarque
+  r.get('/api/admin/opm/embarques/:id/ficha.pdf', admin, async (req, res) => {
+    try {
+      const e = await obtener(req.params.id);
+      if (!e) return res.status(404).json({ error: 'No encontrado' });
+      const buf = await reportes.fichaEmbarque(e);
+      res.set({ 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="FICHA DE EMBARQUE ${String(e.ref || req.params.id).replace(/[\\/:*?"<>|]/g, '-')}.pdf"` });
+      res.send(buf);
+    } catch (e) { err(res, e, 'No se pudo generar la ficha'); }
+  });
   // PDF del Reporte ejecutivo / Reporte por referencia (Control de gastos)
   r.get('/api/admin/opm/reporte/:tipo.pdf', admin, async (req, res) => {
     const gen = { ejecutivo: reportes.reporteEjecutivo, referencias: reportes.reporteReferencias }[req.params.tipo];

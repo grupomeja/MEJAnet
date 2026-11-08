@@ -94,6 +94,7 @@ nav.tabs button[aria-selected="true"]{background:#4A3826;color:#EAE1D3;box-shado
 .btn:hover{border-color:var(--ink-3)}
 .btn.primary{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
 .btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn.cafe{color:#5E4E37;border-color:#5E4E37;text-decoration:none;display:inline-flex;align-items:center}.btn.cafe:hover{background:#F4EDE0}
 .btn.sm{padding:3px 9px;font-size:12.5px}
 .btn:disabled{opacity:.5;cursor:not-allowed}
 
@@ -1126,6 +1127,7 @@ function menuReporteRef(){
     if(b&&b.dataset.rrmodo){ui.reporte="ref";ui.rrModo=b.dataset.rrmodo;ui.open=null;ui.newMode=false;renderDrawer()}});
 }
 document.addEventListener("keydown",ev=>{if(ev.key==="Escape"&&$("#rr-menu"))$("#rr-menu").remove()});
+const BTN_FICHA=id=>`<a class="btn cafe sm" href="/api/admin/opm/embarques/${encodeURIComponent(id)}/ficha.pdf" download>Descargar ficha de embarque</a>`;
 const BTN_PDF=(t,modo)=>`<a class="rp-pdf" href="/api/admin/opm/reporte/${t==="ejecutivo"?"ejecutivo":"referencias"}.pdf${modo?"?modo="+modo:""}" download><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Descargar PDF</a>`;
 function renderReporteRef(){
   const modo=ui.rrModo||"des",nomModo=(RR_MODOS.find(m=>m[0]===modo)||RR_MODOS[0])[1];
@@ -1409,7 +1411,7 @@ function renderDrawerInner(){
       ${t.n?`<span class="${t.pdf<t.n?"warn":""}">PDF ${t.pdf}/${t.n}</span><span class="${t.xml<t.n?"warn":""}">XML ${t.xml}/${t.n}</span>`:""}
       ${e.gastosCerrada?`<span class="ok">Referencia cerrada</span>`:""}
       <button type="button" class="btn sm" id="g-ir">Ver / capturar en Gastos →</button></div></div>`})()}
-    ${canWrite?`<div class="confirm">${ui.confirmDel?`<span>¿Eliminar ${esc(e.ref)} con sus hitos y gastos?</span><button class="btn danger" type="button" id="del-yes">Sí, eliminar</button><button class="btn" type="button" id="del-no">Cancelar</button>`:`<button class="btn danger sm" type="button" id="del-ask">Eliminar embarque</button>`}</div>`:""}
+    ${canWrite?`<div class="confirm">${ui.confirmDel?`<span>¿Eliminar ${esc(e.ref)} con sus hitos y gastos?</span><button class="btn danger" type="button" id="del-yes">Sí, eliminar</button><button class="btn" type="button" id="del-no">Cancelar</button>`:`<button class="btn danger sm" type="button" id="del-ask">Eliminar embarque</button>${BTN_FICHA(ui.open)}`}</div>`:`<div class="confirm">${BTN_FICHA(ui.open)}</div>`}
   </div>
   <datalist id="dl-term">${["TIMSA","CONTECON","SSA MEXICO","OCUPA","CORPORACION MULTIMODAL","COMERCIALIZADORA LA JUNTA","TAP","FRIMAN","HAZESA"].map(t=>`<option value="${t}">`).join("")}</datalist>
   <datalist id="dl-cli">${clientes().map(c=>`<option value="${esc(c)}">`).join("")}</datalist>`;
