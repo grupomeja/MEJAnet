@@ -624,7 +624,8 @@ td>.gi[type=date]{min-width:118px}
 .seg2 button.on.pue{background:#2E8B57;color:#fff} .seg2 button.on.ppd{background:#2F6FD0;color:#fff}
 .doc{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap;text-decoration:none;cursor:pointer;font-family:inherit}
 body.vista-gas .filters,body.vista-gas #b-nuevo{display:none}
-.g-titulo{margin:4px 0 2px;font-family:var(--f-display);font-weight:600;font-size:28px;letter-spacing:.04em;text-transform:uppercase;color:var(--st-or);text-align:center}
+.g-titulo{display:flex;align-items:center;gap:18px;margin:12px 0 6px;font-family:var(--f-body);font-weight:800;font-size:15px;line-height:1;letter-spacing:.32em;text-transform:uppercase;color:#7A1C1C;text-align:left;white-space:nowrap}
+.g-titulo::after{content:"";flex:1;height:1px;background:rgba(122,28,28,.18)}
 .doc-w{display:inline-flex;align-items:center;gap:2px}
 .doc-x{border:0;background:none;color:var(--bad);font-size:13px;line-height:1;padding:0 2px;cursor:pointer;opacity:.45}.doc-x:hover{opacity:1}
 .doc.ok{background:#E2F2E8;color:#1F6B41;border:1px solid #BFE3CC}
@@ -687,7 +688,7 @@ body.vista-gas .filters,body.vista-gas #b-nuevo{display:none}
   .tr .c-next .nx{justify-content:flex-end;flex-wrap:wrap}
   .tr .c-bq .a,.tr .c-bq .b{white-space:normal}
   /* Gastos */
-  .g-titulo{font-size:20px}
+  .g-titulo{font-size:13px;letter-spacing:.22em;gap:12px}
   .g-res>div{min-width:0;flex:1 1 140px}
   .g-conc{min-width:0;flex-basis:100%}
   .g-q{min-width:0;flex-basis:100%}
@@ -1245,7 +1246,7 @@ function renderGas(){
         <div class="gref-acc">${vacia?`<button type="button" class="btn sm" data-gquitar="${esc(x.id)}" style="color:var(--bad);margin-right:auto">× Quitar referencia de Gastos</button>`:""}${canWrite?(x.e.gastosCerrada?`<button type="button" class="btn sm" data-greopen="${esc(x.id)}">Reabrir referencia</button>`:`<button type="button" class="btn sm cerrar-ref" data-gclose="${esc(x.id)}">Cerrar referencia</button>`):""}<button type="button" class="btn sm" data-open="${esc(x.id)}">Ver ficha del embarque</button></div></div>`:""}
     </div>`};
   $("#v-gas").innerHTML=`
-  <h2 class="g-titulo">Control de gastos por referencia</h2>
+  <h2 class="g-titulo">Control de gastos</h2>
   <div class="g-st">
     <div class="g-kpi"><span>Gasto total</span><b>$${money(S.tot)}</b></div>
     <div class="g-kpi"><span>Cliente con mayor gasto</span><b>$${money(topCli[1])}</b><i title="${esc(topCli[0])}">${esc(topCli[0])}</i></div>
