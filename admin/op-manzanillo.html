@@ -522,19 +522,40 @@ main{padding-bottom:40px}
 
 /* ---------- Gastos v2: control por referencia ---------- */
 #v-gas{gap:10px}
-.g-st{display:grid;grid-template-columns:repeat(3,minmax(150px,auto)) minmax(200px,auto) minmax(300px,1fr);gap:8px;align-items:stretch}
-.g-st>div{background:linear-gradient(180deg,var(--cel-bg1),var(--cel-bg2));border:1px solid var(--cel-line);border-radius:8px;padding:5px 11px;min-width:0;display:flex;flex-direction:column;height:66px}
+.rp .rp-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.rp-k{background:linear-gradient(180deg,var(--cel-bg1),var(--cel-bg2));border:1px solid var(--cel-line);border-radius:8px;padding:7px 12px;display:flex;flex-direction:column;min-width:0}
+.rp-k span{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--cel-ico)}
+.rp-k b{font-family:"Oswald","Arial Narrow",system-ui,sans-serif;font-size:21px;font-weight:600;color:var(--cel-ink);font-variant-numeric:tabular-nums;line-height:1.2}
+.rp-k i{font-style:normal;font-size:11px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rp-card{padding:10px 12px}.rp-h{font-family:"Oswald","Arial Narrow",system-ui,sans-serif;font-size:14px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--cel-ink);margin:0 0 6px}.rp-h small{font-family:var(--f-body);font-size:10.5px;letter-spacing:0;text-transform:none;color:var(--ink-3,#999);font-weight:500}
+.rp-pend{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.rp-p{border:1px solid var(--line);border-radius:8px;padding:6px 8px;text-align:center;display:flex;flex-direction:column}.rp-p b{font-family:"Oswald","Arial Narrow",system-ui,sans-serif;font-size:20px;color:var(--cel-ink);line-height:1.1}.rp-p.w b{color:var(--bad)}
+.rp-p span{font-size:10.5px;color:var(--ink-2);line-height:1.2}.rp-p i{font-style:normal;font-size:10px;color:var(--ink-3,#999)}
+.rp-2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
+.rp-t{width:100%;border-collapse:collapse;font-size:12px}.rp-t th{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--cel-ico);text-align:left;padding:4px 6px;border-bottom:1px solid var(--cel-line);white-space:nowrap}
+.rp-t td{padding:4px 6px;border-bottom:1px solid var(--line);vertical-align:middle}.rp-t tr:last-child td{border-bottom:0}
+.rp-t .r{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}.rp-t .c{text-align:center}.rp-t .b{font-weight:700;color:var(--cel-ink)}
+.rp-t td.bar{width:90px}.rp-t td:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}.rp-t{table-layout:auto}
+.rp-t a{color:var(--brand);font-weight:700;text-decoration:none}.rp-t a:hover{text-decoration:underline}
+.rp-tit{font-family:"Oswald","Arial Narrow",system-ui,sans-serif;text-transform:uppercase;letter-spacing:1px}.rp-t td.trunc{max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rb{display:block;height:6px;background:rgba(94,78,55,.12);border-radius:3px;overflow:hidden}.rb s{display:block;height:100%;background:var(--cel-ico);border-radius:3px}
+@media (max-width:820px){.rp .rp-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.rp-pend{grid-template-columns:repeat(3,minmax(0,1fr))}.rp-2{grid-template-columns:1fr}}
+.g-st{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,1.25fr) auto;gap:8px;align-items:stretch}
+.g-st>div{background:linear-gradient(180deg,var(--cel-bg1),var(--cel-bg2));border:1px solid var(--cel-line);border-radius:8px;padding:4px 12px;min-width:0;display:flex;flex-direction:column;justify-content:center;height:52px}
 .g-st span{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--cel-ico);white-space:nowrap}
 .g-kpi b{font-family:"Oswald","Arial Narrow",system-ui,sans-serif;font-size:19px;font-weight:600;color:var(--cel-ink);line-height:1.15;font-variant-numeric:tabular-nums}
-.g-kpi i{font-style:normal;font-size:11px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:230px}
-.g-pend>div{display:grid;grid-template-columns:auto auto auto;gap:1px 10px;margin-top:3px}
+.g-kpi{display:grid!important;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:10px;align-content:center}.g-kpi span{grid-column:1/-1}
+.g-kpi i{font-style:normal;font-size:11px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;align-self:center;padding-top:3px}
+.g-repbtn{display:flex;align-items:center;gap:7px;background:var(--cel-ink,#4A3826);color:#EAE1D3;border:0;border-radius:8px;padding:0 16px;font:inherit;font-size:12.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;white-space:nowrap}
+.g-repbtn:hover{filter:brightness(1.15)}
+.g-pend>div{display:flex;flex-wrap:wrap;gap:1px 14px;margin-top:2px}
 .g-pend em{font-style:normal;font-size:11px;color:var(--ink-2);white-space:nowrap}.g-pend em b{font-size:12.5px;color:var(--cel-ink);margin-left:2px}.g-pend em.w b{color:var(--bad)}
 .g-con>div{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));grid-auto-rows:16px;gap:1px 14px;overflow-y:auto;height:33px;margin-top:4px;padding-right:4px}
 .g-con p{margin:0;display:grid;grid-template-columns:minmax(0,1fr) 46px auto;align-items:center;gap:6px;font-size:11px;line-height:1.45}
 .g-con p em{font-style:normal;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .g-con p u{display:block;height:5px;background:rgba(94,78,55,.12);border-radius:3px;overflow:hidden}.g-con p s{display:block;height:100%;background:var(--cel-ico);border-radius:3px}
 .g-con p b{font-weight:700;color:var(--cel-ink);font-variant-numeric:tabular-nums;text-align:right;min-width:72px}
-@media (max-width:1100px){.g-st{grid-template-columns:repeat(2,minmax(0,1fr))}.g-st>.g-con{grid-column:1/-1;height:auto;max-height:110px}}
+@media (max-width:1100px){.g-st{grid-template-columns:repeat(2,minmax(0,1fr))}.g-repbtn{justify-content:center;min-height:40px}}
 .g-res{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px}
 .g-res>div{background:linear-gradient(180deg,var(--cel-bg1),var(--cel-bg2));border:1px solid var(--cel-line);border-radius:8px;padding:6px 12px;display:flex;flex-direction:column;min-width:120px}
 .g-res>div span{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--cel-ico)}
@@ -1063,6 +1084,53 @@ function leerCFDI(txt){
   return{factura:folio.toUpperCase(),proveedor:a(em,"Nombre").toUpperCase(),importe:isFinite(tot)?tot:"",moneda:a(c,"Moneda")==="USD"?"USD":"",
     metodo:/^(PUE|PPD)$/.test(a(c,"MetodoPago"))?a(c,"MetodoPago"):"",uuid:a(tf,"UUID").toUpperCase(),fecha:(a(c,"Fecha")||"").slice(0,10)}
 }
+function renderReporte(){
+  const xs=Object.entries(EMB).map(([id,e])=>({id,e})).filter(x=>(x.e.gastos||[]).length);
+  const pct=(v,t)=>t?(v/t*100):0;
+  const R={tot:0,ab:0,ce:0,n:0,refsAb:0,refsCe:0,cli:{},con:{},prov:{},mes:{},pend:{pdf:0,xml:0,pago:0,ppd:0,comp:0,sinFac:0},refs:[]};
+  xs.forEach(x=>{const ce=!!x.e.gastosCerrada;ce?R.refsCe++:R.refsAb++;let tr=0;
+    (x.e.gastos||[]).forEach(g=>{const v=+g.importe||0;tr+=v;R.tot+=v;R.n++;ce?R.ce+=v:R.ab+=v;
+      const c=x.e.cliente||"Sin cliente",o=R.cli[c]||(R.cli[c]={v:0,n:0,refs:new Set()});o.v+=v;o.n++;o.refs.add(x.id);
+      const k=nomConcepto(g.concepto)||"Sin concepto",q=R.con[k]||(R.con[k]={v:0,n:0});q.v+=v;q.n++;
+      const p=(g.proveedor||"Sin proveedor").trim(),w=R.prov[p]||(R.prov[p]={v:0,n:0});w.v+=v;w.n++;
+      const m=(g.fecha||"").slice(0,7)||"Sin fecha";R.mes[m]=(R.mes[m]||0)+v;
+      if(!ce){if(!g.pdf)R.pend.pdf++;if(!g.xml)R.pend.xml++;if(!g.pago)R.pend.pago++;if(g.metodo==="PPD"){R.pend.ppd++;if(!(g.cpdf&&g.cxml))R.pend.comp++}if(!g.factura||/pendiente/i.test(g.factura))R.pend.sinFac++}});
+    const t=totGastos(x.e);R.refs.push({x,v:tr,t,ce})});
+  const orden=o=>Object.entries(o).sort((a,b)=>b[1].v-a[1].v);
+  const barra=(v,max)=>`<u class="rb"><s style="width:${Math.max(2,pct(v,max)).toFixed(1)}%"></s></u>`;
+  const tabla=(tit,cols,filas)=>`<div class="card rp-card"><h3 class="rp-h">${tit}</h3><div class="scroll"><table class="rp-t"><thead><tr>${cols.map(c=>`<th class="${c[1]||""}">${c[0]}</th>`).join("")}</tr></thead><tbody>${filas||`<tr><td colspan="${cols.length}" class="muted">Sin datos</td></tr>`}</tbody></table></div></div>`;
+  const cli=orden(R.cli),con=orden(R.con),prov=orden(R.prov).slice(0,15),refs=R.refs.sort((a,b)=>b.v-a.v);
+  const conN=Object.entries(R.con).filter(([k])=>k!=="Sin concepto").sort((a,b)=>b[1].n-a[1].n)[0];
+  const MES=["ENE","FEB","MAR","ABR","MAY","JUN","JUL","AGO","SEP","OCT","NOV","DIC"];
+  const meses=Object.entries(R.mes).sort((a,b)=>a[0].localeCompare(b[0])),mMax=Math.max(1,...meses.map(m=>m[1]));
+  const kpi=(l,v,s)=>`<div class="rp-k"><span>${l}</span><b>${v}</b>${s?`<i>${s}</i>`:""}</div>`;
+  const pend=(l,n,tot)=>`<div class="rp-p ${n?"w":""}"><b>${n}</b><span>${l}</span>${tot!=null?`<i>de ${tot}</i>`:""}</div>`;
+  const nAb=R.refs.filter(r=>!r.ce).reduce((a,r)=>a+r.t.n,0);
+  $("#drawer").innerHTML=`
+  <div class="dh"><div class="id"><div class="refbig rp-tit">Reporte ejecutivo</div><div class="cli">Control de gastos por referencia</div>
+    <div class="meta"><span class="pill">${fd(TODAY)}</span><span class="pill">${xs.length} referencias · ${R.n} facturas</span></div></div>
+    <button class="x" type="button" data-close aria-label="Cerrar">×</button></div>
+  <div class="db rp">
+    <div class="rp-kpis">
+      ${kpi("Gasto total","$"+money(R.tot),`${xs.length} referencias`)}
+      ${kpi("Referencias abiertas","$"+money(R.ab),`${R.refsAb} referencia${R.refsAb===1?"":"s"}`)}
+      ${kpi("Referencias cerradas","$"+money(R.ce),`${R.refsCe} referencia${R.refsCe===1?"":"s"}`)}
+      ${kpi("Promedio por referencia","$"+money(xs.length?R.tot/xs.length:0),`${R.n} facturas · prom. factura $${money(R.n?R.tot/R.n:0)}`)}
+      ${kpi("Cliente con mayor gasto",cli[0]?"$"+money(cli[0][1].v):"—",cli[0]?esc(cli[0][0])+` · ${pct(cli[0][1].v,R.tot).toFixed(1)}%`:"")}
+      ${kpi("Concepto más utilizado",conN?"$"+money(conN[1].v):"—",conN?esc(conN[0])+` · ${conN[1].n} ${conN[1].n===1?"vez":"veces"}`:"")}
+    </div>
+    <div class="card rp-card"><h3 class="rp-h">Pendientes de documentación <small>(referencias abiertas)</small></h3><div class="rp-pend">
+      ${pend("Facturas sin PDF",R.pend.pdf,nAb)}${pend("Facturas sin XML",R.pend.xml,nAb)}${pend("Sin comprobante de pago",R.pend.pago,nAb)}${pend("Facturas PPD",R.pend.ppd)}${pend("PPD sin complemento",R.pend.comp,R.pend.ppd)}${pend("Sin número de factura",R.pend.sinFac,nAb)}
+    </div></div>
+    ${tabla("Gasto por cliente",[["Cliente"],["Refs","c"],["Facturas","c"],["Total","r"],["%","r"],["",""]],cli.map(([k,o])=>`<tr><td title="${esc(k)}">${esc(k)}</td><td class="c">${o.refs.size}</td><td class="c">${o.n}</td><td class="r b">$${money(o.v)}</td><td class="r">${pct(o.v,R.tot).toFixed(1)}%</td><td class="bar">${barra(o.v,cli[0][1].v)}</td></tr>`).join(""))}
+    ${tabla("Gasto por concepto",[["Concepto"],["Veces","c"],["Total","r"],["Promedio","r"],["%","r"],["",""]],con.map(([k,o])=>`<tr><td>${esc(k)}</td><td class="c">${o.n}</td><td class="r b">$${money(o.v)}</td><td class="r">$${money(o.v/o.n)}</td><td class="r">${pct(o.v,R.tot).toFixed(1)}%</td><td class="bar">${barra(o.v,con[0][1].v)}</td></tr>`).join(""))}
+    <div class="rp-2">
+    ${tabla("Gasto por mes <small>(fecha de transferencia)</small>",[["Mes"],["Total","r"],["",""]],meses.map(([m,v])=>`<tr><td>${m==="Sin fecha"?m:MES[+m.slice(5)-1]+" "+m.slice(0,4)}</td><td class="r b">$${money(v)}</td><td class="bar">${barra(v,mMax)}</td></tr>`).join(""))}
+    ${tabla("Principales proveedores",[["Proveedor"],["Facturas","c"],["Total","r"],["",""]],prov.map(([k,o])=>`<tr><td title="${esc(k)}">${esc(k)}</td><td class="c">${o.n}</td><td class="r b">$${money(o.v)}</td><td class="bar">${barra(o.v,prov[0][1].v)}</td></tr>`).join(""))}
+    </div>
+    ${tabla("Gasto por referencia",[["Referencia"],["Cliente"],["Fact.","c"],["Total","r"],["Estado","c"]],refs.map(r=>`<tr><td class="mono"><a href="#" data-open="${esc(r.x.id)}">${esc(r.x.e.ref)}</a></td><td class="trunc">${esc(r.x.e.cliente||"")}</td><td class="c">${r.t.n}</td><td class="r b">$${money(r.v)}</td><td class="c">${r.ce?`<span class="pill">Cerrada</span>`:`<span class="pill info">Abierta</span>`}</td></tr>`).join(""))}
+  </div>`;
+}
 function gastoVacio(g){return !["factura","proveedor","concepto","detalle","uuid","fecha"].some(k=>String(g[k]||"").trim())&&!(+g.importe)&&!g.pdf&&!g.xml&&!g.pago}
 function renderGas(){
   if(document.activeElement&&document.activeElement.closest&&document.activeElement.closest("#v-gas .gref")&&/INPUT|SELECT/.test(document.activeElement.tagName)){ui.gasPend=true;return}
@@ -1114,12 +1182,12 @@ function renderGas(){
   $("#v-gas").innerHTML=`
   <h2 class="g-titulo">Control de gastos por referencia</h2>
   <div class="g-st">
-    <div class="g-kpi"><span>Gasto total</span><b>$${money(S.tot)}</b><i>${xs.length} ref. · abiertas $${money(T.MXN)}</i></div>
+    <div class="g-kpi"><span>Gasto total</span><b>$${money(S.tot)}</b></div>
     <div class="g-kpi"><span>Cliente con mayor gasto</span><b>$${money(topCli[1])}</b><i title="${esc(topCli[0])}">${esc(topCli[0])}</i></div>
     <div class="g-kpi"><span>Concepto más utilizado</span><b>$${money(topCon[1].v)}</b><i title="${esc(topCon[0])}">${esc(topCon[0])} · ${topCon[1].n} ${topCon[1].n===1?"vez":"veces"}</i></div>
     <div class="g-pend"><span>Pendientes (abiertas)</span>
       <div><em class="${T.n-T.pdf?"w":""}">PDF <b>${T.n-T.pdf}</b></em><em class="${T.n-T.xml?"w":""}">XML <b>${T.n-T.xml}</b></em><em class="${T.n-T.pago?"w":""}">Pagos <b>${T.n-T.pago}</b></em><em>PPD <b>${T.ppd}</b></em><em class="${T.sinFac?"w":""}">Sin factura <b>${T.sinFac}</b></em></div></div>
-    <div class="g-con"><span>Por concepto</span><div>${conAll.map(([k,o])=>`<p title="${esc(k)} · ${o.n} factura${o.n===1?"":"s"}"><em>${esc(k)}</em><u><s style="width:${Math.max(4,o.v/conMax*100).toFixed(1)}%"></s></u><b>$${money(o.v)}</b></p>`).join("")||"—"}</div></div>
+    <button type="button" class="g-repbtn" id="b-repej"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>Reporte ejecutivo</button>
   </div>
   <div class="g-bar">
     <div class="seg-tabs"><button type="button" class="${tab==="abiertas"?"on":""}" data-gtab="abiertas">Abiertas <small>${abiertas.length}</small></button><button type="button" class="${tab==="cerradas"?"on":""}" data-gtab="cerradas">Cerradas <small>${cerradas.length}</small></button></div>
@@ -1193,9 +1261,10 @@ document.addEventListener("focusout",ev=>{if(!ev.target.closest||!ev.target.clos
 function isEditing(){const ae=document.activeElement;return !!(ae&&ae.closest&&ae.closest("#drawer")&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName))}
 function renderDrawerInner(){
   const d=$("#drawer");
-  if(!ui.open&&!ui.newMode){d.hidden=true;$("#scrim").hidden=true;document.documentElement.classList.remove("ficha-abierta");return}
+  if(!ui.open&&!ui.newMode&&!ui.reporte){d.hidden=true;$("#scrim").hidden=true;document.documentElement.classList.remove("ficha-abierta");return}
   d.hidden=false;$("#scrim").hidden=false;document.documentElement.classList.add("ficha-abierta");
   if(ui.newMode){renderNew();return}
+  if(ui.reporte&&!ui.open){renderReporte();return}
   const e=EMB[ui.open];if(!e){d.innerHTML=`<div class="dh"><div class="id"><div class="refbig">Embarque no encontrado</div></div><button class="x" data-close>×</button></div>`;return}
   const a=analyze(e);
   const dis=canWrite?"":"disabled";
@@ -1455,12 +1524,13 @@ document.addEventListener("click",ev=>{
   if(t.matches("nav.tabs button")){setView(t.dataset.v);return}
   if(t.dataset.go){ui.estado=t.dataset.est||"activa";syncSeg();setView(t.dataset.go);return}
   if(t.dataset.fil){ui[t.dataset.fil]=t.dataset.val==="Sin asignar"||t.dataset.val==="Sin cliente"?"":t.dataset.val;$("#f-"+t.dataset.fil).value=ui[t.dataset.fil];setView("seg");return}
-  if(t.dataset.open){ui.open=t.dataset.open;ui.newMode=false;ui.confirmDel=false;renderDrawer();return}
+  if(t.dataset.open){ui.reporte=false;ui.open=t.dataset.open;ui.newMode=false;ui.confirmDel=false;renderDrawer();return}
   if(t.id==="b-previo"&&ui.open){abrirPrevio(ui.open);return}
   if(t.id==="g-ir"&&ui.open){const id=ui.open;(ui.gasOpen||(ui.gasOpen=new Set())).add(id);ui.gasTab=EMB[id].gastosCerrada?"cerradas":"abiertas";ui.gasAdd=id;ui.open=null;renderDrawer();setView("gas");return}
-  if(t.hasAttribute("data-close")){ui.open=null;ui.newMode=false;renderDrawer();return}
+  if(t.hasAttribute("data-close")){ui.open=null;ui.newMode=false;ui.reporte=false;renderDrawer();return}
   if(t.closest("#f-estado")&&t.dataset.e!==undefined){ui.estado=t.dataset.e;syncSeg();renderAll();return}
   if(t.closest("#f-tipo")&&t.dataset.t!==undefined){ui.tipo=t.dataset.t;syncSeg();renderAll();return}
+  if(t.id==="b-repej"){ui.reporte=true;ui.open=null;ui.newMode=false;renderDrawer();return}
   if(t.id==="n-asig"){const m=$("#n-asig-m");t.disabled=true;m.textContent="Consultando el control de referencias…";
     api("GET","/api/admin/opm/siguiente-ref").then(r=>{$("#n-ref").value=r.ref;m.textContent="Consecutivo de MANZANILLO 26 · se registra al crear el embarque"}).catch(e=>{m.textContent=e.message}).finally(()=>{t.disabled=false});return}
   if(t.id==="b-nuevo"){if(!canWrite){toast("Este tablero es de solo lectura para ti");return}ui.newMode=true;ui.open=null;renderDrawer();return}
@@ -1472,7 +1542,7 @@ document.addEventListener("click",ev=>{
   if(t.dataset.gpay){const e=EMB[ui.open];write(ui.open,{gastos:(e.gastos||[]).map(g=>g.id===t.dataset.gpay?{...g,pagado:!g.pagado}:g)});return}
 });
 $("#scrim").addEventListener("click",()=>{ui.open=null;ui.newMode=false;renderDrawer()});
-document.addEventListener("keydown",ev=>{if(ev.key==="Escape"&&(ui.open||ui.newMode)){ui.open=null;ui.newMode=false;renderDrawer()}});
+document.addEventListener("keydown",ev=>{if(ev.key==="Escape"&&(ui.open||ui.newMode||ui.reporte)){ui.open=null;ui.newMode=false;ui.reporte=false;renderDrawer()}});
 document.addEventListener("change",ev=>{
   const el=ev.target;
   if(el.id==="f-cliente"){ui.cliente=el.value;renderAll();return}
