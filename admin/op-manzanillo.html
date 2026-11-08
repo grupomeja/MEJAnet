@@ -1190,7 +1190,7 @@ function renderReporte(){
       ${kpi("Cliente con mayor gasto",cli[0]?"$"+money(cli[0][1].v):"—",cli[0]?esc(cli[0][0])+` · ${pct(cli[0][1].v,R.tot).toFixed(1)}%`:"")}
       ${kpi("Concepto más utilizado",conN?"$"+money(conN[1].v):"—",conN?esc(conN[0])+` · ${conN[1].n} ${conN[1].n===1?"vez":"veces"}`:"")}
     </div>
-    ${tabla("Gasto por mes <small>(fecha de transferencia)</small>",[["Mes"],["Total","r"],["",""]],meses.map(([m,v])=>`<tr><td>${m==="Sin fecha"?m:MES[+m.slice(5)-1]+" "+m.slice(0,4)}</td><td class="r b">$${money(v)}</td><td class="bar">${barra(v,mMax)}</td></tr>`).join(""))}
+    ${tabla("Gasto por mes <small>(fecha de transferencia)</small>",[["Mes"],["Total","r"],["%","r"],["",""]],meses.map(([m,v])=>`<tr><td>${m==="Sin fecha"?m:MES[+m.slice(5)-1]+" "+m.slice(0,4)}</td><td class="r b">$${money(v)}</td><td class="r">${pct(v,R.tot).toFixed(1)}%</td><td class="bar">${barra(v,mMax)}</td></tr>`).join(""))}
     ${tabla("Gasto por cliente",[["Cliente"],["Refs","c"],["Facturas","c"],["Total","r"],["%","r"],["",""]],cli.map(([k,o])=>`<tr><td title="${esc(k)}">${esc(k)}</td><td class="c">${o.refs.size}</td><td class="c">${o.n}</td><td class="r b">$${money(o.v)}</td><td class="r">${pct(o.v,R.tot).toFixed(1)}%</td><td class="bar">${barra(o.v,cli[0][1].v)}</td></tr>`).join(""))}
     ${tabla("Gasto por concepto",[["Concepto"],["Veces","c"],["Total","r"],["Promedio","r"],["%","r"],["",""]],con.map(([k,o])=>`<tr><td>${esc(k)}</td><td class="c">${o.n}</td><td class="r b">$${money(o.v)}</td><td class="r">$${money(o.v/o.n)}</td><td class="r">${pct(o.v,R.tot).toFixed(1)}%</td><td class="bar">${barra(o.v,con[0][1].v)}</td></tr>`).join(""))}
   </div>`;

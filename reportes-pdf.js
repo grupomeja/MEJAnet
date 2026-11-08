@@ -121,8 +121,8 @@ async function reporteEjecutivo(embs) {
   D.y -= 2 * kh + 8 + 16;
   const meses = Object.entries(R.mes).sort((a, b) => a[0].localeCompare(b[0])); const mMax = Math.max(1, ...meses.map((m) => m[1]));
   D.seccion('GASTO POR MES  (fecha de transferencia)');
-  D.tabla([['MES', 0], ['TOTAL', 96, 'r', true], ['', 200]],
-    meses.map(([m, v]) => [m === 'Sin fecha' ? m : `${MESES[+m.slice(5) - 1]} ${m.slice(0, 4)}`, '$' + money(v), '']), { barra: { col: 2, frac: (i) => meses[i][1] / mMax } });
+  D.tabla([['MES', 0], ['TOTAL', 96, 'r', true], ['%', 44, 'r'], ['', 160]],
+    meses.map(([m, v]) => [m === 'Sin fecha' ? m : `${MESES[+m.slice(5) - 1]} ${m.slice(0, 4)}`, '$' + money(v), pct(v, R.tot).toFixed(1) + '%', '']), { barra: { col: 3, frac: (i) => meses[i][1] / mMax } });
   D.seccion('GASTO POR CLIENTE');
   D.tabla([['CLIENTE', 0], ['REFS', 40, 'c'], ['FACTURAS', 54, 'c'], ['TOTAL', 84, 'r', true], ['%', 44, 'r'], ['', 100]],
     cli.map(([k, o]) => [k, o.refs.size, o.n, '$' + money(o.v), pct(o.v, R.tot).toFixed(1) + '%', '']), { barra: { col: 5, frac: (i) => cli[i][1].v / (cli[0][1].v || 1) } });
