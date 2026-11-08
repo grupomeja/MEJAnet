@@ -216,7 +216,7 @@ async function generarPDFCotizacion(reg, calc, folio) {
     espacio(150); // la sección completa va junta
     titulo('IMPUESTOS ADUANALES');
     cuadricula([['FACTURA', im.factura], ['TIPO DE CAMBIO APROX.', ci.tc ? `$ ${ci.tc} MXN por USD` : ''],
-      ['MERCANCÍA', im.mercancia, 2], ['RÉGIMEN ADUANERO', im.regimen, 4]], 4, 26, TINTA);
+      ['MERCANCÍA', im.mercancia, 2], ['RÉGIMEN ADUANERO', im.regimen, 4]], 4, 26, AZUL);
     y += 6;
     const izq = [
       ['Valor en dólares', ci.valorUsd ? `USD $ ${dinero(ci.valorUsd)}` : '-'],
@@ -229,8 +229,8 @@ async function generarPDFCotizacion(reg, calc, folio) {
     encTabla([['BASE GRAVABLE', M, q1], ['MONTO', q1, mitad], ['IMPUESTO', mitad, q3], ['COSTO (MXN)', q3, W - M]]);
     for (let i = 0; i < filasM; i++) {
       const yy = y - i * rh;
-      if (izq[i]) { texto(izq[i][0], centro(M, q1), yy - 9.4, { size: 7.8, color: GRIS, align: 'center' }); texto(izq[i][1], mitad - 8, yy - 9.4, { f: FB, size: 7.8, align: 'right' }); }
-      if (der[i]) { texto(der[i][0], centro(mitad, q3), yy - 9.4, { size: 7.8, color: GRIS, align: 'center' }); texto(der[i][1], W - M - 8, yy - 9.4, { f: FB, size: 7.8, align: 'right' }); }
+      if (izq[i]) { texto(izq[i][0], centro(M, q1), yy - 9.4, { size: 7.8, color: GRIS, align: 'center' }); texto(izq[i][1], mitad - 8, yy - 9.4, { f: FB, size: 7.8, color: AZUL, align: 'right' }); }
+      if (der[i]) { texto(der[i][0], centro(mitad, q3), yy - 9.4, { size: 7.8, color: GRIS, align: 'center' }); texto(der[i][1], W - M - 8, yy - 9.4, { f: FB, size: 7.8, color: AZUL, align: 'right' }); }
       linea(M, yy - rh, W - M, yy - rh);
     }
     for (const x of [q1, mitad, q3]) linea(x, y, x, y - filasM * rh, x === mitad ? ENC_BORDE : LINEA);
@@ -276,7 +276,7 @@ async function generarPDFCotizacion(reg, calc, folio) {
       let yy = y0;
       for (const [k, v, nota] of resumen) {
         texto(k, xT + 8, yy - 9.5, { size: 7.5, color: GRIS });
-        texto(v, W - M - 8, yy - 9.5, { f: FB, size: 7.8, align: 'right' });
+        texto(v, W - M - 8, yy - 9.5, { f: FB, size: 7.8, color: AZUL, align: 'right' });
         if (nota) texto(nota, W - M - 8, yy - 17, { size: 5.8, color: GRIS, align: 'right' });
         const h = nota ? 20 : 13;
         linea(xT, yy - h, W - M, yy - h);
