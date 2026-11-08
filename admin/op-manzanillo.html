@@ -522,6 +522,19 @@ main{padding-bottom:40px}
 
 /* ---------- Gastos v2: control por referencia ---------- */
 #v-gas{gap:10px}
+.g-st{display:grid;grid-template-columns:repeat(3,minmax(150px,auto)) minmax(200px,auto) minmax(300px,1fr);gap:8px;align-items:stretch}
+.g-st>div{background:linear-gradient(180deg,var(--cel-bg1),var(--cel-bg2));border:1px solid var(--cel-line);border-radius:8px;padding:5px 11px;min-width:0;display:flex;flex-direction:column;height:66px}
+.g-st span{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--cel-ico);white-space:nowrap}
+.g-kpi b{font-family:"Oswald","Arial Narrow",system-ui,sans-serif;font-size:19px;font-weight:600;color:var(--cel-ink);line-height:1.15;font-variant-numeric:tabular-nums}
+.g-kpi i{font-style:normal;font-size:11px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:230px}
+.g-pend>div{display:grid;grid-template-columns:auto auto auto;gap:1px 10px;margin-top:3px}
+.g-pend em{font-style:normal;font-size:11px;color:var(--ink-2);white-space:nowrap}.g-pend em b{font-size:12.5px;color:var(--cel-ink);margin-left:2px}.g-pend em.w b{color:var(--bad)}
+.g-con>div{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));grid-auto-rows:16px;gap:1px 14px;overflow-y:auto;height:33px;margin-top:4px;padding-right:4px}
+.g-con p{margin:0;display:grid;grid-template-columns:minmax(0,1fr) 46px auto;align-items:center;gap:6px;font-size:11px;line-height:1.45}
+.g-con p em{font-style:normal;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.g-con p u{display:block;height:5px;background:rgba(94,78,55,.12);border-radius:3px;overflow:hidden}.g-con p s{display:block;height:100%;background:var(--cel-ico);border-radius:3px}
+.g-con p b{font-weight:700;color:var(--cel-ink);font-variant-numeric:tabular-nums;text-align:right;min-width:72px}
+@media (max-width:1100px){.g-st{grid-template-columns:repeat(2,minmax(0,1fr))}.g-st>.g-con{grid-column:1/-1;height:auto;max-height:110px}}
 .g-res{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px}
 .g-res>div{background:linear-gradient(180deg,var(--cel-bg1),var(--cel-bg2));border:1px solid var(--cel-line);border-radius:8px;padding:6px 12px;display:flex;flex-direction:column;min-width:120px}
 .g-res>div span{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--cel-ico)}
@@ -1064,6 +1077,12 @@ function renderGas(){
   const T={MXN:0,n:0,pdf:0,xml:0,pago:0,ppd:0,sinFac:0};abiertas.forEach(x=>{const t=totGastos(x.e);for(const k in T)T[k]+=t[k]||0});
   const byC={};abiertas.forEach(x=>(x.e.gastos||[]).forEach(g=>{const k=nomConcepto(g.concepto)||"Sin concepto";byC[k]=(byC[k]||0)+(+g.importe||0)}));
   const cEnt=Object.entries(byC).sort((a,b)=>b[1]-a[1]);
+  // Estadísticas de todas las referencias con gastos (abiertas y cerradas)
+  const S={tot:0,cli:{},con:{}};xs.forEach(x=>(x.e.gastos||[]).forEach(g=>{const v=+g.importe||0;S.tot+=v;const c=x.e.cliente||"Sin cliente";S.cli[c]=(S.cli[c]||0)+v;
+    const k=nomConcepto(g.concepto)||"Sin concepto";(S.con[k]||(S.con[k]={n:0,v:0})).n++;S.con[k].v+=v}));
+  const topCli=Object.entries(S.cli).sort((a,b)=>b[1]-a[1])[0]||["—",0];
+  const topCon=Object.entries(S.con).filter(([k])=>k!=="Sin concepto").sort((a,b)=>b[1].n-a[1].n||b[1].v-a[1].v)[0]||["—",{n:0,v:0}];
+  const conAll=Object.entries(S.con).sort((a,b)=>b[1].v-a[1].v),conMax=conAll.length?conAll[0][1].v:1;
   const abiertos=ui.gasOpen||(ui.gasOpen=new Set());
   const dis=canWrite?"":"disabled";
   const doc=(g,k)=>g[k]?`<span class="doc-w"><a class="doc ok" href="#" data-gdoc="${esc(g.id)}" data-k="${k}" title="Abrir ${esc(g[k].nombre||"")}">${DOC_CORTO[k]} ✓</a>${canWrite?`<button type="button" class="doc-x" data-gdocx="${esc(g.id)}" data-k="${k}" title="Quitar ${DOC_ET[k]}" aria-label="Quitar ${DOC_ET[k]}">×</button>`:""}</span>`:`<button type="button" class="doc falta" data-gup="${esc(g.id)}" data-k="${k}" ${dis}>Subir ${DOC_CORTO[k]}</button>`;
@@ -1094,14 +1113,13 @@ function renderGas(){
     </div>`};
   $("#v-gas").innerHTML=`
   <h2 class="g-titulo">Control de gastos por referencia</h2>
-  <div class="g-res">
-    <div><span>Referencias abiertas</span><b>${abiertas.length}</b></div>
-    <div><span>Total abiertas</span><b>$${money(T.MXN)}</b></div>
-    <div class="${T.n-T.pdf||T.n-T.xml?"warn":""}"><span>Faltan PDF / XML</span><b>${T.n-T.pdf} / ${T.n-T.xml}</b></div>
-    <div class="${T.n-T.pago?"warn":""}"><span>Faltan pagos</span><b>${T.n-T.pago}</b></div>
-    <div><span>Facturas PPD</span><b>${T.ppd}</b></div>
-    <div class="${T.sinFac?"warn":""}"><span>Sin número de factura</span><b>${T.sinFac}</b></div>
-    <details class="g-conc"><summary>Por concepto</summary><div>${cEnt.map(([k,v])=>`<span>${esc(k)} <b>$${money(v)}</b></span>`).join("")||"—"}</div></details>
+  <div class="g-st">
+    <div class="g-kpi"><span>Gasto total</span><b>$${money(S.tot)}</b><i>${xs.length} ref. · abiertas $${money(T.MXN)}</i></div>
+    <div class="g-kpi"><span>Cliente con mayor gasto</span><b>$${money(topCli[1])}</b><i title="${esc(topCli[0])}">${esc(topCli[0])}</i></div>
+    <div class="g-kpi"><span>Concepto más utilizado</span><b>$${money(topCon[1].v)}</b><i title="${esc(topCon[0])}">${esc(topCon[0])} · ${topCon[1].n} ${topCon[1].n===1?"vez":"veces"}</i></div>
+    <div class="g-pend"><span>Pendientes (abiertas)</span>
+      <div><em class="${T.n-T.pdf?"w":""}">PDF <b>${T.n-T.pdf}</b></em><em class="${T.n-T.xml?"w":""}">XML <b>${T.n-T.xml}</b></em><em class="${T.n-T.pago?"w":""}">Pagos <b>${T.n-T.pago}</b></em><em>PPD <b>${T.ppd}</b></em><em class="${T.sinFac?"w":""}">Sin factura <b>${T.sinFac}</b></em></div></div>
+    <div class="g-con"><span>Por concepto</span><div>${conAll.map(([k,o])=>`<p title="${esc(k)} · ${o.n} factura${o.n===1?"":"s"}"><em>${esc(k)}</em><u><s style="width:${Math.max(4,o.v/conMax*100).toFixed(1)}%"></s></u><b>$${money(o.v)}</b></p>`).join("")||"—"}</div></div>
   </div>
   <div class="g-bar">
     <div class="seg-tabs"><button type="button" class="${tab==="abiertas"?"on":""}" data-gtab="abiertas">Abiertas <small>${abiertas.length}</small></button><button type="button" class="${tab==="cerradas"?"on":""}" data-gtab="cerradas">Cerradas <small>${cerradas.length}</small></button></div>
