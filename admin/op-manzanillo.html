@@ -289,6 +289,7 @@ button.kpi:hover{border-color:var(--ink-3)}
 html{scrollbar-gutter:stable}
 html.ficha-abierta,html.ficha-abierta body{overflow:hidden}
 .drawer .db{overscroll-behavior:contain}
+aside.drawer.ancho{width:min(1180px,100%)}
 aside.drawer{position:fixed;top:0;right:0;bottom:0;width:min(820px,100%);background:var(--bg);z-index:41;display:flex;flex-direction:column;border-left:1px solid var(--line);box-shadow:-12px 0 32px rgba(0,0,0,.18)}
 .dh{background:var(--surface);border-bottom:1px solid var(--line);padding:calc(14px + env(safe-area-inset-top,0px)) max(18px,env(safe-area-inset-right,0px)) 14px 18px;display:flex;gap:14px;align-items:flex-start}
 .dh .id{flex:1;min-width:0}
@@ -546,7 +547,14 @@ main{padding-bottom:40px}
 .g-kpi b{font-family:"Oswald","Arial Narrow",system-ui,sans-serif;font-size:19px;font-weight:600;color:var(--cel-ink);line-height:1.15;font-variant-numeric:tabular-nums}
 .g-kpi{display:grid!important;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:10px;align-content:center}.g-kpi span{grid-column:1/-1}
 .g-kpi i{font-style:normal;font-size:11px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;align-self:center;padding-top:3px}
-.g-repbtn{display:flex;align-items:center;gap:7px;background:var(--cel-ink,#4A3826);color:#EAE1D3;border:0;border-radius:8px;padding:0 16px;font:inherit;font-size:12.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;white-space:nowrap}
+.g-btns{display:flex;flex-direction:column;gap:4px;height:52px}
+.g-repbtn{flex:1;display:flex;align-items:center;gap:6px;background:var(--cel-ink,#4A3826);color:#EAE1D3;border:0;border-radius:7px;padding:0 11px;font:inherit;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;white-space:nowrap}
+.rp-pdf{display:inline-flex;align-items:center;gap:6px;background:#88F9C0;color:#000;border:0;border-radius:999px;padding:6px 14px;font:inherit;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;align-self:center;margin-left:auto}.rp-pdf:hover{filter:brightness(.95)}
+.rr-ref{padding:0;overflow:hidden}.rr-h{display:flex;align-items:center;gap:12px;background:#4A3826;color:#EAE1D3;padding:7px 12px;font-size:12px}
+.rr-h a{color:#EAE1D3;font-weight:800;font-size:14px;text-decoration:none;font-family:var(--f-mono,monospace)}.rr-h a:hover{text-decoration:underline}.rr-h .cl{opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rr-h .der{margin-left:auto;font-weight:700;white-space:nowrap}
+.rr-ref .rp-t{margin:0}.rr-t{table-layout:fixed}.rr-t td,.rr-t th{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rr-t th{font-size:9px!important}.rr-ref .rp-t th,.rr-ref .rp-t td{padding:4px 8px}.rr-ref .rp-t td.no{color:var(--bad);font-weight:700}.rr-ref .rp-t td.si{color:#1F6B41;font-weight:700}
+.rr-ref .rp-t td.det{max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rr-ref .rp-t td.pend{color:var(--brand);font-weight:700}
+.rr-tot{display:flex;justify-content:flex-end}.rr-tot b{background:var(--cel-bg2,#EAE1D3);border:1px solid var(--cel-line);border-radius:8px;padding:8px 16px;font-family:"Oswald","Arial Narrow",system-ui,sans-serif;font-size:17px;color:var(--cel-ink)}
 .g-repbtn:hover{filter:brightness(1.15)}
 .g-pend>div{display:flex;flex-wrap:wrap;gap:1px 14px;margin-top:2px}
 .g-pend em{font-style:normal;font-size:11px;color:var(--ink-2);white-space:nowrap}.g-pend em b{font-size:12.5px;color:var(--cel-ink);margin-left:2px}.g-pend em.w b{color:var(--bad)}
@@ -1084,6 +1092,25 @@ function leerCFDI(txt){
   return{factura:folio.toUpperCase(),proveedor:a(em,"Nombre").toUpperCase(),importe:isFinite(tot)?tot:"",moneda:a(c,"Moneda")==="USD"?"USD":"",
     metodo:/^(PUE|PPD)$/.test(a(c,"MetodoPago"))?a(c,"MetodoPago"):"",uuid:a(tf,"UUID").toUpperCase(),fecha:(a(c,"Fecha")||"").slice(0,10)}
 }
+const BTN_PDF=t=>`<a class="rp-pdf" href="/api/admin/opm/reporte/${t==="ejecutivo"?"ejecutivo":"referencias"}.pdf" download><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Descargar PDF</a>`;
+function renderReporteRef(){
+  const xs=Object.entries(EMB).map(([id,e])=>({id,e})).filter(x=>(x.e.gastos||[]).length).sort((a,b)=>(b.e.ref||"").localeCompare(a.e.ref||""));
+  const tot=xs.reduce((a,x)=>a+totGastos(x.e).MXN,0),nf=xs.reduce((a,x)=>a+x.e.gastos.length,0);
+  const si=v=>v?`<td class="c si">✓</td>`:`<td class="c no">✗</td>`;
+  $("#drawer").innerHTML=`
+  <div class="dh"><div class="id"><div class="refbig rp-tit">Reporte x referencia</div><div class="cli">Control de gastos por referencia</div>
+    <div class="meta"><span class="pill">${fd(TODAY)}</span><span class="pill">${xs.length} referencias · ${nf} facturas</span><span class="pill">$${money(tot)}</span></div></div>
+    ${BTN_PDF("referencias")}
+    <button class="x" type="button" data-close aria-label="Cerrar">×</button></div>
+  <div class="db rp">
+    ${xs.map(x=>{const g=x.e.gastos,t=totGastos(x.e);return `<div class="card rr-ref">
+      <div class="rr-h"><a href="#" data-open="${esc(x.id)}">${esc(x.e.ref)}</a><span class="cl">${esc(x.e.cliente||"")}</span><span class="der">${x.e.gastosCerrada?"CERRADA":"ABIERTA"} · ${g.length} factura${g.length===1?"":"s"} · $${money(t.MXN)}</span></div>
+      <div class="scroll"><table class="rp-t rr-t"><colgroup><col style="width:28px"><col style="width:112px"><col style="width:190px"><col style="width:170px"><col><col style="width:96px"><col style="width:62px"><col style="width:44px"><col style="width:44px"><col style="width:48px"><col style="width:100px"></colgroup><thead><tr><th>#</th><th>Factura</th><th>Proveedor</th><th>Concepto</th><th>Detalle</th><th class="c">Fecha</th><th class="c">Método</th><th class="c">PDF</th><th class="c">XML</th><th class="c">Pago</th><th class="r">Importe</th></tr></thead><tbody>
+      ${g.map((y,i)=>`<tr><td>${i+1}</td><td class="mono ${!y.factura||/pendiente/i.test(y.factura)?"pend":"b"}">${esc(y.factura||"PENDIENTE")}</td><td class="trunc" title="${esc(y.proveedor||"")}">${esc(y.proveedor||"")}</td><td class="trunc">${esc(nomConcepto(y.concepto)||"")}</td><td class="det" title="${esc(y.detalle||"")}">${esc(y.detalle||"")}</td><td class="c" style="white-space:nowrap">${y.fecha?fd(y.fecha).replace(/^\S+ /,""):"—"}</td><td class="c">${esc(y.metodo||"—")}</td>${si(y.pdf)}${si(y.xml)}${si(y.pago)}<td class="r b">$${money(+y.importe||0)}</td></tr>`).join("")}
+      </tbody></table></div></div>`}).join("")||`<p class="muted">Sin gastos capturados.</p>`}
+    <div class="rr-tot"><b>Total general $${money(tot)}</b></div>
+  </div>`;
+}
 function renderReporte(){
   const xs=Object.entries(EMB).map(([id,e])=>({id,e})).filter(x=>(x.e.gastos||[]).length);
   const pct=(v,t)=>t?(v/t*100):0;
@@ -1109,6 +1136,7 @@ function renderReporte(){
   $("#drawer").innerHTML=`
   <div class="dh"><div class="id"><div class="refbig rp-tit">Reporte ejecutivo</div><div class="cli">Control de gastos por referencia</div>
     <div class="meta"><span class="pill">${fd(TODAY)}</span><span class="pill">${xs.length} referencias · ${R.n} facturas</span></div></div>
+    ${BTN_PDF("ejecutivo")}
     <button class="x" type="button" data-close aria-label="Cerrar">×</button></div>
   <div class="db rp">
     <div class="rp-kpis">
@@ -1124,11 +1152,7 @@ function renderReporte(){
     </div></div>
     ${tabla("Gasto por cliente",[["Cliente"],["Refs","c"],["Facturas","c"],["Total","r"],["%","r"],["",""]],cli.map(([k,o])=>`<tr><td title="${esc(k)}">${esc(k)}</td><td class="c">${o.refs.size}</td><td class="c">${o.n}</td><td class="r b">$${money(o.v)}</td><td class="r">${pct(o.v,R.tot).toFixed(1)}%</td><td class="bar">${barra(o.v,cli[0][1].v)}</td></tr>`).join(""))}
     ${tabla("Gasto por concepto",[["Concepto"],["Veces","c"],["Total","r"],["Promedio","r"],["%","r"],["",""]],con.map(([k,o])=>`<tr><td>${esc(k)}</td><td class="c">${o.n}</td><td class="r b">$${money(o.v)}</td><td class="r">$${money(o.v/o.n)}</td><td class="r">${pct(o.v,R.tot).toFixed(1)}%</td><td class="bar">${barra(o.v,con[0][1].v)}</td></tr>`).join(""))}
-    <div class="rp-2">
     ${tabla("Gasto por mes <small>(fecha de transferencia)</small>",[["Mes"],["Total","r"],["",""]],meses.map(([m,v])=>`<tr><td>${m==="Sin fecha"?m:MES[+m.slice(5)-1]+" "+m.slice(0,4)}</td><td class="r b">$${money(v)}</td><td class="bar">${barra(v,mMax)}</td></tr>`).join(""))}
-    ${tabla("Principales proveedores",[["Proveedor"],["Facturas","c"],["Total","r"],["",""]],prov.map(([k,o])=>`<tr><td title="${esc(k)}">${esc(k)}</td><td class="c">${o.n}</td><td class="r b">$${money(o.v)}</td><td class="bar">${barra(o.v,prov[0][1].v)}</td></tr>`).join(""))}
-    </div>
-    ${tabla("Gasto por referencia",[["Referencia"],["Cliente"],["Fact.","c"],["Total","r"],["Estado","c"]],refs.map(r=>`<tr><td class="mono"><a href="#" data-open="${esc(r.x.id)}">${esc(r.x.e.ref)}</a></td><td class="trunc">${esc(r.x.e.cliente||"")}</td><td class="c">${r.t.n}</td><td class="r b">$${money(r.v)}</td><td class="c">${r.ce?`<span class="pill">Cerrada</span>`:`<span class="pill info">Abierta</span>`}</td></tr>`).join(""))}
   </div>`;
 }
 function gastoVacio(g){return !["factura","proveedor","concepto","detalle","uuid","fecha"].some(k=>String(g[k]||"").trim())&&!(+g.importe)&&!g.pdf&&!g.xml&&!g.pago}
@@ -1187,7 +1211,8 @@ function renderGas(){
     <div class="g-kpi"><span>Concepto más utilizado</span><b>$${money(topCon[1].v)}</b><i title="${esc(topCon[0])}">${esc(topCon[0])} · ${topCon[1].n} ${topCon[1].n===1?"vez":"veces"}</i></div>
     <div class="g-pend"><span>Pendientes (abiertas)</span>
       <div><em class="${T.n-T.pdf?"w":""}">PDF <b>${T.n-T.pdf}</b></em><em class="${T.n-T.xml?"w":""}">XML <b>${T.n-T.xml}</b></em><em class="${T.n-T.pago?"w":""}">Pagos <b>${T.n-T.pago}</b></em><em>PPD <b>${T.ppd}</b></em><em class="${T.sinFac?"w":""}">Sin factura <b>${T.sinFac}</b></em></div></div>
-    <button type="button" class="g-repbtn" id="b-repej"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>Reporte ejecutivo</button>
+    <div class="g-btns"><button type="button" class="g-repbtn" id="b-repej"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>Reporte ejecutivo</button>
+      <button type="button" class="g-repbtn" id="b-repref"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Reporte x referencia</button></div>
   </div>
   <div class="g-bar">
     <div class="seg-tabs"><button type="button" class="${tab==="abiertas"?"on":""}" data-gtab="abiertas">Abiertas <small>${abiertas.length}</small></button><button type="button" class="${tab==="cerradas"?"on":""}" data-gtab="cerradas">Cerradas <small>${cerradas.length}</small></button></div>
@@ -1262,9 +1287,10 @@ function isEditing(){const ae=document.activeElement;return !!(ae&&ae.closest&&a
 function renderDrawerInner(){
   const d=$("#drawer");
   if(!ui.open&&!ui.newMode&&!ui.reporte){d.hidden=true;$("#scrim").hidden=true;document.documentElement.classList.remove("ficha-abierta");return}
+  d.classList.toggle("ancho",ui.reporte==="ref"&&!ui.open&&!ui.newMode);
   d.hidden=false;$("#scrim").hidden=false;document.documentElement.classList.add("ficha-abierta");
   if(ui.newMode){renderNew();return}
-  if(ui.reporte&&!ui.open){renderReporte();return}
+  if(ui.reporte&&!ui.open){ui.reporte==="ref"?renderReporteRef():renderReporte();return}
   const e=EMB[ui.open];if(!e){d.innerHTML=`<div class="dh"><div class="id"><div class="refbig">Embarque no encontrado</div></div><button class="x" data-close>×</button></div>`;return}
   const a=analyze(e);
   const dis=canWrite?"":"disabled";
@@ -1530,7 +1556,7 @@ document.addEventListener("click",ev=>{
   if(t.hasAttribute("data-close")){ui.open=null;ui.newMode=false;ui.reporte=false;renderDrawer();return}
   if(t.closest("#f-estado")&&t.dataset.e!==undefined){ui.estado=t.dataset.e;syncSeg();renderAll();return}
   if(t.closest("#f-tipo")&&t.dataset.t!==undefined){ui.tipo=t.dataset.t;syncSeg();renderAll();return}
-  if(t.id==="b-repej"){ui.reporte=true;ui.open=null;ui.newMode=false;renderDrawer();return}
+  if(t.id==="b-repej"||t.id==="b-repref"){ui.reporte=t.id==="b-repej"?"ejec":"ref";ui.open=null;ui.newMode=false;renderDrawer();return}
   if(t.id==="n-asig"){const m=$("#n-asig-m");t.disabled=true;m.textContent="Consultando el control de referencias…";
     api("GET","/api/admin/opm/siguiente-ref").then(r=>{$("#n-ref").value=r.ref;m.textContent="Consecutivo de MANZANILLO 26 · se registra al crear el embarque"}).catch(e=>{m.textContent=e.message}).finally(()=>{t.disabled=false});return}
   if(t.id==="b-nuevo"){if(!canWrite){toast("Este tablero es de solo lectura para ti");return}ui.newMode=true;ui.open=null;renderDrawer();return}

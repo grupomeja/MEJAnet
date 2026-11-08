@@ -7,6 +7,7 @@ const express = require('express');
 const db = require('./db');
 const { limpiarPrevio, generarPrevio } = require('./previo-pdf');
 const drive = require('./drive-gastos');
+const reportes = require('./reportes-pdf');
 
 const pool = db.pool;
 const FILE = path.join(db.DIR, 'op_manzanillo.json');
@@ -284,6 +285,17 @@ function rutas(admin) {
 
   r.get('/op-manzanillo', admin, (_req, res) => res.set('Cache-Control', 'no-store').sendFile(path.join(__dirname, 'admin', 'op-manzanillo.html')));
 
+  // PDF del Reporte ejecutivo / Reporte por referencia (Control de gastos)
+  r.get('/api/admin/opm/reporte/:tipo.pdf', admin, async (req, res) => {
+    const gen = { ejecutivo: reportes.reporteEjecutivo, referencias: reportes.reporteReferencias }[req.params.tipo];
+    if (!gen) return res.status(404).json({ error: 'Reporte no encontrado' });
+    try {
+      const buf = await gen(await listar());
+      const hoy = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Matamoros' });
+      res.set({ 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="${req.params.tipo === 'ejecutivo' ? 'REPORTE EJECUTIVO' : 'REPORTE POR REFERENCIA'} ${hoy}.pdf"` });
+      res.send(buf);
+    } catch (e) { err(res, e, 'No se pudo generar el PDF'); }
+  });
   r.get('/api/admin/opm/embarques', admin, async (_req, res) => {
     try { res.set('Cache-Control', 'no-store').json(await listar()); } catch (e) { err(res, e, 'No se pudieron leer los embarques'); }
   });
