@@ -1216,7 +1216,7 @@ function renderDrawerInner(){
         ${F("ff","Forwarder / consolidador","wide")}${F("origen_puerto","Puerto de origen")}
       </div></section>
       <section class="sec"><h3>Conocimiento de embarque</h3><div class="fields">
-        ${F("hbl","House B/L","", "text",'class="mono"')}${F("mbl","Master B/L","","text",'class="mono"')}<div class="cont-fila">${F("contenedores","Contenedor no.","","text",'class="mono" placeholder="-"')}<label>Tipo<select id="fx-tipoCont" data-f="tipoCont"><option value="">—</option><option value="20DC">20' DC</option><option value="40DC">40' DC</option><option value="40HC">40' HC</option><option value="SUELTA">Carga suelta</option></select></label></div>
+        ${F("hbl","House B/L","", "text",'class="mono"')}${F("mbl","Master B/L","","text",'class="mono"')}<div class="cont-fila">${F("contenedores","Contenedor no.","","text",'class="mono" placeholder="-"')}<label>Tipo<select id="fx-tipoCont" data-f="tipoCont"><option value="">—</option><option value="20DC">20' DC</option><option value="20OT">20' OT</option><option value="40DC">40' DC</option><option value="40HC">40' HC</option><option value="REEFER">REEFER</option><option value="SUELTA">Carga suelta</option></select></label></div>
         <label>Tipo de carga<select id="fx-tipo" data-f="tipo"><option value="">—</option><option>LCL</option><option>FCL</option></select></label>
         ${F("mercancia","Mercancía","wide")}
         ${F("bultos","Bultos","","text",'placeholder="Ej. 27 CARTONES"')}
@@ -1309,7 +1309,7 @@ let tt;function toast(t){const el=$("#toast");el.textContent=t;el.hidden=false;c
 
 /* ---------- Reporte de previo ---------- */
 const PV={id:null,datos:null,t:null};
-const PV_TIPOS=[["20DC","20' DC"],["40DC","40' DC"],["40HC","40' HC"],["SUELTA","Carga suelta"]];
+const PV_TIPOS=[["20DC","20' DC"],["20OT","20' OT"],["40DC","40' DC"],["40HC","40' HC"],["REEFER","REEFER"],["SUELTA","Carga suelta"]];
 const PV_PALLETS=[["MADERA","Madera"],["PLASTICO","Plástico"],["SIN","Sin pallets"]];
 const PV_RENG=[["marca","MARCA"],["modelo","MODELO"],["origen","ORIGEN"],["lote","LOTE #"],["pzsCarton","CANT. PZS X CARTÓN"],["cant","CANT. PZS"]];
 const pvVacia=()=>({desc:"",marca:"",modelo:"",origen:"",lote:"",pzsCarton:"",cant:"",notas:""});

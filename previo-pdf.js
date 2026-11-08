@@ -9,7 +9,7 @@ const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
 const CAMPOS = ['cliente', 'fecha', 'trafico', 'factura', 'buque', 'contenedor', 'tipoCont', 'sello', 'operadora', 'claveCR',
   'bultos', 'peso', 'pallets', 'palletsCant', 'palAlto', 'palLargo', 'palAncho'];
 const PARTIDA = ['desc', 'marca', 'modelo', 'origen', 'lote', 'pzsCarton', 'cant', 'notas'];
-const TIPOS_CONT = { '20DC': "20' DC", '40DC': "40' DC", '40HC': "40' HC", SUELTA: 'Carga suelta' };
+const TIPOS_CONT = { '20DC': "20' DC", '20OT': "20' OT", '40DC': "40' DC", '40HC': "40' HC", REEFER: 'REEFER', SUELTA: 'Carga suelta' };
 const PALLETS = { MADERA: 'Madera', PLASTICO: 'Plástico', SIN: 'Sin pallets' };
 
 const t = (v, max) => String(v ?? '').trim().slice(0, max);
@@ -114,11 +114,13 @@ async function generarPrevio(rep, ref) {
   };
   const opciones = (etq, mapa, elegido, x, yy, w) => {
     txt(etq.toUpperCase(), x, yy - 8, 6.8, FB, GRIS);
-    let cx = x;
+    let cx = x, sz = 9, gap = 14;
+    const total = () => Object.entries(mapa).reduce((a, [k, n]) => a + 13 + ancho(n, sz, elegido === k ? FB : F) + gap, -gap);
+    while (total() > w && sz > 6.5) { sz -= 0.25; gap = Math.max(6, gap - 1); }
     for (const [k, nombre] of Object.entries(mapa)) {
       casilla(cx, yy - 23, elegido === k);
-      txt(nombre, cx + 13, yy - 21.5, 9, elegido === k ? FB : F, TINTA);
-      cx += 13 + ancho(nombre, 9, elegido === k ? FB : F) + 14;
+      txt(nombre, cx + 13, yy - 21.5, sz, elegido === k ? FB : F, TINTA);
+      cx += 13 + ancho(nombre, sz, elegido === k ? FB : F) + gap;
     }
     pg.drawLine({ start: { x, y: yy - 27 }, end: { x: x + w, y: yy - 27 }, thickness: 1, color: LINEA });
     return yy - 27;
