@@ -106,9 +106,6 @@ async function reporteEjecutivo(embs) {
   // Indicadores (3 x 2)
   const K = [
     ['GASTO TOTAL', '$' + money(R.tot), `${R.xs.length} referencias`],
-    ['REFERENCIAS ABIERTAS', '$' + money(R.ab), `${R.refsAb} referencias`],
-    ['REFERENCIAS CERRADAS', '$' + money(R.ce), `${R.refsCe} referencias`],
-    ['PROMEDIO POR REFERENCIA', '$' + money(R.xs.length ? R.tot / R.xs.length : 0), `${R.n} facturas · prom. factura $${money(R.n ? R.tot / R.n : 0)}`],
     ['CLIENTE CON MAYOR GASTO', cli[0] ? '$' + money(cli[0][1].v) : '-', cli[0] ? `${cli[0][0]} · ${pct(cli[0][1].v, R.tot).toFixed(1)}%` : ''],
     ['CONCEPTO MAS UTILIZADO', conN ? '$' + money(conN[1].v) : '-', conN ? `${conN[0]} · ${conN[1].n} ${conN[1].n === 1 ? 'vez' : 'veces'}` : ''],
   ];
@@ -120,7 +117,7 @@ async function reporteEjecutivo(embs) {
     D.texto(v, x + 9, y - 29, 15, FB, OSCURO);
     D.texto(D.corta(s, 7.5, kw - 18), x + 9, y - 40, 7.5, F, GRIS);
   });
-  D.y -= 2 * kh + 8 + 16;
+  D.y -= Math.ceil(K.length / 3) * (kh + 8) + 8;
   const meses = Object.entries(R.mes).sort((a, b) => a[0].localeCompare(b[0])); const mMax = Math.max(1, ...meses.map((m) => m[1]));
   D.seccion('GASTO POR MES  (fecha de transferencia)');
   D.tabla([['MES', 0], ['TOTAL', 96, 'r', true], ['%', 44, 'r'], ['', 160]],

@@ -1199,9 +1199,6 @@ function renderReporte(){
   <div class="db rp">
     <div class="rp-kpis">
       ${kpi("Gasto total","$"+money(R.tot),`${xs.length} referencias`)}
-      ${kpi("Referencias abiertas","$"+money(R.ab),`${R.refsAb} referencia${R.refsAb===1?"":"s"}`)}
-      ${kpi("Referencias cerradas","$"+money(R.ce),`${R.refsCe} referencia${R.refsCe===1?"":"s"}`)}
-      ${kpi("Promedio por referencia","$"+money(xs.length?R.tot/xs.length:0),`${R.n} facturas · prom. factura $${money(R.n?R.tot/R.n:0)}`)}
       ${kpi("Cliente con mayor gasto",cli[0]?"$"+money(cli[0][1].v):"—",cli[0]?esc(cli[0][0])+` · ${pct(cli[0][1].v,R.tot).toFixed(1)}%`:"")}
       ${kpi("Concepto más utilizado",conN?"$"+money(conN[1].v):"—",conN?esc(conN[0])+` · ${conN[1].n} ${conN[1].n===1?"vez":"veces"}`:"")}
     </div>
