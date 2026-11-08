@@ -54,6 +54,21 @@
   button.pdf:active{transform:translateY(2px);box-shadow:0 1px 0 var(--c-osc)}
   button.pdf:disabled{opacity:.6;cursor:wait}
   button.pdf svg{width:18px;height:18px}
+  /* Ventana para elegir columnas */
+  .modal[hidden]{display:none}
+  .modal{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(11,26,51,.42)}
+  .modal .caja{width:min(460px,100%);max-height:calc(100vh - 32px);overflow:auto;background:#fff;border-radius:12px;box-shadow:0 18px 50px rgba(11,26,51,.3);padding:18px 18px 16px}
+  .modal h2{margin:0 0 12px;font:600 21px "Barlow Condensed","Arial Narrow",system-ui,sans-serif;letter-spacing:.02em;color:var(--ink)}
+  .modal label{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px}
+  .modal input[type=checkbox]{width:17px;height:17px;accent-color:var(--c);cursor:pointer}
+  .modal .todas{padding:9px 10px;border-radius:8px;background:#f0f8f3;font-weight:700;margin-bottom:8px}
+  .modal .lista{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 12px;padding:2px 10px 4px}
+  .modal .lista label{padding:6px 0}
+  @media (max-width:420px){.modal .lista{grid-template-columns:1fr}}
+  .modal .acciones{display:flex;align-items:center;gap:10px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}
+  .modal .dlgmsg{flex:1;font-size:12.5px;color:var(--err);min-width:140px}
+  .modal .cancelar{font:inherit;font-size:13.5px;font-weight:600;padding:9px 14px;border:1.5px solid var(--line);border-radius:8px;background:#fff;color:var(--muted);cursor:pointer}
+  .modal .cancelar:hover{color:var(--ink);border-color:var(--ink)}
   button:focus-visible,.drop:focus-visible,a:focus-visible{outline:3px solid #4fc9ee;outline-offset:3px}
 
   /* Reporte */
@@ -132,8 +147,9 @@
       <div class="resumen" id="resumen"></div>
       <span class="borradas" id="borradas" hidden><span id="borradasTxt"></span> · <button type="button" id="restaurar">Restaurar</button></span>
       <button class="pdf" id="pdf" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg> Descargar PDF</button>
+      <button class="pdf" id="xlsx" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg> Descargar XLSX</button>
     </div>
-    <p class="nota">El PDF lleva solo fracción, descripción, cantidad, UMC, precio unitario, valor, moneda, número de parte y proveedor.</p>
+    <p class="nota">Al descargar en PDF o XLSX puedes elegir qué columnas incluir.</p>
     <div class="filtros" role="search" aria-label="Filtrar partidas">
       <input id="fBuscar" type="search" placeholder="Buscar descripción, número de parte, proveedor, secuencia o referencia…" aria-label="Buscar en el reporte">
       <select id="fFrac" aria-label="Filtrar por fracción"><option value="">Todas las fracciones</option></select>
@@ -145,6 +161,19 @@
     <div class="titref" id="titref"></div>
     <div class="tabla"><table id="tabla"></table></div>
   </section>
+</div>
+
+<div class="modal" id="dlgCols" hidden>
+  <div class="caja" role="dialog" aria-modal="true" aria-labelledby="dlgTit">
+    <h2 id="dlgTit">¿Qué columnas quieres incluir?</h2>
+    <label class="todas"><input type="checkbox" id="colTodas"> <span>Todas las columnas</span></label>
+    <div class="lista" id="colLista"></div>
+    <div class="acciones">
+      <span class="dlgmsg" id="dlgMsg"></span>
+      <button type="button" class="cancelar" id="dlgCancelar">Cancelar</button>
+      <button type="button" class="pdf" id="dlgOk">Descargar</button>
+    </div>
+  </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -166,7 +195,9 @@ const COLS = [
   { k: 'sec',   t: 'SECUENCIA\nPEDIMENTO' },
   { k: 'ref',   t: 'REFERENCIA' },
 ];
-const COLS_PDF = ['frac', 'desc', 'qty', 'umc', 'pu', 'val', 'mon', 'parte', 'prov'];
+// Columnas que se pueden descargar (en PDF o XLSX); el usuario elige cuáles
+const COLS_EXPORTAR = ['num', 'frac', 'desc', 'qty', 'umc', 'pu', 'val', 'mon', 'parte', 'prov', 'sec', 'ref'];
+const NOMBRE_COL = k => COLS.find(c => c.k === k).t.replace(/\n/g, ' ');
 // Encabezados del archivo de entrada
 const ENTRADA = { frac: 'FRACCION', desc: 'DESCRIPCION', qty: 'QTY UMC', umc: 'UMC', pu: 'PRECIO UNITARIO', val: 'VALOR', mon: 'MONEDA', parte: 'NUMERO PARTE', prov: 'PROVEEDOR', sec: 'SECUENCIA PEDIMENTO', ref: 'REFERENCIA' };
 
@@ -300,7 +331,6 @@ async function abrirGuardado(id, conPdf) {
     $('res').hidden = false;
     document.body.classList.add('con-reporte');
     ajustarColumnas();
-    if (conPdf) { try { descargarPDF(); } catch (e) { aviso('No pude generar el PDF: ' + e.message, 'err'); } }
   } catch (e) {
     aviso('No pude abrir el reporte: ' + e.message, 'err');
   }
@@ -350,7 +380,7 @@ function llenarFiltros(ps) {
 const BORRAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4h6v3"/></svg>';
 function pintar() {
   const { grupos } = actual;
-  $('pdf').disabled = !grupos.length;
+  $('pdf').disabled = !grupos.length; $('xlsx').disabled = !grupos.length;
   $('titref').textContent = 'Referencia : ' + $('ref').value;
   let h = '<thead><tr>' + COLS.map(c => '<th' + (c.k === 'desc' ? '' : ' class="ajusta"') + '>' + esc(c.t) + '</th>').join('') + '<th class="col-borrar"><span class="sr">Borrar</span></th></tr></thead><tbody>';
   let n = 0;
@@ -403,49 +433,71 @@ function ajustarColumnas() {
 let tAjuste;
 addEventListener('resize', () => { clearTimeout(tAjuste); tAjuste = setTimeout(() => { if (actual) ajustarColumnas(); }, 150); });
 
-// PDF carta horizontal: solo las columnas del formato para el cliente
-function descargarPDF() {
+// Renglones a descargar, en el mismo orden y numeración que la pantalla.
+// tipo 'dato' trae la partida; 'sep' es el espacio entre secciones (alto chico entre descripciones de la misma fracción)
+function renglonesExportar() {
+  const out = []; let n = 0;
+  actual.grupos.forEach((g, gi) => {
+    g.bloques.forEach((b, bi) => {
+      for (const p of b.filas) out.push({ tipo: 'dato', p, n: ++n });
+      if (bi < g.bloques.length - 1) out.push({ tipo: 'sep', chico: true });
+    });
+    if (gi < actual.grupos.length - 1) out.push({ tipo: 'sep' });
+  });
+  return out;
+}
+const textoCol = (k, r) => ({ num: String(r.n), qty: fmt(r.p.qty, 4), pu: dinero(r.p.pu), val: dinero(r.p.val) }[k] ?? String(r.p[k] ?? ''));
+const nombreArchivo = ext => 'REPORTE_SAFE_MARKET_1_' + ($('ref').value.trim().split('/')[0] || 'SIN_REF') + '.' + ext;
+
+// PDF carta horizontal con las columnas elegidas, todas a lo ancho de la hoja
+function descargarPDF(cols) {
   if (!window.jspdf || !window.jspdf.jsPDF) throw new Error('no se cargó el generador de PDF. Revisa tu conexión y recarga la página.');
   const { jsPDF } = window.jspdf;
   const ref = $('ref').value.trim();
   const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'letter', compress: true });
-  const ancho = doc.internal.pageSize.getWidth();
+  const ancho = doc.internal.pageSize.getWidth(), util = ancho - 48;
   const VERDE = [46, 139, 87], TXT = [51, 51, 51], LINEA = [190, 214, 199];
-  const titulos = COLS_PDF.map(k => COLS.find(c => c.k === k).t);
-  const body = [];
-  actual.grupos.forEach((g, gi) => {
-    g.bloques.forEach((b, bi) => {
-      for (const p of b.filas) body.push({ tipo: 'dato', celdas: [p.frac, p.desc, fmt(p.qty, 4), p.umc, dinero(p.pu), dinero(p.val), p.mon, p.parte, p.prov] });
-      if (bi < g.bloques.length - 1) body.push({ tipo: 'sep', alto: 10, celdas: COLS_PDF.map(() => '') });
-    });
-    if (gi < actual.grupos.length - 1) body.push({ tipo: 'sep', celdas: COLS_PDF.map(() => '') });
-  });
-  // Proveedor en una sola línea: la columna toma el ancho del proveedor más largo (de 90 a 190 pt);
-  // si aun así no cabe, la letra de esa celda se hace más chica
+  const filas = renglonesExportar();
+  // Anchos base a 7.5 pt; el proveedor toma el ancho de su texto más largo (90 a 190) para ir en una línea
   doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5);
-  const provMax = Math.max(0, ...actual.grupos.flatMap(g => g.bloques.flatMap(b => b.filas.map(p => doc.getTextWidth(p.prov)))));
-  const anchoProv = Math.min(190, Math.max(90, Math.ceil(provMax + 8)));
+  const provMax = Math.max(0, ...filas.filter(f => f.p).map(f => doc.getTextWidth(f.p.prov)));
+  const BASE = { num: 24, frac: 60, qty: 44, umc: 32, pu: 62, val: 68, mon: 44, parte: 80, sec: 52, ref: 52, prov: Math.min(190, Math.max(90, Math.ceil(provMax + 8))) };
+  const anchos = {}; let tam = 7.5;
+  const fijas = cols.filter(k => k !== 'desc'), suma = fijas.reduce((s, k) => s + BASE[k], 0);
+  if (cols.includes('desc')) {
+    // La descripción toma lo que sobre; si quedan menos de 150 pt, todo se reduce (letra incluida) para que quepa
+    const f = util - suma < 150 ? (util - 150) / suma : 1;
+    fijas.forEach(k => { anchos[k] = BASE[k] * f; });
+    anchos.desc = util - fijas.reduce((s, k) => s + anchos[k], 0);
+    tam = 7.5 * Math.max(0.72, Math.min(1, f));
+  } else {
+    // Sin descripción: las columnas se estiran (o encogen) para ocupar todo el ancho
+    const f = util / suma;
+    fijas.forEach(k => { anchos[k] = BASE[k] * f; });
+    tam = 7.5 * Math.max(0.72, Math.min(1.1, f));
+  }
+  const iProv = cols.indexOf('prov');
+  const body = filas.map(r => r.tipo === 'dato' ? cols.map(k => textoCol(k, r)) : cols.map(() => ''));
   doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.setTextColor(11, 26, 51);
   doc.text('Referencia : ' + ref, ancho / 2, 40, { align: 'center' });
   doc.autoTable({
     startY: 52,
     margin: { left: 24, right: 24, top: 34, bottom: 32 },
-    head: [titulos],
+    head: [cols.map(k => COLS.find(c => c.k === k).t)],
     showHead: 'firstPage', // la fila de títulos solo en la primera hoja
-    body: body.map(f => f.celdas),
+    body,
     theme: 'grid',
     rowPageBreak: 'avoid',
-    styles: { font: 'helvetica', fontSize: 7.5, textColor: TXT, halign: 'center', valign: 'middle', cellPadding: 2.8, lineColor: LINEA, lineWidth: 0.4 },
-    headStyles: { fillColor: VERDE, textColor: 255, fontStyle: 'bold', lineColor: [111, 176, 139], fontSize: 7.2 },
-    // Ancho útil 744 pt: fracción 62, cantidad 46, UMC 34, precio 68, valor 74, moneda 48, parte 84, proveedor según su texto; la descripción toma el resto
-    columnStyles: { 0: { cellWidth: 62 }, 1: {}, 2: { cellWidth: 46 }, 3: { cellWidth: 34 }, 4: { cellWidth: 68 }, 5: { cellWidth: 74 }, 6: { cellWidth: 48 }, 7: { cellWidth: 84 }, 8: { cellWidth: anchoProv, overflow: 'hidden' } },
+    styles: { font: 'helvetica', fontSize: tam, textColor: TXT, halign: 'center', valign: 'middle', cellPadding: 2.8, lineColor: LINEA, lineWidth: 0.4 },
+    headStyles: { fillColor: VERDE, textColor: 255, fontStyle: 'bold', lineColor: [111, 176, 139], fontSize: tam * 0.96 },
+    columnStyles: Object.fromEntries(cols.map((k, i) => [i, { cellWidth: anchos[k], ...(k === 'prov' ? { overflow: 'hidden' } : {}) }])),
     didParseCell: d => {
       if (d.section !== 'body') return;
-      const f = body[d.row.index];
-      if (f.tipo === 'sep') { d.cell.styles.fillColor = [255, 255, 255]; d.cell.styles.lineWidth = 0; d.cell.styles.minCellHeight = f.alto || 16; d.cell.styles.cellPadding = 0; d.cell.text = ['']; }
-      // Proveedor siempre en una línea: si no cabe, la letra se hace más chica
-      if (f.tipo === 'dato' && d.column.index === 8) {
-        const disp = anchoProv - 6, tam = 7.5;
+      const f = filas[d.row.index];
+      if (f.tipo === 'sep') { d.cell.styles.fillColor = [255, 255, 255]; d.cell.styles.lineWidth = 0; d.cell.styles.minCellHeight = f.chico ? 10 : 16; d.cell.styles.cellPadding = 0; d.cell.text = ['']; }
+      // Proveedor siempre en una línea: si no cabe, la letra de esa celda se hace más chica
+      if (f.tipo === 'dato' && d.column.index === iProv) {
+        const disp = anchos.prov - 6;
         doc.setFont('helvetica', 'normal'); doc.setFontSize(tam);
         const w = doc.getTextWidth(String(d.cell.raw || ''));
         if (w > disp) d.cell.styles.fontSize = Math.max(3.5, tam * disp / w * 0.98);
@@ -453,7 +505,7 @@ function descargarPDF() {
     },
     didDrawCell: d => {
       // Cierra cada sección: línea en la orilla de arriba del espacio (se dibuja después de su fondo blanco)
-      if (d.section !== 'body' || body[d.row.index].tipo !== 'sep') return;
+      if (d.section !== 'body' || filas[d.row.index].tipo !== 'sep') return;
       doc.setDrawColor(...LINEA); doc.setLineWidth(0.6);
       doc.line(d.cell.x, d.cell.y + 0.3, d.cell.x + d.cell.width, d.cell.y + 0.3);
     },
@@ -463,8 +515,119 @@ function descargarPDF() {
       doc.text('Referencia ' + ref + ' · Página ' + n, ancho - 24, doc.internal.pageSize.getHeight() - 16, { align: 'right' });
     },
   });
-  doc.save('REPORTE_SAFE_MARKET_1_' + (ref.split('/')[0] || 'SIN_REF') + '.pdf');
+  doc.save(nombreArchivo('pdf'));
 }
+
+// XLSX con las columnas elegidas: mismo acomodo, colores y espacios que la pantalla
+let cargaExcel;
+function cargarExcel() {
+  if (window.ExcelJS) return Promise.resolve();
+  return cargaExcel ||= new Promise((ok, ko) => {
+    const sc = document.createElement('script');
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js';
+    sc.onload = ok; sc.onerror = () => { cargaExcel = null; ko(new Error('no se cargó el generador de Excel. Revisa tu conexión e intenta de nuevo.')); };
+    document.head.appendChild(sc);
+  });
+}
+async function descargarXLSX(cols) {
+  await cargarExcel();
+  const ref = $('ref').value.trim();
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'MEJAnet';
+  const ws = wb.addWorksheet('Safe Market 1', {
+    views: [{ state: 'frozen', ySplit: 2 }],
+    pageSetup: { orientation: 'landscape', paperSize: 1, fitToPage: true, fitToWidth: 1, fitToHeight: 0, printTitlesRow: '2:2', margins: { left: 0.3, right: 0.3, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } },
+  });
+  const ANCHO = { num: 6, frac: 13, desc: 46, qty: 9, umc: 7, pu: 13, val: 14, mon: 9, parte: 18, prov: 34, sec: 12, ref: 12 };
+  ws.columns = cols.map(k => ({ key: k, width: ANCHO[k] }));
+  const fuente = { name: 'Arial', size: 10, color: { argb: 'FF333333' } };
+  const borde = { style: 'thin', color: { argb: 'FFBED6C7' } };
+  const bordes = { top: borde, bottom: borde, left: borde, right: borde };
+  const centro = { horizontal: 'center', vertical: 'middle', wrapText: true };
+  // Título
+  ws.mergeCells(1, 1, 1, cols.length);
+  const t = ws.getCell(1, 1);
+  t.value = 'Referencia : ' + ref;
+  t.font = { name: 'Arial', size: 16, bold: true, color: { argb: 'FF0B1A33' } };
+  t.alignment = { horizontal: 'center', vertical: 'middle' };
+  ws.getRow(1).height = 28;
+  // Títulos de columna en verde
+  const h = ws.getRow(2);
+  h.values = cols.map(k => NOMBRE_COL(k));
+  h.height = 30;
+  h.eachCell(c => {
+    c.font = { name: 'Arial', size: 9, bold: true, color: { argb: 'FFFFFFFF' } };
+    c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2E8B57' } };
+    c.alignment = centro; c.border = { top: { style: 'thin', color: { argb: 'FF6FB08B' } }, bottom: { style: 'thin', color: { argb: 'FF6FB08B' } }, left: { style: 'thin', color: { argb: 'FF6FB08B' } }, right: { style: 'thin', color: { argb: 'FF6FB08B' } } };
+  });
+  const valor = (k, r) => {
+    const p = r.p;
+    if (k === 'num') return r.n;
+    if (k === 'qty' || k === 'pu' || k === 'val') return p[k];
+    return String(p[k] ?? '');
+  };
+  const FORMATO = { qty: '#,##0.####', pu: '"$"#,##0.00##', val: '"$"#,##0.00##', frac: '@', parte: '@', sec: '@', ref: '@' };
+  let fila = 3;
+  for (const r of renglonesExportar()) {
+    const row = ws.getRow(fila++);
+    if (r.tipo === 'sep') { row.height = r.chico ? 8 : 15; continue; } // espacio entre secciones
+    row.values = cols.map(k => valor(k, r));
+    cols.forEach((k, i) => {
+      const c = row.getCell(i + 1);
+      c.font = fuente; c.alignment = centro; c.border = bordes;
+      if (FORMATO[k]) c.numFmt = FORMATO[k];
+    });
+  }
+  const buf = await wb.xlsx.writeBuffer();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+  a.download = nombreArchivo('xlsx');
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+
+// --- Ventana para elegir columnas (se recuerda la última elección de cada formato en este navegador) ---
+let formatoDlg = 'pdf';
+const leerEleccion = f => { try { const x = JSON.parse(localStorage.getItem('sm1-cols-' + f)); return Array.isArray(x) && x.length ? x.filter(k => COLS_EXPORTAR.includes(k)) : null; } catch { return null; } };
+const guardarEleccion = (f, cols) => { try { localStorage.setItem('sm1-cols-' + f, JSON.stringify(cols)); } catch {} };
+function abrirColumnas(formato) {
+  formatoDlg = formato;
+  const elegidas = leerEleccion(formato) || COLS_EXPORTAR;
+  $('dlgTit').textContent = '¿Qué columnas quieres en el ' + (formato === 'pdf' ? 'PDF' : 'Excel (XLSX)') + '?';
+  $('dlgOk').textContent = formato === 'pdf' ? 'Descargar PDF' : 'Descargar XLSX';
+  $('colLista').innerHTML = COLS_EXPORTAR.map(k => `<label><input type="checkbox" value="${k}"${elegidas.includes(k) ? ' checked' : ''}> <span>${esc(NOMBRE_COL(k))}</span></label>`).join('');
+  $('dlgMsg').textContent = '';
+  revisarTodas();
+  $('dlgCols').hidden = false;
+  $('dlgOk').focus();
+}
+const marcadas = () => [...$('colLista').querySelectorAll('input:checked')].map(i => i.value);
+function revisarTodas() {
+  const n = marcadas().length;
+  $('colTodas').checked = n === COLS_EXPORTAR.length;
+  $('colTodas').indeterminate = n > 0 && n < COLS_EXPORTAR.length;
+  $('dlgOk').disabled = !n;
+  $('dlgMsg').textContent = n ? '' : 'Elige al menos una columna.';
+}
+const cerrarColumnas = () => { $('dlgCols').hidden = true; };
+$('colTodas').addEventListener('change', ev => { $('colLista').querySelectorAll('input').forEach(i => { i.checked = ev.target.checked; }); revisarTodas(); });
+$('colLista').addEventListener('change', revisarTodas);
+$('dlgCancelar').addEventListener('click', cerrarColumnas);
+$('dlgCols').addEventListener('click', ev => { if (ev.target === $('dlgCols')) cerrarColumnas(); });
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && !$('dlgCols').hidden) cerrarColumnas(); });
+$('dlgOk').addEventListener('click', async () => {
+  const cols = COLS_EXPORTAR.filter(k => marcadas().includes(k)); // siempre en el orden de la tabla
+  if (!cols.length) return;
+  guardarEleccion(formatoDlg, cols);
+  const btn = $('dlgOk'), txt = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Generando…';
+  try {
+    if (formatoDlg === 'pdf') descargarPDF(cols); else await descargarXLSX(cols);
+    cerrarColumnas();
+  } catch (e) {
+    $('dlgMsg').textContent = 'No se pudo generar: ' + e.message;
+  } finally { btn.disabled = false; btn.textContent = txt; }
+});
 
 $('tabla').addEventListener('click', ev => {
   const b = ev.target.closest?.('button.borrar'); if (!b) return;
@@ -483,7 +646,8 @@ drop.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' 
 ['dragleave', 'drop'].forEach(t => drop.addEventListener(t, ev => { ev.preventDefault(); drop.classList.remove('over'); }));
 drop.addEventListener('drop', ev => { const f = ev.dataTransfer.files[0]; if (f) leerArchivo(f); });
 $('ref').addEventListener('input', () => { if (actual) { $('titref').textContent = 'Referencia : ' + $('ref').value; guardar(900); } });
-$('pdf').addEventListener('click', () => { try { descargarPDF(); } catch (e) { aviso('No pude generar el PDF: ' + e.message, 'err'); } });
+$('pdf').addEventListener('click', () => abrirColumnas('pdf'));
+$('xlsx').addEventListener('click', () => abrirColumnas('xlsx'));
 { const q = new URLSearchParams(location.search); if (q.get('id')) abrirGuardado(q.get('id'), q.get('pdf') === '1'); }
 </script>
 <script src="/solo-lectura.js"></script>
