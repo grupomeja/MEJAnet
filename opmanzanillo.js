@@ -290,9 +290,9 @@ function rutas(admin) {
     const gen = { ejecutivo: reportes.reporteEjecutivo, referencias: reportes.reporteReferencias }[req.params.tipo];
     if (!gen) return res.status(404).json({ error: 'Reporte no encontrado' });
     try {
-      const buf = await gen(await listar());
+      const buf = await gen(await listar(), String(req.query.modo || 'des'));
       const hoy = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Matamoros' });
-      res.set({ 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="${req.params.tipo === 'ejecutivo' ? 'REPORTE EJECUTIVO' : 'REPORTE POR REFERENCIA'} ${hoy}.pdf"` });
+      res.set({ 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="${req.params.tipo === 'ejecutivo' ? 'REPORTE EJECUTIVO' : 'REPORTE POR REFERENCIA - ' + ({ tot: 'TOTALES', mes: 'POR MES', cli: 'POR CLIENTE' }[req.query.modo] || 'DESGLOSADO')} ${hoy}.pdf"` });
       res.send(buf);
     } catch (e) { err(res, e, 'No se pudo generar el PDF'); }
   });

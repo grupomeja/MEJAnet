@@ -144,11 +144,41 @@ async function reporteEjecutivo(embs) {
   return D.fin();
 }
 
-async function reporteReferencias(embs) {
+const MODOS = { des: 'DESGLOSADO', tot: 'SOLO GASTOS TOTALES', mes: 'GASTOS TOTALES POR MES', cli: 'GASTOS TOTALES POR CLIENTE' };
+const totRef = (e) => (e.gastos || []).reduce((s, g) => s + (+g.importe || 0), 0);
+async function reporteResumen(xs, modo, tot, nf) {
+  const D = await base('REPORTE POR REFERENCIA', `${MODOS[modo]}  ·  ${xs.length} REFERENCIAS  ·  ${nf} FACTURAS`, false);
+  const { M, AN, FB } = D;
+  const p = (v) => (tot ? (v / tot) * 100 : 0).toFixed(1) + '%';
+  if (modo === 'tot') {
+    const max = Math.max(1, ...xs.map(totRef));
+    D.tabla([['REFERENCIA', 74, '', true], ['CLIENTE', 0], ['ESTADO', 58, 'c'], ['FACTURAS', 54, 'c'], ['TOTAL', 84, 'r', true], ['%', 42, 'r'], ['', 90]],
+      xs.map((e) => [e.ref, e.cliente, e.gastosCerrada ? 'CERRADA' : 'ABIERTA', e.gastos.length, '$' + money(totRef(e)), p(totRef(e)), '']), { barra: { col: 6, frac: (i) => totRef(xs[i]) / max } });
+  } else if (modo === 'mes') {
+    const Mm = {}; xs.forEach((e) => e.gastos.forEach((g) => { const k = (g.fecha || '').slice(0, 7) || 'Sin fecha'; const o = Mm[k] || (Mm[k] = { v: 0, n: 0, refs: new Set() }); o.v += +g.importe || 0; o.n++; o.refs.add(e.ref); }));
+    const ms = Object.entries(Mm).sort((a, b) => (a[0] === 'Sin fecha' ? 1 : b[0] === 'Sin fecha' ? -1 : b[0].localeCompare(a[0]))); const max = Math.max(1, ...ms.map((m) => m[1].v));
+    D.tabla([['MES', 0, '', true], ['REFERENCIAS', 70, 'c'], ['FACTURAS', 60, 'c'], ['TOTAL', 90, 'r', true], ['%', 44, 'r'], ['', 120]],
+      ms.map(([k, o]) => [k === 'Sin fecha' ? 'SIN FECHA DE TRANSFERENCIA' : `${MESES[+k.slice(5) - 1]} ${k.slice(0, 4)}`, o.refs.size, o.n, '$' + money(o.v), p(o.v), '']), { barra: { col: 5, frac: (i) => ms[i][1].v / max }, alto: 18, z: 9 });
+  } else {
+    const C = {}; xs.forEach((e) => { const k = e.cliente || 'Sin cliente', o = C[k] || (C[k] = { v: 0, n: 0, refs: 0 }); o.v += totRef(e); o.n += e.gastos.length; o.refs++; });
+    const cs = Object.entries(C).sort((a, b) => b[1].v - a[1].v); const max = Math.max(1, ...cs.map((c) => c[1].v));
+    D.tabla([['CLIENTE', 0, '', true], ['REFERENCIAS', 70, 'c'], ['FACTURAS', 60, 'c'], ['TOTAL', 90, 'r', true], ['%', 44, 'r'], ['', 120]],
+      cs.map(([k, o]) => [k, o.refs, o.n, '$' + money(o.v), p(o.v), '']), { barra: { col: 5, frac: (i) => cs[i][1].v / max }, alto: 18, z: 9 });
+  }
+  D.espacio(30);
+  const tt = `TOTAL GENERAL   $${money(tot)} MXN`;
+  D.pg.drawRectangle({ x: M + AN - 250, y: D.y - 24, width: 250, height: 24, color: BEIGE });
+  D.texto(tt, M + AN - 12 - D.ancho(tt, 12, FB), D.y - 16.5, 12, FB, OSCURO);
+  return D.fin();
+}
+
+async function reporteReferencias(embs, modo = 'des') {
+  if (!MODOS[modo]) modo = 'des';
   const xs = embs.filter((e) => (e.gastos || []).length).sort((a, b) => String(b.ref || '').localeCompare(String(a.ref || '')));
   const tot = xs.reduce((a, e) => a + (e.gastos || []).reduce((s, g) => s + (+g.importe || 0), 0), 0);
   const nf = xs.reduce((a, e) => a + e.gastos.length, 0);
-  const D = await base('REPORTE POR REFERENCIA', `CONTROL DE GASTOS  ·  ${xs.length} REFERENCIAS  ·  ${nf} FACTURAS  ·  $${money(tot)}`, true);
+  if (modo !== 'des') return reporteResumen(xs, modo, tot, nf);
+  const D = await base('REPORTE POR REFERENCIA', `DESGLOSADO  ·  ${xs.length} REFERENCIAS  ·  ${nf} FACTURAS  ·  $${money(tot)}`, true);
   const { M, AN, FB, F } = D;
   const COLS = [['#', 18, 'c'], ['FACTURA', 74, '', true], ['PROVEEDOR', 128], ['CONCEPTO', 118], ['DETALLE', 0], ['FECHA TRANSF.', 66, 'c'], ['METODO', 42, 'c'], ['PDF', 26, 'c'], ['XML', 26, 'c'], ['PAGO', 30, 'c'], ['IMPORTE', 76, 'r', true]];
   xs.forEach((e) => {

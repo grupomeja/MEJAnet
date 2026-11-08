@@ -547,6 +547,13 @@ main{padding-bottom:40px}
 .g-kpi b{font-family:"Oswald","Arial Narrow",system-ui,sans-serif;font-size:19px;font-weight:600;color:var(--cel-ink);line-height:1.15;font-variant-numeric:tabular-nums}
 .g-kpi{display:grid!important;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:10px;align-content:center}.g-kpi span{grid-column:1/-1}
 .g-kpi i{font-style:normal;font-size:11px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;align-self:center;padding-top:3px}
+.rr-menu{position:fixed;inset:0;background:rgba(20,15,10,.38);z-index:60;display:flex;align-items:center;justify-content:center;padding:16px}
+.rr-box{background:var(--surface,#fff);border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.3);width:min(420px,100%);padding:14px;display:flex;flex-direction:column;gap:7px}
+.rr-bt{display:flex;flex-direction:column;margin:0 2px 4px}.rr-bt b{font-family:"Oswald","Arial Narrow",system-ui,sans-serif;font-size:17px;letter-spacing:.8px;text-transform:uppercase;color:var(--cel-ink)}.rr-bt span{font-size:12.5px;color:var(--ink-2)}
+.rr-box button{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:1px;border:1px solid var(--cel-line);background:linear-gradient(180deg,var(--cel-bg1),var(--cel-bg2));border-radius:9px;padding:9px 13px;cursor:pointer;font:inherit}
+.rr-box button b{font-size:13.5px;color:var(--cel-ink)}.rr-box button span{font-size:11.5px;color:var(--ink-2)}.rr-box button:hover{border-color:var(--cel-ink);filter:brightness(.98)}
+.rr-box .rr-can{align-items:center;background:none;border:0;color:var(--ink-2);font-size:12.5px;padding:6px}
+.rr-s td.bar{width:140px}
 .g-btns{display:flex;flex-direction:column;gap:4px;height:52px}
 .g-repbtn{flex:1;display:flex;align-items:center;gap:6px;background:var(--cel-ink,#4A3826);color:#EAE1D3;border:0;border-radius:7px;padding:0 11px;font:inherit;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;white-space:nowrap}
 .rp-pdf{display:inline-flex;align-items:center;gap:6px;background:#88F9C0;color:#000;border:0;border-radius:999px;padding:6px 14px;font:inherit;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;align-self:center;margin-left:auto}.rp-pdf:hover{filter:brightness(.95)}
@@ -1092,24 +1099,60 @@ function leerCFDI(txt){
   return{factura:folio.toUpperCase(),proveedor:a(em,"Nombre").toUpperCase(),importe:isFinite(tot)?tot:"",moneda:a(c,"Moneda")==="USD"?"USD":"",
     metodo:/^(PUE|PPD)$/.test(a(c,"MetodoPago"))?a(c,"MetodoPago"):"",uuid:a(tf,"UUID").toUpperCase(),fecha:(a(c,"Fecha")||"").slice(0,10)}
 }
-const BTN_PDF=t=>`<a class="rp-pdf" href="/api/admin/opm/reporte/${t==="ejecutivo"?"ejecutivo":"referencias"}.pdf" download><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Descargar PDF</a>`;
+const RR_MODOS=[["des","Desglosado","Cada referencia con todas sus facturas"],["tot","Solo gastos totales","Gasto total de cada referencia, sin facturas"],["mes","Gastos totales por mes","Gasto total de cada mes (fecha de transferencia)"],["cli","Gastos totales por cliente","Gasto total de cada cliente"]];
+function menuReporteRef(){
+  let m=$("#rr-menu");if(m)m.remove();
+  m=document.createElement("div");m.id="rr-menu";m.className="rr-menu";
+  m.innerHTML=`<div class="rr-box" role="dialog" aria-label="Tipo de reporte"><div class="rr-bt"><b>Reporte x referencia</b><span>¿Cómo quieres el reporte?</span></div>
+    ${RR_MODOS.map(([k,t,d])=>`<button type="button" data-rrmodo="${k}"><b>${t}</b><span>${d}</span></button>`).join("")}
+    <button type="button" class="rr-can" data-rrmodo="">Cancelar</button></div>`;
+  document.body.appendChild(m);
+  m.addEventListener("click",ev=>{const b=ev.target.closest("[data-rrmodo]");if(!b&&ev.target!==m)return;m.remove();
+    if(b&&b.dataset.rrmodo){ui.reporte="ref";ui.rrModo=b.dataset.rrmodo;ui.open=null;ui.newMode=false;renderDrawer()}});
+}
+document.addEventListener("keydown",ev=>{if(ev.key==="Escape"&&$("#rr-menu"))$("#rr-menu").remove()});
+const BTN_PDF=(t,modo)=>`<a class="rp-pdf" href="/api/admin/opm/reporte/${t==="ejecutivo"?"ejecutivo":"referencias"}.pdf${modo?"?modo="+modo:""}" download><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Descargar PDF</a>`;
 function renderReporteRef(){
+  const modo=ui.rrModo||"des",nomModo=(RR_MODOS.find(m=>m[0]===modo)||RR_MODOS[0])[1];
   const xs=Object.entries(EMB).map(([id,e])=>({id,e})).filter(x=>(x.e.gastos||[]).length).sort((a,b)=>(b.e.ref||"").localeCompare(a.e.ref||""));
   const tot=xs.reduce((a,x)=>a+totGastos(x.e).MXN,0),nf=xs.reduce((a,x)=>a+x.e.gastos.length,0);
   const si=v=>v?`<td class="c si">✓</td>`:`<td class="c no">✗</td>`;
-  $("#drawer").innerHTML=`
-  <div class="dh"><div class="id"><div class="refbig rp-tit">Reporte x referencia</div><div class="cli">Control de gastos por referencia</div>
-    <div class="meta"><span class="pill">${fd(TODAY)}</span><span class="pill">${xs.length} referencias · ${nf} facturas</span><span class="pill">$${money(tot)}</span></div></div>
-    ${BTN_PDF("referencias")}
-    <button class="x" type="button" data-close aria-label="Cerrar">×</button></div>
-  <div class="db rp">
-    ${xs.map(x=>{const g=x.e.gastos,t=totGastos(x.e);return `<div class="card rr-ref">
+  const pc=v=>(tot?v/tot*100:0).toFixed(1)+"%";
+  const barra=(v,max)=>`<u class="rb"><s style="width:${Math.max(2,max?v/max*100:0).toFixed(1)}%"></s></u>`;
+  const MES=["ENE","FEB","MAR","ABR","MAY","JUN","JUL","AGO","SEP","OCT","NOV","DIC"];
+  const tablaSimple=(cols,filas,cg)=>`<div class="card rp-card"><div class="scroll"><table class="rp-t rr-s">${cg||""}<thead><tr>${cols.map(c=>`<th class="${c[1]||""}">${c[0]}</th>`).join("")}</tr></thead><tbody>${filas}</tbody></table></div></div>`;
+  let cuerpo="";
+  if(modo==="des"){
+    cuerpo=xs.map(x=>{const g=x.e.gastos,t=totGastos(x.e);return `<div class="card rr-ref">
       <div class="rr-h"><a href="#" data-open="${esc(x.id)}">${esc(x.e.ref)}</a><span class="cl">${esc(x.e.cliente||"")}</span><span class="der">${x.e.gastosCerrada?"CERRADA":"ABIERTA"} · ${g.length} factura${g.length===1?"":"s"} · $${money(t.MXN)}</span></div>
       <div class="scroll"><table class="rp-t rr-t"><colgroup><col style="width:28px"><col style="width:112px"><col style="width:190px"><col style="width:170px"><col><col style="width:96px"><col style="width:62px"><col style="width:44px"><col style="width:44px"><col style="width:48px"><col style="width:100px"></colgroup><thead><tr><th>#</th><th>Factura</th><th>Proveedor</th><th>Concepto</th><th>Detalle</th><th class="c">Fecha</th><th class="c">Método</th><th class="c">PDF</th><th class="c">XML</th><th class="c">Pago</th><th class="r">Importe</th></tr></thead><tbody>
-      ${g.map((y,i)=>`<tr><td>${i+1}</td><td class="mono ${!y.factura||/pendiente/i.test(y.factura)?"pend":"b"}">${esc(y.factura||"PENDIENTE")}</td><td class="trunc" title="${esc(y.proveedor||"")}">${esc(y.proveedor||"")}</td><td class="trunc">${esc(nomConcepto(y.concepto)||"")}</td><td class="det" title="${esc(y.detalle||"")}">${esc(y.detalle||"")}</td><td class="c" style="white-space:nowrap">${y.fecha?fd(y.fecha).replace(/^\S+ /,""):"—"}</td><td class="c">${esc(y.metodo||"—")}</td>${si(y.pdf)}${si(y.xml)}${si(y.pago)}<td class="r b">$${money(+y.importe||0)}</td></tr>`).join("")}
-      </tbody></table></div></div>`}).join("")||`<p class="muted">Sin gastos capturados.</p>`}
+      ${g.map((y,i)=>`<tr><td>${i+1}</td><td class="mono ${!y.factura||/pendiente/i.test(y.factura)?"pend":"b"}">${esc(y.factura||"PENDIENTE")}</td><td title="${esc(y.proveedor||"")}">${esc(y.proveedor||"")}</td><td>${esc(nomConcepto(y.concepto)||"")}</td><td class="det" title="${esc(y.detalle||"")}">${esc(y.detalle||"")}</td><td class="c">${y.fecha?fd(y.fecha).replace(/^\S+ /,""):"—"}</td><td class="c">${esc(y.metodo||"—")}</td>${si(y.pdf)}${si(y.xml)}${si(y.pago)}<td class="r b">$${money(+y.importe||0)}</td></tr>`).join("")}
+      </tbody></table></div></div>`}).join("");
+  }else if(modo==="tot"){
+    const max=Math.max(1,...xs.map(x=>totGastos(x.e).MXN));
+    cuerpo=tablaSimple([["Referencia"],["Cliente"],["Estado","c"],["Facturas","c"],["Total","r"],["%","r"],["",""]],
+      xs.map(x=>{const t=totGastos(x.e);return `<tr><td class="mono"><a href="#" data-open="${esc(x.id)}">${esc(x.e.ref)}</a></td><td>${esc(x.e.cliente||"")}</td><td class="c">${x.e.gastosCerrada?`<span class="pill">Cerrada</span>`:`<span class="pill info">Abierta</span>`}</td><td class="c">${t.n}</td><td class="r b">$${money(t.MXN)}</td><td class="r">${pc(t.MXN)}</td><td class="bar">${barra(t.MXN,max)}</td></tr>`}).join(""));
+  }else if(modo==="mes"){
+    const M={};xs.forEach(x=>x.e.gastos.forEach(g=>{const k=(g.fecha||"").slice(0,7)||"Sin fecha";const o=M[k]||(M[k]={v:0,n:0,refs:new Set()});o.v+=+g.importe||0;o.n++;o.refs.add(x.id)}));
+    const ms=Object.entries(M).sort((a,b)=>a[0]==="Sin fecha"?1:b[0]==="Sin fecha"?-1:b[0].localeCompare(a[0])),max=Math.max(1,...ms.map(m=>m[1].v));
+    cuerpo=tablaSimple([["Mes"],["Referencias","c"],["Facturas","c"],["Total","r"],["%","r"],["",""]],
+      ms.map(([k,o])=>`<tr><td class="b">${k==="Sin fecha"?"Sin fecha de transferencia":MES[+k.slice(5)-1]+" "+k.slice(0,4)}</td><td class="c">${o.refs.size}</td><td class="c">${o.n}</td><td class="r b">$${money(o.v)}</td><td class="r">${pc(o.v)}</td><td class="bar">${barra(o.v,max)}</td></tr>`).join(""));
+  }else{
+    const C={};xs.forEach(x=>{const k=x.e.cliente||"Sin cliente",o=C[k]||(C[k]={v:0,n:0,refs:0});o.v+=totGastos(x.e).MXN;o.n+=x.e.gastos.length;o.refs++});
+    const cs=Object.entries(C).sort((a,b)=>b[1].v-a[1].v),max=Math.max(1,...cs.map(c=>c[1].v));
+    cuerpo=tablaSimple([["Cliente"],["Referencias","c"],["Facturas","c"],["Total","r"],["%","r"],["",""]],
+      cs.map(([k,o])=>`<tr><td class="b">${esc(k)}</td><td class="c">${o.refs}</td><td class="c">${o.n}</td><td class="r b">$${money(o.v)}</td><td class="r">${pc(o.v)}</td><td class="bar">${barra(o.v,max)}</td></tr>`).join(""));
+  }
+  $("#drawer").innerHTML=`
+  <div class="dh"><div class="id"><div class="refbig rp-tit">Reporte x referencia</div><div class="cli">${nomModo}</div>
+    <div class="meta"><span class="pill">${fd(TODAY)}</span><span class="pill">${xs.length} referencias · ${nf} facturas</span><span class="pill">$${money(tot)}</span>
+    <select class="mini-select" id="rr-modo" aria-label="Tipo de reporte">${RR_MODOS.map(([k,t])=>`<option value="${k}" ${k===modo?"selected":""}>${t}</option>`).join("")}</select></div></div>
+    ${BTN_PDF("referencias",modo)}
+    <button class="x" type="button" data-close aria-label="Cerrar">×</button></div>
+  <div class="db rp">${cuerpo||`<p class="muted">Sin gastos capturados.</p>`}
     <div class="rr-tot"><b>Total general $${money(tot)}</b></div>
   </div>`;
+  $("#rr-modo").onchange=ev=>{ui.rrModo=ev.target.value;renderDrawer()};
 }
 function renderReporte(){
   const xs=Object.entries(EMB).map(([id,e])=>({id,e})).filter(x=>(x.e.gastos||[]).length);
@@ -1287,7 +1330,7 @@ function isEditing(){const ae=document.activeElement;return !!(ae&&ae.closest&&a
 function renderDrawerInner(){
   const d=$("#drawer");
   if(!ui.open&&!ui.newMode&&!ui.reporte){d.hidden=true;$("#scrim").hidden=true;document.documentElement.classList.remove("ficha-abierta");return}
-  d.classList.toggle("ancho",ui.reporte==="ref"&&!ui.open&&!ui.newMode);
+  d.classList.toggle("ancho",ui.reporte==="ref"&&(ui.rrModo||"des")==="des"&&!ui.open&&!ui.newMode);
   d.hidden=false;$("#scrim").hidden=false;document.documentElement.classList.add("ficha-abierta");
   if(ui.newMode){renderNew();return}
   if(ui.reporte&&!ui.open){ui.reporte==="ref"?renderReporteRef():renderReporte();return}
@@ -1556,7 +1599,8 @@ document.addEventListener("click",ev=>{
   if(t.hasAttribute("data-close")){ui.open=null;ui.newMode=false;ui.reporte=false;renderDrawer();return}
   if(t.closest("#f-estado")&&t.dataset.e!==undefined){ui.estado=t.dataset.e;syncSeg();renderAll();return}
   if(t.closest("#f-tipo")&&t.dataset.t!==undefined){ui.tipo=t.dataset.t;syncSeg();renderAll();return}
-  if(t.id==="b-repej"||t.id==="b-repref"){ui.reporte=t.id==="b-repej"?"ejec":"ref";ui.open=null;ui.newMode=false;renderDrawer();return}
+  if(t.id==="b-repej"){ui.reporte="ejec";ui.open=null;ui.newMode=false;renderDrawer();return}
+  if(t.id==="b-repref"){menuReporteRef();return}
   if(t.id==="n-asig"){const m=$("#n-asig-m");t.disabled=true;m.textContent="Consultando el control de referencias…";
     api("GET","/api/admin/opm/siguiente-ref").then(r=>{$("#n-ref").value=r.ref;m.textContent="Consecutivo de MANZANILLO 26 · se registra al crear el embarque"}).catch(e=>{m.textContent=e.message}).finally(()=>{t.disabled=false});return}
   if(t.id==="b-nuevo"){if(!canWrite){toast("Este tablero es de solo lectura para ti");return}ui.newMode=true;ui.open=null;renderDrawer();return}
