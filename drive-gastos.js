@@ -127,7 +127,7 @@ async function sincronizar(antes, despues, { leerArchivo, guardarDriveId, leerDr
 let versionScript = 0, versionHora = 0;
 async function scriptListo() {
   if (!activo()) return false;
-  if (versionScript >= 2 && Date.now() - versionHora < 10 * 60e3) return true;
+  if (versionScript >= 3 && Date.now() - versionHora < 10 * 60e3) return true;
   try { const r = await fetch(URL_(), { redirect: 'follow' }); const j = JSON.parse(await r.text()); versionScript = +j.version || 1; }
   catch { versionScript = 0; }
   versionHora = Date.now();
@@ -137,9 +137,13 @@ async function siguienteRef(ocupadas) {
   if (!(await scriptListo())) throw new Error('Falta actualizar el Apps Script de Google (versión 2) para asignar referencias.');
   return (await enviarYa({ accion: 'siguienteRef', ocupadas })).ref;
 }
+async function borrarRef(ref) {
+  if (!(await scriptListo()) || versionScript < 3) return null;
+  return enviarYa({ accion: 'borrarRef', ref });
+}
 async function registrarRef(ref, cliente) {
   if (!(await scriptListo())) return null;
   return enviarYa({ accion: 'registrarRef', ref, cliente });
 }
 
-module.exports = { activo, sincronizar, programarResumen, resumenPDF, carpetaDe, siguienteRef, registrarRef };
+module.exports = { activo, sincronizar, programarResumen, resumenPDF, carpetaDe, siguienteRef, registrarRef, borrarRef };

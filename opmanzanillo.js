@@ -47,6 +47,8 @@ async function init() {
       datos BYTEA NOT NULL, creado TIMESTAMPTZ NOT NULL DEFAULT now())`);
   await importarGastos('gastos-2026-11-06', path.join(__dirname, 'seed', 'gastos_2026-11-06.json'));
   if (pool) await pool.query('CREATE TABLE IF NOT EXISTS opm_drive (archivo TEXT PRIMARY KEY, drive_id TEXT NOT NULL)');
+  // Referencias que MEJAnet escribió en el Google Sheet de control (solo esas se quitan al borrar el embarque)
+  if (pool) await pool.query('CREATE TABLE IF NOT EXISTS opm_refsheet (id TEXT PRIMARY KEY, ref TEXT NOT NULL)');
   // Primera vez que se conecta Google Drive: copia lo que ya existe (archivos y resúmenes)
   if (drive.activo() && !(await yaAplicada('drive-inicial'))) {
     await marcarAplicada('drive-inicial');
@@ -295,7 +297,7 @@ function rutas(admin) {
       if (!(await crear(id, datos))) return res.status(409).json({ error: `La referencia ${datos.ref} ya existe.` });
       res.json({ ok: true, id });
       // Deja registro de la referencia y su cliente en el Google Sheet de control (MANZANILLO 26)
-      drive.registrarRef(datos.ref, datos.cliente || '').then((r) => r && console.log(`OP Manzanillo: ${datos.ref} ${r.existente ? 'ya estaba' : 'registrada'} en el control de referencias (fila ${r.fila})`))
+      drive.registrarRef(datos.ref, datos.cliente || '').then(async (r) => { if (r && !r.existente && pool) await pool.query('INSERT INTO opm_refsheet (id, ref) VALUES ($1,$2) ON CONFLICT (id) DO UPDATE SET ref = EXCLUDED.ref', [id, datos.ref]); return r; }).then((r) => r && console.log(`OP Manzanillo: ${datos.ref} ${r.existente ? 'ya estaba' : 'registrada'} en el control de referencias (fila ${r.fila})`))
         .catch((e) => console.error('Control de referencias (' + datos.ref + '):', e.message));
     } catch (e) { err(res, e, 'No se pudo crear el embarque'); }
   });
@@ -369,8 +371,21 @@ function rutas(admin) {
   });
   r.delete('/api/admin/opm/embarques/:id', admin, async (req, res) => {
     if (!idValido(req.params.id)) return res.status(400).json({ error: 'Datos inválidos' });
-    try { (await borrar(req.params.id)) ? res.json({ ok: true }) : res.status(404).json({ error: 'No encontrado' }); }
-    catch (e) { err(res, e, 'No se pudo borrar'); }
+    try {
+      if (!(await borrar(req.params.id))) return res.status(404).json({ error: 'No encontrado' });
+      res.json({ ok: true });
+      if (pool) {
+        const q = await pool.query('SELECT ref FROM opm_refsheet WHERE id = $1', [req.params.id]);
+        if (q.rows[0]) {
+          const ref = q.rows[0].ref;
+          drive.borrarRef(ref).then(async (r) => {
+            if (!r) return console.log(`Control de referencias: ${ref} no se quitó (falta la versión 3 del Apps Script)`);
+            await pool.query('DELETE FROM opm_refsheet WHERE id = $1', [req.params.id]);
+            console.log(`OP Manzanillo: ${ref} quitada del control de referencias`);
+          }).catch((e) => console.error('Control de referencias (borrar ' + ref + '):', e.message));
+        }
+      }
+    } catch (e) { err(res, e, 'No se pudo borrar'); }
   });
   return r;
 }
