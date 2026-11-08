@@ -970,6 +970,7 @@ function renderEjec(){
 /* ---------- render: seguimiento ---------- */
 // Orden de la tabla según «Ordenar por»
 const RANGO={gr:0,ye:1,az:2,or:3,no:4};
+function ordenRef(ra,rb){return numRef(rb)-numRef(ra)||String(rb||"").localeCompare(String(ra||""))}
 function numRef(r){const m=/^MA(\d+)\/(\d+)/.exec(r||"");return m?(+m[2])*10000+(+m[1]):-1}
 function fechaDesp(e){const h=hit(e,"despacho");return h.r||h.e||""}
 function prioridad(p,q){
@@ -1128,7 +1129,7 @@ document.addEventListener("keydown",ev=>{if(ev.key==="Escape"&&$("#rr-menu"))$("
 const BTN_PDF=(t,modo)=>`<a class="rp-pdf" href="/api/admin/opm/reporte/${t==="ejecutivo"?"ejecutivo":"referencias"}.pdf${modo?"?modo="+modo:""}" download><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Descargar PDF</a>`;
 function renderReporteRef(){
   const modo=ui.rrModo||"des",nomModo=(RR_MODOS.find(m=>m[0]===modo)||RR_MODOS[0])[1];
-  const xs=Object.entries(EMB).map(([id,e])=>({id,e})).filter(x=>(x.e.gastos||[]).length).sort((a,b)=>(b.e.ref||"").localeCompare(a.e.ref||""));
+  const xs=Object.entries(EMB).map(([id,e])=>({id,e})).filter(x=>(x.e.gastos||[]).length).sort((a,b)=>ordenRef(a.e.ref,b.e.ref));
   const tot=xs.reduce((a,x)=>a+totGastos(x.e).MXN,0),nf=xs.reduce((a,x)=>a+x.e.gastos.length,0);
   const si=v=>v?`<td class="c si">✓</td>`:`<td class="c no">✗</td>`;
   const pc=v=>(tot?v/tot*100:0).toFixed(1)+"%";
@@ -1218,7 +1219,7 @@ function renderGas(){
   const q=(ui.gasQ||"").toUpperCase();
   const tab=ui.gasTab||"abiertas";
   const lista=xs.filter(x=>(tab==="cerradas")===!!x.e.gastosCerrada).filter(x=>!q||[x.e.ref,x.e.cliente,...(x.e.gastos||[]).flatMap(g=>[g.factura,g.proveedor,g.detalle,nomConcepto(g.concepto)])].join(" ").toUpperCase().includes(q))
-    .sort((a,b)=>(b.e.ref||"").localeCompare(a.e.ref||""));
+    .sort((a,b)=>ordenRef(a.e.ref,b.e.ref));
   const abiertas=xs.filter(x=>!x.e.gastosCerrada),cerradas=xs.filter(x=>x.e.gastosCerrada);
   const T={MXN:0,n:0,pdf:0,xml:0,pago:0,ppd:0,sinFac:0};abiertas.forEach(x=>{const t=totGastos(x.e);for(const k in T)T[k]+=t[k]||0});
   const byC={};abiertas.forEach(x=>(x.e.gastos||[]).forEach(g=>{const k=nomConcepto(g.concepto)||"Sin concepto";byC[k]=(byC[k]||0)+(+g.importe||0)}));
@@ -1271,7 +1272,7 @@ function renderGas(){
   <div class="g-bar">
     <div class="seg-tabs"><button type="button" class="${tab==="abiertas"?"on":""}" data-gtab="abiertas">Abiertas <small>${abiertas.length}</small></button><button type="button" class="${tab==="cerradas"?"on":""}" data-gtab="cerradas">Cerradas <small>${cerradas.length}</small></button></div>
     <input class="g-q" id="g-q" placeholder="Buscar referencia, factura, proveedor…" value="${esc(ui.gasQ||"")}">
-    ${canWrite?`<select class="g-addsel" id="g-addref"><option value="">Agregar gasto a una referencia…</option>${Object.entries(EMB).filter(([i,e])=>!(e.gastos||[]).length).sort((a,b)=>(b[1].ref||"").localeCompare(a[1].ref||"")).map(([i,e])=>`<option value="${esc(i)}">${esc(e.ref)} · ${esc(e.cliente||"")}</option>`).join("")}</select>`:""}
+    ${canWrite?`<select class="g-addsel" id="g-addref"><option value="">Agregar gasto a una referencia…</option>${Object.entries(EMB).filter(([i,e])=>!(e.gastos||[]).length).sort((a,b)=>ordenRef(a[1].ref,b[1].ref)).map(([i,e])=>`<option value="${esc(i)}">${esc(e.ref)} · ${esc(e.cliente||"")}</option>`).join("")}</select>`:""}
     <button type="button" class="btn sm" id="g-expand">${lista.every(x=>abiertos.has(x.id))&&lista.length?"Contraer todo":"Expandir todo"}</button>
   </div>
   <div class="g-list">${lista.map(bloque).join("")||`<div class="empty">${tab==="cerradas"?"No hay referencias cerradas.":"No hay referencias con gastos abiertas."}</div>`}</div>`;

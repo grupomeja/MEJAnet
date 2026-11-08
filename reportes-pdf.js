@@ -11,6 +11,8 @@ const money = (n) => (+n || 0).toLocaleString('en-US', { minimumFractionDigits: 
 const MESES = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
 const fec = (iso) => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || ''); return m ? `${m[3]} ${MESES[+m[2] - 1]} ${m[1]}` : ''; };
 const nomC = (c) => CAT[c] || c || '';
+// Orden de referencias por año y luego por número (MA174/25 va después de MA001/26)
+const numRef = (r) => { const m = /^MA(\d+)\/(\d+)/.exec(r || ''); return m ? (+m[2]) * 10000 + (+m[1]) : -1; };
 const pct = (v, t) => (t ? (v / t) * 100 : 0);
 
 const INK = hex('#2B241B'), CAFE = hex('#5E4E37'), OSCURO = hex('#4A3826'), BEIGE = hex('#EAE1D3'), SUAVE = hex('#FAF6EF'),
@@ -162,7 +164,7 @@ async function reporteResumen(xs, modo, tot, nf) {
 
 async function reporteReferencias(embs, modo = 'des') {
   if (!MODOS[modo]) modo = 'des';
-  const xs = embs.filter((e) => (e.gastos || []).length).sort((a, b) => String(b.ref || '').localeCompare(String(a.ref || '')));
+  const xs = embs.filter((e) => (e.gastos || []).length).sort((a, b) => numRef(b.ref) - numRef(a.ref) || String(b.ref || '').localeCompare(String(a.ref || '')));
   const tot = xs.reduce((a, e) => a + (e.gastos || []).reduce((s, g) => s + (+g.importe || 0), 0), 0);
   const nf = xs.reduce((a, e) => a + e.gastos.length, 0);
   if (modo !== 'des') return reporteResumen(xs, modo, tot, nf);
