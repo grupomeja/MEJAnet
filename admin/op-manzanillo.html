@@ -625,7 +625,8 @@ td>.gi[type=date]{min-width:118px}
 .doc{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap;text-decoration:none;cursor:pointer;font-family:inherit}
 body.vista-gas .filters,body.vista-gas #b-nuevo{display:none}
 .g-titulo{display:flex;align-items:center;gap:18px;margin:12px 0 6px;font-family:var(--f-body);font-weight:800;font-size:15px;line-height:1;letter-spacing:.32em;text-transform:uppercase;color:#7A1C1C;text-align:left;white-space:nowrap}
-.g-titulo::after{content:"";flex:1;height:1px;background:rgba(122,28,28,.18)}
+.g-titulo span{background:#4A3826;color:#fff;padding:8px 14px 8px 16px;border-radius:6px}
+.g-titulo::after{content:"";flex:1;height:2px;background:#D9CBB5}
 .doc-w{display:inline-flex;align-items:center;gap:2px}
 .doc-x{border:0;background:none;color:var(--bad);font-size:13px;line-height:1;padding:0 2px;cursor:pointer;opacity:.45}.doc-x:hover{opacity:1}
 .doc.ok{background:#E2F2E8;color:#1F6B41;border:1px solid #BFE3CC}
@@ -1246,7 +1247,7 @@ function renderGas(){
         <div class="gref-acc">${vacia?`<button type="button" class="btn sm" data-gquitar="${esc(x.id)}" style="color:var(--bad);margin-right:auto">× Quitar referencia de Gastos</button>`:""}${canWrite?(x.e.gastosCerrada?`<button type="button" class="btn sm" data-greopen="${esc(x.id)}">Reabrir referencia</button>`:`<button type="button" class="btn sm cerrar-ref" data-gclose="${esc(x.id)}">Cerrar referencia</button>`):""}<button type="button" class="btn sm" data-open="${esc(x.id)}">Ver ficha del embarque</button></div></div>`:""}
     </div>`};
   $("#v-gas").innerHTML=`
-  <h2 class="g-titulo">Control de gastos</h2>
+  <h2 class="g-titulo"><span>Control de gastos</span></h2>
   <div class="g-st">
     <div class="g-kpi"><span>Gasto total</span><b>$${money(S.tot)}</b></div>
     <div class="g-kpi"><span>Cliente con mayor gasto</span><b>$${money(topCli[1])}</b><i title="${esc(topCli[0])}">${esc(topCli[0])}</i></div>
