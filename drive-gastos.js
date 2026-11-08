@@ -122,4 +122,24 @@ async function sincronizar(antes, despues, { leerArchivo, guardarDriveId, leerDr
   if (cambio) programarResumen(despues);
 }
 
-module.exports = { activo, sincronizar, programarResumen, resumenPDF, carpetaDe };
+// ---------- Referencias consecutivas (Google Sheet MANZANILLO 26) ----------
+// Requiere la versión 2 del Apps Script; con la versión anterior no se llama para no crear carpetas basura.
+let versionScript = 0, versionHora = 0;
+async function scriptListo() {
+  if (!activo()) return false;
+  if (versionScript >= 2 && Date.now() - versionHora < 10 * 60e3) return true;
+  try { const r = await fetch(URL_(), { redirect: 'follow' }); const j = JSON.parse(await r.text()); versionScript = +j.version || 1; }
+  catch { versionScript = 0; }
+  versionHora = Date.now();
+  return versionScript >= 2;
+}
+async function siguienteRef(ocupadas) {
+  if (!(await scriptListo())) throw new Error('Falta actualizar el Apps Script de Google (versión 2) para asignar referencias.');
+  return (await enviarYa({ accion: 'siguienteRef', ocupadas })).ref;
+}
+async function registrarRef(ref, cliente) {
+  if (!(await scriptListo())) return null;
+  return enviarYa({ accion: 'registrarRef', ref, cliente });
+}
+
+module.exports = { activo, sincronizar, programarResumen, resumenPDF, carpetaDe, siguienteRef, registrarRef };

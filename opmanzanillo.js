@@ -291,8 +291,20 @@ function rutas(admin) {
     const id = datos.ref.toUpperCase().replace(/\//g, '-').replace(/[^A-Z0-9_.\-]/g, '');
     if (!idValido(id)) return res.status(400).json({ error: 'Referencia inválida.' });
     datos.creado = new Date().toISOString();
-    try { (await crear(id, datos)) ? res.json({ ok: true, id }) : res.status(409).json({ error: `La referencia ${datos.ref} ya existe.` }); }
-    catch (e) { err(res, e, 'No se pudo crear el embarque'); }
+    try {
+      if (!(await crear(id, datos))) return res.status(409).json({ error: `La referencia ${datos.ref} ya existe.` });
+      res.json({ ok: true, id });
+      // Deja registro de la referencia y su cliente en el Google Sheet de control (MANZANILLO 26)
+      drive.registrarRef(datos.ref, datos.cliente || '').then((r) => r && console.log(`OP Manzanillo: ${datos.ref} ${r.existente ? 'ya estaba' : 'registrada'} en el control de referencias (fila ${r.fila})`))
+        .catch((e) => console.error('Control de referencias (' + datos.ref + '):', e.message));
+    } catch (e) { err(res, e, 'No se pudo crear el embarque'); }
+  });
+  // Siguiente referencia consecutiva según la columna MEJA del Google Sheet de control
+  r.get('/api/admin/opm/siguiente-ref', admin, async (req, res) => {
+    try {
+      const ocupadas = (await listar()).map((x) => x.ref).filter(Boolean);
+      res.json({ ok: true, ref: await drive.siguienteRef(ocupadas) });
+    } catch (e) { res.status(502).json({ error: e.message || 'No se pudo consultar el control de referencias' }); }
   });
   r.patch('/api/admin/opm/embarques/:id', admin, async (req, res) => {
     if (!idValido(req.params.id)) return res.status(400).json({ error: 'Datos inválidos' });

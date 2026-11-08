@@ -438,6 +438,9 @@ aside.drawer{position:fixed;top:0;right:0;bottom:0;width:min(820px,100%);backgro
 .confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .saved{font-size:12px;color:var(--ok);min-height:16px}
 .toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:8px 14px;border-radius:6px;z-index:60;font-size:13px}
+.ref-asig{display:flex;gap:6px;align-items:stretch}.ref-asig input{flex:0 1 130px;min-width:0}
+.btn-asig{background:#88F9C0;color:#000;border:0;border-radius:999px;padding:4px 12px;font:inherit;font-size:12px;font-weight:700;white-space:nowrap;cursor:pointer}
+.btn-asig:hover{filter:brightness(.95)}.btn-asig:disabled{opacity:.6;cursor:wait}.ref-asig-m{font-size:11px;font-weight:400;min-height:0}
 .newform{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px}
 main{padding-bottom:40px}
 @media (prefers-reduced-motion:no-preference){aside.drawer{animation:slide .18s ease-out}@keyframes slide{from{transform:translateX(24px);opacity:.6}to{transform:none;opacity:1}}}
@@ -1259,14 +1262,15 @@ function renderNew(){
   const d=$("#drawer");
   d.innerHTML=`<div class="dh"><div class="id"><div class="refbig">Nuevo embarque</div><div class="cli nota-nuevo">Registra lo básico; el resto se completa en la ficha.</div></div><button class="x" type="button" data-close aria-label="Cerrar">×</button></div>
   <div class="db"><form class="card" id="newform"><div class="newform fields" style="grid-template-columns:repeat(2,minmax(0,1fr))">
-    <label>Referencia<input id="n-ref" class="mono" required></label>
+    <label>Referencia<span class="ref-asig"><input id="n-ref" class="mono" required placeholder="MA000/26"><button type="button" class="btn-asig" id="n-asig">Asignar Referencia</button></span><span class="muted ref-asig-m" id="n-asig-m"></span></label>
     <label>Cliente<input id="n-cli" list="dl-cli2" required></label>
     <label>Buque<input id="n-buque"></label><label>Viaje<input id="n-viaje" class="mono"></label>
     <label>Tipo de operación<select id="n-op"><option value="">SIN ESPECIFICAR</option><option value="IMPORTACION">IMPORTACIÓN</option><option value="EXPORTACION">EXPORTACIÓN</option></select></label>
     <label>Tipo de carga<select id="n-tipo"><option>LCL</option><option>FCL</option></select></label>
     <label>ETA estimada<input type="date" id="n-eta"></label>
     <label>House B/L<input id="n-hbl" class="mono"></label><label>Master B/L<input id="n-mbl" class="mono"></label><label>Contenedor no.<input id="n-cont" class="mono" placeholder="-"></label>
-    <label class="full">Mercancía<input id="n-merc"></label>
+    <label>Mercancía<input id="n-merc"></label>
+    <label>Tipo<select id="n-tcont"><option value="">—</option>${PV_TIPOS.map(([v,n])=>`<option value="${v}">${esc(n)}</option>`).join("")}</select></label>
   </div><div id="n-err" class="muted" style="margin-top:8px"></div><div style="margin-top:12px;display:flex;gap:8px"><button class="btn primary" type="submit">Crear embarque</button><button class="btn" type="button" data-close>Cancelar</button></div></form></div>
   <datalist id="dl-cli2">${clientes().map(c=>`<option value="${esc(c)}">`).join("")}</datalist>`;
 }
@@ -1439,6 +1443,8 @@ document.addEventListener("click",ev=>{
   if(t.hasAttribute("data-close")){ui.open=null;ui.newMode=false;renderDrawer();return}
   if(t.closest("#f-estado")&&t.dataset.e!==undefined){ui.estado=t.dataset.e;syncSeg();renderAll();return}
   if(t.closest("#f-tipo")&&t.dataset.t!==undefined){ui.tipo=t.dataset.t;syncSeg();renderAll();return}
+  if(t.id==="n-asig"){const m=$("#n-asig-m");t.disabled=true;m.textContent="Consultando el control de referencias…";
+    api("GET","/api/admin/opm/siguiente-ref").then(r=>{$("#n-ref").value=r.ref;m.textContent="Consecutivo de MANZANILLO 26 · se registra al crear el embarque"}).catch(e=>{m.textContent=e.message}).finally(()=>{t.disabled=false});return}
   if(t.id==="b-nuevo"){if(!canWrite){toast("Este tablero es de solo lectura para ti");return}ui.newMode=true;ui.open=null;renderDrawer();return}
   if(t.id==="b-export"){exportCSV();return}
   if(t.id==="del-ask"){ui.confirmDel=true;renderDrawer();return}
@@ -1475,7 +1481,7 @@ document.addEventListener("submit",ev=>{
     if(!id){$("#n-err").textContent="Escribe una referencia válida, por ejemplo MA143/26.";return}
     if(EMB[id]){$("#n-err").textContent="La referencia "+ref+" ya existe. Ábrela desde Seguimiento.";return}
     const hitos={};HITOS.forEach(h=>hitos[h.k]={e:"",c:"",r:""});hitos.arribo.e=$("#n-eta").value;
-    const doc={ref,operacion:$("#n-op").value,cliente:$("#n-cli").value.trim().toUpperCase(),buque:$("#n-buque").value.trim().toUpperCase(),viaje:$("#n-viaje").value.trim().toUpperCase(),bandera:"",hbl:$("#n-hbl").value.trim().toUpperCase(),mbl:$("#n-mbl").value.trim().toUpperCase(),ff:"",tipo:$("#n-tipo").value,previo:"",mercancia:$("#n-merc").value.trim().toUpperCase(),marca:"",factura:"",peso:null,bultos:null,contenedores:$("#n-cont").value.trim().toUpperCase(),terminal:"",claveCR:"",pedimento:"",semaforo:"",estado:"activa",diasLibres:null,nota:"",hitos,gastos:[],creado:new Date().toISOString()};
+    const doc={ref,operacion:$("#n-op").value,cliente:$("#n-cli").value.trim().toUpperCase(),buque:$("#n-buque").value.trim().toUpperCase(),viaje:$("#n-viaje").value.trim().toUpperCase(),bandera:"",hbl:$("#n-hbl").value.trim().toUpperCase(),mbl:$("#n-mbl").value.trim().toUpperCase(),ff:"",tipo:$("#n-tipo").value,previo:"",mercancia:$("#n-merc").value.trim().toUpperCase(),marca:"",factura:"",peso:null,bultos:null,contenedores:$("#n-cont").value.trim().toUpperCase(),tipoCont:$("#n-tcont").value,terminal:"",claveCR:"",pedimento:"",semaforo:"",estado:"activa",diasLibres:null,nota:"",hitos,gastos:[],creado:new Date().toISOString()};
     api("POST","/api/admin/opm/embarques",doc).then(r=>{EMB[r.id]=doc;ui.newMode=false;ui.open=r.id;toast("Embarque "+ref+" creado");renderAll();renderDrawer()}).catch(err=>{$("#n-err").textContent=err.message});
   }
 });
