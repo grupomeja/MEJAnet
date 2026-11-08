@@ -624,8 +624,9 @@ td>.gi[type=date]{min-width:118px}
 .seg2 button.on.pue{background:#2E8B57;color:#fff} .seg2 button.on.ppd{background:#2F6FD0;color:#fff}
 .doc{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap;text-decoration:none;cursor:pointer;font-family:inherit}
 body.vista-gas .filters,body.vista-gas #b-nuevo{display:none}
-.g-titulo{display:flex;align-items:center;gap:20px;margin:10px 0 6px;padding:10px 16px 10px 14px;background:linear-gradient(90deg,#F1E4DF 0%,#F6EEE8 55%,rgba(246,238,232,0) 100%);border-left:4px solid #7A1C1C;font-family:var(--f-body);font-weight:800;font-size:19px;line-height:1;letter-spacing:.3em;text-transform:uppercase;color:#7A1C1C;text-align:left;white-space:nowrap}
-.g-titulo::after{content:"";flex:1;height:1px;background:rgba(122,28,28,.2)}
+.g-titulo{display:flex;align-items:center;gap:0;margin:10px 0 6px;font-family:var(--f-body);font-weight:800;font-size:19px;line-height:1;letter-spacing:.3em;text-transform:uppercase;color:#fff;text-align:left;white-space:nowrap}
+.g-titulo span{flex:0 0 50%;background:#7A1C1C;padding:11px 16px;border-radius:0}
+.g-titulo::after{content:"";flex:1;height:2px;background:#7A1C1C;opacity:.35}
 .doc-w{display:inline-flex;align-items:center;gap:2px}
 .doc-x{border:0;background:none;color:var(--bad);font-size:13px;line-height:1;padding:0 2px;cursor:pointer;opacity:.45}.doc-x:hover{opacity:1}
 .doc.ok{background:#E2F2E8;color:#1F6B41;border:1px solid #BFE3CC}
@@ -688,7 +689,7 @@ body.vista-gas .filters,body.vista-gas #b-nuevo{display:none}
   .tr .c-next .nx{justify-content:flex-end;flex-wrap:wrap}
   .tr .c-bq .a,.tr .c-bq .b{white-space:normal}
   /* Gastos */
-  .g-titulo{font-size:15px;letter-spacing:.2em;gap:12px;padding:8px 12px}
+  .g-titulo{font-size:15px;letter-spacing:.2em}.g-titulo span{flex-basis:auto;min-width:60%;padding:9px 12px}
   .g-res>div{min-width:0;flex:1 1 140px}
   .g-conc{min-width:0;flex-basis:100%}
   .g-q{min-width:0;flex-basis:100%}
@@ -1246,7 +1247,7 @@ function renderGas(){
         <div class="gref-acc">${vacia?`<button type="button" class="btn sm" data-gquitar="${esc(x.id)}" style="color:var(--bad);margin-right:auto">× Quitar referencia de Gastos</button>`:""}${canWrite?(x.e.gastosCerrada?`<button type="button" class="btn sm" data-greopen="${esc(x.id)}">Reabrir referencia</button>`:`<button type="button" class="btn sm cerrar-ref" data-gclose="${esc(x.id)}">Cerrar referencia</button>`):""}<button type="button" class="btn sm" data-open="${esc(x.id)}">Ver ficha del embarque</button></div></div>`:""}
     </div>`};
   $("#v-gas").innerHTML=`
-  <h2 class="g-titulo">Control de gastos</h2>
+  <h2 class="g-titulo"><span>Control de gastos</span></h2>
   <div class="g-st">
     <div class="g-kpi"><span>Gasto total</span><b>$${money(S.tot)}</b></div>
     <div class="g-kpi"><span>Cliente con mayor gasto</span><b>$${money(topCli[1])}</b><i title="${esc(topCli[0])}">${esc(topCli[0])}</i></div>
