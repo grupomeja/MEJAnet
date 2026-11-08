@@ -204,46 +204,35 @@ async function fichaEmbarque(e) {
   const est = `${String(e.estado || 'activa').toUpperCase()}${e.tipo ? '  ·  ' + e.tipo : ''}${e.operacion ? '  ·  ' + e.operacion : ''}`;
   D.texto(est, M + AN - D.ancho(est, 9.5, FB), D.y - 18, 9.5, FB, CAFE);
   D.y -= 48;
-  // Grupos con el mismo formato que la ficha: recuadro con franja beige y campos en casillas
-  const grupo = (titulo, filas) => {
-    const HH = 16, RH = 28, PAD = 6;
-    const alto = HH + filas.length * RH + PAD;
-    D.espacio(alto + 8);
-    const y0 = D.y;
-    D.pg.drawRectangle({ x: M, y: y0 - alto, width: AN, height: alto, color: SUAVE, borderColor: LIN2, borderWidth: 1 });
-    D.pg.drawRectangle({ x: M, y: y0 - HH, width: AN, height: HH, color: BEIGE });
-    D.pg.drawLine({ start: { x: M, y: y0 - HH }, end: { x: M + AN, y: y0 - HH }, thickness: 0.8, color: LIN2 });
-    D.texto(titulo, M + 9, y0 - 11.2, 8, FB, CAFE);
-    filas.forEach((fila, r) => {
-      const tot = fila.reduce((s2, c) => s2 + (c[2] || 1), 0), gap = 8, w1 = (AN - 18 - gap * (tot - 1)) / tot;
-      let x = M + 9; const y = y0 - HH - 4 - r * RH;
-      fila.forEach(([l, v, sp = 1]) => {
-        const w = w1 * sp + gap * (sp - 1);
-        D.texto(l, x, y - 6.5, 6.8, F, CAFE);
-        D.pg.drawRectangle({ x, y: y - 24, width: w, height: 14.5, color: rgb(1, 1, 1), borderColor: LIN2, borderWidth: 0.8 });
-        const val = v == null || v === '' ? '' : String(v);
-        if (val) D.texto(D.corta(val, 8.5, w - 8, FB), x + 4, y - 19.8, 8.5, FB, INK);
-        x += w + gap;
-      });
+  // Bloques de datos en dos columnas
+  // Cada sección en su propio recuadro con franja de título, para distinguir Datos del embarque y Despacho
+  const bloque = (titulo, pares) => {
+    const cw = (AN - 20) / 2, filas = Math.ceil(pares.length / 2);
+    const RH = 22, HH = 18, alto = HH + 8 + filas * RH + 4;
+    D.espacio(alto + 12);
+    D.pg.drawRectangle({ x: M, y: D.y - alto, width: AN, height: alto, color: SUAVE, borderColor: LIN, borderWidth: 1 });
+    D.pg.drawRectangle({ x: M, y: D.y - HH, width: AN, height: HH, color: OSCURO });
+    D.texto(titulo, M + 10, D.y - 12.5, 9.5, FB, BEIGE);
+    const yIni = D.y; D.y -= HH + 8;
+    const M0 = M + 10;
+    pares.forEach(([l, v], i) => {
+      const x = M0 + (i % 2) * cw, y = D.y - Math.floor(i / 2) * RH;
+      D.texto(l.toUpperCase(), x, y - 7, 6.5, FB, BARRA);
+      D.texto(D.corta(v == null || v === '' ? '-' : String(v), 9.5, cw - 14), x, y - 17.5, 9.5, F, INK);
+      D.pg.drawLine({ start: { x, y: y - 20.5 }, end: { x: x + cw - 12, y: y - 20.5 }, thickness: 0.5, color: LIN2 });
     });
-    D.y = y0 - alto - 7;
+    D.y = yIni - alto - 14;
   };
-  const kg = +e.peso || 0, fmt = (n) => n.toLocaleString('en-US', { maximumFractionDigits: 2 });
-  D.seccion('DATOS DEL EMBARQUE');
-  grupo('TRANSPORTE', [
-    [['Buque', e.buque, 2], ['Viaje', e.viaje]],
-    [['Bandera', e.bandera], ['Terminal / operadora', e.terminal], ['Clave CR', e.claveCR]],
-    [['Forwarder / consolidador', e.ff, 2], ['Puerto de origen', e.origen_puerto]],
+  const kg = +e.peso || 0;
+  bloque('DATOS DEL EMBARQUE', [
+    ['Buque', e.buque], ['Viaje', e.viaje], ['Bandera', e.bandera], ['Terminal / operadora', e.terminal],
+    ['Clave CR', e.claveCR], ['Forwarder / consolidador', e.ff], ['House B/L', e.hbl], ['Master B/L', e.mbl],
+    ['Contenedor no.', e.contenedores], ['Tipo de contenedor', TCONT[e.tipoCont] || e.tipoCont], ['Tipo de operacion', e.operacion], ['Tipo de carga', e.tipo],
+    ['Mercancia', e.mercancia], ['Bultos', e.bultos], ['Peso (kg)', kg ? kg.toLocaleString('en-US', { maximumFractionDigits: 2 }) : ''], ['Peso (lbs)', kg ? (kg * 2.20462).toLocaleString('en-US', { maximumFractionDigits: 2 }) : ''],
   ]);
-  grupo('CONOCIMIENTO DE EMBARQUE', [
-    [['House B/L', e.hbl, 3], ['Master B/L', e.mbl, 3], ['Contenedor no.', e.contenedores, 2], ['Tipo', TCONT[e.tipoCont] || e.tipoCont, 2]],
-    [['Tipo de carga', e.tipo], ['Mercancia', e.mercancia, 2]],
-    [['Bultos', e.bultos], ['Peso (kg)', kg ? fmt(kg) : ''], ['Peso (lbs)', kg ? fmt(kg * 2.20462) : '']],
-  ]);
-  grupo('DESPACHO', [
-    [['Cliente', e.cliente, 2], ['Tipo de previo', e.previo]],
-    [['Marca', e.marca], ['Factura', e.factura], ['Dias libres almacenaje', e.diasLibres]],
-    [['Pedimento pagado', e.pedimentoPagado ? 'SI' : 'NO'], ['Pedimento', e.pedimento], ['Semaforo', e.semaforo ? String(e.semaforo).toUpperCase() : ''], ['Fecha de semaforo', fec(e.semaforoFecha || '')]],
+  bloque('DESPACHO', [
+    ['Pedimento', e.pedimento], ['Pedimento pagado', e.pedimentoPagado ? 'SI' : 'NO'], ['Marca', e.marca], ['Factura', e.factura],
+    ['Dias libres almacenaje', e.diasLibres], ['Tipo de previo', e.previo], ['Semaforo', e.semaforo ? String(e.semaforo).toUpperCase() + (h('despacho').r ? '  ·  ' + fec(h('despacho').r) : '') : ''],
   ]);
   D.seccion('SEGUIMIENTO DE EMBARQUE');
   D.tabla([['HITO', 0, '', true], ['ESTIMADA', 110, 'c'], ['REAL', 110, 'c'], ['ESTADO', 130, 'c']],
@@ -253,7 +242,6 @@ async function fichaEmbarque(e) {
     }), { z: 8.5, alto: 15, color: (i, k) => (k === 3 ? (HITOS[i][0] === 'previo' && noPrevio) || h(HITOS[i][0]).r ? VERDE : GRIS : null) });
   if ((e.gastos || []).length) {
     const tot = e.gastos.reduce((s, g) => s + (+g.importe || 0), 0);
-    D.espacio(22 + 15 + 15 * Math.min(3, e.gastos.length) + 10);
     D.seccion(`GASTOS  ·  ${e.gastos.length} factura${e.gastos.length === 1 ? '' : 's'}  ·  $${money(tot)}`);
     D.tabla([['FACTURA', 80, '', true], ['PROVEEDOR', 130], ['CONCEPTO', 0], ['FECHA', 70, 'c'], ['IMPORTE', 80, 'r', true]],
       e.gastos.map((g) => [g.factura || 'PENDIENTE', g.proveedor, nomC(g.concepto), fec(g.fecha), '$' + money(g.importe)]), { z: 8 });
