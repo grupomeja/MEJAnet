@@ -323,9 +323,24 @@ function rutas(admin) {
     try {
       const tocaGastos = drive.activo() && ('gastos' in cambio || 'gastosCerrada' in cambio || 'ref' in cambio || 'cliente' in cambio);
       const antes = tocaGastos ? await obtener(req.params.id) : null;
+      // Mantiene el Google Sheet de control (MANZANILLO 26) al día cuando cambian el cliente o la referencia
+      const refAnt = antes && antes.ref, cliAnt = antes && antes.cliente;
       const d = await cambiar(req.params.id, cambio);
       d ? res.json({ ok: true, datos: d }) : res.status(404).json({ error: 'No encontrado' });
       if (d && tocaGastos) drive.sincronizar(antes, d, ARCH).catch((e) => console.error('Drive:', e.message));
+      if (d && antes && ((d.cliente || '') !== (cliAnt || '') || (d.ref || '') !== (refAnt || ''))) {
+        (async () => {
+          const reg = pool ? (await pool.query('SELECT ref FROM opm_refsheet WHERE id = $1', [req.params.id])).rows[0] : null;
+          // La referencia solo se renombra en el Sheet si la registró MEJAnet; el cliente se actualiza en cualquier renglón que coincida
+          const renombra = reg && d.ref !== refAnt;
+          const cliCambio = (d.cliente || '') !== (cliAnt || '');
+          if (!renombra && !cliCambio) return;
+          const r = await drive.actualizarRef(renombra ? d.ref : refAnt, cliCambio ? (d.cliente || '') : null, refAnt);
+          if (!r) return;
+          if (renombra && pool) await pool.query('UPDATE opm_refsheet SET ref = $2 WHERE id = $1', [req.params.id, d.ref]);
+          if (!r.noEstaba) console.log(`OP Manzanillo: control de referencias actualizado (${refAnt}${renombra ? ' → ' + d.ref : ''}, cliente ${d.cliente || '-'})`);
+        })().catch((e) => console.error('Control de referencias (actualizar):', e.message));
+      }
     } catch (e) { err(res, e, 'No se pudo guardar'); }
   });
   // Reporte de previo: arma el PDF con lo que está en pantalla (ya editado)

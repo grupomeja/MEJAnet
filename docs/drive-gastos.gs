@@ -7,7 +7,7 @@ const TOKEN = 'PEGAR_AQUI_LA_CLAVE';
 const CARPETA_RAIZ = '1snW-JxqCFLN7jFdPLph_-QYQTkBhznYL'; // OPERACION_MZO / 2026 / CONTROL DE GASTOS
 const HOJA_REFS = '1re5tLi7ZgxXwgELUTBv55e1wgEbK1EqDXnIyQyxDuHE'; // control-MEJA / 2026 / MANZANILLO / MANZANILLO 26
 const ANIO = '26';
-const VERSION = 3;
+const VERSION = 4;
 
 function doPost(e) {
   try {
@@ -17,6 +17,7 @@ function doPost(e) {
     if (d.accion === 'siguienteRef') return salida(siguienteRef(d.ocupadas || []));
     if (d.accion === 'registrarRef') return salida(registrarRef(d.ref, d.cliente));
     if (d.accion === 'borrarRef') return salida(borrarRef(d.ref));
+    if (d.accion === 'actualizarRef') return salida(actualizarRef(d.ref, d.cliente, d.refAnterior));
     if (d.accion && d.accion !== 'subir') return salida({ error: 'acción desconocida' });
     const raiz = DriveApp.getFolderById(CARPETA_RAIZ);
     const it = raiz.getFoldersByName(d.carpeta);
@@ -83,6 +84,22 @@ function borrarRef(ref) {
     if (i < 0) return { ok: true, noEstaba: true };
     h.getRange(i + 2, cMeja).clearContent();
     if (cCli) h.getRange(i + 2, cCli).clearContent();
+    SpreadsheetApp.flush();
+    return { ok: true, fila: i + 2 };
+  } finally { lock.releaseLock(); }
+}
+
+// Cambio de cliente (o de referencia) hecho desde la ficha de MEJAnet
+function actualizarRef(ref, cliente, refAnterior) {
+  ref = String(ref || '').trim().toUpperCase(); refAnterior = String(refAnterior || ref).trim().toUpperCase();
+  if (!ref) return { error: 'falta la referencia' };
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    const { h, cMeja, cCli } = hojaRefs();
+    const i = leerRefs(h, cMeja).indexOf(refAnterior);
+    if (i < 0) return { ok: true, noEstaba: true };
+    if (ref !== refAnterior) h.getRange(i + 2, cMeja).setValue(ref);
+    if (cCli && cliente != null) h.getRange(i + 2, cCli).setValue(String(cliente).toUpperCase());
     SpreadsheetApp.flush();
     return { ok: true, fila: i + 2 };
   } finally { lock.releaseLock(); }
