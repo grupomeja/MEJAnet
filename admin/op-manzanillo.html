@@ -1020,8 +1020,8 @@ function dotsHTML(e,a){
   const closed=e.estado==="cerrada";
   return `<div class="dots" aria-label="Avance de hitos">${HITOS.map(h=>{
     const hh=hit(e,h.k);const i=a.hs.indexOf(h);const na=!applicable(e,h.k);
-    const done=closed||(!na&&i<=a.last);
-    return `<span class="dot ${done?"done":""} ${na&&!closed?"na":""}" title="${esc(h.l)}${hh.r?": "+fd(hh.r):na?": no aplica":""}"></span>`}).join("")}</div>`;
+    const done=closed||na||i<=a.last; // «No previo»: el hito se da por cumplido
+    return `<span class="dot ${done?"done":""}" title="${esc(h.l)}${hh.r?": "+fd(hh.r):na?": no aplica (cumplido)":""}"></span>`}).join("")}</div>`;
 }
 function renderSeg(){
   const rows=filtered().sort(ordenar);
@@ -1369,7 +1369,7 @@ function renderDrawerInner(){
     <div class="card card-seg"><h2 class="seg-tit">Seguimiento de embarque</h2>
       <section class="sec"><div class="scroll"><table class="ht ht-sec"><thead><tr><th>Hito</th><th>Estimada</th><th>Real</th><th>Estado</th></tr></thead><tbody>
       ${HITOS.map((h,i)=>{const hh=hit(e,h.k);const na=!applicable(e,h.k);const isN=a.next===h;
-        let st=na?`<span class="muted">No aplica</span>`:hh.r?`<span class="pill ok">Cumplido</span>`:isN?(a.late?`<span class="pill bad">Vencido ${diff(TODAY,a.nd)} d</span>`:`<span class="pill info">Siguiente</span>`):"";
+        let st=na?`<span class="pill ok">Cumplido · no aplica</span>`:hh.r?`<span class="pill ok">Cumplido</span>`:isN?(a.late?`<span class="pill bad">Vencido ${diff(TODAY,a.nd)} d</span>`:`<span class="pill info">Siguiente</span>`):"";
         if(hh.r&&due(hh)&&hh.r>due(hh))st+=` <span class="muted" style="font-size:11.5px">+${diff(hh.r,due(hh))} d</span>`;
         return `<tr class="${na?"na":""} ${isN?"isnext":""} ${isN&&a.late?"late":""}"><td class="h"><span class="n">${i+1}</span>${esc(h.l)}</td>
         ${["e","r"].map(k=>`<td><input type="date" id="h-${h.k}-${k}" data-h="${h.k}" data-k="${k}" value="${esc(hh[k]||"")}" class="${k==="r"&&hh.r?"real":""}" aria-label="${esc(h.l)} ${k==="e"?"estimada":"real"}" ${dis}></td>`).join("")}
