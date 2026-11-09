@@ -1642,7 +1642,11 @@ document.addEventListener("change",ev=>{
   if(el.id==="f-orden"){ui.orden=el.value;try{localStorage.setItem("om.orden2",ui.orden)}catch(e){}renderAll();return}
   if(!ui.open||!el.closest("#drawer"))return;
   if(el.dataset.h){const k=el.dataset.h,f=el.dataset.k;const patch={hitos:{[k]:{[f]:el.value}}};
-    if(k==="retiro"&&f==="r"&&el.value&&EMB[ui.open].estado==="activa"){patch.estado="cerrada";toast("Retiro registrado: la operación pasa a Cerradas")}
+    // La fecha de despacho se copia a «Retiro de puerto» (normalmente es la misma); si el retiro ya tiene otra fecha capturada a mano, no se toca
+    if(k==="despacho"){const hs=EMB[ui.open].hitos||{},ant=(hs.despacho||{})[f]||"",ret=(hs.retiro||{})[f]||"";
+      if(!ret||ret===ant){patch.hitos.retiro={[f]:el.value};const ri=$("#h-retiro-"+f);if(ri)ri.value=el.value}}
+    const retR=(patch.hitos.retiro||{}).r;
+    if(((k==="retiro"&&f==="r"&&el.value)||retR)&&EMB[ui.open].estado==="activa"){patch.estado="cerrada";toast("Retiro registrado: la operación pasa a Cerradas")}
     write(ui.open,patch);return}
   if(el.dataset.lbs){const lb=numero(el.value);write(ui.open,{peso:lb==null?null:Math.round(lb/LB*100)/100});return}
   if(el.dataset.f){let v=el.value;const f=el.dataset.f;

@@ -50,6 +50,7 @@ async function init() {
   await importarPedimentos('pedimentos-2026-11-09', path.join(__dirname, 'seed', 'pedimentos_2026-11-09.json'));
   await importarCampos('operacion-contenedor-2026-11-09', path.join(__dirname, 'seed', 'operacion_contenedor_2026-11-09.json'));
   await importarCampos('radgrid46-2026-11-09', path.join(__dirname, 'seed', 'radgrid46_2026-11-09.json'));
+  await retiroIgualDespacho('retiro-despacho-2026-11-09');
   if (pool) await pool.query('CREATE TABLE IF NOT EXISTS opm_drive (archivo TEXT PRIMARY KEY, drive_id TEXT NOT NULL)');
   // Referencias que MEJAnet escribió en el Google Sheet de control (solo esas se quitan al borrar el embarque)
   if (pool) await pool.query('CREATE TABLE IF NOT EXISTS opm_refsheet (id TEXT PRIMARY KEY, ref TEXT NOT NULL)');
@@ -96,6 +97,24 @@ async function importarCampos(nombre, archivo) {
   }
   await marcarAplicada(nombre);
   console.log(`OP Manzanillo [${nombre}]: ${n} embarques actualizados${faltan.length ? '; no están en el tablero: ' + faltan.join(', ') : ''}`);
+}
+
+// Una sola vez: Retiro de puerto = fecha de despacho (estimada y real) donde el retiro esté vacío; con retiro real pasa a Cerradas
+async function retiroIgualDespacho(nombre) {
+  if (await yaAplicada(nombre)) return;
+  let n = 0;
+  for (const e of await listar()) {
+    const h = e.hitos || {}, d = h.despacho || {}, r = h.retiro || {}, nuevo = {};
+    if (d.e && !r.e) nuevo.e = d.e;
+    if (d.r && !r.r) nuevo.r = d.r;
+    if (!Object.keys(nuevo).length) continue;
+    const cambio = { hitos: { retiro: nuevo } };
+    if (nuevo.r && e.estado === 'activa') cambio.estado = 'cerrada';
+    await cambiar(e.id, cambio); n++;
+    console.log(`OP Manzanillo [${nombre}]: ${e.ref} → retiro ${nuevo.e ? 'estimado ' + nuevo.e : ''}${nuevo.e && nuevo.r ? ', ' : ''}${nuevo.r ? 'real ' + nuevo.r : ''}${cambio.estado ? ' (cerrada)' : ''}`);
+  }
+  await marcarAplicada(nombre);
+  console.log(`OP Manzanillo [${nombre}]: ${n} embarques con retiro = despacho`);
 }
 
 // Pedimentos pagados (reporte RadGridExport del sistema aduanal): llena el pedimento con formato 3596-xxxxxxx y marca «pedimento pagado»
