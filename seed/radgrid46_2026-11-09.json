@@ -1,0 +1,801 @@
+{
+ "MA074/26": {
+  "pedimento": "3596-6004092",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "TCLU1776996"
+ },
+ "MA075/26": {
+  "pedimento": "3596-6004093",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "ONEU5338912"
+ },
+ "MA084/26": {
+  "pedimento": "3596-6004102",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "TCLU8113125"
+ },
+ "MA086/26": {
+  "pedimento": "3596-6004105",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "HAMU3437452"
+ },
+ "MA088/26": {
+  "pedimento": "3596-6004107",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "MSKU7151600"
+ },
+ "MA091/26": {
+  "pedimento": "3596-6004110",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "HASU1547909"
+ },
+ "MA102/26": {
+  "pedimento": "3596-6004121",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "MRKU4893184"
+ },
+ "MA103/26": {
+  "pedimento": "3596-6004122",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "BEAU5868889"
+ },
+ "MA104/26": {
+  "pedimento": "3596-6004123",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "MSNU7773050"
+ },
+ "MA105/26": {
+  "pedimento": "3596-6004124",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "FFAU5618186"
+ },
+ "MA106/26": {
+  "pedimento": "3596-6004125",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "FANU3479742"
+ },
+ "MA109/26": {
+  "pedimento": "3596-6004128",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "MRSU0353386"
+ },
+ "MA116/26": {
+  "pedimento": "3596-6004135",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "MRKU0668400"
+ },
+ "MA100/26": {
+  "pedimento": "3596-6004119",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "MSBU3330668"
+ },
+ "MA120/26": {
+  "pedimento": "3596-6004139",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "MRSU0814847"
+ },
+ "MA136/26": {
+  "pedimento": "3596-6004155",
+  "pedimentoPagado": true,
+  "operacion": "EXPORTACION",
+  "contenedores": "TEMU7362922"
+ },
+ "MA145/26": {
+  "pedimento": "3596-6004164",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "MRSU8956030"
+ },
+ "MA169/25": {
+  "pedimento": "3596-6004024",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA055/26": {
+  "pedimento": "3596-6004072",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA045/26": {
+  "pedimento": "3596-6004062",
+  "pedimentoPagado": true,
+  "operacion": "EXPORTACION",
+  "contenedores": "BMOU5913410"
+ },
+ "MA046/26": {
+  "pedimento": "3596-6004063",
+  "pedimentoPagado": true,
+  "operacion": "EXPORTACION",
+  "contenedores": "KOCU4147980"
+ },
+ "MA047/26": {
+  "pedimento": "3596-6004064",
+  "pedimentoPagado": true,
+  "operacion": "EXPORTACION",
+  "contenedores": "TCNU5748768"
+ },
+ "MA048/26": {
+  "pedimento": "3596-6004065",
+  "pedimentoPagado": true,
+  "operacion": "EXPORTACION",
+  "contenedores": "KOCU4630107"
+ },
+ "MA077/26": {
+  "pedimento": "3596-6004095",
+  "pedimentoPagado": true,
+  "operacion": "EXPORTACION",
+  "contenedores": "HMMU6052357"
+ },
+ "MA059/26": {
+  "pedimento": "3596-6004076",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "MRSU2423380"
+ },
+ "MA061/26": {
+  "pedimento": "3596-6004078",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "ECMU1863533"
+ },
+ "MA085/26": {
+  "pedimento": "3596-6004103",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "MEDU5440052"
+ },
+ "MA098/26": {
+  "pedimento": "3596-6004117",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "MRKU9209398"
+ },
+ "MA107/26": {
+  "pedimento": "3596-6004126",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "HMMU4476675"
+ },
+ "MA108/26": {
+  "pedimento": "3596-6004127",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "HMMU6724050"
+ },
+ "MA008/26": {
+  "pedimento": "3596-6004029",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA175/26": {
+  "pedimento": "3596-6004046",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "BEAU5063035 SEKU5529069"
+ },
+ "MA056/26": {
+  "pedimento": "3596-6004073",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "CAIU6000817 REGU3267046"
+ },
+ "MA068/26": {
+  "pedimento": "3596-6004086",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA092/26": {
+  "pedimento": "3596-6004111",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "SUDU7892124 TCKU1082766"
+ },
+ "MA156/25": {
+  "pedimento": "3596-6004003",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA163/25": {
+  "pedimento": "3596-6004004",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA170/25": {
+  "pedimento": "3596-6004001",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA166/25": {
+  "pedimento": "3596-6004005",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA001/26": {
+  "pedimento": "3596-6004002",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA165/25": {
+  "pedimento": "3596-6004017",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA167/25": {
+  "pedimento": "3596-6004018",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA173/25": {
+  "pedimento": "3596-6004021",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA003/26": {
+  "pedimento": "3596-6004023",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA004/26": {
+  "pedimento": "3596-6004025",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA172/25": {
+  "pedimento": "3596-6004020",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA002/26": {
+  "pedimento": "3596-6004006",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA171/25": {
+  "pedimento": "3596-6004019",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA005/26": {
+  "pedimento": "3596-6004026",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA174/25": {
+  "pedimento": "3596-6004022",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA007/26": {
+  "pedimento": "3596-6004028",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA006/26": {
+  "pedimento": "3596-6004027",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "TEXU1064185"
+ },
+ "MA013/26": {
+  "pedimento": "3596-6004034",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA012/26": {
+  "pedimento": "3596-6004033",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA010/26": {
+  "pedimento": "3596-6004031",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA014/26": {
+  "pedimento": "3596-6004036",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "CAAU6786690"
+ },
+ "MA021/26": {
+  "pedimento": "3596-6004007",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA015/26": {
+  "pedimento": "3596-6004037",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "TRIU0307258"
+ },
+ "MA015/26A": {
+  "pedimento": "3596-6004040",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "TRIU0307258"
+ },
+ "MA009/26": {
+  "pedimento": "3596-6004030",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA011/26": {
+  "pedimento": "3596-6004032",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA018/26": {
+  "pedimento": "3596-6004041",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA016/26": {
+  "pedimento": "3596-6004038",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "APZU3591246"
+ },
+ "MA020/26": {
+  "pedimento": "3596-6004043",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA022/26": {
+  "pedimento": "3596-6004008",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "TCNU6906620"
+ },
+ "MA025/26": {
+  "pedimento": "3596-6004011",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA024/26": {
+  "pedimento": "3596-6004009",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA026/26": {
+  "pedimento": "3596-6004012",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA017/26": {
+  "pedimento": "3596-6004039",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA019/26": {
+  "pedimento": "3596-6004042",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA023/26": {
+  "pedimento": "3596-6004010",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "OOCU0670826"
+ },
+ "MA027/26": {
+  "pedimento": "3596-6004013",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA028/26": {
+  "pedimento": "3596-6004014",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "CAIU3496030"
+ },
+ "MA028/26A": {
+  "pedimento": "3596-6004050",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "CAIU3496030"
+ },
+ "MA032/26": {
+  "pedimento": "3596-6004048",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA033/26": {
+  "pedimento": "3596-6004049",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "OOCU7276141"
+ },
+ "MA029/26": {
+  "pedimento": "3596-6004015",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA030/26": {
+  "pedimento": "3596-6004016",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA035/26": {
+  "pedimento": "3596-6004052",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA034/26": {
+  "pedimento": "3596-6004051",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA036/26": {
+  "pedimento": "3596-6004053",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA037/26": {
+  "pedimento": "3596-6004054",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA031/26": {
+  "pedimento": "3596-6004047",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA040/26": {
+  "pedimento": "3596-6004057",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA039/26": {
+  "pedimento": "3596-6004056",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA043/26": {
+  "pedimento": "3596-6004060",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA038/26": {
+  "pedimento": "3596-6004055",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA041/26": {
+  "pedimento": "3596-6004058",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA042/26": {
+  "pedimento": "3596-6004059",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA049/26": {
+  "pedimento": "3596-6004066",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA050/26": {
+  "pedimento": "3596-6004067",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA052/26": {
+  "pedimento": "3596-6004069",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA044/26": {
+  "pedimento": "3596-6004061",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA053/26": {
+  "pedimento": "3596-6004070",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA054/26": {
+  "pedimento": "3596-6004071",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA057/26": {
+  "pedimento": "3596-6004074",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA051/26": {
+  "pedimento": "3596-6004068",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA058/26": {
+  "pedimento": "3596-6004075",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA062/26": {
+  "pedimento": "3596-6004079",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA060/26": {
+  "pedimento": "3596-6004077",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA065/26": {
+  "pedimento": "3596-6004083",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA066/26": {
+  "pedimento": "3596-6004084",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA064/26": {
+  "pedimento": "3596-6004082",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA069/26": {
+  "pedimento": "3596-6004087",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA071/26": {
+  "pedimento": "3596-6004089",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA070/26": {
+  "pedimento": "3596-6004088",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA067/26": {
+  "pedimento": "3596-6004085",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA072/26": {
+  "pedimento": "3596-6004090",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA073/26": {
+  "pedimento": "3596-6004091",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA079/26": {
+  "pedimento": "3596-6004097",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA080/26": {
+  "pedimento": "3596-6004098",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA082/26": {
+  "pedimento": "3596-6004100",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA078/26": {
+  "pedimento": "3596-6004096",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA083/26": {
+  "pedimento": "3596-6004101",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA076/26": {
+  "pedimento": "3596-6004094",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA087/26": {
+  "pedimento": "3596-6004106",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA081/26": {
+  "pedimento": "3596-6004099",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA089/26": {
+  "pedimento": "3596-6004108",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "EGSU2446615"
+ },
+ "MA095/26": {
+  "pedimento": "3596-6004114",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA090/26": {
+  "pedimento": "3596-6004109",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA094/26": {
+  "pedimento": "3596-6004113",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA093/26": {
+  "pedimento": "3596-6004112",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "CAIU6148168"
+ },
+ "MA096/26": {
+  "pedimento": "3596-6004115",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA097/26": {
+  "pedimento": "3596-6004116",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA112/26": {
+  "pedimento": "3596-6004131",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA110/26": {
+  "pedimento": "3596-6004129",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA128/26": {
+  "pedimento": "3596-6004147",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "TEXU1064307"
+ },
+ "MA111/26": {
+  "pedimento": "3596-6004130",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA117/26": {
+  "pedimento": "3596-6004136",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "TCLU3312741"
+ },
+ "MA101/26": {
+  "pedimento": "3596-6004120",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA114/26": {
+  "pedimento": "3596-6004133",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "CLHU4377740"
+ },
+ "MA115/26": {
+  "pedimento": "3596-6004134",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA126/26": {
+  "pedimento": "3596-6004145",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA127/26": {
+  "pedimento": "3596-6004146",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA113/26": {
+  "pedimento": "3596-6004132",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA099/26": {
+  "pedimento": "3596-6004118",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA123/26": {
+  "pedimento": "3596-6004142",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA121/26": {
+  "pedimento": "3596-6004140",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "EGSU3170305"
+ },
+ "MA125/26": {
+  "pedimento": "3596-6004144",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA124/26": {
+  "pedimento": "3596-6004143",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA119/26": {
+  "pedimento": "3596-6004138",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "TRIU0305846"
+ },
+ "MA139/26": {
+  "pedimento": "3596-6004158",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION",
+  "contenedores": "DFOU1005114"
+ },
+ "MA122/26": {
+  "pedimento": "3596-6004141",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA138/26": {
+  "pedimento": "3596-6004157",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA143/26": {
+  "pedimento": "3596-6004162",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA131/26": {
+  "pedimento": "3596-6004150",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA130/26": {
+  "pedimento": "3596-6004149",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA142/26": {
+  "pedimento": "3596-6004161",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA148/26": {
+  "pedimento": "3596-6004167",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ },
+ "MA132/26": {
+  "pedimento": "3596-6004151",
+  "pedimentoPagado": true,
+  "operacion": "IMPORTACION"
+ }
+}
