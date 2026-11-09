@@ -53,6 +53,8 @@ async function init() {
   await retiroIgualDespacho('retiro-despacho-2026-11-09');
   await importarCampos('semaforo-2026-11-09', path.join(__dirname, 'seed', 'semaforo_2026-11-09.json'));
   await despachoDesdeSemaforo('despacho-semaforo-2026-11-09');
+  await importarCampos('semaforo-ma061-2026-11-09', path.join(__dirname, 'seed', 'semaforo_ma061_2026-11-09.json'));
+  await despachoDesdeSemaforo('despacho-semaforo-ma061-2026-11-09');
   if (pool) await pool.query('CREATE TABLE IF NOT EXISTS opm_drive (archivo TEXT PRIMARY KEY, drive_id TEXT NOT NULL)');
   // Referencias que MEJAnet escribió en el Google Sheet de control (solo esas se quitan al borrar el embarque)
   if (pool) await pool.query('CREATE TABLE IF NOT EXISTS opm_refsheet (id TEXT PRIMARY KEY, ref TEXT NOT NULL)');
