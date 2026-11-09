@@ -1,0 +1,606 @@
+{
+ "MA077/25": {
+  "semaforo": "verde",
+  "semaforoFecha": "2025-12-11"
+ },
+ "MA152/25": {
+  "semaforo": "verde",
+  "semaforoFecha": "2025-12-15"
+ },
+ "MA153/25": {
+  "semaforo": "verde",
+  "semaforoFecha": "2025-12-16"
+ },
+ "MA155/25": {
+  "semaforo": "rojo",
+  "semaforoFecha": "2025-12-15"
+ },
+ "MA157/25": {
+  "semaforo": "verde",
+  "semaforoFecha": "2025-12-10"
+ },
+ "MA158/25": {
+  "semaforo": "verde",
+  "semaforoFecha": "2025-12-08"
+ },
+ "MA159/25": {
+  "semaforo": "rojo",
+  "semaforoFecha": "2025-12-17"
+ },
+ "MA161/25": {
+  "semaforo": "verde",
+  "semaforoFecha": "2025-12-24"
+ },
+ "MA162/25": {
+  "semaforo": "verde",
+  "semaforoFecha": "2025-12-19"
+ },
+ "MA164/25": {
+  "semaforo": "verde",
+  "semaforoFecha": "2025-12-27"
+ },
+ "MA168/25": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-01-02"
+ },
+ "MA170/25": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-01-05"
+ },
+ "MA001/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-01-14"
+ },
+ "MA156/25": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-01-05"
+ },
+ "MA163/25": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-01-05"
+ },
+ "MA166/25": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-01-08"
+ },
+ "MA002/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-01-26"
+ },
+ "MA021/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-02-27"
+ },
+ "MA022/26": {
+  "semaforo": "rojo",
+  "semaforoFecha": "2026-03-07"
+ },
+ "MA024/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-03-13"
+ },
+ "MA023/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-03-19"
+ },
+ "MA025/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-03-13"
+ },
+ "MA026/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-03-13"
+ },
+ "MA027/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-03-27"
+ },
+ "MA028/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-03-28"
+ },
+ "MA029/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-04-10"
+ },
+ "MA030/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-04-09"
+ },
+ "MA165/25": {
+  "semaforo": "rojo",
+  "semaforoFecha": "2026-01-14"
+ },
+ "MA167/25": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-01-17"
+ },
+ "MA171/25": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-01-26"
+ },
+ "MA172/25": {
+  "semaforo": "rojo",
+  "semaforoFecha": "2026-01-21"
+ },
+ "MA173/25": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-01-20"
+ },
+ "MA174/25": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-01-30"
+ },
+ "MA003/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-01-21"
+ },
+ "MA169/25": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-01-20"
+ },
+ "MA004/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-01-20"
+ },
+ "MA005/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-01-30"
+ },
+ "MA006/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-02-05"
+ },
+ "MA007/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-02-04"
+ },
+ "MA008/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-02-03"
+ },
+ "MA009/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-03-04"
+ },
+ "MA010/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-02-14"
+ },
+ "MA011/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-03-02"
+ },
+ "MA012/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-02-13"
+ },
+ "MA013/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-02-12"
+ },
+ "MA165/25R1": {
+  "semaforo": "rojo",
+  "semaforoFecha": "2026-02-10"
+ },
+ "MA014/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-02-20"
+ },
+ "MA015/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-02-27"
+ },
+ "MA016/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-03-03"
+ },
+ "MA017/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-03-17"
+ },
+ "MA015/26A": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-02-27"
+ },
+ "MA019/26": {
+  "semaforo": "rojo",
+  "semaforoFecha": "2026-03-18"
+ },
+ "MA020/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-03-03"
+ },
+ "MA005/26R1": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-03-27"
+ },
+ "MA018/26R1": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-03-02"
+ },
+ "MA175/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-03-25"
+ },
+ "MA031/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-04-23"
+ },
+ "MA032/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-04-01"
+ },
+ "MA033/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-04-09"
+ },
+ "MA028/26A": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-03-28"
+ },
+ "MA034/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-04-15"
+ },
+ "MA035/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-04-13"
+ },
+ "MA037/26": {
+  "semaforo": "rojo",
+  "semaforoFecha": "2026-04-17"
+ },
+ "MA038/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-05-09"
+ },
+ "MA039/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-04-30"
+ },
+ "MA040/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-04-29"
+ },
+ "MA041/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-05-08"
+ },
+ "MA042/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-05-18"
+ },
+ "MA043/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-05-07"
+ },
+ "MA044/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-05-20"
+ },
+ "MA045/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-05-06"
+ },
+ "MA046/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-05-06"
+ },
+ "MA047/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-05-06"
+ },
+ "MA048/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-05-06"
+ },
+ "MA049/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-05-18"
+ },
+ "MA050/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-05-20"
+ },
+ "MA052/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-05-18"
+ },
+ "MA053/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-05-22"
+ },
+ "MA055/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-06-04"
+ },
+ "MA056/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-06-19"
+ },
+ "MA057/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-05-26"
+ },
+ "MA058/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-06-13"
+ },
+ "MA062/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-06-15"
+ },
+ "MA051/26R1": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-06-04"
+ },
+ "MA064/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-06-23"
+ },
+ "MA066/26": {
+  "semaforo": "rojo",
+  "semaforoFecha": "2026-06-19"
+ },
+ "MA067/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-07-13"
+ },
+ "MA068/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-07-09"
+ },
+ "MA069/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-06-24"
+ },
+ "MA070/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-07-06"
+ },
+ "MA071/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-06-27"
+ },
+ "MA072/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-07-09"
+ },
+ "MA073/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-07-09"
+ },
+ "MA074/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-07-24"
+ },
+ "MA075/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-07-24"
+ },
+ "MA076/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-08-06"
+ },
+ "MA077/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-07-11"
+ },
+ "MA078/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-07-31"
+ },
+ "MA079/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-07-17"
+ },
+ "MA080/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-07-29"
+ },
+ "MA081/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-08-18"
+ },
+ "MA082/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-07-28"
+ },
+ "MA083/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-08-06"
+ },
+ "MA084/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-07-31"
+ },
+ "MA086/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-08-07"
+ },
+ "MA087/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-08-17"
+ },
+ "MA088/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-08-13"
+ },
+ "MA089/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-08-15"
+ },
+ "MA090/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-08-20"
+ },
+ "MA091/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-08-13"
+ },
+ "MA092/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-10-12"
+ },
+ "MA093/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-08-28"
+ },
+ "MA094/26": {
+  "semaforo": "rojo",
+  "semaforoFecha": "2026-08-26"
+ },
+ "MA095/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-08-14"
+ },
+ "MA096/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-09-03"
+ },
+ "MA097/26": {
+  "semaforo": "rojo",
+  "semaforoFecha": "2026-09-10"
+ },
+ "MA099/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-10-07"
+ },
+ "MA100/26": {
+  "semaforo": "rojo",
+  "semaforoFecha": "2026-09-30"
+ },
+ "MA101/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-10-05"
+ },
+ "MA102/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-08-29"
+ },
+ "MA103/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-09-09"
+ },
+ "MA104/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-09-14"
+ },
+ "MA105/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-09-17"
+ },
+ "MA106/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-09-11"
+ },
+ "MA109/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-09-17"
+ },
+ "MA110/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-09-21"
+ },
+ "MA112/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-09-18"
+ },
+ "MA113/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-10-07"
+ },
+ "MA114/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-09-30"
+ },
+ "MA115/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-09-30"
+ },
+ "MA116/26": {
+  "semaforo": "rojo",
+  "semaforoFecha": "2026-09-28"
+ },
+ "MA117/26": {
+  "semaforo": "rojo",
+  "semaforoFecha": "2026-09-28"
+ },
+ "MA119/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-10-22"
+ },
+ "MA120/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-10-02"
+ },
+ "MA121/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-10-12"
+ },
+ "MA122/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-11-04"
+ },
+ "MA123/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-10-13"
+ },
+ "MA124/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-10-13"
+ },
+ "MA125/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-10-12"
+ },
+ "MA126/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-10-03"
+ },
+ "MA127/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-10-09"
+ },
+ "MA128/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-09-25"
+ },
+ "MA130/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-11-05"
+ },
+ "MA131/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-11-03"
+ },
+ "MA132/26": {
+  "semaforo": "rojo",
+  "semaforoFecha": "2026-11-07"
+ },
+ "MA136/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-10-23"
+ },
+ "MA139/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-10-26"
+ },
+ "MA142/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-11-06"
+ },
+ "MA143/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-10-31"
+ },
+ "MA145/26": {
+  "semaforo": "verde",
+  "semaforoFecha": "2026-10-28"
+ },
+ "MA148/26": {
+  "semaforo": "rojo",
+  "semaforoFecha": "2026-11-07"
+ }
+}
