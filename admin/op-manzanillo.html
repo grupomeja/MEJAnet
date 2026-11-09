@@ -103,6 +103,11 @@ nav.tabs button[aria-selected="true"]{background:#4A3826;color:#EAE1D3;box-shado
 .seg-head{position:sticky;top:calc(var(--hh,0px) + var(--fh,0px));z-index:18;background:var(--bg)}
 .tbl-head{background:var(--surface);border:1px solid var(--line);border-bottom:0;border-radius:8px 8px 0 0;overflow:hidden}
 @media (max-width:760px){.filters,.seg-head{position:static}}
+/* Pantallas bajas (celular acostado): nada fijo arriba para poder ver las filas */
+@media (max-height:620px){header.top,.filters,.seg-head{position:static}}
+/* Tablet: si la tabla no cabe, se desliza a la derecha en lugar de cortarse */
+.tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}.tscroll-h{scrollbar-width:none}.tscroll-h::-webkit-scrollbar{display:none}
+@media (min-width:821px) and (max-width:1279px){.tscroll>.tbl-head,.tscroll>.tbl{min-width:1230px}}
 .filters select,.filters input{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:6px 10px;min-width:0}
 .filters .orden{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-3);font-weight:600}
 .filters input[type=search]{width:240px;max-width:100%}
@@ -671,7 +676,8 @@ body.vista-gas .filters,body.vista-gas #b-nuevo{display:none}
 @media (max-width:560px){
   .top .wrap{grid-template-columns:auto minmax(0,1fr);gap:5px 10px}
   .title-wrap{justify-self:end;align-items:flex-end}.title-wrap small{display:none}
-  .right{grid-column:1/-1;justify-self:stretch;flex-direction:row;align-items:center;gap:6px}
+  .right{grid-column:1/-1;justify-self:stretch;flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px;min-width:0}
+  .right .actions{margin-left:auto}
   .right nav.tabs{flex:1 1 auto}.right nav.tabs button{flex:1}
   .right .actions{flex:0 0 auto;gap:4px}.right .actions .btn,.right .actions a.btn-mejanet{flex:0 0 auto;min-width:0!important}
   #b-export .lg{display:none}
@@ -1049,8 +1055,11 @@ function renderSeg(){
       <div class="cell c-port num" style="text-align:center">${a.diasPuerto===null?"—":a.diasPuerto+" d"}</div>
     </button>`}).join("");
   $("#v-seg").innerHTML=`<div class="seg-head"><div class="legend top"><span><span class="swatch" style="background:var(--st-gr)"></span>${STATUS.gr}</span><span><span class="swatch" style="background:var(--st-ye)"></span>${STATUS.ye}</span><span><span class="swatch" style="background:var(--st-az)"></span>${STATUS.az}</span><span><span class="swatch" style="background:var(--st-or)"></span>${STATUS.or}</span><span><span class="swatch" style="background:var(--surface)"></span>${STATUS.no}</span><span class="avance-ley">Avance: Zarpe · Arribo · Revalidación · Previo · Despacho · Retiro</span></div>
-  <div class="tbl-head">${head}</div></div>
-  <div class="tbl">${body||`<div class="empty">${loaded?"No hay embarques con estos filtros":"Cargando embarques…"}</div>`}</div>`;
+  <div class="tscroll tscroll-h"><div class="tbl-head">${head}</div></div></div>
+  <div class="tscroll tscroll-b"><div class="tbl">${body||`<div class="empty">${loaded?"No hay embarques con estos filtros":"Cargando embarques…"}</div>`}</div></div>`;
+  // En tablet la tabla puede ser más ancha que la pantalla: el encabezado se desliza junto con las filas
+  const sh=$("#v-seg .tscroll-h"),sb=$("#v-seg .tscroll-b");
+  if(sh&&sb){sb.scrollLeft=ui.segX||0;sh.scrollLeft=sb.scrollLeft;sb.onscroll=()=>{sh.scrollLeft=sb.scrollLeft;ui.segX=sb.scrollLeft};sh.onscroll=()=>{if(Math.abs(sb.scrollLeft-sh.scrollLeft)>1)sb.scrollLeft=sh.scrollLeft}}
   ajustarRef();
   ajustarBuque();
 }
