@@ -52,6 +52,7 @@ async function init() {
   await importarCampos('radgrid46-2026-11-09', path.join(__dirname, 'seed', 'radgrid46_2026-11-09.json'));
   await retiroIgualDespacho('retiro-despacho-2026-11-09');
   await importarCampos('semaforo-2026-11-09', path.join(__dirname, 'seed', 'semaforo_2026-11-09.json'));
+  await despachoDesdeSemaforo('despacho-semaforo-2026-11-09');
   if (pool) await pool.query('CREATE TABLE IF NOT EXISTS opm_drive (archivo TEXT PRIMARY KEY, drive_id TEXT NOT NULL)');
   // Referencias que MEJAnet escribió en el Google Sheet de control (solo esas se quitan al borrar el embarque)
   if (pool) await pool.query('CREATE TABLE IF NOT EXISTS opm_refsheet (id TEXT PRIMARY KEY, ref TEXT NOT NULL)');
@@ -116,6 +117,25 @@ async function retiroIgualDespacho(nombre) {
   }
   await marcarAplicada(nombre);
   console.log(`OP Manzanillo [${nombre}]: ${n} embarques con retiro = despacho`);
+}
+
+// Una sola vez: la fecha de semáforo es la fecha real de despacho (y de retiro, si el retiro estaba vacío o igual al despacho)
+async function despachoDesdeSemaforo(nombre) {
+  if (await yaAplicada(nombre)) return;
+  let n = 0, cerradas = [];
+  for (const e of await listar()) {
+    const sf = e.semaforoFecha; if (!sf) continue;
+    const h = e.hitos || {}, d = h.despacho || {}, r = h.retiro || {};
+    if (d.r === sf && r.r) continue;
+    const cambio = { hitos: { despacho: { r: sf } } };
+    if (!r.r || r.r === d.r) cambio.hitos.retiro = { r: sf };
+    if (cambio.hitos.retiro && e.estado === 'activa') { cambio.estado = 'cerrada'; cerradas.push(e.ref); }
+    if (d.r === sf && !cambio.hitos.retiro) continue;
+    await cambiar(e.id, cambio); n++;
+    console.log(`OP Manzanillo [${nombre}]: ${e.ref} → despacho ${sf}${d.r && d.r !== sf ? ' (antes ' + d.r + ')' : ''}${cambio.estado ? ' · cerrada' : ''}`);
+  }
+  await marcarAplicada(nombre);
+  console.log(`OP Manzanillo [${nombre}]: ${n} embarques con despacho = fecha de semáforo; pasan a Cerradas: ${cerradas.join(', ') || 'ninguno'}`);
 }
 
 // Pedimentos pagados (reporte RadGridExport del sistema aduanal): llena el pedimento con formato 3596-xxxxxxx y marca «pedimento pagado»
