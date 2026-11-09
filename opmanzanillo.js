@@ -47,6 +47,7 @@ async function init() {
       id TEXT PRIMARY KEY, embarque TEXT NOT NULL, nombre TEXT NOT NULL, tipo TEXT NOT NULL,
       datos BYTEA NOT NULL, creado TIMESTAMPTZ NOT NULL DEFAULT now())`);
   await importarGastos('gastos-2026-11-06', path.join(__dirname, 'seed', 'gastos_2026-11-06.json'));
+  await importarPedimentos('pedimentos-2026-11-09', path.join(__dirname, 'seed', 'pedimentos_2026-11-09.json'));
   if (pool) await pool.query('CREATE TABLE IF NOT EXISTS opm_drive (archivo TEXT PRIMARY KEY, drive_id TEXT NOT NULL)');
   // Referencias que MEJAnet escribió en el Google Sheet de control (solo esas se quitan al borrar el embarque)
   if (pool) await pool.query('CREATE TABLE IF NOT EXISTS opm_refsheet (id TEXT PRIMARY KEY, ref TEXT NOT NULL)');
@@ -78,6 +79,22 @@ async function obtener(id) {
 }
 
 // ---------- Gastos capturados de las tablas de pagos (se agregan una sola vez, sin duplicar) ----------
+// Pedimentos pagados (reporte RadGridExport del sistema aduanal): llena el pedimento con formato 3596-xxxxxxx y marca «pedimento pagado»
+async function importarPedimentos(nombre, archivo) {
+  if (!fs.existsSync(archivo) || await yaAplicada(nombre)) return;
+  const lista = JSON.parse(fs.readFileSync(archivo, 'utf8'));
+  const porRef = Object.fromEntries((await listar()).map((x) => [String(x.ref || '').toUpperCase(), x]));
+  let n = 0; const faltan = [];
+  for (const [ref, p] of Object.entries(lista)) {
+    const e = porRef[ref.toUpperCase()]; if (!e) { faltan.push(ref); continue; }
+    if (e.pedimento === p.pedimento && e.pedimentoPagado) continue;
+    await cambiar(e.id, { pedimento: p.pedimento, pedimentoPagado: true }); n++;
+    console.log(`OP Manzanillo [${nombre}]: ${ref} → pedimento ${p.pedimento} pagado`);
+  }
+  await marcarAplicada(nombre);
+  console.log(`OP Manzanillo [${nombre}]: ${n} pedimentos actualizados${faltan.length ? '; no están en el tablero: ' + faltan.join(', ') : ''}`);
+}
+
 async function importarGastos(nombre, archivo) {
   if (!fs.existsSync(archivo) || await yaAplicada(nombre)) return;
   const lista = JSON.parse(fs.readFileSync(archivo, 'utf8'));
