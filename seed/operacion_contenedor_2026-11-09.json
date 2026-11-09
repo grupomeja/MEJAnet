@@ -1,0 +1,198 @@
+{
+ "MA086/26": {
+  "operacion": "IMPORTACION",
+  "contenedores": "HAMU3437452"
+ },
+ "MA088/26": {
+  "operacion": "IMPORTACION",
+  "contenedores": "MSKU7151600"
+ },
+ "MA091/26": {
+  "operacion": "IMPORTACION",
+  "contenedores": "HASU1547909"
+ },
+ "MA102/26": {
+  "operacion": "IMPORTACION",
+  "contenedores": "MRKU4893184"
+ },
+ "MA103/26": {
+  "operacion": "IMPORTACION",
+  "contenedores": "BEAU5868889"
+ },
+ "MA104/26": {
+  "operacion": "IMPORTACION",
+  "contenedores": "MSNU7773050"
+ },
+ "MA105/26": {
+  "operacion": "IMPORTACION",
+  "contenedores": "FFAU5618186"
+ },
+ "MA106/26": {
+  "operacion": "IMPORTACION",
+  "contenedores": "FANU3479742"
+ },
+ "MA109/26": {
+  "operacion": "IMPORTACION",
+  "contenedores": "MRSU0353386"
+ },
+ "MA116/26": {
+  "operacion": "IMPORTACION",
+  "contenedores": "MRKU0668400"
+ },
+ "MA100/26": {
+  "operacion": "IMPORTACION",
+  "contenedores": "MSBU3330668"
+ },
+ "MA120/26": {
+  "operacion": "IMPORTACION",
+  "contenedores": "MRSU0814847"
+ },
+ "MA136/26": {
+  "operacion": "EXPORTACION",
+  "contenedores": "TEMU7362922"
+ },
+ "MA145/26": {
+  "operacion": "IMPORTACION",
+  "contenedores": "MRSU8956030"
+ },
+ "MA061/26": {
+  "operacion": "IMPORTACION",
+  "contenedores": "ECMU1863533"
+ },
+ "MA085/26": {
+  "operacion": "IMPORTACION",
+  "contenedores": "MEDU5440052"
+ },
+ "MA098/26": {
+  "operacion": "IMPORTACION",
+  "contenedores": "MRKU9209398"
+ },
+ "MA107/26": {
+  "operacion": "IMPORTACION",
+  "contenedores": "HMMU4476675"
+ },
+ "MA108/26": {
+  "operacion": "IMPORTACION",
+  "contenedores": "HMMU6724050"
+ },
+ "MA092/26": {
+  "operacion": "IMPORTACION",
+  "contenedores": "SUDU7892124 TCKU1082766"
+ },
+ "MA076/26": {
+  "operacion": "IMPORTACION"
+ },
+ "MA087/26": {
+  "operacion": "IMPORTACION"
+ },
+ "MA081/26": {
+  "operacion": "IMPORTACION"
+ },
+ "MA089/26": {
+  "operacion": "IMPORTACION",
+  "contenedores": "EGSU2446615"
+ },
+ "MA095/26": {
+  "operacion": "IMPORTACION"
+ },
+ "MA090/26": {
+  "operacion": "IMPORTACION"
+ },
+ "MA094/26": {
+  "operacion": "IMPORTACION"
+ },
+ "MA093/26": {
+  "operacion": "IMPORTACION",
+  "contenedores": "CAIU6148168"
+ },
+ "MA096/26": {
+  "operacion": "IMPORTACION"
+ },
+ "MA097/26": {
+  "operacion": "IMPORTACION"
+ },
+ "MA112/26": {
+  "operacion": "IMPORTACION"
+ },
+ "MA110/26": {
+  "operacion": "IMPORTACION"
+ },
+ "MA128/26": {
+  "operacion": "IMPORTACION",
+  "contenedores": "TEXU1064307"
+ },
+ "MA111/26": {
+  "operacion": "IMPORTACION"
+ },
+ "MA117/26": {
+  "operacion": "IMPORTACION",
+  "contenedores": "TCLU3312741"
+ },
+ "MA101/26": {
+  "operacion": "IMPORTACION"
+ },
+ "MA114/26": {
+  "operacion": "IMPORTACION",
+  "contenedores": "CLHU4377740"
+ },
+ "MA115/26": {
+  "operacion": "IMPORTACION"
+ },
+ "MA126/26": {
+  "operacion": "IMPORTACION"
+ },
+ "MA127/26": {
+  "operacion": "IMPORTACION"
+ },
+ "MA113/26": {
+  "operacion": "IMPORTACION"
+ },
+ "MA099/26": {
+  "operacion": "IMPORTACION"
+ },
+ "MA123/26": {
+  "operacion": "IMPORTACION"
+ },
+ "MA121/26": {
+  "operacion": "IMPORTACION",
+  "contenedores": "EGSU3170305"
+ },
+ "MA125/26": {
+  "operacion": "IMPORTACION"
+ },
+ "MA124/26": {
+  "operacion": "IMPORTACION"
+ },
+ "MA119/26": {
+  "operacion": "IMPORTACION",
+  "contenedores": "TRIU0305846"
+ },
+ "MA139/26": {
+  "operacion": "IMPORTACION",
+  "contenedores": "DFOU1005114"
+ },
+ "MA122/26": {
+  "operacion": "IMPORTACION"
+ },
+ "MA138/26": {
+  "operacion": "IMPORTACION"
+ },
+ "MA143/26": {
+  "operacion": "IMPORTACION"
+ },
+ "MA131/26": {
+  "operacion": "IMPORTACION"
+ },
+ "MA130/26": {
+  "operacion": "IMPORTACION"
+ },
+ "MA142/26": {
+  "operacion": "IMPORTACION"
+ },
+ "MA148/26": {
+  "operacion": "IMPORTACION"
+ },
+ "MA132/26": {
+  "operacion": "IMPORTACION"
+ }
+}

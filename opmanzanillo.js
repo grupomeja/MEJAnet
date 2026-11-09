@@ -48,6 +48,7 @@ async function init() {
       datos BYTEA NOT NULL, creado TIMESTAMPTZ NOT NULL DEFAULT now())`);
   await importarGastos('gastos-2026-11-06', path.join(__dirname, 'seed', 'gastos_2026-11-06.json'));
   await importarPedimentos('pedimentos-2026-11-09', path.join(__dirname, 'seed', 'pedimentos_2026-11-09.json'));
+  await importarCampos('operacion-contenedor-2026-11-09', path.join(__dirname, 'seed', 'operacion_contenedor_2026-11-09.json'));
   if (pool) await pool.query('CREATE TABLE IF NOT EXISTS opm_drive (archivo TEXT PRIMARY KEY, drive_id TEXT NOT NULL)');
   // Referencias que MEJAnet escribió en el Google Sheet de control (solo esas se quitan al borrar el embarque)
   if (pool) await pool.query('CREATE TABLE IF NOT EXISTS opm_refsheet (id TEXT PRIMARY KEY, ref TEXT NOT NULL)');
@@ -79,6 +80,23 @@ async function obtener(id) {
 }
 
 // ---------- Gastos capturados de las tablas de pagos (se agregan una sola vez, sin duplicar) ----------
+// Tipo de operación y contenedor(es) desde reporte RadGridExport (Tipo Op 1 = importación, 2 = exportación)
+async function importarCampos(nombre, archivo) {
+  if (!fs.existsSync(archivo) || await yaAplicada(nombre)) return;
+  const lista = JSON.parse(fs.readFileSync(archivo, 'utf8'));
+  const porRef = Object.fromEntries((await listar()).map((x) => [String(x.ref || '').toUpperCase(), x]));
+  let n = 0; const faltan = [];
+  for (const [ref, datos] of Object.entries(lista)) {
+    const e = porRef[ref.toUpperCase()]; if (!e) { faltan.push(ref); continue; }
+    const cambio = {}; for (const [k, v] of Object.entries(datos)) if (v && e[k] !== v) cambio[k] = v;
+    if (!Object.keys(cambio).length) continue;
+    await cambiar(e.id, cambio); n++;
+    console.log(`OP Manzanillo [${nombre}]: ${ref} → ${Object.entries(cambio).map(([k, v]) => k + ' ' + v).join(', ')}`);
+  }
+  await marcarAplicada(nombre);
+  console.log(`OP Manzanillo [${nombre}]: ${n} embarques actualizados${faltan.length ? '; no están en el tablero: ' + faltan.join(', ') : ''}`);
+}
+
 // Pedimentos pagados (reporte RadGridExport del sistema aduanal): llena el pedimento con formato 3596-xxxxxxx y marca «pedimento pagado»
 async function importarPedimentos(nombre, archivo) {
   if (!fs.existsSync(archivo) || await yaAplicada(nombre)) return;
