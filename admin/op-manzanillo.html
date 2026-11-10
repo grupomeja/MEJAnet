@@ -347,7 +347,7 @@ aside.drawer{position:fixed;top:0;right:0;bottom:0;width:min(820px,100%);backgro
 .sec>.fields{padding:12px 14px 14px}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--sec-body:var(--cel-bg1)}}
 :root[data-theme="dark"]{--sec-body:var(--cel-bg1)}
-.sec h3{margin:0;text-align:center;-webkit-text-stroke:.35px currentColor;font-family:var(--f-body);font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#7A1C1C;padding:6px 12px;background:var(--cel-bg2);border-bottom:2px solid var(--cel-line)}
+.sec h3{margin:0;text-align:center;-webkit-text-stroke:.35px currentColor;font-family:var(--f-body);font-size:13.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#7A1C1C;padding:6px 12px;background:var(--cel-bg2);border-bottom:2px solid var(--cel-line)}
 .sec .fields label{color:var(--ink-2);font-weight:600}
 .fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 14px}
 .fields .g{grid-column:1/-1;font-family:var(--f-display);font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);font-size:13px;margin-top:6px;border-bottom:1px solid var(--line-2);padding-bottom:3px}
@@ -366,7 +366,7 @@ aside.drawer{position:fixed;top:0;right:0;bottom:0;width:min(820px,100%);backgro
 #drawer .ref-campo input{font-size:12.5px;padding:3px 5px}
 #drawer .op-sel{font-size:11.5px;padding:4px 0}
 #drawer .secciones{gap:16px}
-#drawer .sec h3{font-size:11px;padding:4px 10px}
+#drawer .sec h3{font-size:12.5px;padding:4px 10px}
 #drawer .sec>.fields{padding:8px 10px 10px}
 #drawer .fields{gap:6px 10px}
 #drawer .fields label{font-size:10.5px;gap:2px}
@@ -436,7 +436,7 @@ aside.drawer{position:fixed;top:0;right:0;bottom:0;width:min(820px,100%);backgro
 #drawer .ref-campo{font-size:10px}
 #drawer .ref-campo input{font-size:12px;padding:2px 5px}
 #drawer .secciones{gap:14px}
-#drawer .sec h3{font-size:10.5px;padding:3px 9px}
+#drawer .sec h3{font-size:12px;padding:3px 9px}
 #drawer .sec>.fields{padding:6px 9px 8px}
 #drawer .fields{gap:4px 8px}
 #drawer .fields label{font-size:10px;gap:1px}
@@ -1405,7 +1405,7 @@ function renderDrawerInner(){
     </div>
     <div class="card"><div class="datos-head"><div class="ref-wrap"><label class="ref-campo">Referencia<input id="fx-ref" data-f="ref" ${dis}></label><label class="ref-campo op-campo">Tipo de operación<select class="op-sel" id="fx-operacion" data-f="operacion" aria-label="Tipo de operación" ${dis}><option value="">SIN ESPECIFICAR</option><option value="IMPORTACION">IMPORTACIÓN</option><option value="EXPORTACION">EXPORTACIÓN</option></select></label></div><h2>Datos del embarque</h2><span></span></div>
       <div class="secciones">
-      <section class="sec"><h3>Transporte</h3><div class="fields">
+      <section class="sec"><h3>Transporte marítimo</h3><div class="fields">
         ${F("buque","Buque","wide")}${F("viaje","Viaje","", "text",'class="mono"')}
         ${F("bandera","Bandera")}${F("terminal","Terminal / operadora","","text",'list="dl-term"')}${F("claveCR","Clave CR")}
         ${F("ff","Forwarder / consolidador","wide")}${F("origen_puerto","Puerto de origen")}
@@ -1417,7 +1417,7 @@ function renderDrawerInner(){
         ${F("bultos","Bultos","","text",'placeholder="Ej. 27 CARTONES"')}
         ${F("peso","Peso (kg)","","text",'inputmode="decimal" autocomplete="off"')}<label>Peso (lbs)<input id="fx-pesoLbs" data-lbs="1" type="text" inputmode="decimal" autocomplete="off"></label>
       </div></section>
-      <section class="sec"><h3>Despacho</h3><div class="fields">
+      <section class="sec"><h3>Despacho aduanal</h3><div class="fields">
         <label class="wide">Cliente<input id="fx-cliente" data-f="cliente" list="dl-cli"></label>
         <label>Tipo de previo<select id="fx-previo" data-f="previo"><option value="">—</option>${opcionesPrevio(e.previo)}</select></label>
         ${F("marca","Marca")}${F("factura","Factura","","text",'class="mono"')}${F("diasLibres","Días libres almacenaje","","text",'inputmode="numeric" autocomplete="off"')}
