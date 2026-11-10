@@ -184,7 +184,8 @@ async function generarPrevio(rep, ref) {
   y = Math.min(b1, b2) - 10;
 
   // ---------- 3. Partidas (cuadrantes con renglones para escribir a mano) ----------
-    const filas = (r.partidas || []).filter((p) => PARTIDA.some((k) => p[k]));
+  // Se imprimen todas las partidas tal como se ven en pantalla, aunque estén vacías (para llenarlas a mano)
+  const filas = r.partidas || [];
   const PIE = M + 22, GX = 10, GY = 10;
   const CW = (AN - GX) / 2;
   const RENGLONES = [['MARCA', 'marca'], ['MODELO', 'modelo'], ['ORIGEN', 'origen'], ['LOTE #', 'lote'], ['CANT. PZS X CARTÓN', 'pzsCarton'], ['CANT. PZS', 'cant']];
@@ -248,7 +249,7 @@ async function generarPrevio(rep, ref) {
   while (n === 0 || n < filas.length) {
     if (n > 0) { pg = pdf.addPage([W, H]); y = barra('PARTIDAS', H - M) - 6; }
     const h = (y - PIE - GY) / 2;
-    for (let j = 0; j < 4; j++, n++) cuadrante(n + 1, filas[n] || {}, M + (j % 2) * (CW + GX), y - Math.floor(j / 2) * (h + GY), h);
+    for (let j = 0; j < 4 && (n < Math.max(4, filas.length)); j++, n++) cuadrante(n + 1, filas[n] || {}, M + (j % 2) * (CW + GX), y - Math.floor(j / 2) * (h + GY), h);
   }
 
   // Pie en todas las hojas
