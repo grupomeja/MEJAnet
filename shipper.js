@@ -99,6 +99,10 @@ function datosUVA(body) {
     umc: txt(p?.umc, 20),
     qty: num(p?.qty),
     desc: txt(p?.desc, 500),
+    // Cambios hechos a mano en la tabla
+    ...(p?.part2 !== undefined ? { part2: txt(p.part2, 20) } : {}),
+    ...(p?.fm ? { fm: true, folio: txt(p?.folio, 40) } : {}),
+    ...(Array.isArray(p?.ed) && p.ed.length ? { ed: [...new Set(p.ed.map((x) => txt(x, 10)))].slice(0, 12) } : {}),
   })).filter((p) => p.frac);
   if (!partidas.length) throw new Error('El reporte no tiene partidas.');
   const cliente = (Array.isArray(body?.cliente) ? body.cliente : []).slice(0, 3000).map((c) => ({
