@@ -86,6 +86,43 @@ function datosSM(body) {
   return { datos: { partidas, borradas }, resumen };
 }
 
+// --- Safe Market UVA: partidas del repclasxls + folios del reporte del cliente (L1); borradas por partida ("i:N") ---
+// El folio se calcula en la página (descripción + fracción a 8 dígitos, y UMC si hay dos opciones); aquí solo se guarda.
+function datosUVA(body) {
+  const partidas = (Array.isArray(body?.partidas) ? body.partidas : []).slice(0, 5000).map((p) => ({
+    sec: txt(p?.sec, 40),
+    ref: txt(p?.ref, 40),
+    fact: txt(p?.fact, 80),
+    parte: txt(p?.parte, 80),
+    part: txt(p?.part, 20),
+    frac: txt(p?.frac, 20),
+    umc: txt(p?.umc, 20),
+    qty: num(p?.qty),
+    desc: txt(p?.desc, 500),
+  })).filter((p) => p.frac);
+  if (!partidas.length) throw new Error('El reporte no tiene partidas.');
+  const cliente = (Array.isArray(body?.cliente) ? body.cliente : []).slice(0, 3000).map((c) => ({
+    folio: txt(c?.folio, 40),
+    nom: txt(c?.nom, 60),
+    frac: txt(c?.frac, 20),
+    desc: txt(c?.desc, 500),
+    umc: txt(c?.umc, 10),
+    cant: num(c?.cant),
+  })).filter((c) => c.folio);
+  const borradas = [...new Set((Array.isArray(body?.borradas) ? body.borradas : []).map((b) => txt(b, 40)))].filter((b) => /^i:\d+$/.test(b)).slice(0, 5000);
+  const vivas = partidas.filter((_p, i) => !borradas.includes('i:' + i));
+  const r = body?.resumen && typeof body.resumen === 'object' ? body.resumen : {};
+  const resumen = {
+    partidas: vivas.length,
+    borradas: partidas.length - vivas.length,
+    referencias: new Set(vivas.map((p) => p.ref).filter(Boolean)).size,
+    folios: cliente.length,
+    sinFolio: Math.max(0, Math.round(num(r.sinFolio))),
+    diferencias: Math.max(0, Math.round(num(r.diferencias))),
+  };
+  return { datos: { partidas, borradas, cliente, archivoCliente: txt(body?.archivoCliente, 200) }, resumen };
+}
+
 // Una lista de reportes guardados (tabla en Postgres o archivo JSON) con sus rutas /api/...
 function crearLista({ tabla, archivo, api, armar }) {
 const FILE = path.join(db.DIR, archivo);
@@ -223,8 +260,9 @@ return { init, rutas };
 
 const normal = crearLista({ tabla: 'shipper_reportes', archivo: 'shipper_reportes.json', api: '/api/shipper', armar: datosNormal });
 const sm = crearLista({ tabla: 'shipper_sm_reportes', archivo: 'shipper_sm_reportes.json', api: '/api/shipper-sm', armar: datosSM });
+const uva = crearLista({ tabla: 'shipper_uva_reportes', archivo: 'shipper_uva_reportes.json', api: '/api/shipper-uva', armar: datosUVA });
 
 module.exports = {
-  init: async () => { await normal.init(); await sm.init(); },
-  rutas: (admin) => { const r = express.Router(); r.use(normal.rutas(admin)); r.use(sm.rutas(admin)); return r; },
+  init: async () => { await normal.init(); await sm.init(); await uva.init(); },
+  rutas: (admin) => { const r = express.Router(); r.use(normal.rutas(admin)); r.use(sm.rutas(admin)); r.use(uva.rutas(admin)); return r; },
 };

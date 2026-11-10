@@ -6,28 +6,721 @@
 <title>Reporte Safe Market UVA · MEJAnet v1.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600&family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-    :root{--c:#6b3fa0}
+  :root{--bg:#f4f8fb;--ink:#0b1a33;--muted:#5d6672;--line:#c9d4e0;--c:#2e8b57;--c-osc:#1f6640;--head:#2e8b57;--alt:#f0f8f3;--tot:#ddefe4;--en:#1f6640;--warn:#a86200;--warn-bg:#fcf0dc;--err:#c0262d;--err-bg:#fff5f5;--ok:#1e7a4c}
   *{box-sizing:border-box}
-  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f4f8fb;color:#0b1a33;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-  main{max-width:480px;padding:32px 20px;text-align:center}
-  img{width:min(180px,50%);height:auto;margin:0 auto 24px;display:block}
-  h1{margin:0 0 12px;font-family:"Oswald","Arial Narrow",system-ui,sans-serif;font-weight:600;font-size:28px;letter-spacing:1.2px;text-transform:uppercase;color:var(--c)}
-  p{margin:0 0 28px;color:#5d6672;font-size:17px}
-  a.volver{display:inline-flex;align-items:center;gap:6px;padding:10px 22px;border-radius:999px;background:var(--c);color:#fff;text-decoration:none;font-weight:700}
-  a.volver svg{width:18px;height:18px}
-  a.volver:hover{filter:brightness(1.08)}
-  a.volver:focus-visible{outline:3px solid #4fc9ee;outline-offset:3px}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px}
+  .wrap{max-width:1800px;margin:0 auto;padding:18px max(16px,2vw) 40px}
+  /* Encabezado como el resto de MEJAnet: logo en el color del módulo, título al centro con el ícono de su botón */
+  header{display:grid;grid-template-columns:1fr auto 1fr;gap:10px 16px;align-items:center;margin-bottom:18px}
+  header .logo{justify-self:start}
+  header .marca{display:block;width:162px;height:40px;background:var(--c);-webkit-mask:url(/logo.png) left center/contain no-repeat;mask:url(/logo.png) left center/contain no-repeat}
+  header .tit{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+  h1.titulo{display:inline-flex;align-items:center;gap:12px;margin:0;padding:6px 22px 6px 6px;border-radius:14px;
+    background:linear-gradient(180deg,#eef8f2,#dcf0e4);border:1px solid #b5dcc5;box-shadow:0 2px 0 #a9d3ba,0 6px 16px rgba(46,139,87,.16);
+    color:var(--c);font-family:"Oswald","Arial Narrow",system-ui,sans-serif;font-weight:600;font-size:27px;letter-spacing:1.2px;line-height:1.1;white-space:nowrap;text-transform:uppercase}
+  h1.titulo .ico{flex:0 0 44px;height:44px;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:10px;color:var(--c);box-shadow:inset 0 -3px 6px rgba(0,0,0,.05)}
+  h1.titulo .ico svg{width:34px;height:34px}
+  header small{color:var(--muted)}
+  header .volver{justify-self:end}
+  @media (max-width:760px){header{grid-template-columns:1fr;justify-items:center}header .logo,header .volver{justify-self:center}h1.titulo{font-size:21px;white-space:normal}}
+  a.volver{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border:1.5px solid var(--line);border-radius:999px;background:#fff;color:var(--muted);text-decoration:none;font-weight:700;font-size:13px}
+  a.volver:hover{color:var(--ink);border-color:var(--ink)}
+  a.volver svg{width:16px;height:16px}
+
+  .drop{display:flex;flex-direction:column;align-items:center;gap:8px;padding:26px 16px;border:2px dashed var(--line);border-radius:12px;background:#fff;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}
+  .drop:hover,.drop.over{border-color:var(--c);background:#f3faf6}
+  .drop.chico{flex-direction:row;justify-content:center;padding:12px 16px}
+  .drop.chico span{display:none}
+  .drop svg{width:40px;height:40px;color:var(--c)}
+  .drop.chico svg{width:24px;height:24px}
+  .drop b{font-size:16px}
+  .drop span{color:var(--muted);font-size:13px}
+  .drop input{display:none}
+  .msg{margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13.5px}
+  .msg.err{background:var(--err-bg);color:var(--err);border:1px solid #f1c4c6}
+  .msg.warn{background:var(--warn-bg);color:var(--warn);border:1px solid #f0d9b0}
+
+  .res{margin-top:18px}
+  .barra{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+  .barra label{font-weight:700;font-size:13px}
+  .barra input{font:inherit;padding:6px 10px;border:1.5px solid var(--line);border-radius:6px;width:130px}
+  .resumen{flex:1;color:var(--muted);font-size:13px;min-width:200px}
+  .resumen b{color:var(--ink)}
+  .nota{margin:0 0 12px;color:var(--muted);font-size:12.5px}
+  button.pdf{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border:0;border-radius:8px;background:var(--c);color:#fff;font:600 15px "Oswald","Arial Narrow",system-ui,sans-serif;letter-spacing:1px;text-transform:uppercase;cursor:pointer;box-shadow:0 3px 0 var(--c-osc)}
+  button.pdf:hover{filter:brightness(1.07)}
+  button.pdf:active{transform:translateY(2px);box-shadow:0 1px 0 var(--c-osc)}
+  button.pdf:disabled{opacity:.6;cursor:wait}
+  button.pdf svg{width:18px;height:18px}
+  /* Ventana para elegir columnas */
+  .modal[hidden]{display:none}
+  .modal{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(11,26,51,.42)}
+  .modal .caja{width:min(460px,100%);max-height:calc(100vh - 32px);overflow:auto;background:#fff;border-radius:12px;box-shadow:0 18px 50px rgba(11,26,51,.3);padding:18px 18px 16px}
+  .modal h2{margin:0 0 12px;font:600 21px "Barlow Condensed","Arial Narrow",system-ui,sans-serif;letter-spacing:.02em;color:var(--ink)}
+  .modal label{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px}
+  .modal input[type=checkbox]{width:17px;height:17px;accent-color:var(--c);cursor:pointer}
+  .modal .todas{padding:9px 10px;border-radius:8px;background:#f0f8f3;font-weight:700;margin-bottom:8px}
+  .modal .lista{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 12px;padding:2px 10px 4px}
+  .modal .lista label{padding:6px 0}
+  @media (max-width:420px){.modal .lista{grid-template-columns:1fr}}
+  .modal .acciones{display:flex;align-items:center;gap:10px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}
+  .modal .dlgmsg{flex:1;font-size:12.5px;color:var(--err);min-width:140px}
+  .modal .cancelar{font:inherit;font-size:13.5px;font-weight:600;padding:9px 14px;border:1.5px solid var(--line);border-radius:8px;background:#fff;color:var(--muted);cursor:pointer}
+  .modal .cancelar:hover{color:var(--ink);border-color:var(--ink)}
+  button:focus-visible,.drop:focus-visible,a:focus-visible{outline:3px solid #4fc9ee;outline-offset:3px}
+
+  /* Reporte */
+  .tabla{overflow:auto;background:#fff;border:1px solid var(--line);border-top:0;border-radius:0 0 8px 8px}
+  table{border-collapse:collapse;width:100%;min-width:760px;font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:12px;color:#2b3038}
+  .filtros{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 10px}
+  .filtros input,.filtros select{font:inherit;font-size:13px;padding:6px 10px;border:1.5px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);min-width:0}
+  .filtros input{flex:1 1 260px;max-width:420px}
+  .filtros select{flex:0 1 220px;max-width:280px}
+  .filtros input:focus,.filtros select:focus{outline:none;border-color:var(--c);box-shadow:0 0 0 3px #d6eee0}
+  .filtros .activo{border-color:var(--c);background:#f3faf6}
+  .filtros button{font:inherit;font-size:13px;font-weight:600;padding:6px 12px;border:1.5px solid var(--line);border-radius:6px;background:#fff;color:var(--muted);cursor:pointer}
+  .filtros button:hover{color:var(--ink);border-color:var(--ink)}
+  .filtros .cuenta{font-size:12.5px;color:var(--muted)}
+  .filtros .cuenta b{color:var(--c)}
+  tr.vacio td{padding:28px 10px;color:var(--muted);font-size:13px;white-space:normal}
+  .titref{text-align:center;font:600 21px "Barlow Condensed","Arial Narrow",system-ui,sans-serif;letter-spacing:.02em;color:var(--ink);padding:10px;background:#fff;border:1px solid var(--line);border-bottom:0;border-radius:8px 8px 0 0}
+  th{background:var(--head);color:#fff;font-weight:600;font-size:11px;letter-spacing:.04em;padding:6px 5px;border:1px solid #6fb08b;white-space:pre-line;position:sticky;top:-1px;z-index:2;box-shadow:0 -2px 0 var(--head)}
+  td:not(.desc):not(.prov){white-space:nowrap}
+  td.prov{white-space:normal}
+  td.sec{white-space:normal}
+  td.num{font-weight:700;color:var(--c-osc)}
+  /* Columnas de datos al ancho de su texto; el espacio que sobra va a descripción y proveedor */
+  th.ajusta{width:1%;padding-inline:10px}
+  body.con-reporte{height:100vh;overflow:hidden}
+  body.con-reporte .wrap{height:100vh;display:flex;flex-direction:column;padding-bottom:14px}
+  body.con-reporte .res{flex:1;min-height:0;display:flex;flex-direction:column}
+  body.con-reporte .tabla{flex:1;min-height:0}
+  @media (max-width:760px),(max-height:560px){body.con-reporte{height:auto;overflow:visible}body.con-reporte .wrap{height:auto;display:block}body.con-reporte .tabla{max-height:80vh}}
+  td{padding:4px 8px;border:1px solid #cfe0d5;text-align:center;font-variant-numeric:tabular-nums}
+  td.desc{text-align:left}
+  tr.tot td{background:var(--tot);font-size:13px;font-weight:700;padding-block:6px;border-top:2px solid var(--head);border-bottom:2px solid var(--head)}
+  tr.sep td{border:0;height:14px;background:#fff}
+  td.total{text-align:right;padding-right:10px}
+  .col-borrar{width:34px;padding:0 4px;background:#fff!important;border-color:#e6efe9!important}
+  th.col-borrar{background:#fff!important;border:0!important;box-shadow:0 -2px 0 #fff!important}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  button.borrar{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border:1px solid transparent;border-radius:6px;background:none;color:#a3a8af;cursor:pointer}
+  button.borrar svg{width:16px;height:16px}
+  button.borrar:hover{color:var(--err);background:var(--err-bg);border-color:#f1c4c6}
+  .borradas{font-size:12.5px;color:var(--muted)}
+  .borradas button{border:0;background:none;padding:0;color:var(--c);font:inherit;font-weight:700;text-decoration:underline;cursor:pointer}
+  td.n{text-align:right}
+  td.prov{white-space:nowrap!important;font-size:var(--prov-tam,12px)}
+  #tabla td.desc,#tabla td.n{text-align:center}
+  #tabla tr.sep td{height:24px;border-top:1px solid #cfe0d5!important;border-left:0;border-right:0;border-bottom:0}
+  #tabla tr.sep.desc-sep td{height:14px}
+  td.parte{font-variant-numeric:tabular-nums;letter-spacing:.01em}
+  td.ref{font-weight:600;color:var(--c-osc)}
+  tr.dato:hover td:not(.col-borrar){background:#f6fbf8}
+  /* Dos archivos: repclasxls (1) y reporte del cliente (2) */
+  .drops{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:700px){.drops{grid-template-columns:1fr}}
+  .drop{position:relative}
+  .drop .paso{position:absolute;top:10px;left:12px;width:26px;height:26px;border-radius:50%;background:var(--c);color:#fff;font:700 14px/26px "IBM Plex Sans",system-ui,sans-serif;text-align:center}
+  .drop.listo{border-style:solid;border-color:#9fd0b2;background:#f3faf6}
+  .drop .ayuda{color:var(--muted);font-size:13px}
+  .drops.chico .drop{flex-direction:row;justify-content:center;padding:10px 16px 10px 46px}
+  .drops.chico .drop .ayuda{display:none}
+  .drops.chico .drop svg{width:22px;height:22px}
+  .drops.chico .drop b{font-size:14px}
+  .drops.chico .drop .paso{top:50%;transform:translateY(-50%);width:22px;height:22px;line-height:22px;font-size:12px}
+  /* Diferencias contra el reporte del cliente */
+  .alerta{margin:0 0 10px;padding:9px 14px;border-radius:8px;font-size:13px;max-height:150px;overflow:auto}
+  .alerta.err{background:var(--err-bg);color:var(--err);border:1.5px solid #e9a3a7}
+  .alerta.ok{background:#eef8f2;color:var(--ok);border:1px solid #b5dcc5}
+  .alerta ul{margin:6px 0 0;padding-left:20px}
+  .alerta li{margin:2px 0}
+  .alerta button{border:0;background:none;padding:0;color:var(--err);font:inherit;font-weight:700;text-decoration:underline;cursor:pointer}
+  #tabla tr.dif td:not(.col-borrar){background:#fff8f8}
+  #tabla td.rojo{background:#fde2e3!important;color:var(--err);font-weight:700;box-shadow:inset 0 0 0 1.5px #e9a3a7}
+  td.folio{font-weight:700;color:var(--c-osc)}
+  #fFolio option.rojo{color:var(--err)}
+  #tabla td.desc{text-align:center;white-space:normal;min-width:260px}
 </style>
 </head>
 <body>
-<main>
-  <a href="/modulos"><img src="/mejanet-logo.png" alt="Grupo Meja"></a>
-  <h1>Reporte Safe Market UVA</h1>
-  <p>Esta herramienta está en desarrollo.</p>
-  <a class="volver" href="/herramientas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg> Herramientas</a>
-</main>
+<div class="wrap">
+  <header>
+    <a class="logo" href="/modulos" aria-label="MEJAnet"><span class="marca" role="img" aria-label="Grupo Meja"></span></a>
+    <div class="tit">
+      <h1 class="titulo"><span class="ico" aria-hidden="true"><svg viewBox="0 0 64 64"> <path d="M14 4h26l12 12v44a2 2 0 0 1-2 2H14a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" fill="currentColor"/> <path d="M40 4v12h12z" fill="#fff" opacity=".55"/> <g fill="#fff"><rect x="18" y="12" width="16" height="3"/><rect x="18" y="19" width="26" height="2.4"/><rect x="18" y="24" width="22" height="2.4"/></g> <g fill="#fff"><circle cx="26" cy="36" r="4"/><circle cx="34" cy="36" r="4"/><circle cx="42" cy="36" r="4"/><circle cx="30" cy="43" r="4"/><circle cx="38" cy="43" r="4"/><circle cx="34" cy="50" r="4"/></g><path d="M34 32c0-3 2-5 5-6" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/> </svg></span>Reporte Safe Market UVA</h1>
+      <small>Sube el reporte por renglón y el reporte del cliente: obtén las partidas con su folio UVA.</small>
+    </div>
+    <a class="volver" href="/herramientas/shipper-uva"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg> Reportes</a>
+  </header>
+
+  <div class="drops" id="drops">
+    <label class="drop" id="dropRep" tabindex="0">
+      <span class="paso">1</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 17v-6"/><path d="M9.5 13.5L12 11l2.5 2.5"/></svg>
+      <b id="txtRep">Reporte por renglón (repclasxls)</b>
+      <span class="ayuda">Selecciona o arrastra aquí el archivo .xls exportado del sistema</span>
+      <input type="file" id="archivoRep" accept=".xls,.xlsx,.htm,.html">
+    </label>
+    <label class="drop" id="dropCli" tabindex="0">
+      <span class="paso">2</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 17v-6"/><path d="M9.5 13.5L12 11l2.5 2.5"/></svg>
+      <b id="txtCli">Reporte del cliente (folios UVA)</b>
+      <span class="ayuda">Selecciona o arrastra aquí el Excel del cliente con los folios de solicitud</span>
+      <input type="file" id="archivoCli" accept=".xlsx,.xls">
+    </label>
+  </div>
+  <div id="msg" class="msg" hidden></div>
+
+  <section class="res" id="res" hidden>
+    <div class="barra">
+      <label for="ref">Referencia</label>
+      <input id="ref" type="text">
+      <div class="resumen" id="resumen"></div>
+      <span class="borradas" id="borradas" hidden><span id="borradasTxt"></span> · <button type="button" id="restaurar">Restaurar</button></span>
+      <button class="pdf" id="pdf" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg> Descargar PDF</button>
+      <button class="pdf" id="xlsx" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg> Descargar XLSX</button>
+    </div>
+    <div class="alerta" id="alerta" hidden></div>
+    <div class="filtros" role="search" aria-label="Filtrar partidas">
+      <input id="fBuscar" type="search" placeholder="Buscar descripción, número de parte, factura, secuencia o folio…" aria-label="Buscar en el reporte">
+      <select id="fFrac" aria-label="Filtrar por fracción"><option value="">Todas las fracciones</option></select>
+      <select id="fRef" aria-label="Filtrar por referencia"><option value="">Todas las referencias</option></select>
+      <select id="fFolio" aria-label="Filtrar por folio UVA"><option value="">Todos los folios</option></select>
+      <button type="button" id="fLimpiar" hidden>Quitar filtros</button>
+      <span class="cuenta" id="fCuenta"></span>
+    </div>
+    <div class="titref" id="titref"></div>
+    <div class="tabla"><table id="tabla"></table></div>
+  </section>
+</div>
+
+<div class="modal" id="dlgCols" hidden>
+  <div class="caja" role="dialog" aria-modal="true" aria-labelledby="dlgTit">
+    <h2 id="dlgTit">¿Qué columnas quieres incluir?</h2>
+    <label class="todas"><input type="checkbox" id="colTodas"> <span>Todas las columnas</span></label>
+    <div class="lista" id="colLista"></div>
+    <div class="acciones">
+      <span class="dlgmsg" id="dlgMsg"></span>
+      <button type="button" class="cancelar" id="dlgCancelar">Cancelar</button>
+      <button type="button" class="pdf" id="dlgOk">Descargar</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script>
+// Columnas del formato Safe Market UVA (en pantalla y para descargar)
+const COLS = [
+  { k: 'sec',   t: 'SECUENCIA' },
+  { k: 'ref',   t: 'REFERENCIA' },
+  { k: 'fact',  t: 'FACTURA' },
+  { k: 'parte', t: '# PARTE' },
+  { k: 'part',  t: 'PARTIDAS' },
+  { k: 'frac',  t: 'FRACCION' },
+  { k: 'sub',   t: 'SUBFRACCION' },
+  { k: 'umc',   t: 'UMC' },
+  { k: 'qty',   t: 'QTY UMC' },
+  { k: 'desc',  t: 'DESCRIPCION' },
+  { k: 'part2', t: 'PARTIDAS' },
+  { k: 'folio', t: 'FOLIO UVA' },
+];
+const COLS_EXPORTAR = COLS.map(c => c.k);
+const NOMBRE_COL = k => COLS.find(c => c.k === k).t;
+// Encabezados del repclasxls
+const ENTRADA = { sec: 'SECUENCIA PEDIMENTO', ref: 'REFERENCIA', fact: 'FACTURA', parte: 'NUMERO PARTE', part: 'ORDEN PARTIDAS', frac: 'FRACCION', umc: 'UMC', qty: 'QTY UMC', desc: 'DESCRIPCION' };
+// Encabezados del reporte del cliente (sin acentos)
+const ENTRADA_CLI = { folio: 'FOLIO DE SOLICITUD', nom: 'NOM', desc: 'DESCRIPCION DEL PRODUCTO', frac: 'FRACCION ARANCELARIA', umc: 'UMC', cant: 'CANTIDAD' };
+// Clave de unidad de medida de comercialización (catálogo del SAT) para comparar con el reporte del cliente
+const UMC_CLAVE = { KG: 1, KGS: 1, KILO: 1, GR: 2, G: 2, GRAMO: 2, M: 3, MT: 3, ML: 3, M2: 4, M3: 5, PZA: 6, PZ: 6, PZAS: 6, PIEZA: 6, CAB: 7, L: 8, LT: 8, LTS: 8, LITRO: 8, PAR: 9, KW: 10, MIL: 11, MILLAR: 11, JGO: 12, JUEGO: 12, KWH: 13, TON: 14, T: 14, BARRIL: 15, GRN: 16, DEC: 17, CTO: 18, CIENTO: 18, DOC: 19, DOCENA: 19, CJA: 20, CAJA: 20, BOT: 21, BOTELLA: 21 };
+const NOMBRE_UMC = { 1: 'KG', 2: 'GR', 3: 'M', 4: 'M2', 5: 'M3', 6: 'PZA', 7: 'CAB', 8: 'LT', 9: 'PAR', 10: 'KW', 11: 'MILLAR', 12: 'JGO', 13: 'KWH', 14: 'TON', 15: 'BARRIL', 16: 'GR NETO', 17: 'DECENA', 18: 'CIENTO', 19: 'DOCENA', 20: 'CAJA', 21: 'BOTELLA' };
+const claveUMC = u => { const s = String(u ?? '').trim().toUpperCase(); return /^\d+$/.test(s) ? Number(s) : (UMC_CLAVE[s.replace(/[^A-Z0-9]/g, '')] || 0); };
+
+let actual = null;      // { id, ref, partidas, borradas:Set, cliente, archivoRep, archivoCli, filas, revision }
+let pendiente = { rep: null, cli: null }; // archivos subidos antes de tener los dos
+const $ = id => document.getElementById(id);
+const norm = s => String(s ?? '').replace(/\s+/g, ' ').trim().toUpperCase();
+const sinAcentos = s => norm(s).normalize('NFD').replace(/[̀-ͯ]/g, '');
+// El repclasxls a veces trae la Ñ y los acentos "rotos" (PASAMONTAÃ‘AS): se corrigen
+const arreglar = s => { s = String(s ?? ''); if (!/[ÃÂ]/.test(s)) return s; try { return decodeURIComponent(escape(s)); } catch { return s; } };
+const num = v => { if (typeof v === 'number') return v; const n = parseFloat(String(v ?? '').replace(/[,$\s]/g, '')); return isNaN(n) ? 0 : n; };
+const redondear = n => Math.round(n * 1e6) / 1e6;
+const fmt = (n, d = 4) => n.toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: d });
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const cmpTxt = (a, b) => String(a).localeCompare(String(b), 'es', { numeric: true });
+const frac8 = f => String(f ?? '').replace(/\D/g, '').slice(0, 8);
+const claveMatch = (desc, frac) => sinAcentos(arreglar(desc)) + '|' + frac8(frac);
+
+function aviso(texto, tipo) { const m = $('msg'); m.textContent = texto; m.className = 'msg ' + tipo; m.hidden = !texto; }
+
+// Lee un Excel (o la página HTML con extensión .xls del sistema) y regresa sus renglones como texto
+async function leerFilas(file, buscar) {
+  const buf = await file.arrayBuffer();
+  const inicio = new TextDecoder('latin1').decode(new Uint8Array(buf).slice(0, 20000));
+  if (/<table/i.test(inicio) || /<html/i.test(inicio)) {
+    const doc = new DOMParser().parseFromString(new TextDecoder('utf-8').decode(buf), 'text/html');
+    const tablas = [...doc.querySelectorAll('table')];
+    const tabla = tablas.find(t => buscar.test(sinAcentos(t.textContent))) || tablas[0];
+    if (!tabla) throw new Error('El archivo no contiene una tabla.');
+    return { inicio, hojas: [[...tabla.rows].map(tr => [...tr.cells].map(td => td.textContent.replace(/ /g, ' ').trim()))] };
+  }
+  if (typeof XLSX === 'undefined') throw new Error('No se pudo cargar el lector de Excel. Revisa tu conexión y recarga la página.');
+  const wb = XLSX.read(buf, { type: 'array', raw: true });
+  return { inicio, hojas: wb.SheetNames.map(n => XLSX.utils.sheet_to_json(wb.Sheets[n], { header: 1, raw: false, defval: '' })) };
+}
+// Busca el renglón de encabezados y la posición de cada columna
+function columnas(hojas, campos, faltaMsg) {
+  const req = Object.values(campos);
+  for (const filas of hojas) {
+    const i = filas.findIndex(f => { const e = f.map(sinAcentos); return req.every(n => e.includes(n)); });
+    if (i < 0) continue;
+    const enc = filas[i].map(sinAcentos), pos = {};
+    for (const [k, n] of Object.entries(campos)) pos[k] = enc.indexOf(n);
+    return { filas: filas.slice(i + 1), pos };
+  }
+  // Para decir exactamente qué columna falta
+  const mejor = hojas.flat().map(f => f.map(sinAcentos)).sort((a, b) => req.filter(n => b.includes(n)).length - req.filter(n => a.includes(n)).length)[0] || [];
+  const faltan = req.filter(n => !mejor.includes(n));
+  throw new Error(faltaMsg + ' Falta' + (faltan.length > 1 ? 'n las columnas ' : ' la columna ') + faltan.map(n => '"' + n + '"').join(', ') + '.');
+}
+
+async function leerRep(file) {
+  const { inicio, hojas } = await leerFilas(file, /FRACCION/);
+  const { filas, pos } = columnas(hojas, ENTRADA, 'Este archivo no parece el reporte por renglón (repclasxls).');
+  const t = (f, k) => arreglar(String(f[pos[k]] ?? '').replace(/\s+/g, ' ').trim());
+  const partidas = [];
+  for (const f of filas) {
+    if (!t(f, 'frac')) continue;
+    partidas.push({ sec: t(f, 'sec'), ref: t(f, 'ref'), fact: t(f, 'fact'), parte: t(f, 'parte'), part: t(f, 'part'), frac: t(f, 'frac'), umc: t(f, 'umc'), qty: num(f[pos.qty]), desc: t(f, 'desc') });
+  }
+  if (!partidas.length) throw new Error('El reporte por renglón no tiene partidas con fracción.');
+  const m = inicio.match(/Referencia\s*:\s*([0-9A-Za-z\/\-]+)/i);
+  return { nombre: file.name, partidas, ref: m ? m[1] : partidas[0].ref };
+}
+async function leerCli(file) {
+  const { hojas } = await leerFilas(file, /FOLIO DE SOLICITUD/);
+  const { filas, pos } = columnas(hojas, ENTRADA_CLI, 'Este archivo no parece el reporte del cliente con los folios UVA.');
+  const t = (f, k) => String(f[pos[k]] ?? '').replace(/\s+/g, ' ').trim();
+  const cliente = [];
+  for (const f of filas) {
+    const folio = t(f, 'folio');
+    if (!/^\d/.test(folio)) continue;
+    cliente.push({ folio, nom: t(f, 'nom'), frac: t(f, 'frac'), desc: t(f, 'desc'), umc: t(f, 'umc'), cant: num(f[pos.cant]) });
+  }
+  if (!cliente.length) throw new Error('El reporte del cliente no tiene folios de solicitud.');
+  return { nombre: file.name, cliente };
+}
+
+async function subir(tipo, file) {
+  aviso('', 'err');
+  try {
+    const x = tipo === 'rep' ? await leerRep(file) : await leerCli(file);
+    if (actual) {
+      if (tipo === 'rep') {
+        // Otro repclasxls: reporte nuevo (se guarda por su referencia)
+        Object.assign(actual, { id: null, partidas: x.partidas, borradas: new Set(), archivoRep: x.nombre, ref: x.ref });
+        $('ref').value = x.ref; limpiarFiltros();
+        try { history.replaceState(null, '', '/herramientas/shipper-uva/reporte'); } catch {}
+      } else {
+        Object.assign(actual, { cliente: x.cliente, archivoCli: x.nombre });
+      }
+      mostrar(); guardar();
+      return;
+    }
+    pendiente[tipo] = x;
+    marcarDrops();
+    if (pendiente.rep && pendiente.cli) {
+      actual = { id: null, ref: pendiente.rep.ref, partidas: pendiente.rep.partidas, borradas: new Set(), cliente: pendiente.cli.cliente, archivoRep: pendiente.rep.nombre, archivoCli: pendiente.cli.nombre };
+      pendiente = { rep: null, cli: null };
+      $('ref').value = actual.ref; limpiarFiltros();
+      mostrar(); guardar();
+    } else {
+      aviso(tipo === 'rep' ? 'Listo el reporte por renglón. Ahora sube el reporte del cliente (paso 2).' : 'Listo el reporte del cliente. Ahora sube el reporte por renglón (paso 1).', 'warn');
+    }
+  } catch (e) {
+    aviso(e.message || 'No pude leer el archivo.', 'err');
+  }
+}
+function marcarDrops() {
+  const rep = actual ? actual.archivoRep : pendiente.rep?.nombre, cli = actual ? actual.archivoCli : pendiente.cli?.nombre;
+  $('txtRep').textContent = rep ? rep + (actual ? ' · cambiar' : ' ✓') : 'Reporte por renglón (repclasxls)';
+  $('txtCli').textContent = cli ? cli + (actual ? ' · cambiar' : ' ✓') : 'Reporte del cliente (folios UVA)';
+  $('dropRep').classList.toggle('listo', !!rep); $('dropCli').classList.toggle('listo', !!cli);
+  $('drops').classList.toggle('chico', !!actual);
+}
+function mostrar() {
+  marcarDrops();
+  recalcular(); pintar();
+  $('res').hidden = false;
+  document.body.classList.add('con-reporte');
+}
+function limpiarFiltros() { ['fBuscar', 'fFrac', 'fRef', 'fFolio'].forEach(id => { $(id).value = ''; }); }
+
+// --- Folio UVA de cada partida ---
+// Se busca en el reporte del cliente por descripción + fracción a 8 dígitos.
+// Si hay más de un folio con esa descripción y fracción, se escoge el de la misma unidad de medida.
+function revisar() {
+  const idx = new Map();
+  for (const c of actual.cliente) { const k = claveMatch(c.desc, c.frac); if (!idx.has(k)) idx.set(k, []); idx.get(k).push(c); }
+  const porFolio = new Map(actual.cliente.map(c => [c.folio, c]));
+  const res = new Map(); // i → { folio, problema }
+  const problemas = [];
+  const vivas = actual.partidas.filter(p => !actual.borradas.has(p.i));
+  for (const p of vivas) {
+    let cand = idx.get(claveMatch(p.desc, p.frac)) || [];
+    if (!cand.length) { res.set(p.i, { folio: '' }); continue; }
+    const u = claveUMC(p.umc);
+    if (cand.length > 1) { const mismos = cand.filter(c => claveUMC(c.umc) === u); if (mismos.length) cand = mismos; }
+    if (cand.length > 1) {
+      res.set(p.i, { folio: '', problema: 'amb' });
+      problemas.push({ tipo: 'amb', folio: '', p, txt: `Secuencia ${p.sec} · ${p.desc}: tiene ${cand.length} folios posibles (${cand.map(c => c.folio).join(', ')}) y no se pudo decidir cuál.` });
+      continue;
+    }
+    const c = cand[0], uc = claveUMC(c.umc);
+    if (u && uc && u !== uc) {
+      res.set(p.i, { folio: c.folio, problema: 'umc' });
+      problemas.push({ tipo: 'umc', folio: c.folio, p, txt: `Secuencia ${p.sec} · ${p.desc}: la partida viene en ${p.umc} y el folio ${c.folio} del cliente está en ${NOMBRE_UMC[uc] || 'UMC ' + c.umc}.` });
+    } else res.set(p.i, { folio: c.folio });
+  }
+  // Cantidades: lo que suman las partidas de cada folio contra la cantidad del reporte del cliente
+  const suma = new Map();
+  for (const p of vivas) { const f = res.get(p.i).folio; if (f) suma.set(f, (suma.get(f) || 0) + p.qty); }
+  const difFolio = new Set();
+  for (const c of actual.cliente) {
+    const s = redondear(suma.get(c.folio) || 0);
+    if (!suma.has(c.folio)) { problemas.push({ tipo: 'nousado', folio: c.folio, txt: `Folio ${c.folio} · ${c.desc}: está en el reporte del cliente (${fmt(c.cant)} ${NOMBRE_UMC[claveUMC(c.umc)] || ''}) pero ninguna partida del reporte lo usa.` }); continue; }
+    if (Math.abs(s - c.cant) > 1e-6) {
+      difFolio.add(c.folio);
+      problemas.push({ tipo: 'cant', folio: c.folio, txt: `Folio ${c.folio} · ${c.desc}: el reporte suma ${fmt(s)} y el cliente dice ${fmt(c.cant)} (${s > c.cant ? 'sobran ' + fmt(redondear(s - c.cant)) : 'faltan ' + fmt(redondear(c.cant - s))}).` });
+    }
+  }
+  for (const [i, r] of res) if (!r.problema && difFolio.has(r.folio)) r.problema = 'cant';
+  const orden = { cant: 0, umc: 1, amb: 2, nousado: 3 };
+  problemas.sort((a, b) => orden[a.tipo] - orden[b.tipo] || cmpTxt(a.folio, b.folio));
+  actual.revision = { res, problemas, sinFolio: vivas.filter(p => !res.get(p.i).folio && !res.get(p.i).problema).length, porFolio };
+}
+
+function recalcular() {
+  actual.partidas.forEach((p, i) => { p.i = i; });
+  revisar();
+  const { res } = actual.revision;
+  const quedan = actual.partidas.filter(p => !actual.borradas.has(p.i)).sort((a, b) => cmpTxt(a.sec, b.sec));
+  llenarFiltros(quedan);
+  const q = sinAcentos($('fBuscar').value), fr = $('fFrac').value, rf = $('fRef').value, fo = $('fFolio').value;
+  actual.filas = quedan.filter(p => {
+    const r = res.get(p.i);
+    if (fr && frac8(p.frac) !== fr) return false;
+    if (rf && p.ref !== rf) return false;
+    if (fo === '__dif' && !r.problema) return false;
+    if (fo === '__sin' && (r.folio || r.problema)) return false;
+    if (fo && fo[0] !== '_' && r.folio !== fo) return false;
+    return !q || [p.desc, p.parte, p.fact, p.sec, p.ref, p.frac, r.folio].some(x => sinAcentos(x).includes(q));
+  });
+  actual.total = quedan.length;
+  const hay = !!(q || fr || rf || fo);
+  $('fLimpiar').hidden = !hay;
+  [['fBuscar', q], ['fFrac', fr], ['fRef', rf], ['fFolio', fo]].forEach(([id, v]) => $(id).classList.toggle('activo', !!v));
+  $('fCuenta').innerHTML = hay ? `Mostrando <b>${actual.filas.length}</b> de ${quedan.length} partidas` : '';
+}
+function llenarFiltros(ps) {
+  const llenar = (sel, ops) => {
+    const v = sel.value;
+    const html = ops.map(([val, t, cls]) => `<option value="${esc(val)}"${cls ? ' class="' + cls + '"' : ''}>${esc(t)}</option>`).join('');
+    if (sel.dataset.h !== html) { sel.innerHTML = html; sel.dataset.h = html; }
+    sel.value = ops.some(o => o[0] === v) ? v : '';
+  };
+  const unicos = f => [...new Set(ps.map(f).filter(Boolean))].sort(cmpTxt);
+  llenar($('fFrac'), [['', 'Todas las fracciones'], ...unicos(p => frac8(p.frac)).map(x => [x, x])]);
+  llenar($('fRef'), [['', 'Todas las referencias'], ...unicos(p => p.ref).map(x => [x, x])]);
+  const { res, problemas } = actual.revision;
+  const ops = [['', 'Todos los folios']];
+  if (problemas.some(x => x.tipo !== 'nousado')) ops.push(['__dif', 'Solo con diferencia', 'rojo']);
+  ops.push(['__sin', 'Sin folio']);
+  llenar($('fFolio'), [...ops, ...unicos(p => res.get(p.i).folio).map(x => [x, x])]);
+}
+
+const BORRAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4h6v3"/></svg>';
+const valorTexto = (k, p, r) => ({ frac: frac8(p.frac), sub: String(p.frac).replace(/\D/g, '').slice(8), part2: p.part, qty: fmt(p.qty), folio: r.folio }[k] ?? String(p[k] ?? ''));
+function pintar() {
+  const { filas, revision } = actual, { res, problemas } = revision;
+  $('pdf').disabled = !filas.length; $('xlsx').disabled = !filas.length;
+  $('titref').textContent = 'Referencia : ' + $('ref').value;
+  let h = '<thead><tr>' + COLS.map(c => '<th' + (c.k === 'desc' ? '' : ' class="ajusta"') + '>' + esc(c.t) + '</th>').join('') + '<th class="col-borrar"><span class="sr">Borrar</span></th></tr></thead><tbody>';
+  for (const p of filas) {
+    const r = res.get(p.i);
+    const tit = r.problema ? ' title="' + esc(problemas.find(x => x.p === p || (r.problema === 'cant' && x.tipo === 'cant' && x.folio === r.folio))?.txt || '') + '"' : '';
+    h += `<tr class="dato${r.problema ? ' dif' : ''}"${tit}>` + COLS.map(c => {
+      const roja = r.problema && (c.k === 'folio' || (r.problema === 'cant' && c.k === 'qty') || (r.problema === 'umc' && c.k === 'umc'));
+      const cls = [c.k === 'desc' ? 'desc' : '', c.k === 'folio' ? 'folio' : '', c.k === 'ref' ? 'ref' : '', roja ? 'rojo' : ''].filter(Boolean).join(' ');
+      let v = esc(valorTexto(c.k, p, r));
+      if (c.k === 'folio' && r.problema === 'amb') v = '¿?';
+      return `<td${cls ? ' class="' + cls + '"' : ''}>${v}</td>`;
+    }).join('') + `<td class="col-borrar"><button type="button" class="borrar" data-i="${p.i}" title="Borrar esta partida del reporte" aria-label="Borrar partida ${esc(p.sec)}">${BORRAR}</button></td></tr>`;
+  }
+  if (!filas.length) h += `<tr class="vacio"><td colspan="13">${actual.total ? 'Ninguna partida coincide con los filtros.' : 'No quedan partidas en el reporte.'}</td></tr>`;
+  $('tabla').innerHTML = h + '</tbody>';
+  // Resumen
+  const quedan = actual.partidas.filter(p => !actual.borradas.has(p.i));
+  const conFolio = quedan.filter(p => res.get(p.i).folio).length;
+  const folios = new Set(quedan.map(p => res.get(p.i).folio).filter(Boolean)).size;
+  const refs = new Set(quedan.map(p => p.ref)).size;
+  $('resumen').innerHTML = `<b>${quedan.length}</b> partidas · <b>${refs}</b> referencia${refs === 1 ? '' : 's'} · <b>${conFolio}</b> con folio (${folios} de ${actual.cliente.length} folios del cliente) · <b>${revision.sinFolio}</b> sin folio`;
+  const nb = actual.borradas.size;
+  $('borradas').hidden = !nb;
+  $('borradasTxt').textContent = nb === 1 ? '1 partida borrada' : nb + ' partidas borradas';
+  // Avisos de diferencias, en rojo
+  const al = $('alerta');
+  if (problemas.length) {
+    al.className = 'alerta err';
+    al.innerHTML = `<b>${problemas.length === 1 ? 'Hay 1 diferencia' : 'Hay ' + problemas.length + ' diferencias'} con el reporte del cliente</b>` +
+      (problemas.some(x => x.tipo !== 'nousado') ? ' · <button type="button" id="verDif">Ver solo esas partidas</button>' : '') +
+      '<ul>' + problemas.map(x => `<li>${esc(x.txt)}</li>`).join('') + '</ul>';
+  } else {
+    al.className = 'alerta ok';
+    al.innerHTML = '<b>Sin diferencias:</b> las cantidades de cada folio coinciden con el reporte del cliente.';
+  }
+  al.hidden = false;
+}
+$('alerta').addEventListener('click', ev => { if (ev.target.id === 'verDif') { $('fFolio').value = '__dif'; filtrar(); } });
+
+// --- Guardado automático en la lista de reportes Safe Market UVA ---
+let colaGuardar = Promise.resolve(), tGuardar;
+function guardar(espera = 0) {
+  if (!actual) return;
+  clearTimeout(tGuardar);
+  tGuardar = setTimeout(() => { colaGuardar = colaGuardar.then(enviarGuardado, enviarGuardado); }, espera);
+}
+async function enviarGuardado() {
+  if (!actual) return;
+  const referencia = $('ref').value.trim();
+  if (!referencia) { aviso('Escribe la referencia para que el reporte se guarde en la lista.', 'warn'); return; }
+  const cuerpo = {
+    referencia, archivo: [actual.archivoRep, actual.archivoCli].filter(Boolean).join(' + '), archivoCliente: actual.archivoCli || '',
+    partidas: actual.partidas.map(({ i, ...p }) => p),
+    borradas: [...actual.borradas].map(i => 'i:' + i),
+    cliente: actual.cliente,
+    resumen: { sinFolio: actual.revision.sinFolio, diferencias: actual.revision.problemas.length },
+  };
+  try {
+    const r = await fetch(actual.id ? '/api/shipper-uva/' + actual.id : '/api/shipper-uva', {
+      method: actual.id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (r.status === 404 && actual.id) { actual.id = null; return enviarGuardado(); }
+    if (!r.ok) throw new Error(j.error || 'el servidor respondió ' + r.status);
+    if (!actual.id && j.id) {
+      actual.id = j.id;
+      try { history.replaceState(null, '', '/herramientas/shipper-uva/reporte?id=' + j.id); } catch {}
+    }
+    if ($('msg').dataset.guardado === '1' || $('msg').classList.contains('warn')) { aviso('', 'warn'); $('msg').dataset.guardado = ''; }
+  } catch (e) {
+    aviso('El reporte no se pudo guardar en la lista: ' + e.message, 'warn');
+    $('msg').dataset.guardado = '1';
+  }
+}
+async function abrirGuardado(id) {
+  try {
+    const r = await fetch('/api/shipper-uva/' + encodeURIComponent(id));
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || 'el servidor respondió ' + r.status);
+    const d = j.datos || {};
+    const archivoCli = d.archivoCliente || '';
+    let archivoRep = j.archivo || '';
+    if (archivoCli && archivoRep.endsWith(' + ' + archivoCli)) archivoRep = archivoRep.slice(0, -(archivoCli.length + 3));
+    actual = {
+      id: j.id, ref: j.referencia, partidas: (d.partidas || []).map(p => ({ ...p })), cliente: d.cliente || [],
+      borradas: new Set((d.borradas || []).map(b => Number(String(b).replace('i:', ''))).filter(n => Number.isInteger(n))),
+      archivoRep: archivoRep || 'Reporte guardado', archivoCli: archivoCli || 'Reporte del cliente',
+    };
+    try { history.replaceState(null, '', '/herramientas/shipper-uva/reporte?id=' + j.id); } catch {}
+    $('ref').value = j.referencia;
+    mostrar();
+  } catch (e) {
+    aviso('No pude abrir el reporte: ' + e.message, 'err');
+  }
+}
+
+// --- Descargas (PDF y XLSX) con las columnas elegidas ---
+const renglonesExportar = () => actual.filas.map(p => ({ p, r: actual.revision.res.get(p.i) }));
+const nombreArchivo = ext => 'REPORTE_SAFE_MARKET_UVA_' + ($('ref').value.trim().split('/')[0] || 'SIN_REF') + '.' + ext;
+function descargarPDF(cols) {
+  if (!window.jspdf || !window.jspdf.jsPDF) throw new Error('no se cargó el generador de PDF. Revisa tu conexión y recarga la página.');
+  const { jsPDF } = window.jspdf;
+  const ref = $('ref').value.trim();
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'letter', compress: true });
+  const ancho = doc.internal.pageSize.getWidth(), util = ancho - 48;
+  const VERDE = [46, 139, 87], TXT = [51, 51, 51], LINEA = [190, 214, 199];
+  const filas = renglonesExportar();
+  // Cada columna al ancho de su título o de su dato más largo (lo que sea mayor); la descripción toma el resto
+  const BASE = {};
+  for (const k of cols.filter(k => k !== 'desc')) {
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(7.2);
+    const th = doc.getTextWidth(NOMBRE_COL(k));
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5);
+    const dato = Math.max(0, ...filas.map(({ p, r }) => doc.getTextWidth(valorTexto(k, p, r))));
+    BASE[k] = Math.min(120, Math.ceil(Math.max(th, dato) + 7));
+  }
+  const anchos = {}; let tam = 7.5;
+  const fijas = cols.filter(k => k !== 'desc'), suma = fijas.reduce((s, k) => s + BASE[k], 0);
+  if (cols.includes('desc')) {
+    const f = util - suma < 210 ? (util - 210) / suma : 1; // la descripción conserva al menos 210 pt
+    fijas.forEach(k => { anchos[k] = BASE[k] * f; });
+    anchos.desc = util - fijas.reduce((s, k) => s + anchos[k], 0);
+    tam = 7.5 * Math.max(0.72, Math.min(1, f));
+  } else {
+    const f = util / suma;
+    fijas.forEach(k => { anchos[k] = BASE[k] * f; });
+    tam = 7.5 * Math.max(0.72, Math.min(1.1, f));
+  }
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.setTextColor(11, 26, 51);
+  doc.text('Referencia : ' + ref, ancho / 2, 40, { align: 'center' });
+  doc.autoTable({
+    startY: 52,
+    margin: { left: 24, right: 24, top: 34, bottom: 32 },
+    head: [cols.map(NOMBRE_COL)],
+    showHead: 'firstPage',
+    body: filas.map(({ p, r }) => cols.map(k => valorTexto(k, p, r))),
+    theme: 'grid',
+    rowPageBreak: 'avoid',
+    styles: { font: 'helvetica', fontSize: tam, textColor: TXT, halign: 'center', valign: 'middle', cellPadding: 2.8, lineColor: LINEA, lineWidth: 0.4 },
+    headStyles: { fillColor: VERDE, textColor: 255, fontStyle: 'bold', lineColor: [111, 176, 139], fontSize: tam * 0.96 },
+    columnStyles: Object.fromEntries(cols.map((k, i) => [i, { cellWidth: anchos[k] }])),
+    didDrawPage: () => {
+      const n = doc.internal.getNumberOfPages();
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(120);
+      doc.text('Referencia ' + ref + ' · Página ' + n, ancho - 24, doc.internal.pageSize.getHeight() - 16, { align: 'right' });
+    },
+  });
+  doc.save(nombreArchivo('pdf'));
+}
+let cargaExcel;
+function cargarExcel() {
+  if (window.ExcelJS) return Promise.resolve();
+  return cargaExcel ||= new Promise((ok, ko) => {
+    const sc = document.createElement('script');
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js';
+    sc.onload = ok; sc.onerror = () => { cargaExcel = null; ko(new Error('no se cargó el generador de Excel. Revisa tu conexión e intenta de nuevo.')); };
+    document.head.appendChild(sc);
+  });
+}
+async function descargarXLSX(cols) {
+  await cargarExcel();
+  const ref = $('ref').value.trim();
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'MEJAnet';
+  const ws = wb.addWorksheet('Safe Market UVA', {
+    views: [{ state: 'frozen', ySplit: 2 }],
+    pageSetup: { orientation: 'landscape', paperSize: 1, fitToPage: true, fitToWidth: 1, fitToHeight: 0, printTitlesRow: '2:2', margins: { left: 0.3, right: 0.3, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } },
+  });
+  const ANCHO = { sec: 11, ref: 11, fact: 20, parte: 15, part: 10, frac: 11, sub: 13, umc: 7, qty: 9, desc: 52, part2: 10, folio: 15 };
+  ws.columns = cols.map(k => ({ key: k, width: ANCHO[k] }));
+  const borde = { style: 'thin', color: { argb: 'FFBED6C7' } };
+  const bordes = { top: borde, bottom: borde, left: borde, right: borde };
+  const centro = { horizontal: 'center', vertical: 'middle', wrapText: true };
+  ws.mergeCells(1, 1, 1, cols.length);
+  const t = ws.getCell(1, 1);
+  t.value = 'Referencia : ' + ref;
+  t.font = { name: 'Arial', size: 16, bold: true, color: { argb: 'FF0B1A33' } };
+  t.alignment = { horizontal: 'center', vertical: 'middle' };
+  ws.getRow(1).height = 28;
+  const h = ws.getRow(2);
+  h.values = cols.map(NOMBRE_COL);
+  h.height = 24;
+  const bh = { style: 'thin', color: { argb: 'FF6FB08B' } };
+  h.eachCell(c => {
+    c.font = { name: 'Arial', size: 9, bold: true, color: { argb: 'FFFFFFFF' } };
+    c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2E8B57' } };
+    c.alignment = centro; c.border = { top: bh, bottom: bh, left: bh, right: bh };
+  });
+  const NUMERO = { sec: 1, part: 1, part2: 1, qty: 1 };
+  let fila = 3;
+  for (const { p, r } of renglonesExportar()) {
+    const row = ws.getRow(fila++);
+    row.values = cols.map(k => { const v = valorTexto(k, p, r); if (k === 'qty') return p.qty; return NUMERO[k] && /^\d+$/.test(v) ? Number(v) : v; });
+    cols.forEach((k, i) => {
+      const c = row.getCell(i + 1);
+      c.font = { name: 'Arial', size: 10, color: { argb: 'FF333333' } }; c.alignment = centro; c.border = bordes;
+      c.numFmt = k === 'qty' ? '#,##0.####' : NUMERO[k] ? '0' : '@';
+    });
+  }
+  const buf = await wb.xlsx.writeBuffer();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+  a.download = nombreArchivo('xlsx');
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+
+// --- Ventana para elegir columnas (se recuerda la última elección de cada formato en este navegador) ---
+let formatoDlg = 'pdf';
+const leerEleccion = f => { try { const x = JSON.parse(localStorage.getItem('uva-cols-' + f)); return Array.isArray(x) && x.length ? x.filter(k => COLS_EXPORTAR.includes(k)) : null; } catch { return null; } };
+const guardarEleccion = (f, cols) => { try { localStorage.setItem('uva-cols-' + f, JSON.stringify(cols)); } catch {} };
+function abrirColumnas(formato) {
+  formatoDlg = formato;
+  const elegidas = leerEleccion(formato) || COLS_EXPORTAR;
+  $('dlgTit').textContent = '¿Qué columnas quieres en el ' + (formato === 'pdf' ? 'PDF' : 'Excel (XLSX)') + '?';
+  $('dlgOk').textContent = formato === 'pdf' ? 'Descargar PDF' : 'Descargar XLSX';
+  $('colLista').innerHTML = COLS_EXPORTAR.map((k, i) => `<label><input type="checkbox" value="${k}"${elegidas.includes(k) ? ' checked' : ''}> <span>${esc(NOMBRE_COL(k))}${k === 'part2' ? ' (2ª)' : k === 'part' ? ' (1ª)' : ''}</span></label>`).join('');
+  $('dlgMsg').textContent = '';
+  revisarTodas();
+  $('dlgCols').hidden = false;
+  $('dlgOk').focus();
+}
+const marcadas = () => [...$('colLista').querySelectorAll('input:checked')].map(i => i.value);
+function revisarTodas() {
+  const n = marcadas().length;
+  $('colTodas').checked = n === COLS_EXPORTAR.length;
+  $('colTodas').indeterminate = n > 0 && n < COLS_EXPORTAR.length;
+  $('dlgOk').disabled = !n;
+  $('dlgMsg').textContent = n ? '' : 'Elige al menos una columna.';
+}
+const cerrarColumnas = () => { $('dlgCols').hidden = true; };
+$('colTodas').addEventListener('change', ev => { $('colLista').querySelectorAll('input').forEach(i => { i.checked = ev.target.checked; }); revisarTodas(); });
+$('colLista').addEventListener('change', revisarTodas);
+$('dlgCancelar').addEventListener('click', cerrarColumnas);
+$('dlgCols').addEventListener('click', ev => { if (ev.target === $('dlgCols')) cerrarColumnas(); });
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && !$('dlgCols').hidden) cerrarColumnas(); });
+$('dlgOk').addEventListener('click', async () => {
+  const cols = COLS_EXPORTAR.filter(k => marcadas().includes(k));
+  if (!cols.length) return;
+  guardarEleccion(formatoDlg, cols);
+  const btn = $('dlgOk'), txt = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Generando…';
+  try {
+    if (formatoDlg === 'pdf') descargarPDF(cols); else await descargarXLSX(cols);
+    cerrarColumnas();
+  } catch (e) {
+    $('dlgMsg').textContent = 'No se pudo generar: ' + e.message;
+  } finally { btn.disabled = false; btn.textContent = txt; }
+});
+
+$('tabla').addEventListener('click', ev => {
+  const b = ev.target.closest?.('button.borrar'); if (!b) return;
+  actual.borradas.add(Number(b.dataset.i)); recalcular(); pintar(); guardar();
+});
+$('restaurar').addEventListener('click', () => { actual.borradas.clear(); recalcular(); pintar(); guardar(); });
+let tFiltro;
+const filtrar = () => { if (!actual) return; recalcular(); pintar(); };
+$('fBuscar').addEventListener('input', () => { clearTimeout(tFiltro); tFiltro = setTimeout(filtrar, 150); });
+['fFrac', 'fRef', 'fFolio'].forEach(id => $(id).addEventListener('change', filtrar));
+$('fLimpiar').addEventListener('click', () => { limpiarFiltros(); filtrar(); });
+for (const [tipo, dropId, inputId] of [['rep', 'dropRep', 'archivoRep'], ['cli', 'dropCli', 'archivoCli']]) {
+  const drop = $(dropId), input = $(inputId);
+  input.addEventListener('change', ev => { const f = ev.target.files[0]; if (f) subir(tipo, f); ev.target.value = ''; });
+  drop.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); input.click(); } });
+  ['dragenter', 'dragover'].forEach(t => drop.addEventListener(t, ev => { ev.preventDefault(); drop.classList.add('over'); }));
+  ['dragleave', 'drop'].forEach(t => drop.addEventListener(t, ev => { ev.preventDefault(); drop.classList.remove('over'); }));
+  drop.addEventListener('drop', ev => { const f = ev.dataTransfer.files[0]; if (f) subir(tipo, f); });
+}
+$('ref').addEventListener('input', () => { if (actual) { $('titref').textContent = 'Referencia : ' + $('ref').value; guardar(900); } });
+$('pdf').addEventListener('click', () => abrirColumnas('pdf'));
+$('xlsx').addEventListener('click', () => abrirColumnas('xlsx'));
+{ const q = new URLSearchParams(location.search); if (q.get('id')) abrirGuardado(q.get('id')); }
+</script>
 <script src="/solo-lectura.js"></script>
 </body>
 </html>

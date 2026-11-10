@@ -151,7 +151,9 @@ app.get('/herramientas/shipper-normal/reporte', admin, (_req, res) => res.set('C
 // Reporte Shipper SM: lista de reportes guardados y convertidor
 app.get('/herramientas/shipper-sm', admin, (_req, res) => res.set('Cache-Control', 'no-store').sendFile(path.join(__dirname, 'admin', 'shipper-sm-lista.html')));
 app.get('/herramientas/shipper-sm/reporte', admin, (_req, res) => res.set('Cache-Control', 'no-store').sendFile(path.join(__dirname, 'admin', 'shipper-sm.html')));
-for (const h of ['conversion-unidades', 'shipper-uva']) {
+app.get('/herramientas/shipper-uva', admin, (_req, res) => res.set('Cache-Control', 'no-store').sendFile(path.join(__dirname, 'admin', 'shipper-uva-lista.html')));
+app.get('/herramientas/shipper-uva/reporte', admin, (_req, res) => res.set('Cache-Control', 'no-store').sendFile(path.join(__dirname, 'admin', 'shipper-uva.html')));
+for (const h of ['conversion-unidades']) {
   app.get('/herramientas/' + h, admin, (_req, res) => res.sendFile(path.join(__dirname, 'admin', h + '.html')));
 }
 
