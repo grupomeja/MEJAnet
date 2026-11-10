@@ -1351,7 +1351,7 @@ function patchDespacho(id,f,val){const e=EMB[id]||{},hs=e.hitos||{},ant=(hs.desp
 function contenedoresHTML(e){if(e.tipo==="LCL")return '<span class="cs">CARGA<br>SUELTA</span>';const l=String(e.contenedores||"").toUpperCase().split(/[\s,;\/]+/).filter(Boolean);
   return l.length?l.map(c=>`<span class="cn">${esc(c)}</span>`).join(""):'<span class="vacio">-</span>'}
 // Tipos de previo, en este orden. Un valor anterior que ya no está en la lista se sigue mostrando hasta que se cambie.
-const TIPOS_PREVIO=["PREVIO OCULAR","PREVIO DESYCON","NO PREVIO","PREVIO EN ORIGEN"];
+const TIPOS_PREVIO=["PREVIO OCULAR","PREVIO DESYCON","PREVIO EN ALMACEN","NO PREVIO","PREVIO EN ORIGEN"];
 function opcionesPrevio(v){const l=TIPOS_PREVIO.slice();if(v&&!l.includes(v))l.push(v);return l.map(o=>`<option>${esc(o)}</option>`).join("")}
 const F=(f,l,cls="",type="text",extra="")=>`<label class="${cls}">${l}<input id="fx-${f}" data-f="${f}" type="${type}" ${extra}></label>`;
 let needDrawer=false;
