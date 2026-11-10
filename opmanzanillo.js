@@ -43,6 +43,7 @@ async function init() {
   await hitosNuevos();
   await importar('2026-10-31', path.join(__dirname, 'seed', 'actualizacion_2026-10-31.json'));
   await importar('2026-11-07', path.join(__dirname, 'seed', 'actualizacion_2026-11-07.json'));
+  await importar('2026-11-09', path.join(__dirname, 'seed', 'actualizacion_2026-11-09.json'));
   if (pool) await pool.query(`CREATE TABLE IF NOT EXISTS opm_archivos (
       id TEXT PRIMARY KEY, embarque TEXT NOT NULL, nombre TEXT NOT NULL, tipo TEXT NOT NULL,
       datos BYTEA NOT NULL, creado TIMESTAMPTZ NOT NULL DEFAULT now())`);
@@ -55,6 +56,7 @@ async function init() {
   await despachoDesdeSemaforo('despacho-semaforo-2026-11-09');
   await importarCampos('semaforo-ma061-2026-11-09', path.join(__dirname, 'seed', 'semaforo_ma061_2026-11-09.json'));
   await despachoDesdeSemaforo('despacho-semaforo-ma061-2026-11-09');
+  await importarCampos('buques-2026-11-09', path.join(__dirname, 'seed', 'buques_2026-11-09.json'));
   if (pool) await pool.query('CREATE TABLE IF NOT EXISTS opm_drive (archivo TEXT PRIMARY KEY, drive_id TEXT NOT NULL)');
   // Referencias que MEJAnet escribió en el Google Sheet de control (solo esas se quitan al borrar el embarque)
   if (pool) await pool.query('CREATE TABLE IF NOT EXISTS opm_refsheet (id TEXT PRIMARY KEY, ref TEXT NOT NULL)');
