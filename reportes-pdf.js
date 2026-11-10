@@ -238,6 +238,7 @@ async function fichaEmbarque(e) {
   D.tabla([['HITO', 0, '', true], ['ESTIMADA', 110, 'c'], ['REAL', 110, 'c'], ['ESTADO', 130, 'c']],
     HITOS.map(([k, l]) => {
       const x = h(k), na = k === 'previo' && noPrevio;
+      if (k === 'arribo' && e.tipo === 'LCL') l = 'Desconsolidacion';
       return [l, na ? 'No aplica' : fec(x.e) || '-', na ? 'No aplica' : fec(x.r) || '-', na ? 'CUMPLIDO (NO APLICA)' : x.r ? 'CUMPLIDO' : (x.e ? 'PROGRAMADO' : 'PENDIENTE')];
     }), { z: 8.5, alto: 15, color: (i, k) => (k === 3 ? (HITOS[i][0] === 'previo' && noPrevio) || h(HITOS[i][0]).r ? VERDE : GRIS : null) });
   if ((e.gastos || []).length) {

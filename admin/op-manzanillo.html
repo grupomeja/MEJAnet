@@ -841,6 +841,8 @@ try{const v=localStorage.getItem("om.view");if(v)ui.view=v;const o=localStorage.
 /* ---------- derived logic ---------- */
 function hit(e,k){return(e.hitos&&e.hitos[k])||{}}
 function applicable(e,k){if(k==="previo"){const p=(e.previo||"").toUpperCase();return !p.startsWith("NO")}return true}
+// En LCL (carga suelta) el hito de Atraque se llama Desconsolidación
+function hl(e,h){return h.k==="arribo"&&e&&e.tipo==="LCL"?"Desconsolidación":h.l}
 function due(h){return h.e||""}
 function analyze(e){
   const hs=HITOS.filter(h=>applicable(e,h.k));
@@ -867,7 +869,7 @@ function analyze(e){
   }
   const alerts=[];
   if(e.estado==="activa"){
-    if(late)alerts.push({lvl:"bad",txt:next.l+" vencido hace "+diff(TODAY,nd)+" d",short:"Vencido "+diff(TODAY,nd)+" d"});
+    if(late)alerts.push({lvl:"bad",txt:hl(e,next)+" vencido hace "+diff(TODAY,nd)+" d",short:"Vencido "+diff(TODAY,nd)+" d"});
     if(libres&&libres.rest<0)alerts.push({lvl:"bad",txt:"Días libres vencidos hace "+(-libres.rest)+" d",short:"Libres vencidos"});
     else if(libres&&libres.rest<=3)alerts.push({lvl:"warn",txt:"Días libres vencen "+(libres.rest===0?"hoy":"en "+libres.rest+" d"),short:"Libres "+libres.rest+" d"});
     if(!arr.r&&!arr.e)alerts.push({lvl:"warn",txt:"Sin fecha de arribo",short:"Sin ETA"});
@@ -969,7 +971,7 @@ function renderEjec(){
       <div class="list">${alertas.slice(0,12).map(({x,a})=>`<button type="button" class="li" data-open="${esc(x.id)}"><span class="pill ${a.lvl}">${esc(a.short)}</span><span style="min-width:0"><div class="t"><span class="ref">${esc(x.e.ref)}</span> · ${esc(x.e.buque)}</div><div class="s">${esc(a.txt)} · ${esc(x.e.cliente)}</div></span><span class="muted" style="font-size:12px">${esc(x.e.terminal||"")}</span></button>`).join("")||`<div class="empty">Todo al corriente</div>`}</div>
     </div>
     <div class="card"><h2>Próximos 14 días <span class="muted">hitos programados</span></h2>
-      <div class="list">${up.slice(0,12).map(u=>`<button type="button" class="li li-st st-${status(u.x.e)}" data-open="${esc(u.x.id)}"><span class="date-chip">${fd2(u.d)}</span><span style="min-width:0"><div class="t">${esc(u.h.l)} · <span class="ref">${esc(u.x.e.ref)}</span></div><div class="s">${esc(u.x.e.buque)} ${esc(u.x.e.viaje||"")} · ${esc(u.x.e.cliente)}</div></span><span class="st-pill s-${status(u.x.e)}">${ST_CORTO[status(u.x.e)]}</span></button>`).join("")||`<div class="empty">Sin hitos en las próximas dos semanas</div>`}</div>
+      <div class="list">${up.slice(0,12).map(u=>`<button type="button" class="li li-st st-${status(u.x.e)}" data-open="${esc(u.x.id)}"><span class="date-chip">${fd2(u.d)}</span><span style="min-width:0"><div class="t">${esc(hl(u.x.e,u.h))} · <span class="ref">${esc(u.x.e.ref)}</span></div><div class="s">${esc(u.x.e.buque)} ${esc(u.x.e.viaje||"")} · ${esc(u.x.e.cliente)}</div></span><span class="st-pill s-${status(u.x.e)}">${ST_CORTO[status(u.x.e)]}</span></button>`).join("")||`<div class="empty">Sin hitos en las próximas dos semanas</div>`}</div>
     </div>
   </div>
   <div class="two">
@@ -1032,7 +1034,7 @@ function dotsHTML(e,a){
   return `<div class="dots" aria-label="Avance de hitos">${HITOS.map(h=>{
     const hh=hit(e,h.k);const i=a.hs.indexOf(h);const na=!applicable(e,h.k);
     const done=closed||na||i<=a.last; // «No previo»: el hito se da por cumplido
-    return `<span class="dot ${done?"done":""}" title="${esc(h.l)}${hh.r?": "+fd(hh.r):na?": no aplica (cumplido)":""}"></span>`}).join("")}</div>`;
+    return `<span class="dot ${done?"done":""}" title="${esc(hl(e,h))}${hh.r?": "+fd(hh.r):na?": no aplica (cumplido)":""}"></span>`}).join("")}</div>`;
 }
 function renderSeg(){
   const rows=filtered().sort(ordenar);
@@ -1040,7 +1042,7 @@ function renderSeg(){
   const body=rows.map(({id,e,a})=>{
     let nextTxt;
     if(e.estado==="cerrada"){const f=hit(e,"despacho").r;nextTxt=`<div class="a"><span class="sema ${e.semaforo||""}"></span> <span class="${e.semaforo==="rojo"?"sem-rojo":e.semaforo==="verde"?"sem-verde":""}">Despachado</span></div><div class="${e.semaforo==="rojo"?"sem-rojo":e.semaforo==="verde"?"sem-verde":""}" style="font-weight:800;white-space:nowrap;font-size:12px">${fd(f)}</div><div class="b">${e.semaforo==="rojo"?`<span class="sem-rojo">Reconocimiento aduanero</span>`:e.semaforo==="verde"?`<span class="sem-verde">Desaduanamiento libre</span>`:""}${e.pedimento?" · Ped. "+esc(e.pedimento):""}</div>`}
-    else if(a.next){nextTxt=`<div class="a">${esc(a.next.l)}</div><div class="nx">${a.nd?`<span class="nx-d">${fd(a.nd)}</span>`:`<span class="muted">Sin fecha</span>`}${a.alerts.length?`<span class="pill ${a.alerts[0].lvl}">${esc(a.alerts[0].short)}</span>`:`<span class="muted">${a.nd?"Estimada":"Registrar fecha estimada"}</span>`}</div>`}
+    else if(a.next){nextTxt=`<div class="a">${esc(hl(e,a.next))}</div><div class="nx">${a.nd?`<span class="nx-d">${fd(a.nd)}</span>`:`<span class="muted">Sin fecha</span>`}${a.alerts.length?`<span class="pill ${a.alerts[0].lvl}">${esc(a.alerts[0].short)}</span>`:`<span class="muted">${a.nd?"Estimada":"Registrar fecha estimada"}</span>`}</div>`}
     else nextTxt=`<div class="a">Todos los hitos registrados</div><div class="b">Marcar como cerrada</div>`;
     return `<button type="button" class="tr s-${status(e)}${status(e)==="gr"&&e.semaforo==="rojo"?" sem-r":""}" data-open="${esc(id)}" title="${esc(STATUS[status(e)])}">
       <div class="cell c-ref"><div class="a ref">${esc(e.ref)}</div><div class="b">${esc(e.cliente)}</div></div>
@@ -1398,8 +1400,8 @@ function renderDrawerInner(){
       ${HITOS.map((h,i)=>{const hh=hit(e,h.k);const na=!applicable(e,h.k);const isN=a.next===h;
         let st=na?`<span class="pill ok">Cumplido · no aplica</span>`:hh.r?`<span class="pill ok">Cumplido</span>`:isN?(a.late?`<span class="pill bad">Vencido ${diff(TODAY,a.nd)} d</span>`:`<span class="pill info">Siguiente</span>`):"";
         if(hh.r&&due(hh)&&hh.r>due(hh))st+=` <span class="muted" style="font-size:11.5px">+${diff(hh.r,due(hh))} d</span>`;
-        return `<tr class="${na?"na":""} ${isN?"isnext":""} ${isN&&a.late?"late":""}"><td class="h"><span class="n">${i+1}</span>${esc(h.l)}</td>
-        ${["e","r"].map(k=>`<td><input type="date" id="h-${h.k}-${k}" data-h="${h.k}" data-k="${k}" value="${esc(hh[k]||"")}" class="${k==="r"&&hh.r?"real":""}" aria-label="${esc(h.l)} ${k==="e"?"estimada":"real"}" ${dis}></td>`).join("")}
+        return `<tr class="${na?"na":""} ${isN?"isnext":""} ${isN&&a.late?"late":""}"><td class="h"><span class="n">${i+1}</span>${esc(hl(e,h))}</td>
+        ${["e","r"].map(k=>`<td><input type="date" id="h-${h.k}-${k}" data-h="${h.k}" data-k="${k}" value="${esc(hh[k]||"")}" class="${k==="r"&&hh.r?"real":""}" aria-label="${esc(hl(e,h))} ${k==="e"?"estimada":"real"}" ${dis}></td>`).join("")}
         <td class="st">${st}</td></tr>`}).join("")}
       </tbody></table></div></section>
     </div>
