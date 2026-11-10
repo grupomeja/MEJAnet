@@ -814,8 +814,7 @@ const MESL=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","S
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
-const now=new Date();
-const TODAY=iso(now);
+let TODAY=iso(new Date());
 function iso(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 function dn(s){if(!s)return null;const[y,m,d]=s.slice(0,10).split("-").map(Number);return Date.UTC(y,m-1,d)/864e5}
 function diff(a,b){return dn(a)-dn(b)}
@@ -859,7 +858,8 @@ function analyze(e){
   const arr=hit(e,"arribo");
   const arrEff=arr.r||(arr.e&&arr.e<=TODAY?arr.e:"");
   const endPort=hit(e,"retiro").r||(e.estado!=="activa"?hit(e,"despacho").r:"")||TODAY;
-  const diasPuerto=arr.r?Math.max(0,diff(endPort,arr.r)):null;
+  // Días en puerto: desde la fecha de Atraque hasta el Retiro de puerto (si no hay retiro, hasta hoy)
+  const diasPuerto=arrEff?Math.max(0,diff(endPort,arrEff)):null;
   let libres=null;
   if(e.diasLibres&&e.estado==="activa"&&!hit(e,"retiro").r){
     const base=arr.r;
@@ -919,7 +919,7 @@ function renderEjec(){
   const alertN=act.filter(x=>x.a.alerts.some(a=>a.lvl==="bad")).length;
 
   // months
-  const curM=now.getMonth();const months=[];
+  const curM=+TODAY.slice(5,7)-1;const months=[];
   for(let m=0;m<=curM;m++){
     const key=y+"-"+String(m+1).padStart(2,"0");
     const xs=all.filter(x=>(hit(x.e,"despacho").r||"").startsWith(key));
@@ -1694,6 +1694,11 @@ function setView(v){ui.view=v;try{localStorage.setItem("om.view",v)}catch(e){}
   $("#f-estado").hidden=v==="ejec";$("#f-orden-w").hidden=v!=="seg";
   document.body.classList.toggle("vista-gas",v==="gas");renderAll();}
 function fillSelect(id,vals,cur,all){const s=$(id);const html=`<option value="">${all}</option>`+vals.map(v=>`<option ${v===cur?"selected":""}>${esc(v)}</option>`).join("");if(s.dataset.h!==html){s.innerHTML=html;s.dataset.h=html}s.value=cur}
+// Al cambiar el día (página abierta), recalcula días en puerto, vencimientos, etc.
+setInterval(()=>{const h=iso(new Date());if(h===TODAY)return;
+  const a=document.activeElement;if(a&&/^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName))return;
+  TODAY=h;$("#hoy").textContent="Puerto de Manzanillo · "+fd(TODAY);renderAll();},60000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&iso(new Date())!==TODAY){TODAY=iso(new Date());$("#hoy").textContent="Puerto de Manzanillo · "+fd(TODAY);renderAll();}});
 function renderAll(){
   fillSelect("#f-cliente",clientes(),ui.cliente,"Todos los clientes");
   fillSelect("#f-terminal",terminales(),ui.terminal,"Todas las terminales");
