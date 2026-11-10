@@ -191,7 +191,7 @@ async function reporteReferencias(embs, modo = 'des') {
 module.exports = { reporteEjecutivo, reporteReferencias };
 
 // ---------- Ficha de embarque (PDF de una sola referencia) ----------
-const HITOS = [['zarpe', 'Zarpe en origen'], ['arribo', 'Arribo a Manzanillo'], ['revalidacion', 'Revalidacion'], ['previo', 'Previo'], ['despacho', 'Despacho'], ['retiro', 'Retiro de puerto']];
+const HITOS = [['zarpe', 'ETA Aproximada'], ['arribo', 'Atraco'], ['revalidacion', 'Revalidacion'], ['previo', 'Previo'], ['despacho', 'Despacho'], ['retiro', 'Retiro de puerto']];
 const TCONT = { '20DC': "20' DC", '20OT': "20' OT", '40DC': "40' DC", '40HC': "40' HC", REEFER: 'REEFER', SUELTA: 'Carga suelta' };
 async function fichaEmbarque(e) {
   const D = await base('FICHA DE EMBARQUE', `${e.ref || ''}  ·  ${String(e.cliente || 'SIN CLIENTE').toUpperCase()}`, false);
