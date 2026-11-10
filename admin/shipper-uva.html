@@ -389,17 +389,21 @@ function revisar() {
     let cand = idx.get(claveMatch(p.desc, p.frac)) || [];
     if (!cand.length) { res.set(p.i, { folio: '' }); continue; }
     const u = claveUMC(p.umc);
-    if (cand.length > 1) { const mismos = cand.filter(c => claveUMC(c.umc) === u); if (mismos.length) cand = mismos; }
+    // Unidad de medida distinta: no se asigna folio (el cliente debe dar un folio para esa unidad), solo se avisa
+    const otraUnidad = c => { const uc = claveUMC(c.umc); return u && uc && uc !== u; };
+    if (cand.every(otraUnidad)) {
+      res.set(p.i, { folio: '', problema: 'umc' });
+      const unidades = [...new Set(cand.map(c => NOMBRE_UMC[claveUMC(c.umc)] || 'UMC ' + c.umc))].join(' / ');
+      problemas.push({ tipo: 'umc', folio: '', p, txt: `Secuencia ${p.sec} · ${p.desc}: la partida viene en ${p.umc} y ${cand.length === 1 ? 'el folio ' + cand[0].folio + ' del cliente está' : 'los folios ' + cand.map(c => c.folio).join(', ') + ' del cliente están'} en ${unidades}. No se asignó folio: el cliente debe dar un folio para ${p.umc}.` });
+      continue;
+    }
+    if (cand.length > 1) cand = cand.filter(c => !otraUnidad(c));
     if (cand.length > 1) {
       res.set(p.i, { folio: '', problema: 'amb' });
       problemas.push({ tipo: 'amb', folio: '', p, txt: `Secuencia ${p.sec} · ${p.desc}: tiene ${cand.length} folios posibles (${cand.map(c => c.folio).join(', ')}) y no se pudo decidir cuál.` });
       continue;
     }
-    const c = cand[0], uc = claveUMC(c.umc);
-    if (u && uc && u !== uc) {
-      res.set(p.i, { folio: c.folio, problema: 'umc' });
-      problemas.push({ tipo: 'umc', folio: c.folio, p, txt: `Secuencia ${p.sec} · ${p.desc}: la partida viene en ${p.umc} y el folio ${c.folio} del cliente está en ${NOMBRE_UMC[uc] || 'UMC ' + c.umc}.` });
-    } else res.set(p.i, { folio: c.folio });
+    res.set(p.i, { folio: cand[0].folio });
   }
   // Cantidades: lo que suman las partidas de cada folio contra la cantidad del reporte del cliente
   const suma = new Map();
