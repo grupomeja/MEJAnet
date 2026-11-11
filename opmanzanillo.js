@@ -358,6 +358,17 @@ async function borrar(id) {
   const o = leer(); if (!o[id]) return false; delete o[id]; escribir(o); return true;
 }
 
+// Para cerrar una operación deben estar cumplidos (con fecha REAL) Atraque, Revalidación, Previo y Despacho.
+// El previo cuenta como cumplido si es NO PREVIO. Solo el usuario principal puede forzar el cierre.
+const PASOS_CIERRE = [['arribo', 'Atraque'], ['revalidacion', 'Revalidación'], ['previo', 'Previo'], ['despacho', 'Despacho']];
+function faltanCierre(e) {
+  const hs = (e && e.hitos) || {};
+  return PASOS_CIERRE.filter(([k]) => {
+    if (k === 'previo' && String(e.previo || '').toUpperCase().startsWith('NO')) return false;
+    return !(hs[k] && hs[k].r);
+  }).map(([k, l]) => (k === 'arribo' && e.tipo === 'LCL' ? 'Desconsolidación' : l));
+}
+
 // ---------- Rutas ----------
 function rutas(admin) {
   const r = express.Router();
@@ -420,6 +431,19 @@ function rutas(admin) {
       try {
         const otra = (await listar()).find((x) => x.id !== req.params.id && String(x.ref || '').toUpperCase() === cambio.ref);
         if (otra) return res.status(409).json({ error: `La referencia ${cambio.ref} ya la tiene otro embarque.` });
+      } catch (e) { return err(res, e, 'No se pudo guardar'); }
+    }
+    if (cambio.estado === 'cerrada') {
+      try {
+        const act = await obtener(req.params.id);
+        if (act && act.estado !== 'cerrada') {
+          const hitos = { ...(act.hitos || {}) };
+          for (const [k, v] of Object.entries(cambio.hitos || {})) hitos[k] = { ...(hitos[k] || {}), ...v };
+          const faltan = faltanCierre({ ...act, ...cambio, hitos });
+          const forzar = !!(req.body && req.body.forzarCierre) && req.principal;
+          if (faltan.length && !forzar) return res.status(409).json({ error: `No se puede cerrar el embarque: falta la fecha real de ${faltan.join(', ')}.`, faltan });
+          if (faltan.length) console.log(`OP Manzanillo: ${act.ref} cierre forzado por ${req.usuario} (faltaba ${faltan.join(', ')})`);
+        }
       } catch (e) { return err(res, e, 'No se pudo guardar'); }
     }
     try {

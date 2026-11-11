@@ -96,6 +96,7 @@ function admin(req, res, next) {
   if (usuario) {
     req.usuario = usuario;
     req.soloLectura = soloLectura(usuario);
+    req.principal = usuario === (process.env.ADMIN_USER || 'amedina'); // usuario principal (puede forzar cierres)
     crearSesion(res, usuario, usuarios().get(usuario)); // renueva el año de vigencia
     if (req.soloLectura && esCambio(req)) return res.status(403).json({ error: 'Tu usuario es solo de consulta: puedes ver la información, pero no guardar cambios.' });
     if (req.soloLectura && req.method === 'GET' && PAGINAS_NUEVO[req.path]) return res.redirect(PAGINAS_NUEVO[req.path]);
@@ -135,7 +136,7 @@ app.post('/api/login', (req, res) => {
   res.status(401).json({ error: 'Usuario o contraseña incorrectos.' });
 });
 // Quién inició sesión y si es solo de consulta (lo usan las páginas para ocultar botones de edición)
-app.get('/api/sesion', admin, (req, res) => res.set('Cache-Control', 'no-store').json({ usuario: req.usuario, soloLectura: !!req.soloLectura }));
+app.get('/api/sesion', admin, (req, res) => res.set('Cache-Control', 'no-store').json({ usuario: req.usuario, soloLectura: !!req.soloLectura, principal: !!req.principal }));
 app.get('/logout', (_req, res) => {
   res.clearCookie(COOKIE, { path: '/' });
   res.redirect('/');

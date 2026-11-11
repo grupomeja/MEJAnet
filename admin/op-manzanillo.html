@@ -830,6 +830,11 @@ function money(n){return(n||0).toLocaleString("es-MX",{minimumFractionDigits:2,m
 $("#hoy").textContent="Puerto de Manzanillo · "+fd(TODAY);
 
 let canWrite=true;
+let PRINCIPAL=false; // solo el usuario principal puede forzar el cierre de una operación
+fetch("/api/sesion",{credentials:"same-origin"}).then(r=>r.ok?r.json():null).then(x=>{PRINCIPAL=!!(x&&x.principal)}).catch(()=>{});
+// Para cerrar: Atraque, Revalidación, Previo y Despacho con fecha REAL (NO PREVIO cuenta como cumplido)
+function faltanCierre(e){return ["arribo","revalidacion","previo","despacho"].filter(k=>applicable(e,k)&&!hit(e,k).r).map(k=>hl(e,HITOS.find(h=>h.k===k)))}
+function avisoCierre(f){toast("No se puede cerrar el embarque: falta la fecha real de "+f.join(", ")+".",7000)}
 // Usuario de solo consulta (lo avisa /solo-lectura.js): todo se muestra bloqueado
 function modoConsulta(){if(!canWrite)return;canWrite=false;if(typeof refresh==="function"&&loaded)refresh()}
 if(window.MEJA_SOLO_LECTURA)modoConsulta();document.addEventListener("meja:solo-lectura",modoConsulta);
@@ -881,7 +886,7 @@ const STATUS={no:"Pendiente ETA y revalidación",or:"Revalidado",az:"Previo prog
 // Verde: despachado. Amarillo: pedimento asignado + pagado + fecha de despacho.
 // Azul: hay fecha de previo. Naranja: hay fecha de revalidación. Sin color: lo demás.
 // Con fecha real de retiro de puerto la operación sale de la lista de activas (cuenta como cerrada)
-function estadoEf(e){const st=e.estado||"activa";return st==="activa"&&hit(e,"retiro").r?"cerrada":st}
+function estadoEf(e){const st=e.estado||"activa";return st==="activa"&&hit(e,"retiro").r&&!faltanCierre(e).length?"cerrada":st}
 const ST_CORTO={gr:"Desaduanado",ye:"Ped. pagado / desp. prog.",az:"Previo programado",or:"Revalidado",no:"Pendiente"};
 function status(e){
   const di=hit(e,"despacho"),pv=hit(e,"previo"),rv=hit(e,"revalidacion");
@@ -1347,7 +1352,7 @@ function patchDespacho(id,f,val){const e=EMB[id]||{},hs=e.hitos||{},ant=(hs.desp
   if(!ret||ret===ant)p.hitos.retiro={[f]:val};
   ["despacho","retiro"].forEach(k=>{const i=$(`#h-${k}-${f}`);if(i&&p.hitos[k])i.value=val});
   if(f==="r"){const sf=$("#fx-semaforoFecha");if(sf)sf.value=val}
-  if(f==="r"&&val&&(p.hitos.retiro||{}).r&&e.estado==="activa"){p.estado="cerrada";toast("Retiro registrado: la operación pasa a Cerradas")}
+  if(f==="r"&&val&&(p.hitos.retiro||{}).r&&e.estado==="activa"){const fl=faltanCierre(merge(e,p));if(fl.length)toast("Retiro registrado. La operación sigue activa: falta la fecha real de "+fl.join(", ")+".",7000);else{p.estado="cerrada";toast("Retiro registrado: la operación pasa a Cerradas")}}
   return p}
 function contenedoresHTML(e){if(e.tipo==="LCL")return '<span class="cs">CARGA<br>SUELTA</span>';const l=String(e.contenedores||"").toUpperCase().split(/[\s,;\/]+/).filter(Boolean);
   return l.length?l.map(c=>`<span class="cn">${esc(c)}</span>`).join(""):'<span class="vacio">-</span>'}
@@ -1502,7 +1507,7 @@ function write(id,patch){
   queues[id]=(queues[id]||Promise.resolve()).then(run,run);return queues[id];
 }
 function flash(t){const s=$("#saved");if(s){s.textContent=t+" · "+new Date().toLocaleTimeString("es-MX",{hour:"2-digit",minute:"2-digit"})}}
-let tt;function toast(t){const el=$("#toast");el.textContent=t;el.hidden=false;clearTimeout(tt);tt=setTimeout(()=>el.hidden=true,3200)}
+let tt;function toast(t,ms=3200){const el=$("#toast");el.textContent=t;el.hidden=false;clearTimeout(tt);tt=setTimeout(()=>el.hidden=true,ms)}
 
 
 /* ---------- Reporte de previo ---------- */
@@ -1660,12 +1665,16 @@ document.addEventListener("change",ev=>{
   if(el.dataset.h){const k=el.dataset.h,f=el.dataset.k;
     if(k==="despacho"){write(ui.open,patchDespacho(ui.open,f,el.value));return}
     const patch={hitos:{[k]:{[f]:el.value}}};
-    if(k==="retiro"&&f==="r"&&el.value&&EMB[ui.open].estado==="activa"){patch.estado="cerrada";toast("Retiro registrado: la operación pasa a Cerradas")}
+    if(k==="retiro"&&f==="r"&&el.value&&EMB[ui.open].estado==="activa"){const fl=faltanCierre(merge(EMB[ui.open],patch));if(fl.length)toast("Retiro registrado. La operación sigue activa: falta la fecha real de "+fl.join(", ")+".",7000);else{patch.estado="cerrada";toast("Retiro registrado: la operación pasa a Cerradas")}}
     write(ui.open,patch);return}
   if(el.dataset.lbs){const lb=numero(el.value);write(ui.open,{peso:lb==null?null:Math.round(lb/LB*100)/100});return}
   if(el.dataset.f){let v=el.value;const f=el.dataset.f;
     if(el.type==="checkbox"){write(ui.open,{[f]:el.checked});return}
     if(f==="semaforoFecha"){write(ui.open,patchDespacho(ui.open,"r",v));return}
+    if(f==="estado"&&v==="cerrada"&&EMB[ui.open].estado!=="cerrada"){const fl=faltanCierre(EMB[ui.open]);
+      if(fl.length){
+        if(PRINCIPAL&&confirm("No se puede cerrar el embarque: falta la fecha real de "+fl.join(", ")+".\n\n¿Forzar cierre?")){write(ui.open,{estado:"cerrada",forzarCierre:true});return}
+        el.value=EMB[ui.open].estado||"activa";if(!PRINCIPAL)avisoCierre(fl);return}}
     if(["peso","diasLibres"].includes(f)){v=numero(v);if(f==="peso"&&v!=null)v=Math.round(v*100)/100}
     else if(f!=="nota"&&f!=="estado"&&f!=="semaforo")v=v.trim().toUpperCase();
     write(ui.open,{[f]:v});}
