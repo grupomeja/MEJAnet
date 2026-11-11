@@ -105,13 +105,13 @@
         </div>
         <p class="ayuda">Escribe el peso en libras o en kilogramos; el otro se calcula solo.</p>
       </div>
-      <div><label for="linea">Linea fletera</label><input type="text" id="linea" list="lLin" maxlength="120"></div>
+      <div><label for="linea">Linea fletera</label><input type="text" id="linea" maxlength="120" autocomplete="off"></div>
       <div><label for="tracking">Tracking #</label><input type="text" id="tracking" maxlength="120"></div>
       <div><label for="po">P.O.</label><input type="text" id="po" maxlength="120"></div>
       <div><label for="pedimento">Pedimento</label><input type="text" id="pedimento" maxlength="120"></div>
       <div class="full"><label for="notas">Notas</label><textarea id="notas" maxlength="500" placeholder="Observaciones de esta entrada"></textarea></div>
     </section>
-    <datalist id="lCli"></datalist><datalist id="lLin"></datalist><datalist id="lPro"></datalist>
+    
 
     <button id="guardar" type="submit">Guardar registro</button>
     <div class="msg" id="msg" role="status"></div>
@@ -141,11 +141,6 @@ $('descripcion').addEventListener('change', () => {
 });
 // Sugerencias con lo que ya existe en el tablero
 fetch('/api/admin/entradas-bodega').then((r) => r.json()).then((lista) => {
-  const llena = (id, campo) => {
-    const vals = [...new Set(lista.map((e) => (e.datos[campo] || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
-    $(id).innerHTML = vals.map((v) => `<option value="${esc(v)}">`).join('');
-  };
-  llena('lLin', 'linea');
   const unicos = (campo) => {
     const m = new Map();
     for (const e of lista) { const v = (e.datos[campo] || '').trim(); if (v && !m.has(v.toUpperCase())) m.set(v.toUpperCase(), v); }
@@ -153,6 +148,7 @@ fetch('/api/admin/entradas-bodega').then((r) => r.json()).then((lista) => {
   };
   sugerencias($('cliente'), unicos('cliente'));
   sugerencias($('proveedor'), unicos('proveedor'));
+  sugerencias($('linea'), unicos('linea'));
 }).catch(() => {});
 
 // Lista de sugerencias propia: muestra coincidencias (primero las que empiezan con lo escrito),
