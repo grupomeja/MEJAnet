@@ -139,6 +139,14 @@
   .fecha{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:#f3f6fa;border:1px solid var(--line);font-weight:600}
   .fecha svg{width:20px;height:20px;color:var(--cielo-osc);flex:0 0 auto}
   .fecha small{display:block;font-weight:500;color:var(--muted);font-size:12px}
+  .verLineas{align-self:flex-start;border:0;background:none;padding:0;color:var(--cielo-osc);font-weight:600;font-size:12.5px;cursor:pointer;text-decoration:underline}
+  .lineasG{display:flex;flex-wrap:wrap;gap:6px;padding:8px;border:1px solid var(--line);border-radius:10px;background:#f7fafc;max-height:150px;overflow:auto}
+  .lineasG[hidden]{display:none}
+  .lineasG span{display:inline-flex;align-items:center;gap:4px;padding:4px 4px 4px 10px;border-radius:999px;background:#fff;border:1px solid var(--line);font-size:12.5px;font-weight:600;cursor:pointer}
+  .lineasG span:hover{border-color:var(--marino)}
+  .lineasG button{border:0;background:none;color:var(--muted);cursor:pointer;font-size:15px;line-height:1;padding:0 4px;border-radius:50%}
+  .lineasG button:hover{color:var(--err)}
+  .lineasG em{color:var(--muted);font-size:12.5px}
   .otra{display:grid;grid-template-columns:110px 1fr;gap:8px;margin-top:6px}
   .otra[hidden]{display:none}
   .pie{display:flex;align-items:center;gap:10px;justify-content:flex-end;padding:14px 18px;border-top:1px solid #e8edf3;background:#fafcfe;flex-wrap:wrap}
@@ -196,6 +204,7 @@
       <button type="button" data-v="salieron">Salieron</button>
       <button type="button" data-v="todas">Todas</button>
     </div>
+    <button class="btn sec" id="pdf" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg> PDF</button>
     <button class="btn sec" id="xlsx" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg> XLSX</button>
   </div>
   <div class="cuenta" id="cuenta"></div>
@@ -243,6 +252,8 @@
           <label for="linea">Línea</label>
           <input id="linea" list="lineasUsadas" placeholder="Nombre de la línea transportista">
           <datalist id="lineasUsadas"></datalist>
+          <button type="button" class="verLineas" id="verLineas">Líneas guardadas</button>
+          <div class="lineasG" id="lineasG" hidden></div>
         </div>
         <div class="campo"><span class="lbl">Origen</span><div class="opciones" data-campo="origen"><button type="button" data-v="MEX">MEX</button><button type="button" data-v="USA">USA</button></div></div>
         <div class="campo"><span class="lbl">Medida</span><div class="opciones" data-campo="medida"><button type="button" data-v="53">53'</button><button type="button" data-v="48">48'</button><button type="button" data-v="40">40'</button></div></div>
@@ -275,7 +286,7 @@
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const norm = s => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().trim();
-let cajas = [], vista = 'patio', filtroKpi = '';
+let cajas = [], lineas = [], vista = 'patio', filtroKpi = '';
 const soloLectura = () => !!window.MEJA_SOLO_LECTURA;
 
 // --- Fechas ---
@@ -299,7 +310,7 @@ async function cargar() {
     const r = await fetch('/api/cajas');
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(j.error || 'el servidor respondió ' + r.status);
-    cajas = j.cajas || [];
+    cajas = j.cajas || []; lineas = j.lineas || [];
     llenarLineas(); pintar();
   } catch (e) {
     $('grid').innerHTML = `<div class="vacio"><b>No se pudo cargar la lista</b>${esc(e.message)}</div>`;
@@ -311,7 +322,8 @@ function llenarLineas() {
   $('fLinea').innerHTML = '<option value="">Todas las líneas</option>' + usadas.map(l => `<option>${esc(l)}</option>`).join('');
   $('fLinea').value = usadas.includes(v) ? v : '';
   // Sugerencias: las líneas que ya se han capturado
-  $('lineasUsadas').innerHTML = usadas.map(l => `<option value="${esc(l)}">`).join('');
+  $('lineasUsadas').innerHTML = [...new Set([...lineas, ...usadas])].sort().map(l => `<option value="${esc(l)}">`).join('');
+  pintarLineas();
 }
 const fotoUrl = (c, t) => `/api/cajas/${c.id}/foto/${t}?v=${encodeURIComponent(c.actualizado || '')}`;
 const ICO_CAJA = '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"><rect x="4" y="16" width="40" height="28" rx="2.5"/><path d="M14 16v28M24 16v28M34 16v28"/><path d="M44 26h8l7 9v9H44z"/><circle cx="15" cy="49" r="4.5"/><circle cx="50" cy="49" r="4.5"/></svg>';
@@ -613,6 +625,79 @@ $('visor').addEventListener('click', ev => {
   const b = ev.target.closest('.pies button');
   if (b) { ev.stopPropagation(); verFoto(visorCaja, b.dataset.t); return; }
   $('visor').hidden = true;
+});
+
+
+// --- Líneas guardadas: se agregan solas al guardar una caja; aquí se eligen o se quitan las mal escritas ---
+function pintarLineas() {
+  $('lineasG').innerHTML = lineas.length ? lineas.map(l => `<span data-l="${esc(l)}">${esc(l)}${soloLectura() ? '' : `<button type="button" aria-label="Quitar ${esc(l)}" title="Quitar de las líneas guardadas">×</button>`}</span>`).join('') : '<em>Aún no hay líneas guardadas: se guardan solas al registrar cajas.</em>';
+}
+$('verLineas').addEventListener('click', () => { $('lineasG').hidden = !$('lineasG').hidden; });
+$('lineasG').addEventListener('click', async ev => {
+  const sp = ev.target.closest('span[data-l]'); if (!sp) return;
+  const l = sp.dataset.l;
+  if (ev.target.closest('button')) {
+    try {
+      const r = await fetch('/api/cajas-lineas/' + encodeURIComponent(l), { method: 'DELETE' });
+      if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || 'el servidor respondió ' + r.status);
+      lineas = lineas.filter(x => x !== l); pintarLineas();
+      $('lineasUsadas').innerHTML = lineas.map(x => `<option value="${esc(x)}">`).join('');
+    } catch (e) { aviso('No se pudo quitar: ' + e.message, true); }
+    return;
+  }
+  $('linea').value = l; $('lineasG').hidden = true;
+});
+
+// --- Descargar en PDF (mismas columnas que el REPORTE DE CAJAS) ---
+let cargaPdf;
+function cargarPdf() {
+  if (window.jspdf?.jsPDF?.API?.autoTable) return Promise.resolve();
+  const sc = src => new Promise((ok, ko) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => ko(new Error('no se cargó el generador de PDF')); document.head.appendChild(s); });
+  return cargaPdf ||= sc('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js')
+    .then(() => sc('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js'))
+    .catch(e => { cargaPdf = null; throw e; });
+}
+$('pdf').addEventListener('click', async () => {
+  const lista = filtradas();
+  if (!lista.length) { aviso('No hay cajas para descargar con estos filtros.', true); return; }
+  const b = $('pdf'); b.disabled = true;
+  try {
+    await cargarPdf();
+    const doc = new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'pt', format: 'letter', compress: true });
+    const ancho = doc.internal.pageSize.getWidth(), alto = doc.internal.pageSize.getHeight();
+    const MARINO = [9, 25, 50], CIELO = [78, 201, 238], hoy = new Date();
+    doc.setFillColor(...MARINO); doc.rect(0, 0, ancho, 6, 'F');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(18); doc.setTextColor(...MARINO);
+    doc.text('REPORTE DE CAJAS', 28, 40);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); doc.setTextColor(93, 104, 120);
+    const vistaTxt = filtroKpi === 'salieron' ? 'Salieron hoy' : vista === 'patio' ? 'En patio' : vista === 'salieron' ? 'Salieron' : 'Todas';
+    doc.text(`${vistaTxt} · ${lista.length} caja${lista.length === 1 ? '' : 's'} · ${hoy.toLocaleString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`, 28, 56);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(...CIELO);
+    doc.text('grupo', ancho - 28 - doc.getTextWidth('grupomeja') + 0, 40);
+    doc.setTextColor(...MARINO); doc.text('meja', ancho - 28 - doc.getTextWidth('meja'), 40);
+    doc.autoTable({
+      startY: 68,
+      margin: { left: 28, right: 28, top: 30, bottom: 34 },
+      head: [['LÍNEA', 'LLEGADA', 'CAJA NO.', 'PLACA', 'ORIGEN', 'MEDIDA', 'MEJA', 'ESTATUS', 'UBICACIÓN']],
+      body: lista.map(c => { const d = c.datos; return [d.linea, fFecha(c.llegada), d.caja, d.placa, d.origen, d.medida ? d.medida + "'" : '', d.meja, d.estatus === 'VACIA' ? 'VACÍA' : d.estatus, d.ubicacion === 'ANDEN' ? 'ANDÉN' : d.ubicacion]; }),
+      theme: 'grid',
+      styles: { font: 'helvetica', fontSize: 9, halign: 'center', valign: 'middle', cellPadding: 5, textColor: [9, 25, 50], lineColor: [207, 217, 228], lineWidth: 0.5 },
+      headStyles: { fillColor: CIELO, textColor: MARINO, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [243, 246, 250] },
+      columnStyles: { 0: { halign: 'left', cellWidth: 170 }, 2: { fontStyle: 'bold', fontSize: 10.5 }, 3: { fontStyle: 'bold' } },
+      didParseCell: d => {
+        if (d.section !== 'body' || d.column.index !== 7) return;
+        if (d.cell.raw === 'CARGADA') { d.cell.styles.fillColor = MARINO; d.cell.styles.textColor = 255; d.cell.styles.fontStyle = 'bold'; }
+        if (d.cell.raw === 'VACÍA') { d.cell.styles.textColor = [26, 166, 209]; d.cell.styles.fontStyle = 'bold'; }
+      },
+      didDrawPage: () => {
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(120);
+        doc.text('Reporte de cajas · Página ' + doc.internal.getNumberOfPages(), ancho - 28, alto - 16, { align: 'right' });
+      },
+    });
+    doc.save('REPORTE_CAJAS_' + hoy.toISOString().slice(0, 10) + '.pdf');
+  } catch (e) { aviso('No se pudo generar el PDF: ' + e.message, true); }
+  finally { b.disabled = false; }
 });
 
 // --- Descargar en Excel (mismo acomodo que el REPORTE DE CAJAS) ---

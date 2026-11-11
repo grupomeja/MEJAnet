@@ -10,6 +10,7 @@ const db = require('./db');
 const pool = db.pool;
 const FILE = path.join(db.DIR, 'cajas_patio.json');
 const DIR_F = path.join(db.DIR, 'cajas_fotos');
+const FILE_L = path.join(db.DIR, 'cajas_lineas.json');
 
 const ORIGENES = ['MEX', 'USA'];
 const ESTATUS = ['CARGADA', 'VACIA'];
@@ -65,6 +66,9 @@ async function init() {
       img BYTEA NOT NULL,
       PRIMARY KEY (caja_id, tipo)
     )`);
+    // Líneas transportistas: se van guardando conforme se capturan
+    await pool.query('CREATE TABLE IF NOT EXISTS cajas_lineas (nombre TEXT PRIMARY KEY)');
+    await pool.query("INSERT INTO cajas_lineas (nombre) SELECT DISTINCT datos->>'linea' FROM cajas_patio WHERE COALESCE(datos->>'linea', '') <> '' ON CONFLICT DO NOTHING");
   } else {
     if (!fs.existsSync(FILE)) escribirJSON(FILE, []);
   }
@@ -157,6 +161,21 @@ async function leerFoto(id, t) {
     return { tipo: b.slice(0, i).toString(), buf: b.slice(i + 1) };
   } catch { return null; }
 }
+async function lineas() {
+  if (pool) return (await pool.query('SELECT nombre FROM cajas_lineas ORDER BY nombre')).rows.map((r) => r.nombre);
+  return leerJSON(FILE_L, []).sort();
+}
+async function guardarLinea(nombre) {
+  if (!nombre) return;
+  if (pool) { await pool.query('INSERT INTO cajas_lineas (nombre) VALUES ($1) ON CONFLICT DO NOTHING', [nombre]); return; }
+  const xs = leerJSON(FILE_L, []);
+  if (!xs.includes(nombre)) { xs.push(nombre); escribirJSON(FILE_L, xs); }
+}
+async function borrarLinea(nombre) {
+  if (pool) { await pool.query('DELETE FROM cajas_lineas WHERE nombre = $1', [nombre]); return; }
+  escribirJSON(FILE_L, leerJSON(FILE_L, []).filter((x) => x !== nombre));
+}
+
 function rutas(admin) {
   const r = express.Router();
   const json = express.json({ limit: '8mb' });
@@ -168,18 +187,20 @@ function rutas(admin) {
   const fotosDe = (b) => ({ caja: foto(b?.fotoCaja), placa: foto(b?.fotoPlaca) });
 
   r.get('/api/cajas', admin, async (_req, res) => {
-    try { res.set('Cache-Control', 'no-store').json({ cajas: await listar() }); }
+    try { res.set('Cache-Control', 'no-store').json({ cajas: await listar(), lineas: await lineas() }); }
     catch (e) { error(res, e, 'No se pudo leer la lista de cajas.'); }
   });
   r.post('/api/cajas', admin, json, async (req, res) => {
     try {
-      res.json(await crear(datos(req.body), fotosDe(req.body), req.usuario));
+      const d = datos(req.body);
+      await guardarLinea(d.linea);
+      res.json(await crear(d, fotosDe(req.body), req.usuario));
     } catch (e) { error(res, e, 'No se pudo guardar la caja.'); }
   });
   r.put('/api/cajas/:id', admin, json, async (req, res) => {
     try {
       const cambios = {};
-      if (req.body?.datos) cambios.datos = datos(req.body.datos);
+      if (req.body?.datos) { cambios.datos = datos(req.body.datos); await guardarLinea(cambios.datos.linea); }
       if ('salida' in (req.body || {})) cambios.salida = !!req.body.salida;
       const ok = await actualizar(Number(req.params.id), cambios, fotosDe(req.body), req.usuario);
       if (!ok) return res.status(404).json({ error: 'La caja ya no existe.' });
@@ -191,6 +212,11 @@ function rutas(admin) {
       if (!(await borrar(Number(req.params.id)))) return res.status(404).json({ error: 'La caja ya no existe.' });
       res.json({ ok: true });
     } catch (e) { error(res, e, 'No se pudo borrar la caja.'); }
+  });
+  // Quitar una línea de las guardadas (por ejemplo, si se escribió mal)
+  r.delete('/api/cajas-lineas/:nombre', admin, async (req, res) => {
+    try { await borrarLinea(txt(req.params.nombre, 80)); res.json({ ok: true }); }
+    catch (e) { error(res, e, 'No se pudo quitar la línea.'); }
   });
   r.get('/api/cajas/:id/foto/:tipo', admin, async (req, res) => {
     try {
