@@ -232,7 +232,7 @@
           <span class="ayuda">De frente y lo más cerca posible</span>
           <img alt="Foto de la placa" hidden>
           <button type="button" class="quitar">Cambiar foto</button>
-          <div class="leyendo"><i></i><span>Leyendo la placa…</span></div>
+          <div class="leyendo"><i></i><span>Leyendo la placa… (unos segundos)</span></div>
           <input type="file" accept="image/*" capture="environment" id="fotoPlaca">
         </label>
       </div>
@@ -513,25 +513,88 @@ function preparar(canvas) {
 // Palabras leídas con su tamaño (las letras más grandes suelen ser el número de caja o la placa)
 async function palabras(canvas) {
   const w = await obtenerWorker();
+  await w.setParameters({ tessedit_pageseg_mode: '11' });
   const { data } = await w.recognize(preparar(canvas));
   return (data.words || []).map(x => ({ t: x.text.toUpperCase().replace(/[^A-Z0-9]/g, ''), h: x.bbox.y1 - x.bbox.y0, conf: x.confidence })).filter(x => x.t.length >= 2 && x.conf > 30);
 }
+// --- Lectura de la placa ---
+// Las placas mexicanas traen guiones (66-US-6X) y letras delgadas; el OCR las lee mejor
+// recortando la franja de los caracteres grandes, en blanco y negro y a un tamaño medio.
+function recorte(src, x, y, w, h, esc, bn) {
+  const cv = document.createElement('canvas');
+  cv.width = Math.max(1, Math.round(w * esc)); cv.height = Math.max(1, Math.round(h * esc));
+  const g = cv.getContext('2d'); g.drawImage(src, x, y, w, h, 0, 0, cv.width, cv.height);
+  const im = g.getImageData(0, 0, cv.width, cv.height), d = im.data, Y = new Uint8Array(d.length / 4), hist = new Array(256).fill(0);
+  for (let i = 0, j = 0; i < d.length; i += 4, j++) { Y[j] = Math.round(0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]); hist[Y[j]]++; }
+  let th = 128;
+  if (bn) { // umbral de Otsu
+    let tot = Y.length, sum = 0, sB = 0, wB = 0, best = 0;
+    for (let t = 0; t < 256; t++) sum += t * hist[t];
+    for (let t = 0; t < 256; t++) { wB += hist[t]; if (!wB) continue; const wF = tot - wB; if (!wF) break; sB += t * hist[t]; const v = wB * wF * (sB / wB - (sum - sB) / wF) ** 2; if (v > best) { best = v; th = t; } }
+  }
+  for (let i = 0, j = 0; i < d.length; i += 4, j++) d[i] = d[i + 1] = d[i + 2] = bn ? (Y[j] > th ? 255 : 0) : Y[j];
+  g.putImageData(im, 0, 0);
+  return cv;
+}
+// Placas posibles dentro de un texto leído
+function placasEn(texto) {
+  const t = ' ' + String(texto).toUpperCase().replace(/\s*[-–—]\s*/g, '-').replace(/[^A-Z0-9\-]+/g, ' ') + ' ';
+  const out = [];
+  for (const m of t.matchAll(/([A-Z0-9]{1,4})-([A-Z0-9]{1,4})(?:-([A-Z0-9]{1,4}))?/g)) {
+    let g = [m[1], m[2], m[3]].filter(Boolean);
+    // El borde de la placa a veces se lee como "1" o "I" pegado al primer grupo (166-US-6X)
+    if (g.length === 3 && g[0].length === 3 && g[1].length === 2 && g[2].length === 2 && /^[1IL]/.test(g[0])) g[0] = g[0].slice(1);
+    if (g.length === 3 && g[2].length === 3 && g[0].length === 2 && g[1].length === 2 && /[1IL]$/.test(g[2])) g[2] = g[2].slice(0, -1);
+    const p = g.join('');
+    if (p.length >= 5 && p.length <= 8 && /\d/.test(p) && /[A-Z]/.test(p)) out.push(p);
+  }
+  for (const w of t.split(/[\s\-]+/)) if (w.length >= 5 && w.length <= 8 && /\d/.test(w) && /[A-Z]/.test(w)) out.push(w);
+  return out;
+}
+async function leerPlaca(canvas) {
+  const w = await obtenerWorker();
+  const votos = new Map(), votar = (txt, peso) => { for (const p of placasEn(txt)) votos.set(p, (votos.get(p) || 0) + peso); };
+  const W = canvas.width, H = canvas.height;
+  // 1) Foto completa: ubica los caracteres más grandes (normalmente la placa)
+  await w.setParameters({ tessedit_pageseg_mode: '11' });
+  const { data } = await w.recognize(recorte(canvas, 0, 0, W, H, 1, false));
+  votar(data.words.filter(x => x.confidence > 30).map(x => x.text).join(' '), 1);
+  const altos = data.words.filter(x => /[A-Z0-9]/i.test(x.text) && (x.bbox.y1 - x.bbox.y0) > H * 0.05)
+    .sort((a, b) => (b.bbox.y1 - b.bbox.y0) - (a.bbox.y1 - a.bbox.y0)).slice(0, 2);
+  // Si no encontró nada grande, prueba franjas a lo alto de la foto
+  const franjas = altos.length ? altos.map(x => { const h = x.bbox.y1 - x.bbox.y0; return { y: x.bbox.y0 - h * 0.35, h: h * 1.7, alto: h }; })
+    : [0.25, 0.4, 0.55].map(c => ({ y: H * c - H * 0.12, h: H * 0.24, alto: H * 0.15 }));
+  // 2) Cada franja en blanco y negro, leída como una línea de texto
+  for (const f of franjas) {
+    const y = Math.max(0, f.y), h = Math.min(H - y, f.h), esc = Math.min(1, 60 / f.alto);
+    for (const [bn, psm] of [[true, '13'], [true, '11'], [false, '11']]) {
+      await w.setParameters({ tessedit_pageseg_mode: psm });
+      const r = await w.recognize(recorte(canvas, 0, y, W, h, esc, bn));
+      votar(r.data.text, bn ? 2 : 1);
+    }
+    if ([...votos.values()].some(v => v >= 3)) break; // ya hay una placa clara
+  }
+  await w.setParameters({ tessedit_pageseg_mode: '11' });
+  return [...votos.entries()].sort((a, b) => b[1] - a[1] || b[0].length - a[0].length)[0]?.[0] || '';
+}
 const comoNumero = s => s.replace(/O/g, '0').replace(/[IL]/g, '1').replace(/S/g, '5').replace(/B/g, '8').replace(/Z/g, '2');
+// Una lectura a la vez (la de la caja y la de la placa comparten el lector)
+let colaOCR = Promise.resolve();
+const enCola = fn => (colaOCR = colaOCR.then(fn, fn));
 async function leerFoto(t, canvas) {
   const slot = $(t === 'caja' ? 'slotCaja' : 'slotPlaca'), lee = slot.querySelector('.leyendo');
   lee.classList.add('ver');
   try {
-    const ws = await palabras(canvas);
     if (t === 'caja') {
+      const ws = await enCola(() => palabras(canvas));
       // Número de caja: el número más grande de la foto (3 a 7 dígitos)
       const nums = ws.map(x => ({ ...x, n: comoNumero(x.t.replace(/^[A-Z]{4}/, '')) })).filter(x => /^\d{3,7}$/.test(x.n)).sort((a, b) => b.h - a.h);
       if (nums[0] && !$('caja').value.trim()) { $('caja').value = nums[0].n; $('caja').classList.add('leido'); $('pCaja').textContent = 'Leído de la foto: revisa que esté bien.'; }
       else if (!nums[0]) $('pCaja').textContent = 'No pude leer el número en la foto: escríbelo.';
     } else {
-      // Placa: 5 a 8 letras y números, con al menos una letra y un número
-      const cands = ws.filter(x => /^[A-Z0-9]{5,8}$/.test(x.t) && /\d/.test(x.t) && /[A-Z]/.test(x.t)).sort((a, b) => b.h - a.h);
-      if (cands[0] && !$('placa').value.trim()) { $('placa').value = cands[0].t; $('placa').classList.add('leido'); $('pPlaca').textContent = 'Leída de la foto: revisa que esté bien.'; }
-      else if (!cands[0]) $('pPlaca').textContent = 'No pude leer la placa en la foto: escríbela.';
+      const placa = await enCola(() => leerPlaca(canvas));
+      if (placa && !$('placa').value.trim()) { $('placa').value = placa; $('placa').classList.add('leido'); $('pPlaca').textContent = 'Leída de la foto: revisa que esté bien.'; }
+      else if (!placa) $('pPlaca').textContent = 'No pude leer la placa en la foto: escríbela.';
     }
   } catch (e) {
     $(t === 'caja' ? 'pCaja' : 'pPlaca').textContent = 'No pude leer la foto (' + e.message + '): escribe el dato.';
