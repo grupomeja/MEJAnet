@@ -107,7 +107,7 @@ nav.tabs button[aria-selected="true"]{background:#4A3826;color:#EAE1D3;box-shado
 @media (max-height:620px){header.top,.filters,.seg-head{position:static}}
 /* Tablet: si la tabla no cabe, se desliza a la derecha en lugar de cortarse */
 .tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}.tscroll-h{scrollbar-width:none}.tscroll-h::-webkit-scrollbar{display:none}
-@media (min-width:821px) and (max-width:1279px) and (min-height:501px){.tscroll>.tbl-head,.tscroll>.tbl{min-width:1230px}}
+@media (min-width:821px) and (max-width:1279px) and (min-height:501px){.tscroll>.tbl-head,.tscroll>.tbl{min-width:1274px}}
 .filters select,.filters input{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:6px 10px;min-width:0}
 .filters .orden{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-3);font-weight:600}
 .filters input[type=search]{width:240px;max-width:100%}
@@ -225,6 +225,8 @@ button.kpi:hover{border-color:var(--ink-3)}
 .tr .c-ref .b{white-space:normal}
 #v-seg.midiendo .c-ref .a,#v-seg.midiendo .c-ref .b{white-space:nowrap!important}
 .cell.c-fd .b,.cell.c-fp .b{white-space:normal}
+/* ETA, fecha de previo, tipo de previo y fecha de despacho: separadas con una línea tenue */
+@media (min-width:821px){.tr:not(.th) .c-fp,.tr:not(.th) .c-tp,.tr:not(.th) .c-fd{border-left:1px solid rgba(74,56,38,.14);align-self:stretch;display:flex;flex-direction:column;justify-content:center;padding-left:6px}}
 .cell{overflow:hidden}
 .tr .c-cont,.tr .c-eta,.tr .c-fp,.tr .c-tp,.tr .c-fd,.tr .c-tipo,.tr .c-op,.tr .c-term,.tr .c-next{text-align:center}
 .tr .c-next .nx{justify-content:center}
@@ -245,7 +247,7 @@ button.kpi:hover{border-color:var(--ink-3)}
 /* Tracking table */
 .tbl{background:var(--surface);border:1px solid var(--line);border-radius:0 0 8px 8px;overflow:hidden}
 .tbl > .tr:first-child{border-top:0}
-.tr{display:grid;grid-template-columns:var(--refw,150px) minmax(190px,1.2fr) minmax(96px,.55fr) minmax(108px,.6fr) minmax(84px,.8fr) 62px 52px 78px 76px 64px 80px 86px minmax(164px,2.2fr) 54px;gap:9px;align-items:center;padding:0 14px 0 0;border-top:1px solid var(--line-2);width:100%;text-align:left;background:var(--surface);border-left:0;border-right:0;border-bottom:0}
+.tr{display:grid;grid-template-columns:var(--refw,150px) minmax(190px,1.2fr) minmax(96px,.55fr) minmax(108px,.6fr) minmax(84px,.8fr) 62px 52px 88px 88px 78px 88px 86px minmax(164px,2.2fr) 54px;gap:9px;align-items:center;padding:0 14px 0 0;border-top:1px solid var(--line-2);width:100%;text-align:left;background:var(--surface);border-left:0;border-right:0;border-bottom:0}
 .tr.th{border-top:0;background:var(--cel-th);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--cel-ink);font-weight:700}
 .tr>div{padding-block:9px}
 .tr>div:first-child{padding-left:14px;align-self:stretch;display:flex;flex-direction:column;justify-content:center}
@@ -1037,7 +1039,7 @@ function celdaFecha(e,k){
   if(!applicable(e,k))return `<div class="b">No aplica</div>`;
   const h=hit(e,k),d=h.r||h.e;
   if(!d)return `<div class="b">—</div>`;
-  return `<div class="a">${fd2(d)}</div><div class="b">${h.r?"Real":"Estimada"}${!h.r&&h.hora?" · "+esc(h.hora):""}</div>`;
+  return `<div class="a">${fd2(d)}</div><div class="b">${h.r?"Real":"Estimada"}</div>`;
 }
 function dotsHTML(e,a){
   const closed=e.estado==="cerrada";
