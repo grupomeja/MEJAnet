@@ -174,7 +174,7 @@
       <h1 class="titulo"><span class="ico" aria-hidden="true">
         <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"><rect x="4" y="16" width="40" height="28" rx="2.5" fill="currentColor" fill-opacity=".14"/><path d="M14 16v28M24 16v28M34 16v28"/><path d="M44 26h8l7 9v9H44z" fill="currentColor" fill-opacity=".14"/><circle cx="15" cy="49" r="4.5" fill="#fff"/><circle cx="50" cy="49" r="4.5" fill="#fff"/></svg>
       </span>Cajas en patio</h1>
-      <small>Registra cada caja con su foto y la de su placa: los datos se leen de las fotos.</small>
+      <small>Registra cada caja con su foto y la de su placa: el número y la placa se leen de las fotos.</small>
     </div>
     <a class="volver" href="/herramientas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg> Herramientas</a>
   </header>
@@ -189,7 +189,7 @@
 
   <div class="barra">
     <button class="btn prim sl-cambia" id="nueva" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg> Registrar caja</button>
-    <input id="buscar" type="search" placeholder="Buscar caja, placa, línea, SCAC o referencia MEJA…" aria-label="Buscar">
+    <input id="buscar" type="search" placeholder="Buscar caja, placa, línea o referencia MEJA…" aria-label="Buscar">
     <select id="fLinea" aria-label="Filtrar por línea"><option value="">Todas las líneas</option></select>
     <div class="seg" id="fVista" role="group" aria-label="Qué cajas ver">
       <button type="button" data-v="patio" class="on">En patio</button>
@@ -211,7 +211,7 @@
         <label class="slot" id="slotCaja">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.6"/></svg>
           <b>Foto de la caja</b>
-          <span class="ayuda">Que se vea el número y las letras de la línea (SCAC)</span>
+          <span class="ayuda">Que se vea bien el número de la caja</span>
           <img alt="Foto de la caja" hidden>
           <button type="button" class="quitar">Cambiar foto</button>
           <div class="leyendo"><i></i><span>Leyendo el número de caja…</span></div>
@@ -241,19 +241,14 @@
         </div>
         <div class="campo w6">
           <label for="linea">Línea</label>
-          <select id="linea"><option value="">— Elige la línea —</option></select>
-          <div class="pista" id="pLinea"></div>
-          <div class="otra" id="otraLinea" hidden>
-            <input id="nScac" placeholder="SCAC" maxlength="4" aria-label="SCAC de la línea nueva">
-            <input id="nLinea" placeholder="Nombre de la línea" aria-label="Nombre de la línea nueva">
-          </div>
+          <input id="linea" list="lineasUsadas" placeholder="Nombre de la línea transportista">
+          <datalist id="lineasUsadas"></datalist>
         </div>
         <div class="campo"><span class="lbl">Origen</span><div class="opciones" data-campo="origen"><button type="button" data-v="MEX">MEX</button><button type="button" data-v="USA">USA</button></div></div>
         <div class="campo"><span class="lbl">Medida</span><div class="opciones" data-campo="medida"><button type="button" data-v="53">53'</button><button type="button" data-v="48">48'</button><button type="button" data-v="40">40'</button></div></div>
         <div class="campo"><label for="meja">MEJA (referencia)</label><input id="meja" placeholder="Ej. 1836/26"></div>
         <div class="campo w3"><span class="lbl">Estatus</span><div class="opciones" data-campo="estatus"><button type="button" data-v="CARGADA">Cargada</button><button type="button" data-v="VACIA">Vacía</button></div></div>
         <div class="campo w3"><span class="lbl">Ubicación</span><div class="opciones cielo" data-campo="ubicacion"><button type="button" data-v="PATIO">Patio</button><button type="button" data-v="ANDEN">Andén</button></div></div>
-        <div class="campo w6"><label for="notas">Notas (opcional)</label><textarea id="notas" rows="2" placeholder="Sellos, daños, quién la trajo…"></textarea></div>
         <div class="campo w6">
           <span class="lbl">Llegada</span>
           <div class="fecha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><div><span id="fechaTxt"></span><small id="fechaNota">Se registra sola con la fecha y hora en que guardas.</small></div></div>
@@ -280,7 +275,7 @@
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const norm = s => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().trim();
-let cajas = [], lineas = [], vista = 'patio', filtroKpi = '';
+let cajas = [], vista = 'patio', filtroKpi = '';
 const soloLectura = () => !!window.MEJA_SOLO_LECTURA;
 
 // --- Fechas ---
@@ -304,7 +299,7 @@ async function cargar() {
     const r = await fetch('/api/cajas');
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(j.error || 'el servidor respondió ' + r.status);
-    cajas = j.cajas || []; lineas = j.lineas || [];
+    cajas = j.cajas || [];
     llenarLineas(); pintar();
   } catch (e) {
     $('grid').innerHTML = `<div class="vacio"><b>No se pudo cargar la lista</b>${esc(e.message)}</div>`;
@@ -315,7 +310,8 @@ function llenarLineas() {
   const v = $('fLinea').value;
   $('fLinea').innerHTML = '<option value="">Todas las líneas</option>' + usadas.map(l => `<option>${esc(l)}</option>`).join('');
   $('fLinea').value = usadas.includes(v) ? v : '';
-  $('linea').innerHTML = '<option value="">— Elige la línea —</option>' + lineas.map(l => `<option value="${esc(l.scac)}">${esc(l.nombre)} · ${esc(l.scac)}</option>`).join('') + '<option value="__otra">Otra línea…</option>';
+  // Sugerencias: las líneas que ya se han capturado
+  $('lineasUsadas').innerHTML = usadas.map(l => `<option value="${esc(l)}">`).join('');
 }
 const fotoUrl = (c, t) => `/api/cajas/${c.id}/foto/${t}?v=${encodeURIComponent(c.actualizado || '')}`;
 const ICO_CAJA = '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"><rect x="4" y="16" width="40" height="28" rx="2.5"/><path d="M14 16v28M24 16v28M34 16v28"/><path d="M44 26h8l7 9v9H44z"/><circle cx="15" cy="49" r="4.5"/><circle cx="50" cy="49" r="4.5"/></svg>';
@@ -350,7 +346,7 @@ function pintar() {
       <div class="cuerpo">
         <div class="top">
           <div class="num"><small>Caja</small>${esc(d.caja)}</div>
-          <div class="linea">${esc(d.linea || 'Sin línea')}${d.scac ? `<span>${esc(d.scac)}</span>` : ''}</div>
+          <div class="linea">${esc(d.linea || 'Sin línea')}</div>
         </div>
         <dl>
           <div><dt>Placa</dt><dd class="placa-txt">${esc(d.placa || '—')}</dd></div>
@@ -359,7 +355,6 @@ function pintar() {
           <div><dt>MEJA</dt><dd>${esc(d.meja || '—')}</dd></div>
         </dl>
         <div class="llegada">Llegó <b>${fFecha(c.llegada)}</b> · ${hace(c.llegada)}${c.creado_por ? ' · ' + esc(c.creado_por) : ''}${c.salida ? `<br>Salió <b>${fFecha(c.salida)}</b>` : ''}</div>
-        ${d.notas ? `<div class="notas">${esc(d.notas)}</div>` : ''}
       </div>
       <div class="acc sl-cambia">
         ${c.salida ? '' : '<button type="button" class="sal" data-a="salida">Dar salida</button>'}
@@ -382,7 +377,7 @@ function filtradas() {
     if (filtroKpi === 'CARGADA' || filtroKpi === 'VACIA') { if (d.estatus !== filtroKpi) return false; }
     if (filtroKpi === 'ANDEN' && d.ubicacion !== 'ANDEN') return false;
     if (fl && d.linea !== fl) return false;
-    return !q || [d.caja, d.placa, d.linea, d.scac, d.meja, d.notas].some(x => norm(x).includes(q));
+    return !q || [d.caja, d.placa, d.linea, d.meja].some(x => norm(x).includes(q));
   });
 }
 
@@ -416,14 +411,11 @@ function abrir(c) {
   $('form').reset();
   const d = c?.datos || {};
   $('dlgTit').textContent = c ? 'Editar caja ' + d.caja : 'Registrar caja';
-  $('caja').value = d.caja || ''; $('placa').value = d.placa || ''; $('meja').value = d.meja || ''; $('notas').value = d.notas || '';
-  const l = lineas.find(x => x.scac === d.scac);
-  $('linea').value = l ? l.scac : (d.linea ? '__otra' : '');
-  $('otraLinea').hidden = $('linea').value !== '__otra';
-  $('nScac').value = l ? '' : (d.scac || ''); $('nLinea').value = l ? '' : (d.linea || '');
+  $('caja').value = d.caja || ''; $('placa').value = d.placa || ''; $('meja').value = d.meja || '';
+  $('linea').value = d.linea || '';
   for (const k of Object.keys(sel)) elegir(k, d[k] || (c ? '' : { origen: '', medida: '53', estatus: '', ubicacion: 'PATIO' }[k]));
   for (const t of ['caja', 'placa']) mostrarFoto(t, c && (c.fotos || []).includes(t) ? fotoUrl(c, t) : '');
-  ['pCaja', 'pPlaca', 'pLinea'].forEach(id => { $(id).textContent = ''; });
+  ['pCaja', 'pPlaca'].forEach(id => { $(id).textContent = ''; });
   ['caja', 'placa'].forEach(id => $(id).classList.remove('leido'));
   $('fechaTxt').textContent = c ? fFecha(c.llegada) : 'Hoy, ' + fFecha(new Date());
   $('fechaNota').textContent = c ? 'Fecha en que se registró (no cambia).' : 'Se registra sola con la fecha y hora en que guardas.';
@@ -437,7 +429,6 @@ function cerrar() { $('dlg').hidden = true; document.body.style.overflow = ''; c
 $('nueva').addEventListener('click', () => abrir());
 $('cerrar').addEventListener('click', cerrar);
 $('cancelar').addEventListener('click', cerrar);
-$('linea').addEventListener('change', () => { $('otraLinea').hidden = $('linea').value !== '__otra'; if (!$('otraLinea').hidden) $('nScac').focus(); });
 document.addEventListener('keydown', ev => { if (ev.key === 'Escape') { if (!$('visor').hidden) $('visor').hidden = true; else if (!$('dlg').hidden) cerrar(); $('menu').hidden = true; } });
 
 function mostrarFoto(t, src) {
@@ -520,10 +511,6 @@ async function leerFoto(t, canvas) {
   try {
     const ws = await palabras(canvas);
     if (t === 'caja') {
-      // SCAC: 4 letras que estén en el catálogo de líneas → se elige la línea
-      const scacs = new Set(lineas.map(l => l.scac));
-      const scac = ws.map(x => x.t).find(x => scacs.has(x)) || ws.map(x => x.t.slice(0, 4)).find(x => scacs.has(x));
-      if (scac && !$('linea').value) { $('linea').value = scac; $('otraLinea').hidden = true; $('pLinea').textContent = 'Línea encontrada por el SCAC ' + scac + ' de la foto. Revísala.'; }
       // Número de caja: el número más grande de la foto (3 a 7 dígitos)
       const nums = ws.map(x => ({ ...x, n: comoNumero(x.t.replace(/^[A-Z]{4}/, '')) })).filter(x => /^\d{3,7}$/.test(x.n)).sort((a, b) => b.h - a.h);
       if (nums[0] && !$('caja').value.trim()) { $('caja').value = nums[0].n; $('caja').classList.add('leido'); $('pCaja').textContent = 'Leído de la foto: revisa que esté bien.'; }
@@ -545,10 +532,7 @@ $('form').addEventListener('submit', async ev => {
   ev.preventDefault();
   const caja = $('caja').value.trim();
   if (!caja) { $('dlgMsg').textContent = 'Falta el número de caja.'; $('caja').focus(); return; }
-  let scac = $('linea').value, linea = '';
-  if (scac === '__otra') { scac = $('nScac').value.trim().toUpperCase(); linea = $('nLinea').value.trim().toUpperCase(); if (!linea) { $('dlgMsg').textContent = 'Escribe el nombre de la línea nueva.'; $('nLinea').focus(); return; } }
-  else linea = lineas.find(l => l.scac === scac)?.nombre || '';
-  const d = { caja, placa: $('placa').value.trim(), linea, scac, meja: $('meja').value.trim(), notas: $('notas').value.trim(), ...sel };
+  const d = { caja, placa: $('placa').value.trim(), linea: $('linea').value.trim(), meja: $('meja').value.trim(), ...sel };
   const btn = $('guardar'); btn.disabled = true; btn.textContent = 'Guardando…'; $('dlgMsg').textContent = '';
   try {
     const cuerpo = editando ? { datos: d } : { ...d };
@@ -650,7 +634,7 @@ $('xlsx').addEventListener('click', async () => {
     await cargarExcel();
     const wb = new ExcelJS.Workbook(); wb.creator = 'MEJAnet';
     const ws = wb.addWorksheet('REPORTE CAJAS', { views: [{ state: 'frozen', ySplit: 2 }], pageSetup: { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
-    const cols = [['LINEA', 26], ['SCAC', 8], ['LLEGADA', 18], ['CAJA NO.', 12], ['PLACA', 12], ['ORIGEN', 9], ['MEDIDA', 9], ['MEJA', 12], ['ESTATUS', 12], ['UBICACION', 12], ['SALIDA', 18], ['NOTAS', 30]];
+    const cols = [['LINEA', 28], ['LLEGADA', 18], ['CAJA NO.', 12], ['PLACA', 12], ['ORIGEN', 9], ['MEDIDA', 9], ['MEJA', 12], ['ESTATUS', 12], ['UBICACION', 12]];
     ws.columns = cols.map(([, w]) => ({ width: w }));
     ws.mergeCells(1, 1, 1, cols.length);
     Object.assign(ws.getCell(1, 1), { value: 'REPORTE DE CAJAS · ' + new Date().toLocaleDateString('es-MX') });
@@ -661,11 +645,11 @@ $('xlsx').addEventListener('click', async () => {
     const borde = { style: 'thin', color: { argb: 'FFCFD9E4' } };
     lista.forEach((c, i) => {
       const d = c.datos, r = ws.getRow(3 + i);
-      r.values = [d.linea, d.scac, new Date(c.llegada), d.caja, d.placa, d.origen, d.medida ? Number(d.medida) || d.medida : '', d.meja, d.estatus === 'VACIA' ? 'VACÍA' : d.estatus, d.ubicacion === 'ANDEN' ? 'ANDÉN' : d.ubicacion, c.salida ? new Date(c.salida) : '', d.notas];
+      r.values = [d.linea, new Date(c.llegada), d.caja, d.placa, d.origen, d.medida ? Number(d.medida) || d.medida : '', d.meja, d.estatus === 'VACIA' ? 'VACÍA' : d.estatus, d.ubicacion === 'ANDEN' ? 'ANDÉN' : d.ubicacion];
       r.eachCell({ includeEmpty: true }, (cell, n) => {
-        cell.font = { name: 'Arial', size: 10 }; cell.alignment = { horizontal: n === 1 || n === 12 ? 'left' : 'center', vertical: 'middle', wrapText: n === 12 };
+        cell.font = { name: 'Arial', size: 10 }; cell.alignment = { horizontal: n === 1 ? 'left' : 'center', vertical: 'middle' };
         cell.border = { top: borde, bottom: borde, left: borde, right: borde };
-        if (n === 3 || n === 11) cell.numFmt = 'dd/mm/yyyy hh:mm';
+        if (n === 2) cell.numFmt = 'dd/mm/yyyy hh:mm';
       });
     });
     const buf = await wb.xlsx.writeBuffer();

@@ -9,17 +9,7 @@ const db = require('./db');
 
 const pool = db.pool;
 const FILE = path.join(db.DIR, 'cajas_patio.json');
-const FILE_L = path.join(db.DIR, 'cajas_lineas.json');
 const DIR_F = path.join(db.DIR, 'cajas_fotos');
-
-// Líneas transportistas iniciales (hoja SCAC del Excel REPORTE CAJA)
-const LINEAS_INICIO = [
-  ['TZYA', 'TRANSPORTES ZENTRY', '1PWT'], ['TSMV', 'TSM CONNECT', ''], ['CHJO', 'CHJ TRANSPORT', '33MK'], ['SSZB', 'SE TRANSPORTES', '3H2W'],
-  ['TRER', 'TRANSPORTES ROI', '2Z6E'], ['TRKP', 'ALZA TRANSPORTE', '3MAI'], ['ROQN', 'TRANSPORTES ROSALES', '3LOS'], ['AMDH', "AMADOR'S TRUCKING", '1D59'],
-  ['TXEE', 'TRANSPORTES ENLACE', '10B2'], ['EGLP', 'ESPECIALIZADOS LOPEZ', '10PO'], ['FMSR', 'FLETES MUSA', '31BP'], ['ETPW', 'ESBOR TRANSFER', '3K98'],
-  ['GZXP', 'GONZALEZ EXPRESS', '2HHO'], ['TTRO', 'TRINIDAD TRANSFER', '3ECZ'], ['CFWY', 'CRUCES FRONTERIZOS EXPRESS', '3N1S'], ['TMUM', 'TRANSPORTES MAG', '1ATZ'],
-  ['HLUK', 'HELU TRUCKING', '36T8'], ['TANF', 'TRANSLAREDO', '2973'], ['CINL', 'CRUCES IN. MARTINEZ', '1098'], ['RGZL', 'RAGZA', '340H'],
-].map(([scac, nombre, caat]) => ({ scac, nombre, caat }));
 
 const ORIGENES = ['MEX', 'USA'];
 const ESTATUS = ['CARGADA', 'VACIA'];
@@ -44,7 +34,6 @@ function foto(v) {
 function datos(b) {
   const d = {
     linea: txt(b?.linea, 80),
-    scac: txt(b?.scac, 8),
     caja: txt(b?.caja, 30),
     placa: txt(b?.placa, 20),
     origen: ORIGENES.includes(txt(b?.origen)) ? txt(b?.origen) : '',
@@ -52,7 +41,6 @@ function datos(b) {
     meja: txt(b?.meja, 30),
     estatus: ESTATUS.includes(txt(b?.estatus)) ? txt(b?.estatus) : '',
     ubicacion: UBICACIONES.includes(txt(b?.ubicacion)) ? txt(b?.ubicacion) : '',
-    notas: String(b?.notas ?? '').trim().slice(0, 500),
   };
   if (!d.caja) throw Object.assign(new Error('Falta el número de caja.'), { status: 400 });
   return d;
@@ -77,16 +65,8 @@ async function init() {
       img BYTEA NOT NULL,
       PRIMARY KEY (caja_id, tipo)
     )`);
-    await pool.query(`CREATE TABLE IF NOT EXISTS cajas_lineas (
-      scac TEXT PRIMARY KEY,
-      nombre TEXT NOT NULL,
-      caat TEXT
-    )`);
-    const n = await pool.query('SELECT count(*)::int AS n FROM cajas_lineas');
-    if (!n.rows[0].n) for (const l of LINEAS_INICIO) await pool.query('INSERT INTO cajas_lineas (scac, nombre, caat) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING', [l.scac, l.nombre, l.caat]);
   } else {
     if (!fs.existsSync(FILE)) escribirJSON(FILE, []);
-    if (!fs.existsSync(FILE_L)) escribirJSON(FILE_L, LINEAS_INICIO);
   }
 }
 
@@ -177,21 +157,6 @@ async function leerFoto(id, t) {
     return { tipo: b.slice(0, i).toString(), buf: b.slice(i + 1) };
   } catch { return null; }
 }
-async function lineas() {
-  if (pool) return (await pool.query('SELECT scac, nombre, caat FROM cajas_lineas ORDER BY nombre')).rows;
-  return leerJSON(FILE_L, LINEAS_INICIO).sort((a, b) => a.nombre.localeCompare(b.nombre));
-}
-async function agregarLinea(l) {
-  if (pool) {
-    await pool.query(`INSERT INTO cajas_lineas (scac, nombre, caat) VALUES ($1, $2, $3)
-      ON CONFLICT (scac) DO UPDATE SET nombre = EXCLUDED.nombre, caat = COALESCE(NULLIF(EXCLUDED.caat, ''), cajas_lineas.caat)`, [l.scac, l.nombre, l.caat]);
-    return;
-  }
-  const xs = leerJSON(FILE_L, LINEAS_INICIO).filter((x) => x.scac !== l.scac);
-  xs.push(l);
-  escribirJSON(FILE_L, xs);
-}
-
 function rutas(admin) {
   const r = express.Router();
   const json = express.json({ limit: '8mb' });
@@ -203,25 +168,18 @@ function rutas(admin) {
   const fotosDe = (b) => ({ caja: foto(b?.fotoCaja), placa: foto(b?.fotoPlaca) });
 
   r.get('/api/cajas', admin, async (_req, res) => {
-    try { res.set('Cache-Control', 'no-store').json({ cajas: await listar(), lineas: await lineas() }); }
+    try { res.set('Cache-Control', 'no-store').json({ cajas: await listar() }); }
     catch (e) { error(res, e, 'No se pudo leer la lista de cajas.'); }
   });
   r.post('/api/cajas', admin, json, async (req, res) => {
     try {
-      const d = datos(req.body);
-      // Si la línea es nueva (con SCAC), se agrega al catálogo
-      if (d.scac && d.linea && !(await lineas()).some((l) => l.scac === d.scac)) await agregarLinea({ scac: d.scac, nombre: d.linea, caat: txt(req.body?.caat, 10) });
-      res.json(await crear(d, fotosDe(req.body), req.usuario));
+      res.json(await crear(datos(req.body), fotosDe(req.body), req.usuario));
     } catch (e) { error(res, e, 'No se pudo guardar la caja.'); }
   });
   r.put('/api/cajas/:id', admin, json, async (req, res) => {
     try {
       const cambios = {};
-      if (req.body?.datos) {
-        cambios.datos = datos(req.body.datos);
-        const d = cambios.datos;
-        if (d.scac && d.linea && !(await lineas()).some((l) => l.scac === d.scac)) await agregarLinea({ scac: d.scac, nombre: d.linea, caat: txt(req.body?.caat, 10) });
-      }
+      if (req.body?.datos) cambios.datos = datos(req.body.datos);
       if ('salida' in (req.body || {})) cambios.salida = !!req.body.salida;
       const ok = await actualizar(Number(req.params.id), cambios, fotosDe(req.body), req.usuario);
       if (!ok) return res.status(404).json({ error: 'La caja ya no existe.' });
