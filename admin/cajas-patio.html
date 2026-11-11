@@ -114,8 +114,18 @@
   .slot.con{border-style:solid;border-color:var(--marino);padding:0;background:#000}
   .slot.con img{width:100%;height:100%;object-fit:contain}
   .slot.con > svg,.slot.con > b,.slot.con > span.ayuda{display:none}
-  .slot .quitar{position:absolute;top:8px;right:8px;border:0;background:rgba(9,25,50,.75);color:#fff;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:600;cursor:pointer;display:none}
-  .slot.con .quitar{display:block}
+  /* Tomar foto con la cámara o subir una que ya tengas */
+  .slot{cursor:default}
+  .botonesFoto{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;justify-content:center}
+  .botonesFoto button{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--marino);border-radius:999px;padding:7px 13px;font-weight:700;font-size:12.5px;cursor:pointer;background:#fff;color:var(--marino)}
+  .botonesFoto button.tomar{background:var(--marino);color:#fff}
+  .botonesFoto button svg{width:16px;height:16px}
+  .slot .botonesFoto button span{color:inherit;font-size:inherit}
+  .slot .botonesFoto button svg{color:inherit}
+  .slot.con .botonesFoto{position:absolute;top:8px;left:8px;right:8px;margin:0;justify-content:flex-end}
+  .slot.con .botonesFoto button{padding:5px 10px;font-size:12px;border-color:rgba(255,255,255,.6);background:rgba(9,25,50,.78);color:#fff}
+  .slot.over{border-color:var(--cielo-osc);background:#d4f1fb}
+  @media (max-width:560px){.botonesFoto{flex-direction:column;align-items:stretch;gap:6px}.botonesFoto button{justify-content:center;padding:7px 8px}.slot.con .botonesFoto{flex-direction:row}.slot.con .botonesFoto span{display:none}}
   .slot .leyendo{position:absolute;left:0;right:0;bottom:0;padding:8px 10px;background:rgba(9,25,50,.85);color:#fff;font-size:12.5px;font-weight:600;display:none;align-items:center;gap:8px}
   .slot .leyendo.ver{display:flex}
   .slot .leyendo i{width:14px;height:14px;border:2px solid var(--cielo);border-right-color:transparent;border-radius:50%;animation:gira .8s linear infinite}
@@ -219,24 +229,26 @@
     <div class="cab"><h2 id="dlgTit">Registrar caja</h2><button type="button" id="cerrar" aria-label="Cerrar">×</button></div>
     <div class="cont">
       <div class="fotosForm">
-        <label class="slot" id="slotCaja">
+        <div class="slot" id="slotCaja">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.6"/></svg>
           <b>Foto de la caja</b>
           <span class="ayuda">Que se vea bien el número de la caja</span>
           <img alt="Foto de la caja" hidden>
-          <button type="button" class="quitar">Cambiar foto</button>
+          <div class="botonesFoto"><button type="button" class="tomar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.4"/></svg><span>Tomar foto</span></button><button type="button" class="subir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.6"/><path d="M21 16l-5-5-8 8"/></svg><span>Subir foto</span></button></div>
           <div class="leyendo"><i></i><span>Leyendo el número de caja…</span></div>
           <input type="file" accept="image/*" capture="environment" id="fotoCaja">
-        </label>
-        <label class="slot" id="slotPlaca">
+          <input type="file" accept="image/*" id="fotoCajaArchivo">
+        </div>
+        <div class="slot" id="slotPlaca">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6.5" width="18" height="11" rx="2"/><path d="M7 10.5h4M7 13.5h10"/><circle cx="16.5" cy="10.5" r=".8" fill="currentColor"/></svg>
           <b>Foto de la placa</b>
           <span class="ayuda">De frente y lo más cerca posible</span>
           <img alt="Foto de la placa" hidden>
-          <button type="button" class="quitar">Cambiar foto</button>
+          <div class="botonesFoto"><button type="button" class="tomar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.4"/></svg><span>Tomar foto</span></button><button type="button" class="subir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.6"/><path d="M21 16l-5-5-8 8"/></svg><span>Subir foto</span></button></div>
           <div class="leyendo"><i></i><span>Leyendo la placa… (unos segundos)</span></div>
           <input type="file" accept="image/*" capture="environment" id="fotoPlaca">
-        </label>
+          <input type="file" accept="image/*" id="fotoPlacaArchivo">
+        </div>
       </div>
 
       <div class="campos">
@@ -471,17 +483,25 @@ function reducir(file, max = 1280) {
   });
 }
 for (const t of ['caja', 'placa']) {
-  const slot = $(t === 'caja' ? 'slotCaja' : 'slotPlaca'), input = $(t === 'caja' ? 'fotoCaja' : 'fotoPlaca');
-  slot.querySelector('.quitar').addEventListener('click', ev => { ev.preventDefault(); input.click(); });
-  input.addEventListener('change', async () => {
-    const f = input.files[0]; input.value = '';
+  const T = t === 'caja' ? 'Caja' : 'Placa', slot = $('slot' + T);
+  const camara = $('foto' + T), archivo = $('foto' + T + 'Archivo'); // cámara del celular / foto guardada
+  const usar = async f => {
     if (!f) return;
+    if (!/^image\//.test(f.type)) { $('dlgMsg').textContent = 'Ese archivo no es una imagen.'; return; }
     try {
+      $('dlgMsg').textContent = '';
       const { data, canvas } = await reducir(f);
       fotos[t] = data; mostrarFoto(t, data);
       leerFoto(t, canvas);
     } catch (e) { $('dlgMsg').textContent = e.message; }
-  });
+  };
+  slot.querySelector('.tomar').addEventListener('click', () => camara.click());
+  slot.querySelector('.subir').addEventListener('click', () => archivo.click());
+  for (const inp of [camara, archivo]) inp.addEventListener('change', () => { const f = inp.files[0]; inp.value = ''; usar(f); });
+  // En la computadora también se puede arrastrar la foto al recuadro
+  ['dragenter', 'dragover'].forEach(e => slot.addEventListener(e, ev => { ev.preventDefault(); slot.classList.add('over'); }));
+  ['dragleave', 'drop'].forEach(e => slot.addEventListener(e, ev => { ev.preventDefault(); slot.classList.remove('over'); }));
+  slot.addEventListener('drop', ev => usar(ev.dataTransfer.files[0]));
 }
 
 // --- Lectura de las fotos (OCR en el navegador con Tesseract) ---
@@ -595,11 +615,11 @@ async function leerFoto(t, canvas) {
       const ws = await enCola(() => palabras(canvas));
       // Número de caja: el número más grande de la foto (3 a 7 dígitos)
       const nums = ws.map(x => ({ ...x, n: comoNumero(x.t.replace(/^[A-Z]{4}/, '')) })).filter(x => /^\d{3,7}$/.test(x.n)).sort((a, b) => b.h - a.h);
-      if (nums[0] && !$('caja').value.trim()) { $('caja').value = nums[0].n; $('caja').classList.add('leido'); $('pCaja').textContent = 'Leído de la foto: revisa que esté bien.'; }
+      if (nums[0] && (!$('caja').value.trim() || $('caja').classList.contains('leido'))) { $('caja').value = nums[0].n; $('caja').classList.add('leido'); $('pCaja').textContent = 'Leído de la foto: revisa que esté bien.'; }
       else if (!nums[0]) $('pCaja').textContent = 'No pude leer el número en la foto: escríbelo.';
     } else {
       const placa = await enCola(() => leerPlaca(canvas));
-      if (placa && !$('placa').value.trim()) { $('placa').value = placa; $('placa').classList.add('leido'); $('pPlaca').textContent = 'Leída de la foto: revisa que esté bien.'; }
+      if (placa && (!$('placa').value.trim() || $('placa').classList.contains('leido'))) { $('placa').value = placa; $('placa').classList.add('leido'); $('pPlaca').textContent = 'Leída de la foto: revisa que esté bien.'; }
       else if (!placa) $('pPlaca').textContent = 'No pude leer la placa en la foto: escríbela.';
     }
   } catch (e) {
