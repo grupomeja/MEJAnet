@@ -205,6 +205,7 @@
       <button type="button" data-v="salieron">Salieron</button>
       <button type="button" data-v="todas">Todas</button>
     </div>
+    <button class="btn sec" id="copiar" type="button" title="Copia el reporte como imagen para pegarlo en un correo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg> Copiar imagen</button>
     <button class="btn sec" id="pdf" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg> PDF</button>
     <button class="btn sec" id="xlsx" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg> XLSX</button>
   </div>
@@ -736,6 +737,76 @@ function sugerencias(input) {
 const sugLinea = sugerencias($('linea')), sugCliente = sugerencias($('cliente'));
 // ENTER no guarda el formulario (solo el botón Guardar)
 $('form').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName === 'INPUT') e.preventDefault(); });
+
+// --- Copiar el reporte como imagen (para pegarlo en el cuerpo de un correo) ---
+// Se dibuja igual que el PDF: título, fecha y la tabla con las cajas que estás viendo.
+function imagenReporte(lista) {
+  const E = 2; // doble resolución para que se vea nítida
+  const cols = [['LÍNEA', 170, 'l'], ['LLEGADA', 92], ['CAJA NO.', 84], ['PLACA', 84], ['ORIGEN', 64], ['MEDIDA', 64], ['MEJA', 76], ['CLIENTE', 170, 'l'], ['ESTATUS', 86], ['UBICACIÓN', 84]];
+  const M = 20, W = cols.reduce((a, c) => a + c[1], 0) + M * 2, FILA = 28, CAB = 30, TOP = 74;
+  const H = TOP + CAB + FILA * lista.length + M;
+  const cv = document.createElement('canvas'); cv.width = W * E; cv.height = H * E;
+  const g = cv.getContext('2d'); g.scale(E, E);
+  const MARINO = '#091932', CIELO = '#4ec9ee', LINEA = '#cfd9e4', FUENTE = '"IBM Plex Sans", Arial, sans-serif';
+  g.fillStyle = '#fff'; g.fillRect(0, 0, W, H);
+  g.fillStyle = MARINO; g.fillRect(0, 0, W, 5);
+  g.textBaseline = 'alphabetic'; g.fillStyle = MARINO; g.font = `700 22px ${FUENTE}`; g.fillText('REPORTE DE CAJAS', M, 38);
+  g.font = `400 12.5px ${FUENTE}`; g.fillStyle = '#5d6878';
+  const vistaTxt = filtroKpi === 'salieron' ? 'Salieron hoy' : vista === 'patio' ? (filtroKpi === 'PATIO' ? 'En patio' : filtroKpi === 'ANDEN' ? 'En andén' : filtroKpi === 'VACIA' ? 'Vacías' : filtroKpi === 'CARGADA' ? 'Cargadas' : 'Sin salida') : vista === 'salieron' ? 'Salieron' : 'Todas';
+  g.fillText(`${vistaTxt} · ${lista.length} caja${lista.length === 1 ? '' : 's'} · ${fFechaHora(new Date())}`, M, 58);
+  g.font = `700 15px ${FUENTE}`; const wm = g.measureText('meja').width, wg = g.measureText('grupo').width;
+  g.fillStyle = CIELO; g.fillText('grupo', W - M - wm - wg, 38); g.fillStyle = MARINO; g.fillText('meja', W - M - wm, 38);
+  // Encabezado
+  let x = M, y = TOP;
+  g.fillStyle = CIELO; g.fillRect(M, y, W - M * 2, CAB);
+  g.font = `700 11.5px ${FUENTE}`; g.fillStyle = MARINO; g.textBaseline = 'middle';
+  for (const [t, w] of cols) { g.textAlign = 'center'; g.fillText(t, x + w / 2, y + CAB / 2); x += w; }
+  // Renglones
+  y += CAB;
+  lista.forEach((c, i) => {
+    const d = c.datos, vals = [d.linea, fFecha(c.llegada), d.caja, d.placa, d.origen, d.medida ? d.medida + "'" : '', d.meja, d.cliente, d.estatus === 'VACIA' ? 'VACÍA' : d.estatus, d.ubicacion === 'ANDEN' ? 'ANDÉN' : d.ubicacion];
+    g.fillStyle = i % 2 ? '#fff' : '#f3f6fa'; g.fillRect(M, y, W - M * 2, FILA);
+    x = M;
+    cols.forEach(([, w, al], k) => {
+      let v = String(vals[k] || ''), color = MARINO, peso = k === 2 || k === 3 ? 700 : 400, tam = k === 2 ? 13.5 : 12;
+      if (k === 8 && v === 'CARGADA') { g.fillStyle = MARINO; g.fillRect(x, y, w, FILA); color = '#fff'; peso = 700; }
+      if (k === 8 && v === 'VACÍA') { color = '#1aa6d1'; peso = 700; }
+      g.font = `${peso} ${tam}px ${FUENTE}`; g.fillStyle = color;
+      while (v && g.measureText(v).width > w - 12) v = v.slice(0, -1);
+      if (v !== String(vals[k] || '')) v = v.slice(0, -1) + '…';
+      g.textAlign = al === 'l' ? 'left' : 'center'; g.fillText(v, al === 'l' ? x + 7 : x + w / 2, y + FILA / 2 + 1);
+      x += w;
+    });
+    y += FILA;
+  });
+  // Cuadrícula
+  g.strokeStyle = LINEA; g.lineWidth = 1;
+  x = M; for (const [, w] of cols) { g.beginPath(); g.moveTo(x + 0.5, TOP); g.lineTo(x + 0.5, y); g.stroke(); x += w; }
+  g.beginPath(); g.moveTo(x - 0.5, TOP); g.lineTo(x - 0.5, y); g.stroke();
+  for (let yy = TOP + CAB; yy <= y; yy += FILA) { g.beginPath(); g.moveTo(M, yy + 0.5); g.lineTo(W - M, yy + 0.5); g.stroke(); }
+  return cv;
+}
+$('copiar').addEventListener('click', async () => {
+  const lista = filtradas();
+  if (!lista.length) { aviso('No hay cajas para copiar con estos filtros.', true); return; }
+  const b = $('copiar'); b.disabled = true;
+  try {
+    await document.fonts?.ready;
+    const cv = imagenReporte(lista);
+    const png = new Promise(ok => cv.toBlob(ok, 'image/png'));
+    if (navigator.clipboard && window.ClipboardItem) {
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': png })]);
+      aviso('Imagen copiada: pégala en el correo con Ctrl+V');
+    } else throw new Error('sin portapapeles');
+  } catch (e) {
+    // Si el navegador no deja copiar imágenes, se descarga para adjuntarla
+    const blob = await new Promise(ok => imagenReporte(lista).toBlob(ok, 'image/png'));
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = 'REPORTE_CAJAS_' + new Date().toISOString().slice(0, 10) + '.png';
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    aviso('Tu navegador no deja copiar imágenes: se descargó para que la adjuntes');
+  } finally { b.disabled = false; }
+});
 
 // --- Descargar en PDF (mismas columnas que el REPORTE DE CAJAS) ---
 let cargaPdf;
