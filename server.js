@@ -10,12 +10,13 @@ const cotizador = require('./cotizador');
 const opManzanillo = require('./opmanzanillo');
 const traducciones = require('./traducciones');
 const shipper = require('./shipper');
+const cajas = require('./cajas');
 
 const app = express();
 app.set('trust proxy', 1); // Render pasa por un proxy; así req.ip es la IP real del visitante
 // Los reportes Shipper traen sus propias partidas y usan un límite mayor (ver shipper.js)
 const jsonNormal = express.json({ limit: '200kb' });
-app.use((req, res, next) => (req.path.startsWith('/api/shipper') ? next() : jsonNormal(req, res, next)));
+app.use((req, res, next) => (req.path.startsWith('/api/shipper') || req.path.startsWith('/api/cajas') ? next() : jsonNormal(req, res, next)));
 
 // --- Limpieza de datos que llegan del formulario ---
 const t = (v, max = 200) => String(v ?? '').trim().slice(0, max);
@@ -154,6 +155,7 @@ app.get('/herramientas/shipper-sm', admin, (_req, res) => res.set('Cache-Control
 app.get('/herramientas/shipper-sm/reporte', admin, (_req, res) => res.set('Cache-Control', 'no-store').sendFile(path.join(__dirname, 'admin', 'shipper-sm.html')));
 app.get('/herramientas/shipper-uva', admin, (_req, res) => res.set('Cache-Control', 'no-store').sendFile(path.join(__dirname, 'admin', 'shipper-uva-lista.html')));
 app.get('/herramientas/shipper-uva/reporte', admin, (_req, res) => res.set('Cache-Control', 'no-store').sendFile(path.join(__dirname, 'admin', 'shipper-uva.html')));
+app.get('/herramientas/cajas-patio', admin, (_req, res) => res.set('Cache-Control', 'no-store').sendFile(path.join(__dirname, 'admin', 'cajas-patio.html')));
 for (const h of ['conversion-unidades']) {
   app.get('/herramientas/' + h, admin, (_req, res) => res.sendFile(path.join(__dirname, 'admin', h + '.html')));
 }
@@ -413,6 +415,7 @@ app.use(traducciones.rutas(admin));
 
 // --- Reportes Shipper guardados (Normal y SM) ---
 app.use(shipper.rutas(admin));
+app.use(cajas.rutas(admin));
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -422,6 +425,7 @@ db.init().then(async (aplicadas) => {
   await opManzanillo.init();
   await traducciones.init();
   await shipper.init();
+  await cajas.init();
   app.listen(puerto, () => console.log('Escuchando en puerto', puerto));
   // Si un cambio de datos se aplicó al arrancar, se actualiza la hoja de Google completa
   if (Array.isArray(aplicadas) && aplicadas.length && driveListo()) {

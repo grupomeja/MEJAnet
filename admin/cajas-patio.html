@@ -1,0 +1,687 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cajas en patio · MEJAnet v1.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Colores del logo grupomeja: azul marino #091932 y azul cielo #4EC9EE */
+  :root{--marino:#091932;--marino-2:#16294a;--cielo:#4ec9ee;--cielo-osc:#1aa6d1;--cielo-claro:#e6f7fd;--bg:#f3f6fa;--ink:#091932;--muted:#5d6878;--line:#cfd9e4;--err:#c0262d;--err-bg:#fff4f4;--ok:#1e7a4c}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px}
+  button,input,select,textarea{font:inherit;color:inherit}
+  .wrap{max-width:1500px;margin:0 auto;padding:18px max(16px,2vw) 48px}
+
+  header{display:grid;grid-template-columns:1fr auto 1fr;gap:10px 16px;align-items:center;margin-bottom:18px}
+  header .logo{justify-self:start;display:block;width:170px;height:46px;background:url(/logo-color.png) left center/contain no-repeat}
+  header .tit{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+  h1.titulo{display:inline-flex;align-items:center;gap:12px;margin:0;padding:6px 22px 6px 6px;border-radius:14px;background:var(--marino);color:#fff;
+    box-shadow:0 3px 0 #000c1f,0 8px 20px rgba(9,25,50,.22);font-family:"Oswald","Arial Narrow",system-ui,sans-serif;font-weight:600;font-size:27px;letter-spacing:1.2px;line-height:1.1;white-space:nowrap;text-transform:uppercase}
+  h1.titulo .ico{flex:0 0 44px;height:44px;display:flex;align-items:center;justify-content:center;background:var(--cielo);border-radius:10px;color:var(--marino)}
+  h1.titulo .ico svg{width:34px;height:34px}
+  header small{color:var(--muted)}
+  a.volver{justify-self:end;display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border:1.5px solid var(--line);border-radius:999px;background:#fff;color:var(--muted);text-decoration:none;font-weight:700;font-size:13px}
+  a.volver:hover{color:var(--ink);border-color:var(--ink)}
+  a.volver svg{width:16px;height:16px}
+  @media (max-width:760px){header{grid-template-columns:1fr;justify-items:center}header .logo,a.volver{justify-self:center}h1.titulo{font-size:22px}}
+
+  /* Indicadores */
+  .kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:16px}
+  @media (max-width:900px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;border-top:4px solid var(--cielo);cursor:pointer;text-align:left}
+  .kpi:hover{border-color:var(--cielo-osc)}
+  .kpi.on{background:var(--cielo-claro);border-color:var(--cielo-osc)}
+  .kpi.marino{border-top-color:var(--marino)}
+  .kpi b{display:block;font:600 32px/1.05 "Oswald","Arial Narrow",sans-serif;color:var(--marino)}
+  .kpi span{color:var(--muted);font-size:12.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+
+  /* Barra */
+  .barra{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+  .barra input[type=search]{flex:1 1 260px;min-width:0;padding:10px 14px;border:1.5px solid var(--line);border-radius:10px;background:#fff}
+  .barra select{padding:9px 10px;border:1.5px solid var(--line);border-radius:10px;background:#fff;max-width:220px}
+  .barra input:focus,.barra select:focus{outline:none;border-color:var(--cielo-osc);box-shadow:0 0 0 3px rgba(78,201,238,.25)}
+  .seg{display:inline-flex;background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:3px}
+  .seg button{border:0;background:none;padding:6px 12px;border-radius:7px;font-weight:600;font-size:13px;color:var(--muted);cursor:pointer}
+  .seg button.on{background:var(--marino);color:#fff}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 18px;border:0;border-radius:10px;font:600 15px "Oswald","Arial Narrow",sans-serif;letter-spacing:1px;text-transform:uppercase;cursor:pointer;white-space:nowrap}
+  .btn svg{width:18px;height:18px}
+  .btn.prim{background:var(--cielo);color:var(--marino);box-shadow:0 3px 0 var(--cielo-osc)}
+  .btn.prim:hover{filter:brightness(1.05)}
+  .btn.prim:active{transform:translateY(2px);box-shadow:0 1px 0 var(--cielo-osc)}
+  .btn.osc{background:var(--marino);color:#fff;box-shadow:0 3px 0 #000c1f}
+  .btn.sec{background:#fff;color:var(--marino);border:1.5px solid var(--line)}
+  .btn.sec:hover{border-color:var(--marino)}
+  .btn:disabled{opacity:.55;cursor:default}
+  .cuenta{color:var(--muted);font-size:13px;margin:-4px 0 12px}
+
+  /* Tarjetas de cajas */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 1px 2px rgba(9,25,50,.05)}
+  .card.salio{opacity:.72}
+  .card .fotos{position:relative;aspect-ratio:16/9;background:linear-gradient(135deg,#0f2342,#1c3560);display:flex;align-items:center;justify-content:center;color:#7f93b3;cursor:zoom-in}
+  .card .fotos img.principal{width:100%;height:100%;object-fit:cover;display:block}
+  .card .fotos .sin{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12.5px;cursor:default}
+  .card .fotos .sin svg{width:44px;height:44px;opacity:.7}
+  .card .fotos img.placa{position:absolute;right:10px;bottom:10px;width:34%;aspect-ratio:2/1;object-fit:cover;border-radius:8px;border:2px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,.35);background:#fff}
+  .card .fotos .estado{position:absolute;left:10px;top:10px;display:flex;gap:6px;flex-wrap:wrap}
+  .chip{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+  .chip.cargada{background:var(--marino);color:#fff;box-shadow:0 0 0 1.5px rgba(255,255,255,.75)}
+  .chip.vacia{background:#fff;color:var(--marino);box-shadow:inset 0 0 0 2px var(--cielo)}
+  .chip.ubi{background:var(--cielo);color:var(--marino)}
+  .chip.salida{background:#6b7480;color:#fff}
+  .card .cuerpo{padding:12px 14px 10px;display:flex;flex-direction:column;gap:8px;flex:1}
+  .card .top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+  .card .num{font:700 30px/1 "Barlow Condensed","Arial Narrow",sans-serif;letter-spacing:.02em;color:var(--marino)}
+  .card .num small{display:block;font:600 12px "IBM Plex Sans",sans-serif;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin-bottom:2px}
+  .card .linea{text-align:right;font-weight:700;font-size:13px;line-height:1.25}
+  .card .linea span{display:block;color:var(--cielo-osc);font-size:12px;letter-spacing:.06em}
+  .card dl{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,.9fr) minmax(0,.9fr) minmax(0,1.2fr);gap:6px 10px;margin:0;padding:10px 0 2px;border-top:1px dashed var(--line)}
+  .card dt{font-size:10.5px;font-weight:700;letter-spacing:.06em;color:var(--muted);text-transform:uppercase}
+  .card dd{margin:1px 0 0;font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .card .placa-txt{font-family:"Barlow Condensed",sans-serif;font-size:17px;letter-spacing:.06em}
+  .card .llegada{font-size:12.5px;color:var(--muted)}
+  .card .llegada b{color:var(--ink)}
+  .card .notas{font-size:12.5px;color:var(--muted);font-style:italic}
+  .card .acc{display:flex;gap:8px;padding:10px 14px 12px;border-top:1px solid #edf1f6;background:#fafcfe}
+  .card .acc button{flex:1;padding:8px 6px;border-radius:8px;border:1.5px solid var(--line);background:#fff;font-weight:600;font-size:13px;cursor:pointer;color:var(--marino)}
+  .card .acc button:hover{border-color:var(--marino)}
+  .card .acc button.sal{background:var(--marino);border-color:var(--marino);color:#fff}
+  .card .acc button.sal:hover{background:var(--marino-2)}
+  .card .acc button.mas{flex:0 0 40px}
+  .vacio{grid-column:1/-1;text-align:center;padding:48px 16px;color:var(--muted);background:#fff;border:1.5px dashed var(--line);border-radius:14px}
+  .vacio b{display:block;color:var(--ink);font-size:16px;margin-bottom:4px}
+
+  /* Ventana de registro */
+  .modal[hidden]{display:none}
+  .modal{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;background:rgba(9,25,50,.55);overflow:auto}
+  .modal .caja{width:min(820px,100%);background:#fff;border-radius:16px;box-shadow:0 24px 60px rgba(9,25,50,.4);overflow:hidden}
+  .modal .cab{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;background:var(--marino);color:#fff}
+  .modal .cab h2{margin:0;font:600 21px "Oswald","Arial Narrow",sans-serif;letter-spacing:1px;text-transform:uppercase}
+  .modal .cab button{border:0;background:rgba(255,255,255,.12);color:#fff;width:34px;height:34px;border-radius:8px;font-size:20px;cursor:pointer}
+  .modal .cont{padding:18px}
+  .fotosForm{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+  @media (max-width:560px){.fotosForm{gap:10px}.slot{aspect-ratio:1/1;padding:8px}.slot .ayuda{display:none}.slot b{font-size:13.5px}.modal{padding:0}.modal .caja{border-radius:0;min-height:100%}}
+  .slot{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;aspect-ratio:4/3;border:2px dashed #9fd9ee;border-radius:14px;background:var(--cielo-claro);color:var(--marino);cursor:pointer;text-align:center;padding:12px;overflow:hidden}
+  .slot:hover{border-color:var(--cielo-osc)}
+  .slot svg{width:42px;height:42px;color:var(--cielo-osc)}
+  .slot b{font-size:15px}
+  .slot span{font-size:12.5px;color:var(--muted)}
+  .slot input{display:none}
+  .slot.con{border-style:solid;border-color:var(--marino);padding:0;background:#000}
+  .slot.con img{width:100%;height:100%;object-fit:contain}
+  .slot.con > svg,.slot.con > b,.slot.con > span.ayuda{display:none}
+  .slot .quitar{position:absolute;top:8px;right:8px;border:0;background:rgba(9,25,50,.75);color:#fff;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:600;cursor:pointer;display:none}
+  .slot.con .quitar{display:block}
+  .slot .leyendo{position:absolute;left:0;right:0;bottom:0;padding:8px 10px;background:rgba(9,25,50,.85);color:#fff;font-size:12.5px;font-weight:600;display:none;align-items:center;gap:8px}
+  .slot .leyendo.ver{display:flex}
+  .slot .leyendo i{width:14px;height:14px;border:2px solid var(--cielo);border-right-color:transparent;border-radius:50%;animation:gira .8s linear infinite}
+  @keyframes gira{to{transform:rotate(360deg)}}
+  .campos{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px 14px}
+  .campo{display:flex;flex-direction:column;gap:5px;grid-column:span 2;min-width:0}
+  .campo.w3{grid-column:span 3}.campo.w6{grid-column:span 6}
+  @media (max-width:560px){.campo,.campo.w3{grid-column:span 6}}
+  .campo label,.campo .lbl{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+  .campo input,.campo select,.campo textarea{width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:#fff;text-transform:uppercase}
+  .campo textarea{text-transform:none;resize:vertical;min-height:44px}
+  .campo input:focus,.campo select:focus,.campo textarea:focus{outline:none;border-color:var(--cielo-osc);box-shadow:0 0 0 3px rgba(78,201,238,.25)}
+  .campo input.grande{font:700 22px "Barlow Condensed",sans-serif;letter-spacing:.05em;padding:6px 12px}
+  .campo input.leido{border-color:var(--cielo-osc);background:var(--cielo-claro)}
+  .campo .pista{font-size:12px;color:var(--cielo-osc);font-weight:600;min-height:0}
+  .campo .pista:empty{display:none}
+  .opciones{display:flex;gap:6px;flex-wrap:wrap}
+  .opciones button{flex:1;min-width:58px;padding:9px 10px;border:1.5px solid var(--line);border-radius:10px;background:#fff;font-weight:700;cursor:pointer;color:var(--marino)}
+  .opciones button:hover{border-color:var(--marino)}
+  .opciones button.on{background:var(--marino);border-color:var(--marino);color:#fff}
+  .opciones.cielo button.on{background:var(--cielo);border-color:var(--cielo-osc);color:var(--marino)}
+  .fecha{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:#f3f6fa;border:1px solid var(--line);font-weight:600}
+  .fecha svg{width:20px;height:20px;color:var(--cielo-osc);flex:0 0 auto}
+  .fecha small{display:block;font-weight:500;color:var(--muted);font-size:12px}
+  .otra{display:grid;grid-template-columns:110px 1fr;gap:8px;margin-top:6px}
+  .otra[hidden]{display:none}
+  .pie{display:flex;align-items:center;gap:10px;justify-content:flex-end;padding:14px 18px;border-top:1px solid #e8edf3;background:#fafcfe;flex-wrap:wrap}
+  .pie .msg{flex:1;min-width:180px;font-size:13px;color:var(--err)}
+
+  /* Foto en grande */
+  .visor[hidden]{display:none}
+  .visor{position:fixed;inset:0;z-index:70;background:rgba(5,12,25,.92);display:flex;align-items:center;justify-content:center;padding:20px;cursor:zoom-out}
+  .visor img{max-width:100%;max-height:100%;border-radius:8px}
+  .visor .pies{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:8px}
+  .visor .pies button{border:0;border-radius:999px;padding:7px 14px;background:rgba(255,255,255,.15);color:#fff;font-weight:600;cursor:pointer}
+  .visor .pies button.on{background:var(--cielo);color:var(--marino)}
+
+  .menu{position:fixed;z-index:55;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(9,25,50,.2);padding:6px;min-width:190px}
+  .menu[hidden]{display:none}
+  .menu button{display:block;width:100%;text-align:left;border:0;background:none;padding:9px 12px;border-radius:7px;cursor:pointer;font-weight:600;font-size:13.5px}
+  .menu button:hover{background:var(--cielo-claro)}
+  .menu button.rojo{color:var(--err)}
+  .menu button.rojo:hover{background:var(--err-bg)}
+  .aviso{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:80;background:var(--marino);color:#fff;padding:10px 18px;border-radius:999px;font-weight:600;box-shadow:0 8px 20px rgba(0,0,0,.25)}
+  .aviso[hidden]{display:none}
+  .aviso.err{background:var(--err)}
+  .sl-oculto{display:none!important}
+  @media (max-width:520px){.kpis{grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}.kpi{padding:8px 2px;border-top-width:3px;text-align:center}.kpi b{font-size:22px}.kpi span{font-size:8.6px;letter-spacing:0;line-height:1.15;display:block;overflow-wrap:anywhere}
+    #nueva{flex:1 1 100%}.barra select{flex:1}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="logo" href="/modulos" aria-label="MEJAnet · grupomeja"></a>
+    <div class="tit">
+      <h1 class="titulo"><span class="ico" aria-hidden="true">
+        <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"><rect x="4" y="16" width="40" height="28" rx="2.5" fill="currentColor" fill-opacity=".14"/><path d="M14 16v28M24 16v28M34 16v28"/><path d="M44 26h8l7 9v9H44z" fill="currentColor" fill-opacity=".14"/><circle cx="15" cy="49" r="4.5" fill="#fff"/><circle cx="50" cy="49" r="4.5" fill="#fff"/></svg>
+      </span>Cajas en patio</h1>
+      <small>Registra cada caja con su foto y la de su placa: los datos se leen de las fotos.</small>
+    </div>
+    <a class="volver" href="/herramientas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg> Herramientas</a>
+  </header>
+
+  <div class="kpis" id="kpis">
+    <button class="kpi marino" data-f="patio" type="button"><b id="kTotal">0</b><span>En patio</span></button>
+    <button class="kpi" data-f="CARGADA" type="button"><b id="kCargadas">0</b><span>Cargadas</span></button>
+    <button class="kpi" data-f="VACIA" type="button"><b id="kVacias">0</b><span>Vacías</span></button>
+    <button class="kpi" data-f="ANDEN" type="button"><b id="kAnden">0</b><span>En andén</span></button>
+    <button class="kpi" data-f="salieron" type="button"><b id="kSalieron">0</b><span>Salieron hoy</span></button>
+  </div>
+
+  <div class="barra">
+    <button class="btn prim sl-cambia" id="nueva" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg> Registrar caja</button>
+    <input id="buscar" type="search" placeholder="Buscar caja, placa, línea, SCAC o referencia MEJA…" aria-label="Buscar">
+    <select id="fLinea" aria-label="Filtrar por línea"><option value="">Todas las líneas</option></select>
+    <div class="seg" id="fVista" role="group" aria-label="Qué cajas ver">
+      <button type="button" data-v="patio" class="on">En patio</button>
+      <button type="button" data-v="salieron">Salieron</button>
+      <button type="button" data-v="todas">Todas</button>
+    </div>
+    <button class="btn sec" id="xlsx" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg> XLSX</button>
+  </div>
+  <div class="cuenta" id="cuenta"></div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<!-- Registrar / editar caja -->
+<div class="modal" id="dlg" hidden>
+  <form class="caja" id="form" autocomplete="off" novalidate>
+    <div class="cab"><h2 id="dlgTit">Registrar caja</h2><button type="button" id="cerrar" aria-label="Cerrar">×</button></div>
+    <div class="cont">
+      <div class="fotosForm">
+        <label class="slot" id="slotCaja">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.6"/></svg>
+          <b>Foto de la caja</b>
+          <span class="ayuda">Que se vea el número y las letras de la línea (SCAC)</span>
+          <img alt="Foto de la caja" hidden>
+          <button type="button" class="quitar">Cambiar foto</button>
+          <div class="leyendo"><i></i><span>Leyendo el número de caja…</span></div>
+          <input type="file" accept="image/*" capture="environment" id="fotoCaja">
+        </label>
+        <label class="slot" id="slotPlaca">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6.5" width="18" height="11" rx="2"/><path d="M7 10.5h4M7 13.5h10"/><circle cx="16.5" cy="10.5" r=".8" fill="currentColor"/></svg>
+          <b>Foto de la placa</b>
+          <span class="ayuda">De frente y lo más cerca posible</span>
+          <img alt="Foto de la placa" hidden>
+          <button type="button" class="quitar">Cambiar foto</button>
+          <div class="leyendo"><i></i><span>Leyendo la placa…</span></div>
+          <input type="file" accept="image/*" capture="environment" id="fotoPlaca">
+        </label>
+      </div>
+
+      <div class="campos">
+        <div class="campo w3">
+          <label for="caja">Caja No.</label>
+          <input id="caja" class="grande" inputmode="text" required>
+          <div class="pista" id="pCaja"></div>
+        </div>
+        <div class="campo w3">
+          <label for="placa">Placa</label>
+          <input id="placa" class="grande">
+          <div class="pista" id="pPlaca"></div>
+        </div>
+        <div class="campo w6">
+          <label for="linea">Línea</label>
+          <select id="linea"><option value="">— Elige la línea —</option></select>
+          <div class="pista" id="pLinea"></div>
+          <div class="otra" id="otraLinea" hidden>
+            <input id="nScac" placeholder="SCAC" maxlength="4" aria-label="SCAC de la línea nueva">
+            <input id="nLinea" placeholder="Nombre de la línea" aria-label="Nombre de la línea nueva">
+          </div>
+        </div>
+        <div class="campo"><span class="lbl">Origen</span><div class="opciones" data-campo="origen"><button type="button" data-v="MEX">MEX</button><button type="button" data-v="USA">USA</button></div></div>
+        <div class="campo"><span class="lbl">Medida</span><div class="opciones" data-campo="medida"><button type="button" data-v="53">53'</button><button type="button" data-v="48">48'</button><button type="button" data-v="40">40'</button></div></div>
+        <div class="campo"><label for="meja">MEJA (referencia)</label><input id="meja" placeholder="Ej. 1836/26"></div>
+        <div class="campo w3"><span class="lbl">Estatus</span><div class="opciones" data-campo="estatus"><button type="button" data-v="CARGADA">Cargada</button><button type="button" data-v="VACIA">Vacía</button></div></div>
+        <div class="campo w3"><span class="lbl">Ubicación</span><div class="opciones cielo" data-campo="ubicacion"><button type="button" data-v="PATIO">Patio</button><button type="button" data-v="ANDEN">Andén</button></div></div>
+        <div class="campo w6"><label for="notas">Notas (opcional)</label><textarea id="notas" rows="2" placeholder="Sellos, daños, quién la trajo…"></textarea></div>
+        <div class="campo w6">
+          <span class="lbl">Llegada</span>
+          <div class="fecha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><div><span id="fechaTxt"></span><small id="fechaNota">Se registra sola con la fecha y hora en que guardas.</small></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="pie">
+      <span class="msg" id="dlgMsg"></span>
+      <button type="button" class="btn sec" id="cancelar">Cancelar</button>
+      <button type="submit" class="btn osc" id="guardar">Guardar</button>
+    </div>
+  </form>
+</div>
+
+<div class="visor" id="visor" hidden><img alt="Foto"><div class="pies"><button type="button" data-t="caja">Caja</button><button type="button" data-t="placa">Placa</button></div></div>
+<div class="menu" id="menu" hidden>
+  <button type="button" data-a="editar">Editar datos y fotos</button>
+  <button type="button" data-a="regresar">Regresar al patio</button>
+  <button type="button" data-a="borrar" class="rojo">Borrar registro</button>
+</div>
+<div class="aviso" id="aviso" hidden></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const norm = s => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().trim();
+let cajas = [], lineas = [], vista = 'patio', filtroKpi = '';
+const soloLectura = () => !!window.MEJA_SOLO_LECTURA;
+
+// --- Fechas ---
+const fFecha = d => new Date(d).toLocaleString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+function hace(d) {
+  const min = Math.max(0, Math.round((Date.now() - new Date(d)) / 60000));
+  if (min < 60) return min <= 1 ? 'hace un momento' : `hace ${min} min`;
+  const h = Math.round(min / 60); if (h < 24) return `hace ${h} h`;
+  const dias = Math.floor(min / 1440); return dias === 1 ? 'hace 1 día' : `hace ${dias} días`;
+}
+const esHoy = d => d && new Date(d).toDateString() === new Date().toDateString();
+
+function aviso(t, err) {
+  const a = $('aviso'); a.textContent = t; a.className = 'aviso' + (err ? ' err' : ''); a.hidden = false;
+  clearTimeout(aviso.t); aviso.t = setTimeout(() => { a.hidden = true; }, err ? 5000 : 2600);
+}
+
+// --- Cargar y mostrar ---
+async function cargar() {
+  try {
+    const r = await fetch('/api/cajas');
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || 'el servidor respondió ' + r.status);
+    cajas = j.cajas || []; lineas = j.lineas || [];
+    llenarLineas(); pintar();
+  } catch (e) {
+    $('grid').innerHTML = `<div class="vacio"><b>No se pudo cargar la lista</b>${esc(e.message)}</div>`;
+  }
+}
+function llenarLineas() {
+  const usadas = [...new Set(cajas.map(c => c.datos.linea).filter(Boolean))].sort();
+  const v = $('fLinea').value;
+  $('fLinea').innerHTML = '<option value="">Todas las líneas</option>' + usadas.map(l => `<option>${esc(l)}</option>`).join('');
+  $('fLinea').value = usadas.includes(v) ? v : '';
+  $('linea').innerHTML = '<option value="">— Elige la línea —</option>' + lineas.map(l => `<option value="${esc(l.scac)}">${esc(l.nombre)} · ${esc(l.scac)}</option>`).join('') + '<option value="__otra">Otra línea…</option>';
+}
+const fotoUrl = (c, t) => `/api/cajas/${c.id}/foto/${t}?v=${encodeURIComponent(c.actualizado || '')}`;
+const ICO_CAJA = '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"><rect x="4" y="16" width="40" height="28" rx="2.5"/><path d="M14 16v28M24 16v28M34 16v28"/><path d="M44 26h8l7 9v9H44z"/><circle cx="15" cy="49" r="4.5"/><circle cx="50" cy="49" r="4.5"/></svg>';
+function pintar() {
+  const enPatio = cajas.filter(c => !c.salida);
+  $('kTotal').textContent = enPatio.length;
+  $('kCargadas').textContent = enPatio.filter(c => c.datos.estatus === 'CARGADA').length;
+  $('kVacias').textContent = enPatio.filter(c => c.datos.estatus === 'VACIA').length;
+  $('kAnden').textContent = enPatio.filter(c => c.datos.ubicacion === 'ANDEN').length;
+  $('kSalieron').textContent = cajas.filter(c => esHoy(c.salida)).length;
+  document.querySelectorAll('.kpi').forEach(k => k.classList.toggle('on', k.dataset.f === filtroKpi));
+  document.querySelectorAll('#fVista button').forEach(b => b.classList.toggle('on', b.dataset.v === vista));
+
+  const q = norm($('buscar').value), fl = $('fLinea').value;
+  const lista = filtradas();
+  $('cuenta').textContent = (q || fl || filtroKpi) ? `Mostrando ${lista.length} de ${vista === 'patio' ? enPatio.length : cajas.length} cajas` : '';
+  if (!lista.length) {
+    $('grid').innerHTML = `<div class="vacio"><b>${cajas.length ? 'Ninguna caja coincide' : 'Todavía no hay cajas registradas'}</b>${cajas.length ? 'Prueba con otra búsqueda o filtro.' : 'Usa <i>Registrar caja</i> para dar de alta la primera.'}</div>`;
+    return;
+  }
+  $('grid').innerHTML = lista.map(c => {
+    const d = c.datos, fotos = c.fotos || [];
+    const principal = fotos.includes('caja') ? 'caja' : fotos.includes('placa') ? 'placa' : '';
+    const estado = (d.estatus ? `<span class="chip ${d.estatus === 'CARGADA' ? 'cargada' : 'vacia'}">${d.estatus === 'CARGADA' ? 'Cargada' : 'Vacía'}</span>` : '') +
+      (d.ubicacion ? `<span class="chip ubi">${d.ubicacion === 'ANDEN' ? 'Andén' : 'Patio'}</span>` : '') + (c.salida ? '<span class="chip salida">Salió</span>' : '');
+    return `<article class="card${c.salida ? ' salio' : ''}" data-id="${c.id}">
+      <div class="fotos" data-ver="${principal}">
+        ${principal ? `<img class="principal" src="${fotoUrl(c, principal)}" alt="Foto de la caja ${esc(d.caja)}" loading="lazy">` : `<div class="sin">${ICO_CAJA}Sin foto</div>`}
+        ${principal === 'caja' && fotos.includes('placa') ? `<img class="placa" src="${fotoUrl(c, 'placa')}" alt="Foto de la placa" loading="lazy" data-ver="placa">` : ''}
+        <div class="estado">${estado}</div>
+      </div>
+      <div class="cuerpo">
+        <div class="top">
+          <div class="num"><small>Caja</small>${esc(d.caja)}</div>
+          <div class="linea">${esc(d.linea || 'Sin línea')}${d.scac ? `<span>${esc(d.scac)}</span>` : ''}</div>
+        </div>
+        <dl>
+          <div><dt>Placa</dt><dd class="placa-txt">${esc(d.placa || '—')}</dd></div>
+          <div><dt>Origen</dt><dd>${esc(d.origen || '—')}</dd></div>
+          <div><dt>Medida</dt><dd>${d.medida ? esc(d.medida) + "'" : '—'}</dd></div>
+          <div><dt>MEJA</dt><dd>${esc(d.meja || '—')}</dd></div>
+        </dl>
+        <div class="llegada">Llegó <b>${fFecha(c.llegada)}</b> · ${hace(c.llegada)}${c.creado_por ? ' · ' + esc(c.creado_por) : ''}${c.salida ? `<br>Salió <b>${fFecha(c.salida)}</b>` : ''}</div>
+        ${d.notas ? `<div class="notas">${esc(d.notas)}</div>` : ''}
+      </div>
+      <div class="acc sl-cambia">
+        ${c.salida ? '' : '<button type="button" class="sal" data-a="salida">Dar salida</button>'}
+        <button type="button" data-a="editar">Editar</button>
+        <button type="button" class="mas" data-a="menu" aria-label="Más opciones">⋯</button>
+      </div>
+    </article>`;
+  }).join('');
+  if (soloLectura()) document.querySelectorAll('.sl-cambia').forEach(x => x.classList.add('sl-oculto'));
+}
+function filtradas() {
+  const q = norm($('buscar').value), fl = $('fLinea').value;
+  return cajas.filter(c => {
+    if (filtroKpi === 'salieron') { if (!esHoy(c.salida)) return false; }
+    else {
+      if (vista === 'patio' && c.salida) return false;
+      if (vista === 'salieron' && !c.salida) return false;
+    }
+    const d = c.datos;
+    if (filtroKpi === 'CARGADA' || filtroKpi === 'VACIA') { if (d.estatus !== filtroKpi) return false; }
+    if (filtroKpi === 'ANDEN' && d.ubicacion !== 'ANDEN') return false;
+    if (fl && d.linea !== fl) return false;
+    return !q || [d.caja, d.placa, d.linea, d.scac, d.meja, d.notas].some(x => norm(x).includes(q));
+  });
+}
+
+// --- Filtros ---
+$('buscar').addEventListener('input', () => { clearTimeout(pintar.t); pintar.t = setTimeout(pintar, 120); });
+$('fLinea').addEventListener('change', pintar);
+$('fVista').addEventListener('click', ev => { const b = ev.target.closest('button'); if (!b) return; vista = b.dataset.v; filtroKpi = ''; pintar(); });
+$('kpis').addEventListener('click', ev => {
+  const k = ev.target.closest('.kpi'); if (!k) return;
+  const f = k.dataset.f;
+  filtroKpi = (f === 'patio' || filtroKpi === f) ? '' : f;
+  if (f !== 'salieron') vista = 'patio';
+  pintar();
+});
+
+// --- Ventana de registro ---
+let editando = null; // caja que se edita (null = nueva)
+let fotos = { caja: undefined, placa: undefined }; // data URL nueva, null = quitar, undefined = sin cambio
+const sel = { origen: '', medida: '', estatus: '', ubicacion: '' };
+function elegir(campo, v) {
+  sel[campo] = v;
+  document.querySelectorAll(`.opciones[data-campo="${campo}"] button`).forEach(b => b.classList.toggle('on', b.dataset.v === v));
+}
+document.querySelectorAll('.opciones').forEach(o => o.addEventListener('click', ev => {
+  const b = ev.target.closest('button'); if (!b) return;
+  const c = o.dataset.campo; elegir(c, sel[c] === b.dataset.v ? '' : b.dataset.v);
+}));
+function abrir(c) {
+  editando = c || null;
+  fotos = { caja: undefined, placa: undefined };
+  $('form').reset();
+  const d = c?.datos || {};
+  $('dlgTit').textContent = c ? 'Editar caja ' + d.caja : 'Registrar caja';
+  $('caja').value = d.caja || ''; $('placa').value = d.placa || ''; $('meja').value = d.meja || ''; $('notas').value = d.notas || '';
+  const l = lineas.find(x => x.scac === d.scac);
+  $('linea').value = l ? l.scac : (d.linea ? '__otra' : '');
+  $('otraLinea').hidden = $('linea').value !== '__otra';
+  $('nScac').value = l ? '' : (d.scac || ''); $('nLinea').value = l ? '' : (d.linea || '');
+  for (const k of Object.keys(sel)) elegir(k, d[k] || (c ? '' : { origen: '', medida: '53', estatus: '', ubicacion: 'PATIO' }[k]));
+  for (const t of ['caja', 'placa']) mostrarFoto(t, c && (c.fotos || []).includes(t) ? fotoUrl(c, t) : '');
+  ['pCaja', 'pPlaca', 'pLinea'].forEach(id => { $(id).textContent = ''; });
+  ['caja', 'placa'].forEach(id => $(id).classList.remove('leido'));
+  $('fechaTxt').textContent = c ? fFecha(c.llegada) : 'Hoy, ' + fFecha(new Date());
+  $('fechaNota').textContent = c ? 'Fecha en que se registró (no cambia).' : 'Se registra sola con la fecha y hora en que guardas.';
+  $('dlgMsg').textContent = '';
+  $('dlg').hidden = false;
+  document.body.style.overflow = 'hidden';
+  clearInterval(abrir.reloj);
+  if (!c) abrir.reloj = setInterval(() => { $('fechaTxt').textContent = 'Hoy, ' + fFecha(new Date()); }, 20000);
+}
+function cerrar() { $('dlg').hidden = true; document.body.style.overflow = ''; clearInterval(abrir.reloj); }
+$('nueva').addEventListener('click', () => abrir());
+$('cerrar').addEventListener('click', cerrar);
+$('cancelar').addEventListener('click', cerrar);
+$('linea').addEventListener('change', () => { $('otraLinea').hidden = $('linea').value !== '__otra'; if (!$('otraLinea').hidden) $('nScac').focus(); });
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape') { if (!$('visor').hidden) $('visor').hidden = true; else if (!$('dlg').hidden) cerrar(); $('menu').hidden = true; } });
+
+function mostrarFoto(t, src) {
+  const slot = $(t === 'caja' ? 'slotCaja' : 'slotPlaca'), img = slot.querySelector('img');
+  slot.classList.toggle('con', !!src); img.hidden = !src;
+  if (src) img.src = src; else img.removeAttribute('src');
+}
+// Reduce la foto (máx. 1280 px, JPEG) para que suba rápido desde el celular
+function reducir(file, max = 1280) {
+  return new Promise((ok, ko) => {
+    const url = URL.createObjectURL(file), im = new Image();
+    im.onload = () => {
+      const k = Math.min(1, max / Math.max(im.naturalWidth, im.naturalHeight));
+      const cv = document.createElement('canvas');
+      cv.width = Math.round(im.naturalWidth * k); cv.height = Math.round(im.naturalHeight * k);
+      cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height);
+      URL.revokeObjectURL(url);
+      ok({ data: cv.toDataURL('image/jpeg', 0.82), canvas: cv });
+    };
+    im.onerror = () => { URL.revokeObjectURL(url); ko(new Error('No pude abrir la foto.')); };
+    im.src = url;
+  });
+}
+for (const t of ['caja', 'placa']) {
+  const slot = $(t === 'caja' ? 'slotCaja' : 'slotPlaca'), input = $(t === 'caja' ? 'fotoCaja' : 'fotoPlaca');
+  slot.querySelector('.quitar').addEventListener('click', ev => { ev.preventDefault(); input.click(); });
+  input.addEventListener('change', async () => {
+    const f = input.files[0]; input.value = '';
+    if (!f) return;
+    try {
+      const { data, canvas } = await reducir(f);
+      fotos[t] = data; mostrarFoto(t, data);
+      leerFoto(t, canvas);
+    } catch (e) { $('dlgMsg').textContent = e.message; }
+  });
+}
+
+// --- Lectura de las fotos (OCR en el navegador con Tesseract) ---
+let tesseract;
+function cargarTesseract() {
+  if (window.Tesseract) return Promise.resolve();
+  return tesseract ||= new Promise((ok, ko) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+    s.onload = ok; s.onerror = () => { tesseract = null; ko(new Error('no se pudo cargar el lector de texto')); };
+    document.head.appendChild(s);
+  });
+}
+let worker;
+async function obtenerWorker() {
+  await cargarTesseract();
+  // Modo "texto disperso": en una foto los letreros están sueltos, no en párrafos
+  return worker ||= Tesseract.createWorker('eng', 1, { logger: () => {} }).then(async w => { await w.setParameters({ tessedit_pageseg_mode: '11' }); return w; });
+}
+// Imagen en escala de grises con más contraste: el OCR lee mejor números pintados en la caja
+function preparar(canvas) {
+  const k = Math.min(1, 1600 / Math.max(canvas.width, canvas.height));
+  const cv = document.createElement('canvas');
+  cv.width = Math.round(canvas.width * k); cv.height = Math.round(canvas.height * k);
+  const g = cv.getContext('2d'); g.drawImage(canvas, 0, 0, cv.width, cv.height);
+  const im = g.getImageData(0, 0, cv.width, cv.height), p = im.data;
+  for (let i = 0; i < p.length; i += 4) {
+    let y = 0.299 * p[i] + 0.587 * p[i + 1] + 0.114 * p[i + 2];
+    y = Math.max(0, Math.min(255, (y - 128) * 1.6 + 128));
+    p[i] = p[i + 1] = p[i + 2] = y;
+  }
+  g.putImageData(im, 0, 0);
+  return cv;
+}
+// Palabras leídas con su tamaño (las letras más grandes suelen ser el número de caja o la placa)
+async function palabras(canvas) {
+  const w = await obtenerWorker();
+  const { data } = await w.recognize(preparar(canvas));
+  return (data.words || []).map(x => ({ t: x.text.toUpperCase().replace(/[^A-Z0-9]/g, ''), h: x.bbox.y1 - x.bbox.y0, conf: x.confidence })).filter(x => x.t.length >= 2 && x.conf > 30);
+}
+const comoNumero = s => s.replace(/O/g, '0').replace(/[IL]/g, '1').replace(/S/g, '5').replace(/B/g, '8').replace(/Z/g, '2');
+async function leerFoto(t, canvas) {
+  const slot = $(t === 'caja' ? 'slotCaja' : 'slotPlaca'), lee = slot.querySelector('.leyendo');
+  lee.classList.add('ver');
+  try {
+    const ws = await palabras(canvas);
+    if (t === 'caja') {
+      // SCAC: 4 letras que estén en el catálogo de líneas → se elige la línea
+      const scacs = new Set(lineas.map(l => l.scac));
+      const scac = ws.map(x => x.t).find(x => scacs.has(x)) || ws.map(x => x.t.slice(0, 4)).find(x => scacs.has(x));
+      if (scac && !$('linea').value) { $('linea').value = scac; $('otraLinea').hidden = true; $('pLinea').textContent = 'Línea encontrada por el SCAC ' + scac + ' de la foto. Revísala.'; }
+      // Número de caja: el número más grande de la foto (3 a 7 dígitos)
+      const nums = ws.map(x => ({ ...x, n: comoNumero(x.t.replace(/^[A-Z]{4}/, '')) })).filter(x => /^\d{3,7}$/.test(x.n)).sort((a, b) => b.h - a.h);
+      if (nums[0] && !$('caja').value.trim()) { $('caja').value = nums[0].n; $('caja').classList.add('leido'); $('pCaja').textContent = 'Leído de la foto: revisa que esté bien.'; }
+      else if (!nums[0]) $('pCaja').textContent = 'No pude leer el número en la foto: escríbelo.';
+    } else {
+      // Placa: 5 a 8 letras y números, con al menos una letra y un número
+      const cands = ws.filter(x => /^[A-Z0-9]{5,8}$/.test(x.t) && /\d/.test(x.t) && /[A-Z]/.test(x.t)).sort((a, b) => b.h - a.h);
+      if (cands[0] && !$('placa').value.trim()) { $('placa').value = cands[0].t; $('placa').classList.add('leido'); $('pPlaca').textContent = 'Leída de la foto: revisa que esté bien.'; }
+      else if (!cands[0]) $('pPlaca').textContent = 'No pude leer la placa en la foto: escríbela.';
+    }
+  } catch (e) {
+    $(t === 'caja' ? 'pCaja' : 'pPlaca').textContent = 'No pude leer la foto (' + e.message + '): escribe el dato.';
+  } finally { lee.classList.remove('ver'); }
+}
+['caja', 'placa'].forEach(id => $(id).addEventListener('input', () => { $(id).classList.remove('leido'); $(id === 'caja' ? 'pCaja' : 'pPlaca').textContent = ''; }));
+
+// --- Guardar ---
+$('form').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  const caja = $('caja').value.trim();
+  if (!caja) { $('dlgMsg').textContent = 'Falta el número de caja.'; $('caja').focus(); return; }
+  let scac = $('linea').value, linea = '';
+  if (scac === '__otra') { scac = $('nScac').value.trim().toUpperCase(); linea = $('nLinea').value.trim().toUpperCase(); if (!linea) { $('dlgMsg').textContent = 'Escribe el nombre de la línea nueva.'; $('nLinea').focus(); return; } }
+  else linea = lineas.find(l => l.scac === scac)?.nombre || '';
+  const d = { caja, placa: $('placa').value.trim(), linea, scac, meja: $('meja').value.trim(), notas: $('notas').value.trim(), ...sel };
+  const btn = $('guardar'); btn.disabled = true; btn.textContent = 'Guardando…'; $('dlgMsg').textContent = '';
+  try {
+    const cuerpo = editando ? { datos: d } : { ...d };
+    if (fotos.caja !== undefined) cuerpo.fotoCaja = fotos.caja;
+    if (fotos.placa !== undefined) cuerpo.fotoPlaca = fotos.placa;
+    const r = await fetch(editando ? '/api/cajas/' + editando.id : '/api/cajas', { method: editando ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || 'el servidor respondió ' + r.status);
+    cerrar();
+    aviso(editando ? 'Cambios guardados' : 'Caja ' + caja + ' registrada');
+    await cargar();
+  } catch (e) {
+    $('dlgMsg').textContent = 'No se guardó: ' + e.message;
+  } finally { btn.disabled = false; btn.textContent = 'Guardar'; }
+});
+
+// --- Acciones de cada tarjeta ---
+let menuCaja = null;
+async function cambiar(c, cuerpo, msg) {
+  try {
+    const r = await fetch('/api/cajas/' + c.id, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || 'el servidor respondió ' + r.status);
+    aviso(msg); await cargar();
+  } catch (e) { aviso('No se pudo: ' + e.message, true); }
+}
+$('grid').addEventListener('click', ev => {
+  const card = ev.target.closest('.card'); if (!card) return;
+  const c = cajas.find(x => x.id === Number(card.dataset.id));
+  const ver = ev.target.closest('[data-ver]');
+  if (ver && ver.dataset.ver) { verFoto(c, ver.dataset.ver); return; }
+  const b = ev.target.closest('button[data-a]'); if (!b) return;
+  if (b.dataset.a === 'editar') abrir(c);
+  if (b.dataset.a === 'salida') {
+    if (b.dataset.conf) cambiar(c, { salida: true }, 'Salida registrada · caja ' + c.datos.caja);
+    else { b.dataset.conf = '1'; b.textContent = '¿Confirmar salida?'; setTimeout(() => { if (b.isConnected) { delete b.dataset.conf; b.textContent = 'Dar salida'; } }, 4000); }
+  }
+  if (b.dataset.a === 'menu') {
+    menuCaja = c;
+    const m = $('menu'), rc = b.getBoundingClientRect();
+    m.querySelector('[data-a=regresar]').hidden = !c.salida;
+    m.querySelector('[data-a=borrar]').textContent = 'Borrar registro';
+    m.hidden = false;
+    m.style.left = Math.max(8, Math.min(innerWidth - m.offsetWidth - 8, rc.right - m.offsetWidth)) + 'px';
+    m.style.top = Math.min(innerHeight - m.offsetHeight - 8, rc.bottom + 6) + 'px';
+    ev.stopPropagation();
+  }
+});
+$('menu').addEventListener('click', async ev => {
+  const b = ev.target.closest('button'); if (!b || !menuCaja) return;
+  const c = menuCaja;
+  if (b.dataset.a === 'borrar' && !b.dataset.conf) { b.dataset.conf = '1'; b.textContent = '¿Seguro? Se borra con sus fotos'; ev.stopPropagation(); return; }
+  $('menu').hidden = true;
+  if (b.dataset.a === 'editar') abrir(c);
+  if (b.dataset.a === 'regresar') cambiar(c, { salida: false }, 'La caja ' + c.datos.caja + ' regresó al patio');
+  if (b.dataset.a === 'borrar') {
+    delete b.dataset.conf;
+    try {
+      const r = await fetch('/api/cajas/' + c.id, { method: 'DELETE' });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || 'el servidor respondió ' + r.status);
+      aviso('Registro borrado'); await cargar();
+    } catch (e) { aviso('No se pudo borrar: ' + e.message, true); }
+  }
+});
+document.addEventListener('click', ev => { if (!ev.target.closest('#menu')) { $('menu').hidden = true; const b = $('menu').querySelector('[data-a=borrar]'); delete b.dataset.conf; } });
+
+// --- Visor de fotos ---
+let visorCaja = null;
+function verFoto(c, t) {
+  visorCaja = c;
+  const v = $('visor'), fotosC = c.fotos || [];
+  v.querySelector('img').src = fotoUrl(c, t);
+  v.querySelectorAll('.pies button').forEach(b => { b.hidden = !fotosC.includes(b.dataset.t) || fotosC.length < 2; b.classList.toggle('on', b.dataset.t === t); });
+  v.hidden = false;
+}
+$('visor').addEventListener('click', ev => {
+  const b = ev.target.closest('.pies button');
+  if (b) { ev.stopPropagation(); verFoto(visorCaja, b.dataset.t); return; }
+  $('visor').hidden = true;
+});
+
+// --- Descargar en Excel (mismo acomodo que el REPORTE DE CAJAS) ---
+let cargaExcel;
+function cargarExcel() {
+  if (window.ExcelJS) return Promise.resolve();
+  return cargaExcel ||= new Promise((ok, ko) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js';
+    s.onload = ok; s.onerror = () => { cargaExcel = null; ko(new Error('no se cargó el generador de Excel')); };
+    document.head.appendChild(s);
+  });
+}
+$('xlsx').addEventListener('click', async () => {
+  const lista = filtradas();
+  if (!lista.length) { aviso('No hay cajas para descargar con estos filtros.', true); return; }
+  const b = $('xlsx'); b.disabled = true;
+  try {
+    await cargarExcel();
+    const wb = new ExcelJS.Workbook(); wb.creator = 'MEJAnet';
+    const ws = wb.addWorksheet('REPORTE CAJAS', { views: [{ state: 'frozen', ySplit: 2 }], pageSetup: { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
+    const cols = [['LINEA', 26], ['SCAC', 8], ['LLEGADA', 18], ['CAJA NO.', 12], ['PLACA', 12], ['ORIGEN', 9], ['MEDIDA', 9], ['MEJA', 12], ['ESTATUS', 12], ['UBICACION', 12], ['SALIDA', 18], ['NOTAS', 30]];
+    ws.columns = cols.map(([, w]) => ({ width: w }));
+    ws.mergeCells(1, 1, 1, cols.length);
+    Object.assign(ws.getCell(1, 1), { value: 'REPORTE DE CAJAS · ' + new Date().toLocaleDateString('es-MX') });
+    ws.getCell(1, 1).font = { name: 'Arial', size: 15, bold: true, color: { argb: 'FF091932' } };
+    ws.getCell(1, 1).alignment = { horizontal: 'center', vertical: 'middle' }; ws.getRow(1).height = 26;
+    const h = ws.getRow(2); h.values = cols.map(([t]) => t); h.height = 20;
+    h.eachCell(c => { c.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FF091932' } }; c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4EC9EE' } }; c.alignment = { horizontal: 'center', vertical: 'middle' }; });
+    const borde = { style: 'thin', color: { argb: 'FFCFD9E4' } };
+    lista.forEach((c, i) => {
+      const d = c.datos, r = ws.getRow(3 + i);
+      r.values = [d.linea, d.scac, new Date(c.llegada), d.caja, d.placa, d.origen, d.medida ? Number(d.medida) || d.medida : '', d.meja, d.estatus === 'VACIA' ? 'VACÍA' : d.estatus, d.ubicacion === 'ANDEN' ? 'ANDÉN' : d.ubicacion, c.salida ? new Date(c.salida) : '', d.notas];
+      r.eachCell({ includeEmpty: true }, (cell, n) => {
+        cell.font = { name: 'Arial', size: 10 }; cell.alignment = { horizontal: n === 1 || n === 12 ? 'left' : 'center', vertical: 'middle', wrapText: n === 12 };
+        cell.border = { top: borde, bottom: borde, left: borde, right: borde };
+        if (n === 3 || n === 11) cell.numFmt = 'dd/mm/yyyy hh:mm';
+      });
+    });
+    const buf = await wb.xlsx.writeBuffer();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+    a.download = 'REPORTE_CAJAS_' + new Date().toISOString().slice(0, 10) + '.xlsx';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  } catch (e) { aviso('No se pudo generar el Excel: ' + e.message, true); }
+  finally { b.disabled = false; }
+});
+
+document.addEventListener('meja:solo-lectura', () => { document.querySelectorAll('.sl-cambia').forEach(x => x.classList.add('sl-oculto')); });
+cargar();
+setInterval(() => { if ($('dlg').hidden && document.visibilityState === 'visible') cargar(); }, 60000);
+</script>
+<script src="/solo-lectura.js"></script>
+</body>
+</html>
