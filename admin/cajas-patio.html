@@ -742,15 +742,31 @@ $('form').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.t
 // Se dibuja igual que el PDF: título, fecha y la tabla con las cajas que estás viendo.
 function imagenReporte(lista) {
   const E = 2; // doble resolución para que se vea nítida
-  const cols = [['LÍNEA', 170, 'l'], ['LLEGADA', 92], ['CAJA NO.', 84], ['PLACA', 84], ['ORIGEN', 64], ['MEDIDA', 64], ['MEJA', 76], ['CLIENTE', 170, 'l'], ['ESTATUS', 86], ['UBICACIÓN', 84]];
-  const M = 20, W = cols.reduce((a, c) => a + c[1], 0) + M * 2, FILA = 28, CAB = 30, TOP = 74;
-  const H = TOP + CAB + FILA * lista.length + M;
+  const MARINO = '#091932', CIELO = '#4ec9ee', LINEA = '#cfd9e4', FUENTE = '"IBM Plex Sans", Arial, sans-serif';
+  const medir = document.createElement('canvas').getContext('2d');
+  const ancho = (t, f) => { medir.font = f; return medir.measureText(t).width; };
+  const filas = lista.map(c => { const d = c.datos; return [d.linea, fFecha(c.llegada), d.caja, d.placa, d.origen, d.medida ? d.medida + "'" : '', d.meja, d.cliente, d.estatus === 'VACIA' ? 'VACÍA' : d.estatus, d.ubicacion === 'ANDEN' ? 'ANDÉN' : d.ubicacion].map(v => String(v || '')); });
+  // LÍNEA y CLIENTE: ancho según su texto más largo (máx. 250); si no cabe, pasa a dos líneas
+  const anchoCol = (k, t) => Math.min(250, Math.max(ancho(t, `700 11.5px ${FUENTE}`), ...filas.map(f => ancho(f[k], `400 12px ${FUENTE}`))) + 16);
+  const cols = [['LÍNEA', anchoCol(0, 'LÍNEA'), 'l'], ['LLEGADA', 92], ['CAJA NO.', 84], ['PLACA', 84], ['ORIGEN', 64], ['MEDIDA', 64], ['MEJA', 76], ['CLIENTE', anchoCol(7, 'CLIENTE'), 'l'], ['ESTATUS', 86], ['UBICACIÓN', 84]];
+  // Parte un texto en máximo 2 líneas que quepan en el ancho
+  const partir = (t, w, f) => {
+    if (ancho(t, f) <= w) return [t];
+    const pal = t.split(' '); let l1 = '';
+    while (pal.length && ancho((l1 + ' ' + pal[0]).trim(), f) <= w) l1 = (l1 + ' ' + pal.shift()).trim();
+    if (!l1) { l1 = pal.shift() || ''; }
+    let l2 = pal.join(' ');
+    if (ancho(l2, f) > w) { while (l2 && ancho(l2 + '…', f) > w) l2 = l2.slice(0, -1); l2 += '…'; }
+    return l2 ? [l1, l2] : [l1];
+  };
+  const M = 20, W = cols.reduce((a, c) => a + c[1], 0) + M * 2, CAB = 30, TOP = 74;
+  const altos = filas.map(f => [0, 7].some(k => partir(f[k], cols[k][1] - 14, `400 12px ${FUENTE}`).length > 1) ? 44 : 28);
+  const H = TOP + CAB + altos.reduce((a, b) => a + b, 0) + M;
   const cv = document.createElement('canvas'); cv.width = W * E; cv.height = H * E;
   const g = cv.getContext('2d'); g.scale(E, E);
-  const MARINO = '#091932', CIELO = '#4ec9ee', LINEA = '#cfd9e4', FUENTE = '"IBM Plex Sans", Arial, sans-serif';
   g.fillStyle = '#fff'; g.fillRect(0, 0, W, H);
   g.fillStyle = MARINO; g.fillRect(0, 0, W, 5);
-  g.textBaseline = 'alphabetic'; g.fillStyle = MARINO; g.font = `700 22px ${FUENTE}`; g.fillText('REPORTE DE CAJAS', M, 38);
+  g.textBaseline = 'alphabetic'; g.textAlign = 'left'; g.fillStyle = MARINO; g.font = `700 22px ${FUENTE}`; g.fillText('REPORTE DE CAJAS', M, 38);
   g.font = `400 12.5px ${FUENTE}`; g.fillStyle = '#5d6878';
   const vistaTxt = filtroKpi === 'salieron' ? 'Salieron hoy' : vista === 'patio' ? (filtroKpi === 'PATIO' ? 'En patio' : filtroKpi === 'ANDEN' ? 'En andén' : filtroKpi === 'VACIA' ? 'Vacías' : filtroKpi === 'CARGADA' ? 'Cargadas' : 'Sin salida') : vista === 'salieron' ? 'Salieron' : 'Todas';
   g.fillText(`${vistaTxt} · ${lista.length} caja${lista.length === 1 ? '' : 's'} · ${fFechaHora(new Date())}`, M, 58);
@@ -759,31 +775,32 @@ function imagenReporte(lista) {
   // Encabezado
   let x = M, y = TOP;
   g.fillStyle = CIELO; g.fillRect(M, y, W - M * 2, CAB);
-  g.font = `700 11.5px ${FUENTE}`; g.fillStyle = MARINO; g.textBaseline = 'middle';
-  for (const [t, w] of cols) { g.textAlign = 'center'; g.fillText(t, x + w / 2, y + CAB / 2); x += w; }
+  g.font = `700 11.5px ${FUENTE}`; g.fillStyle = MARINO; g.textBaseline = 'middle'; g.textAlign = 'center';
+  for (const [t, w] of cols) { g.fillText(t, x + w / 2, y + CAB / 2); x += w; }
   // Renglones
   y += CAB;
-  lista.forEach((c, i) => {
-    const d = c.datos, vals = [d.linea, fFecha(c.llegada), d.caja, d.placa, d.origen, d.medida ? d.medida + "'" : '', d.meja, d.cliente, d.estatus === 'VACIA' ? 'VACÍA' : d.estatus, d.ubicacion === 'ANDEN' ? 'ANDÉN' : d.ubicacion];
+  const lineasY = [y];
+  filas.forEach((vals, i) => {
+    const FILA = altos[i];
     g.fillStyle = i % 2 ? '#fff' : '#f3f6fa'; g.fillRect(M, y, W - M * 2, FILA);
     x = M;
     cols.forEach(([, w, al], k) => {
-      let v = String(vals[k] || ''), color = MARINO, peso = k === 2 || k === 3 ? 700 : 400, tam = k === 2 ? 13.5 : 12;
+      let v = vals[k], color = MARINO, peso = k === 2 || k === 3 ? 700 : 400, tam = k === 2 ? 13.5 : 12;
       if (k === 8 && v === 'CARGADA') { g.fillStyle = MARINO; g.fillRect(x, y, w, FILA); color = '#fff'; peso = 700; }
       if (k === 8 && v === 'VACÍA') { color = '#1aa6d1'; peso = 700; }
-      g.font = `${peso} ${tam}px ${FUENTE}`; g.fillStyle = color;
-      while (v && g.measureText(v).width > w - 12) v = v.slice(0, -1);
-      if (v !== String(vals[k] || '')) v = v.slice(0, -1) + '…';
-      g.textAlign = al === 'l' ? 'left' : 'center'; g.fillText(v, al === 'l' ? x + 7 : x + w / 2, y + FILA / 2 + 1);
+      const f = `${peso} ${tam}px ${FUENTE}`;
+      g.font = f; g.fillStyle = color; g.textAlign = al === 'l' ? 'left' : 'center';
+      const ls = k === 0 || k === 7 ? partir(v, w - 14, f) : [v];
+      ls.forEach((l, j) => g.fillText(l, al === 'l' ? x + 7 : x + w / 2, y + FILA / 2 + 1 + (j - (ls.length - 1) / 2) * 15));
       x += w;
     });
-    y += FILA;
+    y += FILA; lineasY.push(y);
   });
   // Cuadrícula
   g.strokeStyle = LINEA; g.lineWidth = 1;
   x = M; for (const [, w] of cols) { g.beginPath(); g.moveTo(x + 0.5, TOP); g.lineTo(x + 0.5, y); g.stroke(); x += w; }
   g.beginPath(); g.moveTo(x - 0.5, TOP); g.lineTo(x - 0.5, y); g.stroke();
-  for (let yy = TOP + CAB; yy <= y; yy += FILA) { g.beginPath(); g.moveTo(M, yy + 0.5); g.lineTo(W - M, yy + 0.5); g.stroke(); }
+  for (const yy of lineasY) { g.beginPath(); g.moveTo(M, yy + 0.5); g.lineTo(W - M, yy + 0.5); g.stroke(); }
   return cv;
 }
 $('copiar').addEventListener('click', async () => {
@@ -835,6 +852,21 @@ $('pdf').addEventListener('click', async () => {
     doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(...CIELO);
     doc.text('grupo', ancho - 28 - doc.getTextWidth('grupomeja') + 0, 40);
     doc.setTextColor(...MARINO); doc.text('meja', ancho - 28 - doc.getTextWidth('meja'), 40);
+    // LÍNEA y CLIENTE: ancho según su texto más largo (máx. 170); si no cabe, pasa a dos líneas
+    const anchoTexto = (i, vals) => {
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
+      const t = doc.getTextWidth(['LÍNEA', 'CLIENTE'][i]);
+      doc.setFont('helvetica', 'normal');
+      return Math.max(t, ...vals.map(v => doc.getTextWidth(String(v || '')))) + 12;
+    };
+    // Las demás columnas tienen ancho fijo; LÍNEA y CLIENTE se reparten lo que queda de la hoja
+    const FIJAS = { 1: 62, 2: 56, 3: 56, 4: 46, 5: 50, 6: 52, 8: 64, 9: 66 };
+    const resto = ancho - 56 - Object.values(FIJAS).reduce((a, b) => a + b, 0);
+    let wLinea = anchoTexto(0, lista.map(c => c.datos.linea)), wCliente = anchoTexto(1, lista.map(c => c.datos.cliente));
+    if (wLinea + wCliente <= resto) { const k = resto / (wLinea + wCliente); wLinea *= k; wCliente *= k; }
+    else if (wLinea <= resto / 2) wCliente = resto - wLinea;
+    else if (wCliente <= resto / 2) wLinea = resto - wCliente;
+    else wLinea = wCliente = resto / 2;
     doc.autoTable({
       startY: 68,
       margin: { left: 28, right: 28, top: 30, bottom: 34 },
@@ -844,8 +876,15 @@ $('pdf').addEventListener('click', async () => {
       styles: { font: 'helvetica', fontSize: 9, halign: 'center', valign: 'middle', cellPadding: 5, textColor: [9, 25, 50], lineColor: [207, 217, 228], lineWidth: 0.5 },
       headStyles: { fillColor: CIELO, textColor: MARINO, fontStyle: 'bold' },
       alternateRowStyles: { fillColor: [243, 246, 250] },
-      columnStyles: { 0: { halign: 'left', cellWidth: 130 }, 1: { cellWidth: 62 }, 2: { fontStyle: 'bold', fontSize: 10.5 }, 3: { fontStyle: 'bold' }, 7: { halign: 'left', cellWidth: 130 } },
+      columnStyles: { ...Object.fromEntries(Object.entries(FIJAS).map(([k, w]) => [k, { cellWidth: w }])), 0: { halign: 'left', cellWidth: wLinea }, 2: { fontStyle: 'bold', fontSize: 10.5, cellWidth: 56 }, 3: { fontStyle: 'bold', cellWidth: 56 }, 7: { halign: 'left', cellWidth: wCliente } },
       didParseCell: d => {
+        // LÍNEA y CLIENTE en máximo 2 líneas: si no caben, la letra de esa celda se hace más chica
+        if (d.section === 'body' && (d.column.index === 0 || d.column.index === 7) && d.cell.raw) {
+          const w = (d.column.index === 0 ? wLinea : wCliente) - 10;
+          let t = 9; doc.setFont('helvetica', 'normal');
+          while (t > 6.5) { doc.setFontSize(t); if (doc.splitTextToSize(String(d.cell.raw), w).length <= 2) break; t -= 0.25; }
+          d.cell.styles.fontSize = t;
+        }
         if (d.section !== 'body' || d.column.index !== 8) return;
         if (d.cell.raw === 'CARGADA') { d.cell.styles.fillColor = MARINO; d.cell.styles.textColor = 255; d.cell.styles.fontStyle = 'bold'; }
         if (d.cell.raw === 'VACÍA') { d.cell.styles.textColor = [26, 166, 209]; d.cell.styles.fontStyle = 'bold'; }
