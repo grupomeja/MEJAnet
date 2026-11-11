@@ -11,6 +11,7 @@ const pool = db.pool;
 const FILE = path.join(db.DIR, 'cajas_patio.json');
 const DIR_F = path.join(db.DIR, 'cajas_fotos');
 const FILE_L = path.join(db.DIR, 'cajas_lineas.json');
+const FILE_C = path.join(db.DIR, 'cajas_clientes.json');
 
 const ORIGENES = ['MEX', 'USA'];
 const ESTATUS = ['CARGADA', 'VACIA'];
@@ -40,6 +41,7 @@ function datos(b) {
     origen: ORIGENES.includes(txt(b?.origen)) ? txt(b?.origen) : '',
     medida: txt(b?.medida, 10),
     meja: txt(b?.meja, 30),
+    cliente: txt(b?.cliente, 120),
     estatus: ESTATUS.includes(txt(b?.estatus)) ? txt(b?.estatus) : '',
     ubicacion: UBICACIONES.includes(txt(b?.ubicacion)) ? txt(b?.ubicacion) : '',
   };
@@ -69,6 +71,8 @@ async function init() {
     // Líneas transportistas: se van guardando conforme se capturan
     await pool.query('CREATE TABLE IF NOT EXISTS cajas_lineas (nombre TEXT PRIMARY KEY)');
     await pool.query("INSERT INTO cajas_lineas (nombre) SELECT DISTINCT datos->>'linea' FROM cajas_patio WHERE COALESCE(datos->>'linea', '') <> '' ON CONFLICT DO NOTHING");
+    // Clientes: igual que las líneas, se guardan conforme se capturan
+    await pool.query('CREATE TABLE IF NOT EXISTS cajas_clientes (nombre TEXT PRIMARY KEY)');
   } else {
     if (!fs.existsSync(FILE)) escribirJSON(FILE, []);
   }
@@ -171,6 +175,16 @@ async function guardarLinea(nombre) {
   const xs = leerJSON(FILE_L, []);
   if (!xs.includes(nombre)) { xs.push(nombre); escribirJSON(FILE_L, xs); }
 }
+async function clientes() {
+  if (pool) return (await pool.query('SELECT nombre FROM cajas_clientes ORDER BY nombre')).rows.map((r) => r.nombre);
+  return leerJSON(FILE_C, []).sort();
+}
+async function guardarCliente(nombre) {
+  if (!nombre) return;
+  if (pool) { await pool.query('INSERT INTO cajas_clientes (nombre) VALUES ($1) ON CONFLICT DO NOTHING', [nombre]); return; }
+  const xs = leerJSON(FILE_C, []);
+  if (!xs.includes(nombre)) { xs.push(nombre); escribirJSON(FILE_C, xs); }
+}
 async function borrarLinea(nombre) {
   if (pool) { await pool.query('DELETE FROM cajas_lineas WHERE nombre = $1', [nombre]); return; }
   escribirJSON(FILE_L, leerJSON(FILE_L, []).filter((x) => x !== nombre));
@@ -187,20 +201,20 @@ function rutas(admin) {
   const fotosDe = (b) => ({ caja: foto(b?.fotoCaja), placa: foto(b?.fotoPlaca) });
 
   r.get('/api/cajas', admin, async (_req, res) => {
-    try { res.set('Cache-Control', 'no-store').json({ cajas: await listar(), lineas: await lineas() }); }
+    try { res.set('Cache-Control', 'no-store').json({ cajas: await listar(), lineas: await lineas(), clientes: await clientes() }); }
     catch (e) { error(res, e, 'No se pudo leer la lista de cajas.'); }
   });
   r.post('/api/cajas', admin, json, async (req, res) => {
     try {
       const d = datos(req.body);
-      await guardarLinea(d.linea);
+      await guardarLinea(d.linea); await guardarCliente(d.cliente);
       res.json(await crear(d, fotosDe(req.body), req.usuario));
     } catch (e) { error(res, e, 'No se pudo guardar la caja.'); }
   });
   r.put('/api/cajas/:id', admin, json, async (req, res) => {
     try {
       const cambios = {};
-      if (req.body?.datos) { cambios.datos = datos(req.body.datos); await guardarLinea(cambios.datos.linea); }
+      if (req.body?.datos) { cambios.datos = datos(req.body.datos); await guardarLinea(cambios.datos.linea); await guardarCliente(cambios.datos.cliente); }
       if ('salida' in (req.body || {})) cambios.salida = !!req.body.salida;
       const ok = await actualizar(Number(req.params.id), cambios, fotosDe(req.body), req.usuario);
       if (!ok) return res.status(404).json({ error: 'La caja ya no existe.' });

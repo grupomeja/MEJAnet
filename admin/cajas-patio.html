@@ -80,6 +80,7 @@
   .card .linea span{display:block;color:var(--cielo-osc);font-size:12px;letter-spacing:.06em}
   .card dl{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,.9fr) minmax(0,.9fr) minmax(0,1.2fr);gap:6px 10px;margin:0;padding:10px 0 2px;border-top:1px dashed var(--line)}
   .card dt{font-size:10.5px;font-weight:700;letter-spacing:.06em;color:var(--muted);text-transform:uppercase}
+  .card dl .ancho{grid-column:1/-1}
   .card dd{margin:1px 0 0;font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .card .placa-txt{font-family:"Barlow Condensed",sans-serif;font-size:17px;letter-spacing:.06em}
   .card .llegada{font-size:12.5px;color:var(--muted)}
@@ -139,14 +140,14 @@
   .fecha{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:#f3f6fa;border:1px solid var(--line);font-weight:600}
   .fecha svg{width:20px;height:20px;color:var(--cielo-osc);flex:0 0 auto}
   .fecha small{display:block;font-weight:500;color:var(--muted);font-size:12px}
-  .verLineas{align-self:flex-start;border:0;background:none;padding:0;color:var(--cielo-osc);font-weight:600;font-size:12.5px;cursor:pointer;text-decoration:underline}
-  .lineasG{display:flex;flex-wrap:wrap;gap:6px;padding:8px;border:1px solid var(--line);border-radius:10px;background:#f7fafc;max-height:150px;overflow:auto}
-  .lineasG[hidden]{display:none}
-  .lineasG span{display:inline-flex;align-items:center;gap:4px;padding:4px 4px 4px 10px;border-radius:999px;background:#fff;border:1px solid var(--line);font-size:12.5px;font-weight:600;cursor:pointer}
-  .lineasG span:hover{border-color:var(--marino)}
-  .lineasG button{border:0;background:none;color:var(--muted);cursor:pointer;font-size:15px;line-height:1;padding:0 4px;border-radius:50%}
-  .lineasG button:hover{color:var(--err)}
-  .lineasG em{color:var(--muted);font-size:12.5px}
+  /* Sugerencias de Línea / Cliente: la primera queda marcada y ENTER la escribe */
+  .sug{position:absolute;z-index:20;left:0;right:0;top:100%;margin-top:3px;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 22px rgba(9,25,50,.16);padding:4px;max-height:240px;overflow:auto}
+  .sug[hidden]{display:none}
+  .sug div{padding:8px 10px;border-radius:7px;cursor:pointer;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sug div.act{background:var(--marino);color:#fff}
+  .sug div:not(.act):hover{background:var(--cielo-claro)}
+  .sug b{font-weight:800}
+  .campo .conSug{position:relative}
   .otra{display:grid;grid-template-columns:110px 1fr;gap:8px;margin-top:6px}
   .otra[hidden]{display:none}
   .pie{display:flex;align-items:center;gap:10px;justify-content:flex-end;padding:14px 18px;border-top:1px solid #e8edf3;background:#fafcfe;flex-wrap:wrap}
@@ -197,7 +198,7 @@
 
   <div class="barra">
     <button class="btn prim sl-cambia" id="nueva" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg> Registrar caja</button>
-    <input id="buscar" type="search" placeholder="Buscar caja, placa, línea o referencia MEJA…" aria-label="Buscar">
+    <input id="buscar" type="search" placeholder="Buscar caja, placa, línea, cliente o referencia MEJA…" aria-label="Buscar">
     <select id="fLinea" aria-label="Filtrar por línea"><option value="">Todas las líneas</option></select>
     <div class="seg" id="fVista" role="group" aria-label="Qué cajas ver">
       <button type="button" data-v="patio" class="on">En patio</button>
@@ -248,12 +249,13 @@
           <input id="placa" class="grande">
           <div class="pista" id="pPlaca"></div>
         </div>
-        <div class="campo w6">
+        <div class="campo w3">
           <label for="linea">Línea</label>
-          <input id="linea" list="lineasUsadas" placeholder="Nombre de la línea transportista">
-          <datalist id="lineasUsadas"></datalist>
-          <button type="button" class="verLineas" id="verLineas">Líneas guardadas</button>
-          <div class="lineasG" id="lineasG" hidden></div>
+          <div class="conSug"><input id="linea" placeholder="Línea transportista" autocomplete="off"></div>
+        </div>
+        <div class="campo w3">
+          <label for="cliente">Cliente</label>
+          <div class="conSug"><input id="cliente" placeholder="Nombre del cliente" autocomplete="off"></div>
         </div>
         <div class="campo"><span class="lbl">Origen</span><div class="opciones" data-campo="origen"><button type="button" data-v="MEX">MEX</button><button type="button" data-v="USA">USA</button></div></div>
         <div class="campo"><span class="lbl">Medida</span><div class="opciones" data-campo="medida"><button type="button" data-v="53">53'</button><button type="button" data-v="48">48'</button><button type="button" data-v="40">40'</button></div></div>
@@ -286,16 +288,17 @@
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const norm = s => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().trim();
-let cajas = [], lineas = [], vista = 'patio', filtroKpi = '';
+let cajas = [], lineas = [], clientes = [], vista = 'patio', filtroKpi = '';
 const soloLectura = () => !!window.MEJA_SOLO_LECTURA;
 
 // --- Fechas ---
-const fFecha = d => new Date(d).toLocaleString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+const fFecha = d => new Date(d).toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' });
+const fFechaHora = d => new Date(d).toLocaleString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+// Días en patio, contando por fecha (sin horas)
 function hace(d) {
-  const min = Math.max(0, Math.round((Date.now() - new Date(d)) / 60000));
-  if (min < 60) return min <= 1 ? 'hace un momento' : `hace ${min} min`;
-  const h = Math.round(min / 60); if (h < 24) return `hace ${h} h`;
-  const dias = Math.floor(min / 1440); return dias === 1 ? 'hace 1 día' : `hace ${dias} días`;
+  const dia = x => { const f = new Date(x); return Date.UTC(f.getFullYear(), f.getMonth(), f.getDate()); };
+  const dias = Math.round((dia(Date.now()) - dia(d)) / 86400000);
+  return dias <= 0 ? 'hoy' : dias === 1 ? 'hace 1 día' : `hace ${dias} días`;
 }
 const esHoy = d => d && new Date(d).toDateString() === new Date().toDateString();
 
@@ -310,7 +313,7 @@ async function cargar() {
     const r = await fetch('/api/cajas');
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(j.error || 'el servidor respondió ' + r.status);
-    cajas = j.cajas || []; lineas = j.lineas || [];
+    cajas = j.cajas || []; lineas = j.lineas || []; clientes = j.clientes || [];
     llenarLineas(); pintar();
   } catch (e) {
     $('grid').innerHTML = `<div class="vacio"><b>No se pudo cargar la lista</b>${esc(e.message)}</div>`;
@@ -322,8 +325,8 @@ function llenarLineas() {
   $('fLinea').innerHTML = '<option value="">Todas las líneas</option>' + usadas.map(l => `<option>${esc(l)}</option>`).join('');
   $('fLinea').value = usadas.includes(v) ? v : '';
   // Sugerencias: las líneas que ya se han capturado
-  $('lineasUsadas').innerHTML = [...new Set([...lineas, ...usadas])].sort().map(l => `<option value="${esc(l)}">`).join('');
-  pintarLineas();
+  sugLinea.valores = [...new Set([...lineas, ...usadas])].sort();
+  sugCliente.valores = [...new Set([...clientes, ...cajas.map(c => c.datos.cliente).filter(Boolean)])].sort();
 }
 const fotoUrl = (c, t) => `/api/cajas/${c.id}/foto/${t}?v=${encodeURIComponent(c.actualizado || '')}`;
 const ICO_CAJA = '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"><rect x="4" y="16" width="40" height="28" rx="2.5"/><path d="M14 16v28M24 16v28M34 16v28"/><path d="M44 26h8l7 9v9H44z"/><circle cx="15" cy="49" r="4.5"/><circle cx="50" cy="49" r="4.5"/></svg>';
@@ -365,8 +368,9 @@ function pintar() {
           <div><dt>Origen</dt><dd>${esc(d.origen || '—')}</dd></div>
           <div><dt>Medida</dt><dd>${d.medida ? esc(d.medida) + "'" : '—'}</dd></div>
           <div><dt>MEJA</dt><dd>${esc(d.meja || '—')}</dd></div>
+          <div class="ancho"><dt>Cliente</dt><dd>${esc(d.cliente || '—')}</dd></div>
         </dl>
-        <div class="llegada">Llegó <b>${fFecha(c.llegada)}</b> · ${hace(c.llegada)}${c.creado_por ? ' · ' + esc(c.creado_por) : ''}${c.salida ? `<br>Salió <b>${fFecha(c.salida)}</b>` : ''}</div>
+        <div class="llegada">Llegó <b title="${fFechaHora(c.llegada)}">${fFecha(c.llegada)}</b> · ${hace(c.llegada)}${c.creado_por ? ' · ' + esc(c.creado_por) : ''}${c.salida ? `<br>Salió <b title="${fFechaHora(c.salida)}">${fFecha(c.salida)}</b>` : ''}</div>
       </div>
       <div class="acc sl-cambia">
         ${c.salida ? '' : '<button type="button" class="sal" data-a="salida">Dar salida</button>'}
@@ -389,7 +393,7 @@ function filtradas() {
     if (filtroKpi === 'CARGADA' || filtroKpi === 'VACIA') { if (d.estatus !== filtroKpi) return false; }
     if (filtroKpi === 'ANDEN' && d.ubicacion !== 'ANDEN') return false;
     if (fl && d.linea !== fl) return false;
-    return !q || [d.caja, d.placa, d.linea, d.meja].some(x => norm(x).includes(q));
+    return !q || [d.caja, d.placa, d.linea, d.meja, d.cliente].some(x => norm(x).includes(q));
   });
 }
 
@@ -423,7 +427,7 @@ function abrir(c) {
   $('form').reset();
   const d = c?.datos || {};
   $('dlgTit').textContent = c ? 'Editar caja ' + d.caja : 'Registrar caja';
-  $('caja').value = d.caja || ''; $('placa').value = d.placa || ''; $('meja').value = d.meja || '';
+  $('caja').value = d.caja || ''; $('placa').value = d.placa || ''; $('meja').value = d.meja || ''; $('cliente').value = d.cliente || '';
   $('linea').value = d.linea || '';
   for (const k of Object.keys(sel)) elegir(k, d[k] || (c ? '' : { origen: '', medida: '53', estatus: '', ubicacion: 'PATIO' }[k]));
   for (const t of ['caja', 'placa']) mostrarFoto(t, c && (c.fotos || []).includes(t) ? fotoUrl(c, t) : '');
@@ -607,7 +611,7 @@ $('form').addEventListener('submit', async ev => {
   ev.preventDefault();
   const caja = $('caja').value.trim();
   if (!caja) { $('dlgMsg').textContent = 'Falta el número de caja.'; $('caja').focus(); return; }
-  const d = { caja, placa: $('placa').value.trim(), linea: $('linea').value.trim(), meja: $('meja').value.trim(), ...sel };
+  const d = { caja, placa: $('placa').value.trim(), linea: $('linea').value.trim(), cliente: $('cliente').value.trim(), meja: $('meja').value.trim(), ...sel };
   const btn = $('guardar'); btn.disabled = true; btn.textContent = 'Guardando…'; $('dlgMsg').textContent = '';
   try {
     const cuerpo = editando ? { datos: d } : { ...d };
@@ -691,25 +695,46 @@ $('visor').addEventListener('click', ev => {
 });
 
 
-// --- Líneas guardadas: se agregan solas al guardar una caja; aquí se eligen o se quitan las mal escritas ---
-function pintarLineas() {
-  $('lineasG').innerHTML = lineas.length ? lineas.map(l => `<span data-l="${esc(l)}">${esc(l)}${soloLectura() ? '' : `<button type="button" aria-label="Quitar ${esc(l)}" title="Quitar de las líneas guardadas">×</button>`}</span>`).join('') : '<em>Aún no hay líneas guardadas: se guardan solas al registrar cajas.</em>';
+// --- Sugerencias de Línea y Cliente (lo ya capturado): la primera queda marcada;
+// flechas para moverse, ENTER o clic la escribe completa, ESC cierra ---
+function sugerencias(input) {
+  const caja = document.createElement('div'); caja.className = 'sug'; caja.hidden = true;
+  input.parentElement.appendChild(caja);
+  const ctl = { valores: [] };
+  let items = [], act = 0;
+  const pinta = () => {
+    caja.innerHTML = items.map((v, i) => {
+      const q = input.value.trim(), k = v.toUpperCase().indexOf(q.toUpperCase());
+      const t = k >= 0 && q ? esc(v.slice(0, k)) + '<b>' + esc(v.slice(k, k + q.length)) + '</b>' + esc(v.slice(k + q.length)) : esc(v);
+      return `<div data-i="${i}" class="${i === act ? 'act' : ''}">${t}</div>`;
+    }).join('');
+    caja.hidden = !items.length;
+    const a = caja.children[act]; if (a) a.scrollIntoView({ block: 'nearest' });
+  };
+  const busca = () => {
+    const q = norm(input.value);
+    if (!q) { items = []; return pinta(); }
+    const empieza = ctl.valores.filter(v => norm(v).startsWith(q));
+    const contiene = ctl.valores.filter(v => !norm(v).startsWith(q) && norm(v).includes(q));
+    items = [...empieza, ...contiene].filter(v => norm(v) !== q).slice(0, 8); act = 0; pinta();
+  };
+  const elige = i => { if (items[i] == null) return; input.value = items[i]; items = []; pinta(); };
+  input.addEventListener('input', busca);
+  input.addEventListener('focus', () => { if (input.value.trim()) busca(); });
+  input.addEventListener('blur', () => setTimeout(() => { items = []; pinta(); }, 120));
+  input.addEventListener('keydown', e => {
+    if (caja.hidden) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); act = (act + 1) % items.length; pinta(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); act = (act - 1 + items.length) % items.length; pinta(); }
+    else if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); elige(act); }
+    else if (e.key === 'Escape') { e.stopPropagation(); items = []; pinta(); }
+  });
+  caja.addEventListener('mousedown', e => { const d = e.target.closest('[data-i]'); if (d) { e.preventDefault(); elige(+d.dataset.i); } });
+  return ctl;
 }
-$('verLineas').addEventListener('click', () => { $('lineasG').hidden = !$('lineasG').hidden; });
-$('lineasG').addEventListener('click', async ev => {
-  const sp = ev.target.closest('span[data-l]'); if (!sp) return;
-  const l = sp.dataset.l;
-  if (ev.target.closest('button')) {
-    try {
-      const r = await fetch('/api/cajas-lineas/' + encodeURIComponent(l), { method: 'DELETE' });
-      if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || 'el servidor respondió ' + r.status);
-      lineas = lineas.filter(x => x !== l); pintarLineas();
-      $('lineasUsadas').innerHTML = lineas.map(x => `<option value="${esc(x)}">`).join('');
-    } catch (e) { aviso('No se pudo quitar: ' + e.message, true); }
-    return;
-  }
-  $('linea').value = l; $('lineasG').hidden = true;
-});
+const sugLinea = sugerencias($('linea')), sugCliente = sugerencias($('cliente'));
+// ENTER no guarda el formulario (solo el botón Guardar)
+$('form').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName === 'INPUT') e.preventDefault(); });
 
 // --- Descargar en PDF (mismas columnas que el REPORTE DE CAJAS) ---
 let cargaPdf;
@@ -741,15 +766,15 @@ $('pdf').addEventListener('click', async () => {
     doc.autoTable({
       startY: 68,
       margin: { left: 28, right: 28, top: 30, bottom: 34 },
-      head: [['LÍNEA', 'LLEGADA', 'CAJA NO.', 'PLACA', 'ORIGEN', 'MEDIDA', 'MEJA', 'ESTATUS', 'UBICACIÓN']],
-      body: lista.map(c => { const d = c.datos; return [d.linea, fFecha(c.llegada), d.caja, d.placa, d.origen, d.medida ? d.medida + "'" : '', d.meja, d.estatus === 'VACIA' ? 'VACÍA' : d.estatus, d.ubicacion === 'ANDEN' ? 'ANDÉN' : d.ubicacion]; }),
+      head: [['LÍNEA', 'LLEGADA', 'CAJA NO.', 'PLACA', 'ORIGEN', 'MEDIDA', 'MEJA', 'CLIENTE', 'ESTATUS', 'UBICACIÓN']],
+      body: lista.map(c => { const d = c.datos; return [d.linea, fFecha(c.llegada), d.caja, d.placa, d.origen, d.medida ? d.medida + "'" : '', d.meja, d.cliente, d.estatus === 'VACIA' ? 'VACÍA' : d.estatus, d.ubicacion === 'ANDEN' ? 'ANDÉN' : d.ubicacion]; }),
       theme: 'grid',
       styles: { font: 'helvetica', fontSize: 9, halign: 'center', valign: 'middle', cellPadding: 5, textColor: [9, 25, 50], lineColor: [207, 217, 228], lineWidth: 0.5 },
       headStyles: { fillColor: CIELO, textColor: MARINO, fontStyle: 'bold' },
       alternateRowStyles: { fillColor: [243, 246, 250] },
-      columnStyles: { 0: { halign: 'left', cellWidth: 170 }, 2: { fontStyle: 'bold', fontSize: 10.5 }, 3: { fontStyle: 'bold' } },
+      columnStyles: { 0: { halign: 'left', cellWidth: 130 }, 1: { cellWidth: 62 }, 2: { fontStyle: 'bold', fontSize: 10.5 }, 3: { fontStyle: 'bold' }, 7: { halign: 'left', cellWidth: 130 } },
       didParseCell: d => {
-        if (d.section !== 'body' || d.column.index !== 7) return;
+        if (d.section !== 'body' || d.column.index !== 8) return;
         if (d.cell.raw === 'CARGADA') { d.cell.styles.fillColor = MARINO; d.cell.styles.textColor = 255; d.cell.styles.fontStyle = 'bold'; }
         if (d.cell.raw === 'VACÍA') { d.cell.styles.textColor = [26, 166, 209]; d.cell.styles.fontStyle = 'bold'; }
       },
@@ -782,7 +807,7 @@ $('xlsx').addEventListener('click', async () => {
     await cargarExcel();
     const wb = new ExcelJS.Workbook(); wb.creator = 'MEJAnet';
     const ws = wb.addWorksheet('REPORTE CAJAS', { views: [{ state: 'frozen', ySplit: 2 }], pageSetup: { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
-    const cols = [['LINEA', 28], ['LLEGADA', 18], ['CAJA NO.', 12], ['PLACA', 12], ['ORIGEN', 9], ['MEDIDA', 9], ['MEJA', 12], ['ESTATUS', 12], ['UBICACION', 12]];
+    const cols = [['LINEA', 28], ['LLEGADA', 18], ['CAJA NO.', 12], ['PLACA', 12], ['ORIGEN', 9], ['MEDIDA', 9], ['MEJA', 12], ['CLIENTE', 28], ['ESTATUS', 12], ['UBICACION', 12]];
     ws.columns = cols.map(([, w]) => ({ width: w }));
     ws.mergeCells(1, 1, 1, cols.length);
     Object.assign(ws.getCell(1, 1), { value: 'REPORTE DE CAJAS · ' + new Date().toLocaleDateString('es-MX') });
@@ -793,11 +818,11 @@ $('xlsx').addEventListener('click', async () => {
     const borde = { style: 'thin', color: { argb: 'FFCFD9E4' } };
     lista.forEach((c, i) => {
       const d = c.datos, r = ws.getRow(3 + i);
-      r.values = [d.linea, new Date(c.llegada), d.caja, d.placa, d.origen, d.medida ? Number(d.medida) || d.medida : '', d.meja, d.estatus === 'VACIA' ? 'VACÍA' : d.estatus, d.ubicacion === 'ANDEN' ? 'ANDÉN' : d.ubicacion];
+      r.values = [d.linea, new Date(c.llegada), d.caja, d.placa, d.origen, d.medida ? Number(d.medida) || d.medida : '', d.meja, d.cliente, d.estatus === 'VACIA' ? 'VACÍA' : d.estatus, d.ubicacion === 'ANDEN' ? 'ANDÉN' : d.ubicacion];
       r.eachCell({ includeEmpty: true }, (cell, n) => {
-        cell.font = { name: 'Arial', size: 10 }; cell.alignment = { horizontal: n === 1 ? 'left' : 'center', vertical: 'middle' };
+        cell.font = { name: 'Arial', size: 10 }; cell.alignment = { horizontal: n === 1 || n === 8 ? 'left' : 'center', vertical: 'middle' };
         cell.border = { top: borde, bottom: borde, left: borde, right: borde };
-        if (n === 2) cell.numFmt = 'dd/mm/yyyy hh:mm';
+        if (n === 2) cell.numFmt = 'dd/mm/yyyy'; // la hora queda guardada en la celda
       });
     });
     const buf = await wb.xlsx.writeBuffer();
