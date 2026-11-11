@@ -61,6 +61,13 @@
   .msg.err{display:block;background:color-mix(in srgb,var(--err) 15%,transparent);color:var(--err)}
   .msg a{color:inherit}
   @media (max-width:520px){.grid{grid-template-columns:1fr}}
+  /* Sugerencias de Cliente / Proveedor: la primera queda marcada y ENTER la escribe */
+  .sug{position:absolute;z-index:20;left:0;right:0;top:100%;margin-top:3px;background:var(--card,#fff);border:1px solid #c9d3e0;border-radius:10px;
+    box-shadow:0 8px 22px rgba(0,0,0,.12);padding:4px;max-height:240px;overflow:auto}
+  .sug div{padding:7px 10px;border-radius:7px;cursor:pointer;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sug div.act{background:#1f4e8c;color:#fff}
+  .sug div:not(.act):hover{background:#eef2f8}
+  .sug b{font-weight:800}
 </style>
 </head>
 <body>
@@ -81,8 +88,8 @@
           <label class="tipo hz" title="Marca si la entrada es haz-mat (material peligroso)"><input type="checkbox" id="hazmat"><span>haz-mat</span></label>
         </div></div>
       <div class="derecha"><label for="fecha">Fecha arribo</label><input type="date" id="fecha"></div>
-      <div><label for="proveedor">Proveedor</label><input type="text" id="proveedor" list="lPro" maxlength="120"></div>
-      <div><label for="cliente">Cliente</label><input type="text" id="cliente" list="lCli" maxlength="120"></div>
+      <div><label for="proveedor">Proveedor</label><input type="text" id="proveedor" maxlength="120" autocomplete="off"></div>
+      <div><label for="cliente">Cliente</label><input type="text" id="cliente" maxlength="120" autocomplete="off"></div>
       <div><label for="bultos">Bultos</label><input type="text" id="bultos" inputmode="numeric" maxlength="120"></div>
       <div><label for="descripcion">Descripcion</label>
         <select id="descripcion">
@@ -138,8 +145,51 @@ fetch('/api/admin/entradas-bodega').then((r) => r.json()).then((lista) => {
     const vals = [...new Set(lista.map((e) => (e.datos[campo] || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
     $(id).innerHTML = vals.map((v) => `<option value="${esc(v)}">`).join('');
   };
-  llena('lCli', 'cliente'); llena('lLin', 'linea'); llena('lPro', 'proveedor');
+  llena('lLin', 'linea');
+  const unicos = (campo) => {
+    const m = new Map();
+    for (const e of lista) { const v = (e.datos[campo] || '').trim(); if (v && !m.has(v.toUpperCase())) m.set(v.toUpperCase(), v); }
+    return [...m.values()].sort((a, b) => a.localeCompare(b, 'es'));
+  };
+  sugerencias($('cliente'), unicos('cliente'));
+  sugerencias($('proveedor'), unicos('proveedor'));
 }).catch(() => {});
+
+// Lista de sugerencias propia: muestra coincidencias (primero las que empiezan con lo escrito),
+// la primera queda marcada; flechas para moverse, ENTER o clic la escribe, ESC cierra.
+function sugerencias(input, valores) {
+  const caja = document.createElement('div'); caja.className = 'sug'; caja.hidden = true;
+  input.parentElement.style.position = 'relative'; input.parentElement.appendChild(caja);
+  let items = [], act = 0;
+  const pinta = () => {
+    caja.innerHTML = items.map((v, i) => {
+      const q = input.value.trim(), k = v.toUpperCase().indexOf(q.toUpperCase());
+      const t = k >= 0 && q ? esc(v.slice(0, k)) + '<b>' + esc(v.slice(k, k + q.length)) + '</b>' + esc(v.slice(k + q.length)) : esc(v);
+      return `<div data-i="${i}" class="${i === act ? 'act' : ''}">${t}</div>`;
+    }).join('');
+    caja.hidden = !items.length;
+    const a = caja.children[act]; if (a) a.scrollIntoView({ block: 'nearest' });
+  };
+  const busca = () => {
+    const q = input.value.trim().toUpperCase();
+    if (!q) { items = []; return pinta(); }
+    const empieza = valores.filter((v) => v.toUpperCase().startsWith(q));
+    const contiene = valores.filter((v) => !v.toUpperCase().startsWith(q) && v.toUpperCase().includes(q));
+    items = [...empieza, ...contiene].filter((v) => v.toUpperCase() !== q).slice(0, 8); act = 0; pinta();
+  };
+  const elige = (i) => { if (items[i] == null) return; input.value = items[i]; items = []; pinta(); input.dispatchEvent(new Event('change')); };
+  input.addEventListener('input', busca);
+  input.addEventListener('focus', () => { if (input.value.trim()) busca(); });
+  input.addEventListener('blur', () => setTimeout(() => { items = []; pinta(); }, 120));
+  input.addEventListener('keydown', (e) => {
+    if (caja.hidden) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); act = (act + 1) % items.length; pinta(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); act = (act - 1 + items.length) % items.length; pinta(); }
+    else if (e.key === 'Enter') { e.preventDefault(); elige(act); }
+    else if (e.key === 'Escape') { items = []; pinta(); }
+  });
+  caja.addEventListener('mousedown', (e) => { const d = e.target.closest('[data-i]'); if (d) { e.preventDefault(); elige(+d.dataset.i); } });
+}
 
 // ENTER no hace nada en el formulario; solo se guarda con clic en el botón (en NOTAS sí hace salto de línea)
 $('f').addEventListener('keydown', (e) => {
