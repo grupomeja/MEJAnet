@@ -501,6 +501,7 @@ main{padding-bottom:40px}
 .pv-g.c6{grid-template-columns:repeat(6,minmax(0,1fr));gap:12px 12px}
 .pv-g .s2{grid-column:span 2}
 .pv-g input{font-weight:700;font-size:13px}
+.pv-g textarea.pv-ajus{min-height:26px;font-weight:700;font-size:13px;resize:none;overflow:hidden;line-height:1.3;display:block}
 .pv-sec{margin-top:20px;background:var(--pv-beige);border-left:4px solid var(--pv-ico);padding:5px 12px;font-weight:800;font-size:12.5px;letter-spacing:.04em;color:var(--pv-cafe)}
 .pv-ops{display:flex;flex-wrap:wrap;gap:6px 18px;padding:4px 0 5px;border-bottom:1px solid var(--pv-line)}
 .pv-ops label{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;user-select:none}
@@ -1569,7 +1570,7 @@ function renderPrevio(){
       <div class="s2"><span class="pv-lbl">Tipo de contenedor</span>${pvOps("tipoCont",PV_TIPOS)}</div>
       <label><span class="pv-lbl">Sello</span>${pvIn("sello")}</label>
       <label><span class="pv-lbl">Clave CR</span>${pvIn("claveCR")}</label>
-      <label><span class="pv-lbl">Operadora</span>${pvIn("operadora")}</label>
+      <label><span class="pv-lbl">Operadora</span><textarea class="pv-ajus" data-pv="operadora" rows="1" ${canWrite?"":"disabled"}>${esc(PV.datos.operadora||"")}</textarea></label>
       <label><span class="pv-lbl">Bultos</span>${pvIn("bultos")}</label>
       <label><span class="pv-lbl">Peso (kg)</span>${pvIn("peso",'inputmode="decimal"')}</label>
       <label><span class="pv-lbl">Cant. de pallets</span>${pvIn("palletsCant",'inputmode="numeric"')}</label>
@@ -1583,7 +1584,7 @@ function renderPrevio(){
   </div></div>`;
   pvAjustarAlto();
 }
-function pvAjustarAlto(){document.querySelectorAll("#previo textarea").forEach(t=>{t.style.height="auto";t.style.height=t.scrollHeight+"px"})}
+function pvAjustarAlto(){const f=()=>document.querySelectorAll("#previo textarea").forEach(t=>{if(!t.offsetParent)return;t.style.height="auto";t.style.height=t.scrollHeight+"px"});f();requestAnimationFrame(f);setTimeout(f,350)}
 function pvCambio(){
   if(!canWrite)return;const est=$("#pv-est");if(est)est.textContent="Guardando…";
   clearTimeout(PV.t);PV.t=setTimeout(()=>{PV.t=null;guardarPrevio()},700);
@@ -1607,7 +1608,7 @@ async function descargarPrevio(){
 (function(){
   const box=$("#previo");
   box.addEventListener("input",ev=>{const el=ev.target;
-    if(el.dataset.pv){PV.datos[el.dataset.pv]=el.value;pvCambio();return}
+    if(el.dataset.pv){PV.datos[el.dataset.pv]=el.value;if(el.tagName==="TEXTAREA"){el.style.height="auto";el.style.height=el.scrollHeight+"px"}pvCambio();return}
     if(el.dataset.pp){const i=+el.closest("[data-i]").dataset.i;PV.datos.partidas[i][el.dataset.pp]=el.value;if(el.tagName==="TEXTAREA"){el.style.height="auto";el.style.height=el.scrollHeight+"px"}pvCambio()}});
   box.addEventListener("change",ev=>{const el=ev.target;
     if(el.dataset.pvop){const k=el.dataset.pvop;PV.datos[k]=el.checked?el.value:"";
