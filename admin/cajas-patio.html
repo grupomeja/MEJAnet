@@ -192,7 +192,7 @@
     <button class="kpi" data-f="VACIA" type="button"><b id="kVacias">0</b><span>Vacías</span></button>
     <button class="kpi" data-f="CARGADA" type="button"><b id="kCargadas">0</b><span>Cargadas</span></button>
     <button class="kpi" data-f="ANDEN" type="button"><b id="kAnden">0</b><span>En andén</span></button>
-    <button class="kpi marino" data-f="patio" type="button"><b id="kTotal">0</b><span>En patio</span></button>
+    <button class="kpi marino" data-f="PATIO" type="button"><b id="kPatio">0</b><span>En patio</span></button>
     <button class="kpi" data-f="salieron" type="button"><b id="kSalieron">0</b><span>Salieron hoy</span></button>
   </div>
 
@@ -201,7 +201,7 @@
     <input id="buscar" type="search" placeholder="Buscar caja, placa, línea, cliente o referencia MEJA…" aria-label="Buscar">
     <select id="fLinea" aria-label="Filtrar por línea"><option value="">Todas las líneas</option></select>
     <div class="seg" id="fVista" role="group" aria-label="Qué cajas ver">
-      <button type="button" data-v="patio" class="on">En patio</button>
+      <button type="button" data-v="patio" class="on">Sin salida</button>
       <button type="button" data-v="salieron">Salieron</button>
       <button type="button" data-v="todas">Todas</button>
     </div>
@@ -332,7 +332,8 @@ const fotoUrl = (c, t) => `/api/cajas/${c.id}/foto/${t}?v=${encodeURIComponent(c
 const ICO_CAJA = '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"><rect x="4" y="16" width="40" height="28" rx="2.5"/><path d="M14 16v28M24 16v28M34 16v28"/><path d="M44 26h8l7 9v9H44z"/><circle cx="15" cy="49" r="4.5"/><circle cx="50" cy="49" r="4.5"/></svg>';
 function pintar() {
   const enPatio = cajas.filter(c => !c.salida);
-  $('kTotal').textContent = enPatio.length;
+  // EN PATIO y EN ANDÉN son ubicaciones (de las cajas que no han salido)
+  $('kPatio').textContent = enPatio.filter(c => c.datos.ubicacion === 'PATIO').length;
   $('kCargadas').textContent = enPatio.filter(c => c.datos.estatus === 'CARGADA').length;
   $('kVacias').textContent = enPatio.filter(c => c.datos.estatus === 'VACIA').length;
   $('kAnden').textContent = enPatio.filter(c => c.datos.ubicacion === 'ANDEN').length;
@@ -391,7 +392,7 @@ function filtradas() {
     }
     const d = c.datos;
     if (filtroKpi === 'CARGADA' || filtroKpi === 'VACIA') { if (d.estatus !== filtroKpi) return false; }
-    if (filtroKpi === 'ANDEN' && d.ubicacion !== 'ANDEN') return false;
+    if ((filtroKpi === 'ANDEN' || filtroKpi === 'PATIO') && d.ubicacion !== filtroKpi) return false;
     if (fl && d.linea !== fl) return false;
     return !q || [d.caja, d.placa, d.linea, d.meja, d.cliente].some(x => norm(x).includes(q));
   });
@@ -404,7 +405,7 @@ $('fVista').addEventListener('click', ev => { const b = ev.target.closest('butto
 $('kpis').addEventListener('click', ev => {
   const k = ev.target.closest('.kpi'); if (!k) return;
   const f = k.dataset.f;
-  filtroKpi = (f === 'patio' || filtroKpi === f) ? '' : f;
+  filtroKpi = filtroKpi === f ? '' : f;
   if (f !== 'salieron') vista = 'patio';
   pintar();
 });
@@ -758,7 +759,7 @@ $('pdf').addEventListener('click', async () => {
     doc.setFont('helvetica', 'bold'); doc.setFontSize(18); doc.setTextColor(...MARINO);
     doc.text('REPORTE DE CAJAS', 28, 40);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); doc.setTextColor(93, 104, 120);
-    const vistaTxt = filtroKpi === 'salieron' ? 'Salieron hoy' : vista === 'patio' ? 'En patio' : vista === 'salieron' ? 'Salieron' : 'Todas';
+    const vistaTxt = filtroKpi === 'salieron' ? 'Salieron hoy' : vista === 'patio' ? (filtroKpi === 'PATIO' ? 'En patio' : filtroKpi === 'ANDEN' ? 'En andén' : filtroKpi === 'VACIA' ? 'Vacías' : filtroKpi === 'CARGADA' ? 'Cargadas' : 'Sin salida') : vista === 'salieron' ? 'Salieron' : 'Todas';
     doc.text(`${vistaTxt} · ${lista.length} caja${lista.length === 1 ? '' : 's'} · ${hoy.toLocaleString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`, 28, 56);
     doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(...CIELO);
     doc.text('grupo', ancho - 28 - doc.getTextWidth('grupomeja') + 0, 40);
