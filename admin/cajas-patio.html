@@ -191,18 +191,18 @@
     a.volver{grid-column:1;grid-row:1;justify-self:start;width:34px;height:34px;padding:0;justify-content:center}
     a.volver span{display:none}
     header .tit{align-items:stretch;justify-self:stretch;width:100%}
-    h1.titulo{width:100%;justify-content:center;font-size:16px;letter-spacing:1px;padding:3px 10px 3px 3px;gap:8px;border-radius:8px;box-shadow:0 2px 0 #000c1f;position:relative}
+    h1.titulo{width:100%;height:39px;box-sizing:border-box;justify-content:center;font-size:17px;letter-spacing:1px;padding:3px 10px 3px 3px;gap:8px;border-radius:8px;box-shadow:0 2px 0 #000c1f;position:relative}
     h1.titulo .ico{position:absolute;left:3px;top:50%;transform:translateY(-50%)}
-    h1.titulo .ico{flex:0 0 24px;height:24px;border-radius:6px}
-    h1.titulo .ico svg{width:19px;height:19px}
+    h1.titulo .ico{flex:0 0 31px;width:31px;height:31px;left:4px;border-radius:7px}
+    h1.titulo .ico svg{width:24px;height:24px}
     /* Registrar caja a la izquierda (ancho de dos indicadores) y los 4 indicadores a la derecha, 2 arriba y 2 abajo */
     .arriba{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:10px}
     #nueva{display:none}
     #nuevaCel{display:flex;height:100%;padding:6px 8px;font-size:13px;letter-spacing:.6px;white-space:normal;line-height:1.1;box-shadow:0 2px 0 var(--cielo-osc)}
     #nuevaCel.sl-oculto{display:none}
     .kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;margin:0}
-    .kpi{gap:4px;padding:5px 4px;justify-content:center;min-width:0;border-radius:8px}
-    .kpi b,.kpi.marino b{min-width:0;height:auto;padding:0;background:none;color:var(--marino);font-size:15px}
+    .kpi{gap:5px;padding:5px 4px 5px 3px;justify-content:flex-start;min-width:0;border-radius:8px}
+    .kpi b,.kpi.marino b{flex:0 0 22px;width:22px;min-width:0;height:auto;padding:0;background:none;color:var(--marino);font-size:15px;text-align:right;justify-content:flex-end}
     .kpi span{font-size:9.5px;letter-spacing:0;white-space:nowrap}
     .barra{gap:8px}
     #fLinea{display:none}
