@@ -603,6 +603,166 @@ async function leerPlaca(canvas) {
   await w.setParameters({ tessedit_pageseg_mode: '11' });
   return [...votos.entries()].sort((a, b) => b[1] - a[1] || b[0].length - a[0].length)[0]?.[0] || '';
 }
+// --- Lectura por grupos de caracteres ---
+// En las fotos reales el número de la caja puede venir en vertical (un dígito debajo de otro), en rojo,
+// o la placa salir chica y algo movida. Aquí se buscan "manchas" con forma de letra o número que estén
+// alineadas (en fila o en columna), se acomodan en una sola línea limpia y esa línea se le da al lector.
+function mascaras(cv) {
+  const W = cv.width, H = cv.height, px = cv.getContext('2d').getImageData(0, 0, W, H).data, n = W * H;
+  const gris = new Float32Array(n), rojo = new Uint8Array(n);
+  for (let i = 0, j = 0; j < n; i += 4, j++) {
+    gris[j] = 0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2];
+    rojo[j] = px[i] - Math.max(px[i + 1], px[i + 2]) > 45 ? 1 : 0;
+  }
+  // Umbral local (promedio de una ventana de 31 px) con imagen integral
+  const I = new Float64Array((W + 1) * (H + 1));
+  for (let y = 0; y < H; y++) { let s = 0; for (let x = 0; x < W; x++) { s += gris[y * W + x]; I[(y + 1) * (W + 1) + x + 1] = I[y * (W + 1) + x + 1] + s; } }
+  const R = 15, osc = new Uint8Array(n), claro = new Uint8Array(n);
+  for (let y = 0; y < H; y++) {
+    const y0 = Math.max(0, y - R), y1 = Math.min(H, y + R + 1);
+    for (let x = 0; x < W; x++) {
+      const x0 = Math.max(0, x - R), x1 = Math.min(W, x + R + 1);
+      const m = (I[y1 * (W + 1) + x1] - I[y0 * (W + 1) + x1] - I[y1 * (W + 1) + x0] + I[y0 * (W + 1) + x0]) / ((y1 - y0) * (x1 - x0));
+      const v = gris[y * W + x];
+      osc[y * W + x] = v < m - 15 ? 1 : 0;
+      claro[y * W + x] = v > m + 15 ? 1 : 0;
+    }
+  }
+  return { W, H, lista: [osc, rojo, claro] };
+}
+// Manchas conectadas con forma de carácter
+function manchas(m, W, H) {
+  const lab = new Int32Array(W * H), out = [], pila = [];
+  let id = 0;
+  for (let p = 0; p < W * H; p++) {
+    if (!m[p] || lab[p]) continue;
+    id++; lab[p] = id; pila.push(p);
+    let x0 = W, y0 = H, x1 = 0, y1 = 0, area = 0;
+    while (pila.length) {
+      const q = pila.pop(), x = q % W, y = (q - x) / W; area++;
+      if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const xx = x + dx, yy = y + dy; if (xx < 0 || yy < 0 || xx >= W || yy >= H) continue;
+        const r = yy * W + xx; if (m[r] && !lab[r]) { lab[r] = id; pila.push(r); }
+      }
+    }
+    const w = x1 - x0 + 1, h = y1 - y0 + 1;
+    if (h < H * 0.018 || h > H * 0.2 || w / h < 0.12 || w / h > 1.1) continue;
+    const llen = area / (w * h); if (llen < 0.15 || llen > 0.95) continue;
+    out.push({ x: x0, y: y0, w, h, id });
+  }
+  return { cs: out, lab };
+}
+// Manchas alineadas en fila ('h') o en columna ('v'), de tamaño parecido
+function alineadas(cs) {
+  const res = [];
+  for (const ori of ['h', 'v']) {
+    const usados = new Set(), orden = [...cs].sort((a, b) => ori === 'h' ? a.x - b.x : a.y - b.y);
+    for (const c of orden) {
+      if (usados.has(c.id)) continue;
+      const g = [c];
+      for (;;) {
+        const u = g[g.length - 1]; let mejor = null;
+        for (const d of orden) {
+          if (usados.has(d.id) || g.includes(d) || Math.abs(d.h - u.h) > 0.3 * u.h) continue;
+          let gap;
+          if (ori === 'h') {
+            if (Math.abs(d.y + d.h / 2 - (u.y + u.h / 2)) > 0.35 * u.h) continue;
+            gap = d.x - (u.x + u.w); if (gap < -0.1 * u.h || gap > 0.9 * u.h) continue;
+          } else {
+            if (Math.abs(d.x + d.w / 2 - (u.x + u.w / 2)) > 0.4 * u.h) continue;
+            gap = d.y - (u.y + u.h); if (gap < -0.1 * u.h || gap > 0.6 * u.h) continue;
+          }
+          if (!mejor || gap < mejor.gap) mejor = { gap, d };
+        }
+        if (!mejor) break;
+        g.push(mejor.d);
+      }
+      if (g.length >= 3) { g.forEach(x => usados.add(x.id)); res.push({ ori, g }); }
+    }
+  }
+  return res;
+}
+// Las manchas del grupo, una junto a otra en negro sobre blanco, a 48 px de alto
+function lineaLimpia(g, lab, W) {
+  const hs = Math.max(...g.map(c => c.h)), esc = 48 / hs, pad = 10;
+  const anchos = g.map(c => Math.max(1, Math.round(c.w * esc)));
+  const cv = document.createElement('canvas');
+  cv.width = anchos.reduce((a, b) => a + b, 0) + pad * (g.length + 1); cv.height = Math.round(hs * esc) + pad * 2;
+  const ctx = cv.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
+  let x = pad;
+  g.forEach((c, k) => {
+    const t = document.createElement('canvas'); t.width = c.w; t.height = c.h;
+    const tc = t.getContext('2d'), im = tc.createImageData(c.w, c.h);
+    for (let yy = 0; yy < c.h; yy++) for (let xx = 0; xx < c.w; xx++) {
+      const v = lab[(c.y + yy) * W + c.x + xx] === c.id ? 0 : 255, o = (yy * c.w + xx) * 4;
+      im.data[o] = im.data[o + 1] = im.data[o + 2] = v; im.data[o + 3] = 255;
+    }
+    tc.putImageData(im, 0, 0);
+    const h = Math.round(c.h * esc);
+    ctx.imageSmoothingEnabled = true; ctx.drawImage(t, x, cv.height - pad - h, anchos[k], h);
+    x += anchos[k] + pad;
+  });
+  return cv;
+}
+// Lee todos los grupos de la foto; regresa [{texto, n, alto, ori, cortes}] (cortes = dónde hay un espacio grande, p. ej. guiones de la placa)
+async function leerGrupos(canvas, lista) {
+  const k = Math.min(1, 900 / Math.max(canvas.width, canvas.height));
+  const cv = document.createElement('canvas'); cv.width = Math.round(canvas.width * k); cv.height = Math.round(canvas.height * k);
+  cv.getContext('2d').drawImage(canvas, 0, 0, cv.width, cv.height);
+  const { W, H, lista: ms } = mascaras(cv);
+  const w = await obtenerWorker(), out = [];
+  await w.setParameters({ tessedit_pageseg_mode: '7', tessedit_char_whitelist: lista + '-' });
+  for (const m of ms) {
+    const { cs, lab } = manchas(m, W, H);
+    for (const { ori, g } of alineadas(cs).slice(0, 8)) {
+      // En fila: se recorta esa zona de la foto original (se leen mejor las letras reales, con todo y guiones).
+      // En columna: se acomodan los caracteres uno junto a otro.
+      const hs = Math.max(...g.map(c => c.h));
+      let img;
+      if (ori === 'h') {
+        const m = 0.3 * hs, x0 = Math.max(0, Math.min(...g.map(c => c.x)) - m), y0 = Math.max(0, Math.min(...g.map(c => c.y)) - m);
+        const x1 = Math.min(W, Math.max(...g.map(c => c.x + c.w)) + m), y1 = Math.min(H, Math.max(...g.map(c => c.y + c.h)) + m);
+        img = recorte(cv, x0, y0, x1 - x0, y1 - y0, 48 / hs, false);
+      } else img = lineaLimpia(g, lab, W);
+      const r = await w.recognize(img);
+      let crudo = r.data.text.toUpperCase().replace(/[^A-Z0-9\-]/g, '');
+      // El borde de la placa o del letrero a veces se lee como "I" o "1" de más en las orillas
+      if (crudo.replace(/-/g, '').length > g.length) crudo = crudo.replace(/^[I1L]-?/, '').replace(/-?[I1L]$/, m => crudo.replace(/-/g, '').length - 1 > g.length ? '' : m);
+      const texto = crudo.replace(/-/g, '');
+      if (texto) out.push({ texto, crudo, n: g.length, alto: hs, ori });
+    }
+  }
+  await w.setParameters({ tessedit_char_whitelist: '', tessedit_pageseg_mode: '11' });
+  return out;
+}
+
+const ALNUM = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+// Vota por los textos repetidos (la misma lectura en varias máscaras cuenta más) y prefiere los caracteres más grandes
+function mejorGrupo(cands) {
+  const votos = new Map();
+  for (const c of cands) { const v = votos.get(c.texto) || { ...c, votos: 0 }; v.votos++; v.alto = Math.max(v.alto, c.alto); votos.set(c.texto, v); }
+  return [...votos.values()].sort((a, b) => b.votos - a.votos || b.alto - a.alto)[0] || null;
+}
+async function numeroCaja(canvas) {
+  const gs = await leerGrupos(canvas, ALNUM);
+  return mejorGrupo(gs.filter(c => /^\d{3,7}$/.test(c.texto) && Math.abs(c.texto.length - c.n) <= 1))?.texto || '';
+}
+// Placa mexicana con guiones (40-UK-5U): el 1er grupo son números y el 2º letras, así se corrigen A↔4, O↔0, etc.
+const aDigito = { O: '0', Q: '0', D: '0', I: '1', L: '1', Z: '2', S: '5', B: '8', G: '6', A: '4', T: '7' };
+const aLetra = { 0: 'O', 1: 'I', 2: 'Z', 5: 'S', 8: 'B', 6: 'G', 4: 'A', 7: 'T' };
+function corregirPlaca(c) {
+  const grupos = c.crudo.split('-').filter(Boolean).map(x => [...x]);
+  if (grupos.length !== 3) return c.texto;
+  grupos[0] = grupos[0].map(ch => aDigito[ch] || ch);
+  grupos[1] = grupos[1].map(ch => aLetra[ch] || ch);
+  return grupos.map(x => x.join('')).join('');
+}
+async function placaPorGrupos(canvas) {
+  const gs = (await leerGrupos(canvas, ALNUM)).filter(c => c.ori === 'h' && c.texto.length >= 5 && c.texto.length <= 8)
+    .map(c => ({ ...c, texto: corregirPlaca(c) })).filter(c => /\d/.test(c.texto) && /[A-Z]/.test(c.texto));
+  return mejorGrupo(gs)?.texto || '';
+}
 const comoNumero = s => s.replace(/O/g, '0').replace(/[IL]/g, '1').replace(/S/g, '5').replace(/B/g, '8').replace(/Z/g, '2');
 // Una lectura a la vez (la de la caja y la de la placa comparten el lector)
 let colaOCR = Promise.resolve();
@@ -612,13 +772,18 @@ async function leerFoto(t, canvas) {
   lee.classList.add('ver');
   try {
     if (t === 'caja') {
-      const ws = await enCola(() => palabras(canvas));
+      // Primero por grupos de caracteres (sirve para números en vertical o en color); si no, palabra por palabra
+      let porGrupo = '';
+      try { porGrupo = await enCola(() => numeroCaja(canvas)); } catch (e) { console.warn('grupos', e); }
+      const ws = porGrupo ? [] : await enCola(() => palabras(canvas));
       // Número de caja: el número más grande de la foto (3 a 7 dígitos)
-      const nums = ws.map(x => ({ ...x, n: comoNumero(x.t.replace(/^[A-Z]{4}/, '')) })).filter(x => /^\d{3,7}$/.test(x.n)).sort((a, b) => b.h - a.h);
+      const nums = porGrupo ? [{ n: porGrupo, h: 1 }] : ws.map(x => ({ ...x, n: comoNumero(x.t.replace(/^[A-Z]{4}/, '')) })).filter(x => /^\d{3,7}$/.test(x.n)).sort((a, b) => b.h - a.h);
       if (nums[0] && (!$('caja').value.trim() || $('caja').classList.contains('leido'))) { $('caja').value = nums[0].n; $('caja').classList.add('leido'); $('pCaja').textContent = 'Leído de la foto: revisa que esté bien.'; }
       else if (!nums[0]) $('pCaja').textContent = 'No pude leer el número en la foto: escríbelo.';
     } else {
-      const placa = await enCola(() => leerPlaca(canvas));
+      let placa = '';
+      try { placa = await enCola(() => placaPorGrupos(canvas)); } catch (e) { console.warn('grupos', e); }
+      if (!placa) placa = await enCola(() => leerPlaca(canvas));
       if (placa && (!$('placa').value.trim() || $('placa').classList.contains('leido'))) { $('placa').value = placa; $('placa').classList.add('leido'); $('pPlaca').textContent = 'Leída de la foto: revisa que esté bien.'; }
       else if (!placa) $('pPlaca').textContent = 'No pude leer la placa en la foto: escríbela.';
     }
