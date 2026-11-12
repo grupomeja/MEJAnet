@@ -647,7 +647,7 @@ function manchas(m, W, H) {
       }
     }
     const w = x1 - x0 + 1, h = y1 - y0 + 1;
-    if (h < H * 0.018 || h > H * 0.2 || w / h < 0.12 || w / h > 1.1) continue;
+    if (h < H * 0.018 || h > H * 0.35 || w / h < 0.12 || w / h > 1.1) continue;
     const llen = area / (w * h); if (llen < 0.15 || llen > 0.95) continue;
     out.push({ x: x0, y: y0, w, h, id });
   }
@@ -668,7 +668,7 @@ function alineadas(cs) {
           let gap;
           if (ori === 'h') {
             if (Math.abs(d.y + d.h / 2 - (u.y + u.h / 2)) > 0.35 * u.h) continue;
-            gap = d.x - (u.x + u.w); if (gap < -0.1 * u.h || gap > 0.9 * u.h) continue;
+            gap = d.x - (u.x + u.w); if (gap < -0.1 * u.h || gap > 1.5 * u.h) continue; // deja pasar los guiones de la placa
           } else {
             if (Math.abs(d.x + d.w / 2 - (u.x + u.w / 2)) > 0.4 * u.h) continue;
             gap = d.y - (u.y + u.h); if (gap < -0.1 * u.h || gap > 0.6 * u.h) continue;
@@ -712,7 +712,7 @@ async function leerGrupos(canvas, lista) {
   cv.getContext('2d').drawImage(canvas, 0, 0, cv.width, cv.height);
   const { W, H, lista: ms } = mascaras(cv);
   const w = await obtenerWorker(), out = [];
-  await w.setParameters({ tessedit_pageseg_mode: '7', tessedit_char_whitelist: lista + '-' });
+  await w.setParameters({ tessedit_pageseg_mode: '13', tessedit_char_whitelist: lista + '-' }); // línea de texto cruda
   for (const m of ms) {
     const { cs, lab } = manchas(m, W, H);
     for (const { ori, g } of alineadas(cs).slice(0, 8)) {
