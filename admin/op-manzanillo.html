@@ -140,6 +140,8 @@ nav.tabs button[aria-selected="true"]{background:#4A3826;color:#EAE1D3;box-shado
 .filters .seg.est-tabs button{border:0;background:transparent;padding:4px 12px;height:auto;font-size:13px;line-height:1.3;border-radius:6px;font-weight:600;color:#5E4E37;cursor:pointer}
 .filters .seg.est-tabs button:hover{background:rgba(94,78,55,.10)}
 .filters .seg.est-tabs button[aria-pressed="true"]{background:#4A3826;color:#EAE1D3;box-shadow:0 1px 2px rgba(0,0,0,.18)}
+/* Escritorio: los filtros llenan la zona izquierda y "Ordenar por" arranca en la derecha, con el mismo espacio a ambos lados de las pestañas */
+@media (min-width:1101px){.filters{column-gap:22px}.f-izq #f-cliente{flex:1 1 170px}.f-izq #f-terminal{flex:1 1 160px}.f-izq input[type=search]{flex:1.4 1 200px!important;width:auto}.f-der{justify-content:space-between}.filters .orden select{max-width:none;width:190px}}
 @media (min-width:561px) and (max-width:1100px){.f-izq{grid-column:1/-1}.f-izq select{flex:1 1 0}.f-izq input[type=search]{flex:1.3 1 0!important}.f-der{display:contents}.filters .orden{grid-column:1;grid-row:2;justify-self:start}.filters .orden select{max-width:200px}.filters .seg.est-tabs{grid-column:2;grid-row:2}.f-der .count{grid-column:3;grid-row:2;justify-self:end}}
 .banner{margin-top:12px;padding:10px 14px;border-radius:var(--r);background:var(--warn-soft);color:var(--warn);font-weight:500}
 
@@ -701,7 +703,7 @@ body.vista-gas .filters,body.vista-gas #b-nuevo{display:none}
   #b-export .lg{display:none}
   h1.titulo{font-size:14px;letter-spacing:.5px}
   h1.titulo .ico{flex-basis:24px;height:24px}h1.titulo .ico svg{width:18px;height:18px}
-  .logo img{height:24px}
+  .logo img{height:18px}
   nav.tabs button,.right .actions .btn,.right .actions a.btn-mejanet{font-size:11.5px!important;padding:3px 6px!important}
   .filters{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding-block:8px}
   .filters>*{min-width:0;width:100%!important;font-size:13px}
@@ -736,6 +738,8 @@ body.vista-gas .filters,body.vista-gas #b-nuevo{display:none}
   .gref-h .tot{min-width:0;margin-left:auto;font-size:16px}
   .gref-b .scroll{-webkit-overflow-scrolling:touch}
 }
+/* Celulares angostos: logo y título más chicos para que el logo se vea completo */
+@media (max-width:400px){h1.titulo{font-size:12.5px;letter-spacing:.2px;gap:5px;padding-right:9px}.logo img{height:16px}}
 </style>
 </head>
 <body>
