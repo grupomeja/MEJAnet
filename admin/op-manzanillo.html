@@ -665,7 +665,7 @@ td>.gi[type=date]{min-width:118px}
 .seg2 button{border:0;background:var(--surface);font:inherit;font-size:10.5px;font-weight:700;padding:2px 8px;cursor:pointer;color:var(--ink-3)}
 .seg2 button.on.pue{background:#2E8B57;color:#fff} .seg2 button.on.ppd{background:#2F6FD0;color:#fff}
 .doc{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap;text-decoration:none;cursor:pointer;font-family:inherit}
-body.vista-gas .filters,body.vista-gas #b-nuevo{display:none}
+body.vista-gas .filters,body.vista-gas #b-nuevo{display:none!important}
 .g-titulo{display:flex;align-items:center;gap:18px;margin:12px 0 6px;font-family:var(--f-body);font-weight:800;font-size:15px;line-height:1;letter-spacing:.32em;text-transform:uppercase;color:#7A1C1C;text-align:left;white-space:nowrap}
 .g-titulo span{background:#4A3826;color:#fff;padding:8px 14px 8px 16px;border-radius:6px}
 .g-titulo::after{content:"";flex:1;height:2px;background:#D9CBB5}
@@ -1721,7 +1721,7 @@ function syncSeg(){
 function setView(v){ui.view=v;try{localStorage.setItem("om.view",v)}catch(e){}
   document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.v===v)));
   $("#v-ejec").hidden=v!=="ejec";$("#v-seg").hidden=v!=="seg";$("#v-gas").hidden=v!=="gas";
-  $("#f-estado").hidden=v==="ejec";$("#f-orden-w").hidden=v!=="seg";
+  $("#f-estado").hidden=v!=="seg";$("#f-orden-w").hidden=v!=="seg";$("#f-count").hidden=v==="gas";
   document.body.classList.toggle("vista-gas",v==="gas");renderAll();}
 function fillSelect(id,vals,cur,all){const s=$(id);const html=`<option value="">${all}</option>`+vals.map(v=>`<option ${v===cur?"selected":""}>${esc(v)}</option>`).join("");if(s.dataset.h!==html){s.innerHTML=html;s.dataset.h=html}s.value=cur}
 // Mismo espacio a los dos lados de Activas/Cerradas/Todas: lo que hay entre el buscador y las pestañas se repite antes de "Ordenar por"
