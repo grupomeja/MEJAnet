@@ -120,8 +120,8 @@ nav.tabs button[aria-selected="true"]{background:#4A3826;color:#EAE1D3;box-shado
 @media (min-width:821px){
   .filters{gap:7px;padding-block:10px;flex-wrap:nowrap}
   .filters select,.filters input{font-size:12.5px;padding:4px 8px;height:30px}
-  .filters #f-cliente{flex:0 1 180px}.filters #f-terminal{flex:0 1 165px}
-  .filters input[type=search]{flex:0 1 210px;width:auto}
+  .filters #f-cliente{flex:0 1 190px}
+  .filters input[type=search]{flex:0 1 340px;width:auto}
   .filters .orden{font-size:11.5px;gap:5px;flex:0 1 auto;min-width:0;white-space:nowrap}.filters .orden select{max-width:170px}
   .filters .seg{flex:0 0 auto}.filters .seg button{font-size:12.5px;padding:0 9px;height:28px;white-space:nowrap}
   .filters .count{flex:0 0 auto;white-space:nowrap}
@@ -715,7 +715,7 @@ body.vista-gas .filters,body.vista-gas #b-nuevo{display:none}
   .filters select,.filters input{font-size:13px;padding:5px 8px}
   .filters .seg{width:100%;display:flex}.filters .seg button{white-space:nowrap}
   .legend.top{gap:4px 12px;font-size:11px}.filters .seg button{flex:1;padding:5px 6px;font-size:12.5px}
-  .filters{grid-template-columns:1fr!important}.f-izq{display:grid;grid-template-columns:1fr 1fr;gap:6px}.f-der{flex-wrap:wrap;justify-content:flex-end;gap:8px}.f-der .orden{flex:1 1 100%}.f-izq input[type=search]{grid-column:1/-1;width:100%}.filters .orden{flex:1}.filters .orden select{flex:1}.filters .seg.est-tabs{justify-self:stretch}
+  .filters{grid-template-columns:1fr!important}.f-izq{display:grid;grid-template-columns:1fr;gap:6px}.f-der{flex-wrap:wrap;justify-content:flex-end;gap:8px}.f-der .orden{flex:1 1 100%}.f-izq input[type=search]{grid-column:1/-1;width:100%}.filters .orden{flex:1}.filters .orden select{flex:1}.filters .seg.est-tabs{justify-self:stretch}
   .filters input[type=search]{grid-column:1/-1}.f-der .count{margin:0}
 }
 @media (max-width:820px), (max-height:500px) and (max-width:1000px){
@@ -785,7 +785,6 @@ body.vista-gas .filters,body.vista-gas #b-nuevo{display:none}
   <div class="filters">
     <div class="f-izq">
     <select id="f-cliente" aria-label="Cliente"><option value="">Todos los clientes</option></select>
-    <select id="f-terminal" aria-label="Terminal"><option value="">Todas las terminales</option></select>
     <input type="search" id="f-q" placeholder="Referencia, buque, BL, pedimento…" aria-label="Buscar">
     </div>
     <span class="seg est-tabs" id="f-estado" role="group" aria-label="Estado">
@@ -1736,7 +1735,6 @@ setInterval(()=>{const h=iso(new Date());if(h===TODAY)return;
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&iso(new Date())!==TODAY){TODAY=iso(new Date());$("#hoy").textContent="Puerto de Manzanillo · "+fd(TODAY);renderAll();}});
 function renderAll(){
   fillSelect("#f-cliente",clientes(),ui.cliente,"Todos los clientes");
-  fillSelect("#f-terminal",terminales(),ui.terminal,"Todas las terminales");
   const n=filtered({ignoreEstado:ui.view==="ejec"}).length;
   $("#f-count").innerHTML=loaded?`<b>${n}</b><i>Embarque${n===1?"":"s"}<small>${ui.estado==="activa"?"En seguimiento":ui.estado==="cerrada"?"Cerrado"+(n===1?"":"s"):"En total"}</small></i>`:"";requestAnimationFrame(espejoFiltros);
   if(ui.view==="ejec")renderEjec();else if(ui.view==="seg")renderSeg();else renderGas();
