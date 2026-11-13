@@ -6,12 +6,12 @@
 <title>TABLERO DE ENTRADAS BODEGA</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600&family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{--bg:#f4f5f7;--card:#fff;--ink:#15181d;--muted:#5d6672;--line:#d5d9df;--accent:#1f4e8c;--accent-ink:#fff;--soft:#eef2f8;--ok:#17794a;--err:#b3261e;--azul:#1a64c8;--nar:#d95a00}
   @media (prefers-color-scheme:dark){:root{--bg:#14171b;--card:#1d2127;--ink:#eef0f3;--muted:#a2abb7;--line:#363c45;--accent:#6aa3ec;--accent-ink:#0b1626;--soft:#232a33;--ok:#52c28a;--err:#ff8a80;--azul:#6aa3ec;--nar:#ff9a4d}}
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif} /* mismas letras que Operaciones Manzanillo */
   main{max-width:none;margin:0 auto;padding:16px 20px}
   .logo .marca{display:block;width:162px;height:40px;background:#875a86;
     -webkit-mask:url(/logo.png) left center/contain no-repeat;mask:url(/logo.png) left center/contain no-repeat}
@@ -34,7 +34,7 @@
   .kpi.par{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .kpi.par span{font-size:10px}
   .kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:6px 10px;min-width:0;text-align:center}
-  .kpi b{display:block;font-size:19px;line-height:1.25;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .kpi b{display:block;font-family:"Barlow Condensed","Arial Narrow",Arial,sans-serif;font-weight:600;font-size:24px;line-height:1.1;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .kpi span{color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.4px}
   .kpi small{font-size:11.5px;font-weight:600;color:var(--muted)}
   .kpi .verde{color:var(--ok)} .kpi .rojo{color:var(--err)} .kpi .naranja{color:var(--nar)}
