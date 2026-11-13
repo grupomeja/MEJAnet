@@ -837,9 +837,8 @@ $("#hoy").textContent="Puerto de Manzanillo · "+fd(TODAY);
 let canWrite=true;
 let PRINCIPAL=false; // solo el usuario principal puede forzar el cierre de una operación
 fetch("/api/sesion",{credentials:"same-origin"}).then(r=>r.ok?r.json():null).then(x=>{PRINCIPAL=!!(x&&x.principal)}).catch(()=>{});
-// Para cerrar: Atraque, Revalidación, Previo y Despacho con fecha REAL (NO PREVIO cuenta como cumplido)
-function faltanCierre(e){return ["arribo","revalidacion","previo","despacho"].filter(k=>applicable(e,k)&&!hit(e,k).r).map(k=>hl(e,HITOS.find(h=>h.k===k)))}
-function avisoCierre(f){toast("No se puede cerrar el embarque: falta la fecha real de "+f.join(", ")+".",7000)}
+// Regla de cierre: la operación pasa a Cerradas solo al marcar "Cerrar referencia" en GASTOS
+const MSG_CIERRE='No se puede cerrar el embarque: primero hay que marcar "Cerrar referencia" en la sección de GASTOS.';
 // Usuario de solo consulta (lo avisa /solo-lectura.js): todo se muestra bloqueado
 function modoConsulta(){if(!canWrite)return;canWrite=false;if(typeof refresh==="function"&&loaded)refresh()}
 if(window.MEJA_SOLO_LECTURA)modoConsulta();document.addEventListener("meja:solo-lectura",modoConsulta);
@@ -890,8 +889,8 @@ function analyze(e){
 const STATUS={no:"Pendiente ETA y revalidación",or:"Revalidado",az:"Previo programado",ye:"Pedimento pagado o despacho programado",gr:"Desaduanado / cumplido"};
 // Verde: despachado. Amarillo: pedimento asignado + pagado + fecha de despacho.
 // Azul: hay fecha de previo. Naranja: hay fecha de revalidación. Sin color: lo demás.
-// Con fecha real de retiro de puerto la operación sale de la lista de activas (cuenta como cerrada)
-function estadoEf(e){const st=e.estado||"activa";return st==="activa"&&hit(e,"retiro").r&&!faltanCierre(e).length?"cerrada":st}
+// Estado tal cual: aunque tenga despacho y retiro, sigue activa hasta que se cierre la referencia en GASTOS
+function estadoEf(e){return e.estado||"activa"}
 const ST_CORTO={gr:"Desaduanado",ye:"Ped. pagado / desp. prog.",az:"Previo programado",or:"Revalidado",no:"Pendiente"};
 function status(e){
   const di=hit(e,"despacho"),pv=hit(e,"previo"),rv=hit(e,"revalidacion");
@@ -1053,7 +1052,7 @@ function renderSeg(){
     let nextTxt;
     if(e.estado==="cerrada"){const f=hit(e,"despacho").r;nextTxt=`<div class="a"><span class="sema ${e.semaforo||""}"></span> <span class="${e.semaforo==="rojo"?"sem-rojo":e.semaforo==="verde"?"sem-verde":""}">Despachado</span></div><div class="${e.semaforo==="rojo"?"sem-rojo":e.semaforo==="verde"?"sem-verde":""}" style="font-weight:800;white-space:nowrap;font-size:12px">${fd(f)}</div><div class="b">${e.semaforo==="rojo"?`<span class="sem-rojo">Reconocimiento aduanero</span>`:e.semaforo==="verde"?`<span class="sem-verde">Desaduanamiento libre</span>`:""}${e.pedimento?" · Ped. "+esc(e.pedimento):""}</div>`}
     else if(a.next){nextTxt=`<div class="a">${esc(hl(e,a.next))}</div><div class="nx">${a.nd?`<span class="nx-d">${fd(a.nd)}</span>`:`<span class="muted">Sin fecha</span>`}${a.alerts.length?`<span class="pill ${a.alerts[0].lvl}">${esc(a.alerts[0].short)}</span>`:`<span class="muted">${a.nd?"Estimada":"Registrar fecha estimada"}</span>`}</div>`}
-    else nextTxt=`<div class="a">Todos los hitos registrados</div><div class="b">Marcar como cerrada</div>`;
+    else nextTxt=`<div class="a">Todos los hitos registrados</div><div class="b">Cerrar referencia en Gastos</div>`;
     return `<button type="button" class="tr s-${status(e)}${status(e)==="gr"&&e.semaforo==="rojo"?" sem-r":""}" data-open="${esc(id)}" title="${esc(STATUS[status(e)])}">
       <div class="cell c-ref"><div class="a ref">${esc(e.ref)}</div><div class="b">${esc(e.cliente)}</div></div>
       <div class="cell c-bq"><div class="a" title="${esc((e.buque||"")+" "+(e.viaje||""))}">${esc(e.buque||"—")} <span class="muted mono">${esc(e.viaje||"")}</span></div>${lineasBL(e)}</div>
@@ -1321,8 +1320,8 @@ function renderGas(){
     if(t.dataset.gnew){guardarG(id,gs().concat([{id:"g"+Date.now().toString(36),moneda:"MXN",fecha:"",metodo:""}]));renderGas();return}
     if(t.dataset.gdel2){const x0=gs().find(x=>x.id===g)||{};const qu=[x0.factura&&"factura "+x0.factura,x0.proveedor,+x0.importe?"$"+money(+x0.importe):""].filter(Boolean).join(" · ");
       if(!confirm("¿Eliminar este gasto por completo?"+(qu?"\n\n"+qu:"")+((x0.pdf||x0.xml||x0.pago||x0.cpdf||x0.cxml)?"\n\nTambién se quitarán sus archivos (PDF / XML / PAGO / COMPLEMENTO).":"")))return;const r=gs().filter(x=>x.id!==g);if(!r.length&&ui.gasAdd===id)ui.gasAdd=null;guardarG(id,r);["pdf","xml","pago","cpdf","cxml"].forEach(k=>{if(x0[k]&&x0[k].id)api("DELETE","/api/admin/opm/archivos/"+encodeURIComponent(x0[k].id)).catch(()=>{})});renderGas();return}
-    if(t.dataset.gclose){write(id,{gastosCerrada:true});ui.gasOpen.delete(id);toast(EMB[id].ref+" pasó a Cerradas");renderGas();return}
-    if(t.dataset.greopen){write(id,{gastosCerrada:false});toast(EMB[id].ref+" regresó a Abiertas");renderGas();return}
+    if(t.dataset.gclose){const p={gastosCerrada:true};if((EMB[id].estado||"activa")==="activa")p.estado="cerrada";write(id,p);ui.gasOpen.delete(id);toast(EMB[id].ref+": referencia cerrada; la operación pasa a Cerradas");renderGas();return}
+    if(t.dataset.greopen){const p={gastosCerrada:false};if(EMB[id].estado==="cerrada")p.estado="activa";write(id,p);toast(EMB[id].ref+": referencia reabierta; la operación regresa a Activas");renderGas();return}
     if(t.dataset.gdocx){const k=t.dataset.k,x=gs().find(z=>z.id===g);if(!x||!x[k])return;if(!confirm("¿Quitar el "+DOC_ET[k]+" «"+(x[k].nombre||"")+"» de esta factura?"))return;
       const aid=x[k].id;guardarG(id,gs().map(z=>z.id===g?{...z,[k]:null}:z));api("DELETE","/api/admin/opm/archivos/"+encodeURIComponent(aid)).catch(()=>{});toast(DOC_ET[k]+" quitado");renderGas();return}
     if(t.dataset.gdoc){ev.preventDefault();window.open("/api/admin/opm/archivos/"+encodeURIComponent(gs().find(x=>x.id===g)[t.dataset.k].id),"_blank");return}
@@ -1350,14 +1349,13 @@ document.addEventListener("input",ev=>{const el=ev.target;if(!el.closest||!el.cl
 // Fecha de despacho ⇄ fecha de semáforo ⇄ retiro de puerto:
 //  · despacho real = fecha de semáforo (se escriben juntas, en cualquiera de los dos campos);
 //  · el retiro toma la misma fecha si está vacío o era igual al despacho anterior (si se capturó otra a mano, no se toca);
-//  · con retiro real, la operación pasa a Cerradas.
+//  · la operación NO se cierra con el retiro: se cierra al marcar "Cerrar referencia" en GASTOS.
 function patchDespacho(id,f,val){const e=EMB[id]||{},hs=e.hitos||{},ant=(hs.despacho||{})[f]||"",ret=(hs.retiro||{})[f]||"";
   const p={hitos:{despacho:{[f]:val}}};
   if(f==="r")p.semaforoFecha=val;
   if(!ret||ret===ant)p.hitos.retiro={[f]:val};
   ["despacho","retiro"].forEach(k=>{const i=$(`#h-${k}-${f}`);if(i&&p.hitos[k])i.value=val});
   if(f==="r"){const sf=$("#fx-semaforoFecha");if(sf)sf.value=val}
-  if(f==="r"&&val&&(p.hitos.retiro||{}).r&&e.estado==="activa"){const fl=faltanCierre(merge(e,p));if(fl.length)toast("Retiro registrado. La operación sigue activa: falta la fecha real de "+fl.join(", ")+".",7000);else{p.estado="cerrada";toast("Retiro registrado: la operación pasa a Cerradas")}}
   return p}
 function contenedoresHTML(e){if(e.tipo==="LCL")return '<span class="cs">CARGA<br>SUELTA</span>';const l=String(e.contenedores||"").toUpperCase().split(/[\s,;\/]+/).filter(Boolean);
   return l.length?l.map(c=>`<span class="cn">${esc(c)}</span>`).join(""):'<span class="vacio">-</span>'}
@@ -1670,16 +1668,15 @@ document.addEventListener("change",ev=>{
   if(el.dataset.h){const k=el.dataset.h,f=el.dataset.k;
     if(k==="despacho"){write(ui.open,patchDespacho(ui.open,f,el.value));return}
     const patch={hitos:{[k]:{[f]:el.value}}};
-    if(k==="retiro"&&f==="r"&&el.value&&EMB[ui.open].estado==="activa"){const fl=faltanCierre(merge(EMB[ui.open],patch));if(fl.length)toast("Retiro registrado. La operación sigue activa: falta la fecha real de "+fl.join(", ")+".",7000);else{patch.estado="cerrada";toast("Retiro registrado: la operación pasa a Cerradas")}}
+
     write(ui.open,patch);return}
   if(el.dataset.lbs){const lb=numero(el.value);write(ui.open,{peso:lb==null?null:Math.round(lb/LB*100)/100});return}
   if(el.dataset.f){let v=el.value;const f=el.dataset.f;
     if(el.type==="checkbox"){write(ui.open,{[f]:el.checked});return}
     if(f==="semaforoFecha"){write(ui.open,patchDespacho(ui.open,"r",v));return}
-    if(f==="estado"&&v==="cerrada"&&EMB[ui.open].estado!=="cerrada"){const fl=faltanCierre(EMB[ui.open]);
-      if(fl.length){
-        if(PRINCIPAL&&confirm("No se puede cerrar el embarque: falta la fecha real de "+fl.join(", ")+".\n\n¿Forzar cierre?")){write(ui.open,{estado:"cerrada",forzarCierre:true});return}
-        el.value=EMB[ui.open].estado||"activa";if(!PRINCIPAL)avisoCierre(fl);return}}
+    if(f==="estado"&&v==="cerrada"&&EMB[ui.open].estado!=="cerrada"&&!EMB[ui.open].gastosCerrada){
+      if(PRINCIPAL&&confirm(MSG_CIERRE+"\n\n¿Forzar cierre?")){write(ui.open,{estado:"cerrada",forzarCierre:true});return}
+      el.value=EMB[ui.open].estado||"activa";if(!PRINCIPAL)toast(MSG_CIERRE,7000);return}
     if(["peso","diasLibres"].includes(f)){v=numero(v);if(f==="peso"&&v!=null)v=Math.round(v*100)/100}
     else if(f!=="nota"&&f!=="estado"&&f!=="semaforo")v=v.trim().toUpperCase();
     write(ui.open,{[f]:v});}

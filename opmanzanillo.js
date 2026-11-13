@@ -115,7 +115,6 @@ async function retiroIgualDespacho(nombre) {
     if (d.r && !r.r) nuevo.r = d.r;
     if (!Object.keys(nuevo).length) continue;
     const cambio = { hitos: { retiro: nuevo } };
-    if (nuevo.r && e.estado === 'activa') cambio.estado = 'cerrada';
     await cambiar(e.id, cambio); n++;
     console.log(`OP Manzanillo [${nombre}]: ${e.ref} → retiro ${nuevo.e ? 'estimado ' + nuevo.e : ''}${nuevo.e && nuevo.r ? ', ' : ''}${nuevo.r ? 'real ' + nuevo.r : ''}${cambio.estado ? ' (cerrada)' : ''}`);
   }
@@ -133,7 +132,6 @@ async function despachoDesdeSemaforo(nombre) {
     if (d.r === sf && r.r) continue;
     const cambio = { hitos: { despacho: { r: sf } } };
     if (!r.r || r.r === d.r) cambio.hitos.retiro = { r: sf };
-    if (cambio.hitos.retiro && e.estado === 'activa') { cambio.estado = 'cerrada'; cerradas.push(e.ref); }
     if (d.r === sf && !cambio.hitos.retiro) continue;
     await cambiar(e.id, cambio); n++;
     console.log(`OP Manzanillo [${nombre}]: ${e.ref} → despacho ${sf}${d.r && d.r !== sf ? ' (antes ' + d.r + ')' : ''}${cambio.estado ? ' · cerrada' : ''}`);
@@ -358,17 +356,6 @@ async function borrar(id) {
   const o = leer(); if (!o[id]) return false; delete o[id]; escribir(o); return true;
 }
 
-// Para cerrar una operación deben estar cumplidos (con fecha REAL) Atraque, Revalidación, Previo y Despacho.
-// El previo cuenta como cumplido si es NO PREVIO. Solo el usuario principal puede forzar el cierre.
-const PASOS_CIERRE = [['arribo', 'Atraque'], ['revalidacion', 'Revalidación'], ['previo', 'Previo'], ['despacho', 'Despacho']];
-function faltanCierre(e) {
-  const hs = (e && e.hitos) || {};
-  return PASOS_CIERRE.filter(([k]) => {
-    if (k === 'previo' && String(e.previo || '').toUpperCase().startsWith('NO')) return false;
-    return !(hs[k] && hs[k].r);
-  }).map(([k, l]) => (k === 'arribo' && e.tipo === 'LCL' ? 'Desconsolidación' : l));
-}
-
 // ---------- Rutas ----------
 function rutas(admin) {
   const r = express.Router();
@@ -437,12 +424,11 @@ function rutas(admin) {
       try {
         const act = await obtener(req.params.id);
         if (act && act.estado !== 'cerrada') {
-          const hitos = { ...(act.hitos || {}) };
-          for (const [k, v] of Object.entries(cambio.hitos || {})) hitos[k] = { ...(hitos[k] || {}), ...v };
-          const faltan = faltanCierre({ ...act, ...cambio, hitos });
+          // Regla: la operación solo pasa a Cerradas cuando su referencia se cerró en GASTOS
+          const refCerrada = 'gastosCerrada' in cambio ? !!cambio.gastosCerrada : !!act.gastosCerrada;
           const forzar = !!(req.body && req.body.forzarCierre) && req.principal;
-          if (faltan.length && !forzar) return res.status(409).json({ error: `No se puede cerrar el embarque: falta la fecha real de ${faltan.join(', ')}.`, faltan });
-          if (faltan.length) console.log(`OP Manzanillo: ${act.ref} cierre forzado por ${req.usuario} (faltaba ${faltan.join(', ')})`);
+          if (!refCerrada && !forzar) return res.status(409).json({ error: 'No se puede cerrar el embarque: primero hay que marcar "Cerrar referencia" en la sección de GASTOS.' });
+          if (!refCerrada) console.log(`OP Manzanillo: ${act.ref} cierre forzado por ${req.usuario} (referencia abierta en Gastos)`);
         }
       } catch (e) { return err(res, e, 'No se pudo guardar'); }
     }
