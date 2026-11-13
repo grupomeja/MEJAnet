@@ -140,6 +140,11 @@ nav.tabs button[aria-selected="true"]{background:#4A3826;color:#EAE1D3;box-shado
 .filters .seg.est-tabs button{border:0;background:transparent;padding:4px 12px;height:auto;font-size:13px;line-height:1.3;border-radius:6px;font-weight:600;color:#5E4E37;cursor:pointer}
 .filters .seg.est-tabs button:hover{background:rgba(94,78,55,.10)}
 .filters .seg.est-tabs button[aria-pressed="true"]{background:#4A3826;color:#EAE1D3;box-shadow:0 1px 2px rgba(0,0,0,.18)}
+/* Mismo tamaño que Ejecutivo / Seguimiento / Gastos */
+.filters .seg.est-tabs button{width:91.8px}.filters .seg.est-tabs button:nth-child(2){width:102.8px}
+/* Activas seleccionada: menta con letra negra · Cerradas seleccionada: verde del tablero con letra blanca */
+.filters .seg.est-tabs button[data-e="activa"][aria-pressed="true"]{background:#88F9C0;color:#000}
+.filters .seg.est-tabs button[data-e="cerrada"][aria-pressed="true"]{background:#2E8B57;color:#fff}
 /* Escritorio: "Ordenar por" queda a la misma distancia de las pestañas que el buscador (se mide en JS: --gap-izq) */
 @media (min-width:1101px){.f-der{justify-content:space-between;padding-left:var(--gap-izq,0px)}}
 @media (min-width:561px) and (max-width:1100px){.f-izq{grid-column:1/-1}.f-izq select{flex:1 1 0}.f-izq input[type=search]{flex:1.3 1 0!important}.f-der{display:contents}.filters .orden{grid-column:1;grid-row:2;justify-self:start}.filters .orden select{max-width:200px}.filters .seg.est-tabs{grid-column:2;grid-row:2}.f-der .count{grid-column:3;grid-row:2;justify-self:end}}
