@@ -140,8 +140,8 @@ nav.tabs button[aria-selected="true"]{background:#4A3826;color:#EAE1D3;box-shado
 .filters .seg.est-tabs button{border:0;background:transparent;padding:4px 12px;height:auto;font-size:13px;line-height:1.3;border-radius:6px;font-weight:600;color:#5E4E37;cursor:pointer}
 .filters .seg.est-tabs button:hover{background:rgba(94,78,55,.10)}
 .filters .seg.est-tabs button[aria-pressed="true"]{background:#4A3826;color:#EAE1D3;box-shadow:0 1px 2px rgba(0,0,0,.18)}
-/* Escritorio: los filtros llenan la zona izquierda y "Ordenar por" arranca en la derecha, con el mismo espacio a ambos lados de las pestañas */
-@media (min-width:1101px){.filters{column-gap:22px}.f-izq #f-cliente{flex:1 1 170px}.f-izq #f-terminal{flex:1 1 160px}.f-izq input[type=search]{flex:1.4 1 200px!important;width:auto}.f-der{justify-content:space-between}.filters .orden select{max-width:none;width:190px}}
+/* Escritorio: "Ordenar por" queda a la misma distancia de las pestañas que el buscador (se mide en JS: --gap-izq) */
+@media (min-width:1101px){.f-der{justify-content:space-between;padding-left:var(--gap-izq,0px)}}
 @media (min-width:561px) and (max-width:1100px){.f-izq{grid-column:1/-1}.f-izq select{flex:1 1 0}.f-izq input[type=search]{flex:1.3 1 0!important}.f-der{display:contents}.filters .orden{grid-column:1;grid-row:2;justify-self:start}.filters .orden select{max-width:200px}.filters .seg.est-tabs{grid-column:2;grid-row:2}.f-der .count{grid-column:3;grid-row:2;justify-self:end}}
 .banner{margin-top:12px;padding:10px 14px;border-radius:var(--r);background:var(--warn-soft);color:var(--warn);font-weight:500}
 
@@ -1720,6 +1720,10 @@ function setView(v){ui.view=v;try{localStorage.setItem("om.view",v)}catch(e){}
   $("#f-estado").hidden=v==="ejec";$("#f-orden-w").hidden=v!=="seg";
   document.body.classList.toggle("vista-gas",v==="gas");renderAll();}
 function fillSelect(id,vals,cur,all){const s=$(id);const html=`<option value="">${all}</option>`+vals.map(v=>`<option ${v===cur?"selected":""}>${esc(v)}</option>`).join("");if(s.dataset.h!==html){s.innerHTML=html;s.dataset.h=html}s.value=cur}
+// Mismo espacio a los dos lados de Activas/Cerradas/Todas: lo que hay entre el buscador y las pestañas se repite antes de "Ordenar por"
+function espejoFiltros(){const q=$("#f-q"),t=$("#f-estado"),d=$(".f-der");if(!q||!t||!d)return;d.style.removeProperty("--gap-izq");
+  if(innerWidth<1101)return;const g=Math.max(0,t.getBoundingClientRect().left-q.getBoundingClientRect().right-parseFloat(getComputedStyle($(".filters")).columnGap||0));d.style.setProperty("--gap-izq",g+"px")}
+addEventListener("resize",espejoFiltros);
 // Al cambiar el día (página abierta), recalcula días en puerto, vencimientos, etc.
 setInterval(()=>{const h=iso(new Date());if(h===TODAY)return;
   const a=document.activeElement;if(a&&/^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName))return;
@@ -1729,7 +1733,7 @@ function renderAll(){
   fillSelect("#f-cliente",clientes(),ui.cliente,"Todos los clientes");
   fillSelect("#f-terminal",terminales(),ui.terminal,"Todas las terminales");
   const n=filtered({ignoreEstado:ui.view==="ejec"}).length;
-  $("#f-count").innerHTML=loaded?`<b>${n}</b><i>Embarque${n===1?"":"s"}<small>${ui.estado==="activa"?"En seguimiento":ui.estado==="cerrada"?"Cerrado"+(n===1?"":"s"):"En total"}</small></i>`:"";
+  $("#f-count").innerHTML=loaded?`<b>${n}</b><i>Embarque${n===1?"":"s"}<small>${ui.estado==="activa"?"En seguimiento":ui.estado==="cerrada"?"Cerrado"+(n===1?"":"s"):"En total"}</small></i>`:"";requestAnimationFrame(espejoFiltros);
   if(ui.view==="ejec")renderEjec();else if(ui.view==="seg")renderSeg();else renderGas();
   medirFijos();
 }
