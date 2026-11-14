@@ -21,7 +21,7 @@ const MODULOS = [
   { id: 'orden-de-carga', nombre: 'Orden de Carga', envia: true, descripcion: 'Aviso con el PDF de cada orden nueva' },
   { id: 'entradas-bodega', nombre: 'Entradas Bodega', envia: false },
   { id: 'cotizador', nombre: 'Cotizador', envia: false },
-  { id: 'op-manzanillo', nombre: 'OP Manzanillo', envia: false },
+  { id: 'op-manzanillo', nombre: 'OP Manzanillo', envia: true, descripcion: 'Ficha de embarque en PDF (botón «Enviar por correo»; los destinatarios se escriben en cada envío)' },
   { id: 'cajas-patio', nombre: 'Cajas en patio', envia: false },
 ];
 
@@ -139,6 +139,7 @@ async function porResend(c) {
       text: c.texto,
     };
     if (c.html) cuerpo.html = c.html;
+    if (c.cc && c.cc.length) cuerpo.cc = c.cc;
     if (c.responder) cuerpo.reply_to = c.responder;
     if (c.adjuntos.length) cuerpo.attachments = c.adjuntos.map((a) => ({ filename: a.nombre, content: Buffer.from(a.contenido).toString('base64') }));
     const r = await fetch('https://api.resend.com/emails', {
@@ -169,6 +170,7 @@ async function porSMTP(c) {
     from: `"${c.nombre}" <${process.env.SMTP_USER}>`,
     replyTo: c.responder || undefined,
     to: c.para.join(', '),
+    cc: c.cc && c.cc.length ? c.cc.join(', ') : undefined,
     subject: c.asunto, text: c.texto, html: c.html || undefined,
     attachments: c.adjuntos.map((a) => ({ filename: a.nombre, content: a.contenido })),
   });
@@ -176,7 +178,7 @@ async function porSMTP(c) {
 
 // Envía un correo de un módulo. Si no se pasa "para", usa los destinatarios configurados del módulo.
 // Devuelve { enviado: true } o { enviado: false, motivo } si el módulo está apagado; lanza error si falla.
-async function enviarCorreo({ modulo, para, asunto, texto, html, adjuntos = [], forzar = false }) {
+async function enviarCorreo({ modulo, para, cc, asunto, texto, html, adjuntos = [], forzar = false }) {
   const { config } = await leer();
   const mod = config.modulos[modulo];
   if (!mod) throw new Error(`Módulo de correo desconocido: ${modulo}`);
@@ -186,7 +188,7 @@ async function enviarCorreo({ modulo, para, asunto, texto, html, adjuntos = [], 
   const como = metodo();
   if (!como) throw new Error('Correo no configurado: falta RESEND_API_KEY (o SMTP_USER/SMTP_PASS) en Render.');
   if (como === 'resend' && !config.direccion) throw new Error('Falta la dirección del remitente en Configuración de correo.');
-  const c = { nombre: config.nombre, direccion: config.direccion, responder: config.responder, para: destinatarios, asunto, texto: texto || '', html, adjuntos };
+  const c = { nombre: config.nombre, direccion: config.direccion, responder: config.responder, para: destinatarios, cc: cc ? listaCorreos(cc) : [], asunto, texto: texto || '', html, adjuntos };
   if (como === 'resend') await porResend(c);
   else await porSMTP(c);
   return { enviado: true };

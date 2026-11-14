@@ -8,6 +8,7 @@ const db = require('./db');
 const { limpiarPrevio, generarPrevio } = require('./previo-pdf');
 const drive = require('./drive-gastos');
 const reportes = require('./reportes-pdf');
+const { enviarCorreo } = require('./correo');
 
 const pool = db.pool;
 const FILE = path.join(db.DIR, 'op_manzanillo.json');
@@ -412,6 +413,31 @@ function rutas(admin) {
       res.set({ 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="FICHA DE EMBARQUE ${String(e.ref || req.params.id).replace(/[\\/:*?"<>|]/g, '-')}.pdf"` });
       res.send(buf);
     } catch (e) { err(res, e, 'No se pudo generar la ficha'); }
+  });
+  // Enviar la ficha de embarque por correo (PDF adjunto), vía el Apps Script de Google
+  r.post('/api/admin/opm/embarques/:id/correo', admin, express.json({ limit: '200kb' }), async (req, res) => {
+    try {
+      if (req.soloLectura) return res.status(403).json({ error: 'Usuario de solo lectura' });
+      const e = await obtener(req.params.id);
+      if (!e) return res.status(404).json({ error: 'No encontrado' });
+      const lista = (x) => String(x || '').split(/[;,\s]+/).map((s) => s.trim()).filter(Boolean);
+      const ok = (m) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(m);
+      const para = lista(req.body && req.body.para), cc = lista(req.body && req.body.cc);
+      if (!para.length) return res.status(400).json({ error: 'Escribe al menos un destinatario' });
+      const malos = para.concat(cc).filter((m) => !ok(m));
+      if (malos.length) return res.status(400).json({ error: 'Correo no válido: ' + malos.join(', ') });
+      const pdf = await reportes.fichaEmbarque(e);
+      const ref = String(e.ref || req.params.id);
+      // Mismo servicio de correo que Orden de Carga (remitente configurado en Herramientas → Correo)
+      await enviarCorreo({
+        modulo: 'op-manzanillo', forzar: true, para, cc,
+        asunto: t(req.body.asunto, 200) || `Ficha de embarque ${ref}`,
+        texto: t(req.body.mensaje, 4000),
+        adjuntos: [{ nombre: `FICHA DE EMBARQUE ${ref.replace(/[\\/:*?"<>|]/g, '-')}.pdf`, contenido: pdf }],
+      });
+      console.log(`OP Manzanillo: ficha ${ref} enviada por ${req.usuario} a ${para.join(', ')}${cc.length ? ' (cc ' + cc.join(', ') + ')' : ''}`);
+      res.json({ ok: true });
+    } catch (e) { console.error(e); res.status(500).json({ error: 'No se pudo enviar el correo: ' + e.message }); }
   });
   // PDF del Reporte ejecutivo / Reporte por referencia (Control de gastos)
   r.get('/api/admin/opm/reporte/:tipo.pdf', admin, async (req, res) => {
