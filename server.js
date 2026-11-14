@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const db = require('./db');
 const { generarPDF } = require('./pdf');
 const { enviarOrden } = require('./mail');
+const correo = require('./correo');
 const { formatoOC } = require('./oc');
 const { guardarEnDrive, enviarHojaEB, configurado: driveListo } = require('./drive');
 const cotizador = require('./cotizador');
@@ -176,7 +177,7 @@ app.post('/api/ordenes', admin, async (req, res) => {
       const oc = formatoOC(reg.oc);
       await Promise.all([
         enviarOrden(reg, pdf)
-          .then(() => db.marcarCorreo(reg.id, true))
+          .then((enviado) => enviado && db.marcarCorreo(reg.id, true))
           .catch((e) => console.error(`Error enviando correo de OC ${oc}:`, e.message)),
         driveListo()
           ? guardarEnDrive(`ORDEN_DE_CARGA_${oc}.pdf`, pdf)
@@ -417,6 +418,9 @@ app.use(traducciones.rutas(admin));
 app.use(shipper.rutas(admin));
 app.use(cajas.rutas(admin));
 
+// --- Configuración de correo (un remitente para todos los módulos) ---
+app.use(correo.rutas(admin));
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 const puerto = process.env.PORT || 3000;
@@ -426,6 +430,7 @@ db.init().then(async (aplicadas) => {
   await traducciones.init();
   await shipper.init();
   await cajas.init();
+  await correo.init();
   app.listen(puerto, () => console.log('Escuchando en puerto', puerto));
   // Si un cambio de datos se aplicó al arrancar, se actualiza la hoja de Google completa
   if (Array.isArray(aplicadas) && aplicadas.length && driveListo()) {

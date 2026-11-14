@@ -1,12 +1,8 @@
-// Envío del aviso por correo.
-// - Con RESEND_API_KEY usa la API de Resend por HTTPS (funciona en el plan gratis de Render,
-//   que bloquea los puertos SMTP).
-// - Si no, usa SMTP (SMTP_USER, SMTP_PASS) — solo funciona en planes de pago de Render.
+// Aviso por correo de Orden de Carga.
+// El envío (remitente, destinatarios, Resend/SMTP) lo hace el servicio general de correo (correo.js),
+// que se configura en /herramientas/correo.
 const { formatoOC } = require('./oc');
-
-function configurado() {
-  return !!(process.env.MAIL_TO && (process.env.RESEND_API_KEY || (process.env.SMTP_USER && process.env.SMTP_PASS)));
-}
+const { enviarCorreo } = require('./correo');
 
 function contenido(reg) {
   const d = reg.datos;
@@ -25,53 +21,16 @@ function contenido(reg) {
   };
 }
 
-async function porResend(c, pdf) {
-  const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), 20000);
-  try {
-    const r = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      signal: ctrl.signal,
-      headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        from: process.env.MAIL_FROM || 'Orden de Carga <onboarding@resend.dev>',
-        to: process.env.MAIL_TO.split(',').map((s) => s.trim()).filter(Boolean),
-        subject: c.asunto,
-        text: c.texto,
-        attachments: [{ filename: c.archivo, content: pdf.toString('base64') }],
-      }),
-    });
-    if (!r.ok) throw new Error(`Resend ${r.status}: ${(await r.text()).slice(0, 300)}`);
-  } finally {
-    clearTimeout(t);
-  }
-}
-
-async function porSMTP(c, pdf) {
-  const nodemailer = require('nodemailer');
-  const puerto = Number(process.env.SMTP_PORT || 465);
-  const transporte = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: puerto,
-    secure: puerto === 465,
-    connectionTimeout: 10000, greetingTimeout: 10000, socketTimeout: 20000,
-    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-  });
-  await transporte.sendMail({
-    from: `"Orden de Carga" <${process.env.SMTP_USER}>`,
-    to: process.env.MAIL_TO,
-    subject: c.asunto, text: c.texto,
-    attachments: [{ filename: c.archivo, content: pdf }],
-  });
-}
-
-// Devuelve true si se envió; lanza error si falla.
+// Devuelve true si se envió, false si el envío está apagado para Orden de Carga; lanza error si falla.
 async function enviarOrden(reg, pdf) {
-  if (!configurado()) throw new Error('Correo no configurado (falta RESEND_API_KEY o SMTP_USER/SMTP_PASS, y MAIL_TO)');
   const c = contenido(reg);
-  if (process.env.RESEND_API_KEY) await porResend(c, pdf);
-  else await porSMTP(c, pdf);
-  return true;
+  const r = await enviarCorreo({
+    modulo: 'orden-de-carga',
+    asunto: c.asunto,
+    texto: c.texto,
+    adjuntos: [{ nombre: c.archivo, contenido: pdf }],
+  });
+  return r.enviado;
 }
 
-module.exports = { enviarOrden, configurado };
+module.exports = { enviarOrden };

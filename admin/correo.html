@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="/favicon.ico?v=2" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/iconos/favicon-32.png?v=2">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2">
+<link rel="manifest" href="/site.webmanifest?v=2">
+<meta name="theme-color" content="#0b1a33">
+<meta name="apple-mobile-web-app-title" content="mejanet">
+<title>Correo · mejanet v1.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<script>
+  // Tema: lo elegido por el usuario (si lo hay) o el del sistema
+  (function(){var t=null;try{t=localStorage.getItem('mejanet-tema')}catch(e){}
+   if(t!=='claro'&&t!=='oscuro')t=matchMedia('(prefers-color-scheme: dark)').matches?'oscuro':'claro';
+   document.documentElement.dataset.tema=t})();
+</script>
+<style>
+  :root{
+    --bg:#f3f6fa;--bg2:#e9eef5;--card:#ffffff;--ink:#0b1a33;--ink2:#56627a;--ink3:#8a94a6;--line:#dfe5ee;
+    --navy:#0b1a33;--cyan:#4fc9ee;--hero-ink:#ffffff;--hero-sub:#a9c3dd;
+    --shadow:0 1px 2px rgba(11,26,51,.06),0 8px 24px rgba(11,26,51,.06);--shadow-h:0 2px 4px rgba(11,26,51,.08),0 16px 36px rgba(11,26,51,.12);
+    --logo:#0b1a33;
+  }
+  [data-tema="oscuro"]{
+    --bg:#0a1120;--bg2:#0e1729;--card:#121c31;--ink:#e8eef8;--ink2:#a3b0c6;--ink3:#6f7c94;--line:#1f2b44;
+    --hero-ink:#ffffff;--hero-sub:#8fa7c2;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);--shadow-h:0 2px 4px rgba(0,0,0,.35),0 18px 40px rgba(0,0,0,.45);
+    --logo:#e8eef8;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{min-height:100vh;display:flex;flex-direction:column;background:var(--bg);color:var(--ink);
+    font-family:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+  a{color:inherit}
+  .wrap{width:100%;max-width:1080px;margin:0 auto;padding:0 24px}
+
+  /* Barra superior */
+  header{position:relative;z-index:2}
+  header .wrap{display:flex;align-items:center;justify-content:space-between;height:80px}
+  .logo{display:block;width:204px;height:50px;background:#fff;
+    -webkit-mask:url(/logo.png) left center/contain no-repeat;mask:url(/logo.png) left center/contain no-repeat}
+  .acciones{display:flex;align-items:center;gap:8px}
+  .usuario{display:flex;align-items:center;gap:8px;padding:5px 12px 5px 5px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:#dfe9f5;font-size:13px;font-weight:600}
+  .usuario .av{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--cyan);color:#06263a;font-size:12px;font-weight:700;text-transform:uppercase}
+  .icono-btn{width:36px;height:36px;display:grid;place-items:center;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#dfe9f5;cursor:pointer;text-decoration:none;transition:background .15s,color .15s}
+  .icono-btn:hover{background:rgba(255,255,255,.14)}
+  .icono-btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .icono-btn.salir:hover{background:#FF6B5B;border-color:#FF6B5B;color:#fff}
+  .tema-claro,.tema-oscuro{display:none}
+  [data-tema="claro"] .tema-oscuro{display:block}[data-tema="oscuro"] .tema-claro{display:block}
+
+  /* Portada */
+  .hero{position:relative;background:radial-gradient(1200px 400px at 85% -10%,rgba(79,201,238,.22),transparent 60%),linear-gradient(160deg,#0b1a33 0%,#10284d 100%);color:var(--hero-ink);overflow:hidden;padding-bottom:110px}
+  [data-tema="oscuro"] .hero{background:radial-gradient(1200px 400px at 85% -10%,rgba(79,201,238,.16),transparent 60%),linear-gradient(160deg,#07101f 0%,#0d1d38 100%);border-bottom:1px solid var(--line)}
+  .hero .hex{position:absolute;right:-60px;top:-40px;width:420px;height:420px;opacity:.10;pointer-events:none}
+  .hero .hex path{fill:none;stroke:var(--cyan);stroke-width:14;stroke-linecap:round;stroke-linejoin:round}
+  .hero-txt{position:relative;padding-top:48px}
+  .saludo{margin:0 0 10px;color:var(--hero-sub);font-size:14px;font-weight:500}
+  /* Nombre de la plataforma: "meja" + etiqueta "net" */
+  .hero h1.marca{display:flex;align-items:center;margin:0;font-family:"Inter",system-ui,sans-serif;line-height:1}
+  .marca .a{font-size:clamp(46px,6.4vw,64px);font-weight:900;letter-spacing:-2px;color:#fff;padding-right:7px;transform:translateY(-4px)}
+  .marca .b{font-size:clamp(36px,5vw,50px);font-weight:700;letter-spacing:.5px;color:#06263a;background:var(--cyan);padding:6px 13px 10px;border-radius:13px}
+  .marca small{font-size:13px;font-weight:600;letter-spacing:.4px;color:var(--hero-sub);margin-left:14px;padding:3px 9px;border:1px solid rgba(255,255,255,.22);border-radius:999px}
+  .hero p.lema{margin:12px 0 0;color:var(--hero-sub);font-size:15px}
+
+  /* --- Herramientas --- */
+  .volver{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px 0 10px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#dfe9f5;text-decoration:none;font-size:13px;font-weight:600;transition:background .15s}
+  .volver:hover{background:rgba(255,255,255,.14)}
+  .volver svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+  /* Ruta: meja net › herramientas */
+  .ruta{display:flex;align-items:center;gap:8px;margin:0 0 14px;font-size:13px;font-weight:600;color:var(--hero-sub)}
+  .ruta a{display:inline-flex;align-items:center;text-decoration:none;font-weight:900;letter-spacing:-.4px;color:#fff;font-size:15px}
+  .ruta a b{font-weight:700;letter-spacing:0;color:#06263a;background:var(--cyan);padding:1px 6px 2px;border-radius:5px;margin-left:2px;font-size:13px}
+  .ruta a.mods{font-weight:600;letter-spacing:0;font-size:13px;color:var(--hero-sub)}.ruta a.mods:hover{color:#fff}
+  .ruta svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;opacity:.7}
+  /* Título: mosaico dorado con la llave + "herramientas" en Inter Black */
+  .titulo{display:flex;align-items:center;gap:16px;margin:0}
+  .titulo .sello{--c:#89E900;flex:0 0 auto;width:64px;height:64px;border-radius:16px;display:grid;place-items:center;background:var(--c);color:#222222;
+    box-shadow:inset 0 -8px 14px rgba(0,0,0,.10),0 8px 24px rgba(137,233,0,.30)}
+  .titulo .sello svg{width:40px;height:40px}.titulo .sello svg .h{fill:var(--c)}
+  .titulo h1{margin:0;font-family:"Inter",system-ui,sans-serif;font-weight:900;font-size:clamp(40px,6vw,60px);letter-spacing:-2px;line-height:1;color:#fff}
+  .titulo h1 span{color:#ffcf33}
+  .hero p.lema{margin:14px 0 0}
+  /* --- Configuración de correo --- */
+  .titulo .sello.correo{--c:#4fc9ee;color:#06263a;box-shadow:inset 0 -8px 14px rgba(0,0,0,.10),0 8px 24px rgba(79,201,238,.30)}
+  main{flex:1;position:relative;z-index:1;margin-top:-80px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:22px 22px 20px;margin-bottom:18px}
+  .card h2{margin:0 0 4px;font-family:"Oswald","Arial Narrow",sans-serif;font-weight:500;font-size:19px;letter-spacing:.6px;text-transform:uppercase}
+  .card p.ayuda{margin:0 0 16px;color:var(--ink2);font-size:13px;line-height:1.5}
+  .campos{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .campos .ancho{grid-column:1/-1}
+  label.c{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--ink2)}
+  label.c small{font-weight:500;text-transform:none;letter-spacing:0;color:var(--ink3);font-size:12px}
+  input[type=text],input[type=email],textarea{font:500 14px/1.4 "Inter",system-ui,sans-serif;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%}
+  textarea{min-height:64px;resize:vertical}
+  input:focus,textarea:focus{outline:2px solid var(--cyan);outline-offset:0;border-color:transparent}
+  .vista{margin-top:14px;padding:10px 12px;border-radius:10px;background:var(--bg2);font-size:13px;color:var(--ink2)}
+  .vista b{color:var(--ink)}
+  .estado{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:12px;font-size:13px;line-height:1.45;margin-bottom:18px}
+  .estado.ok{background:color-mix(in srgb,#2e8b57 14%,var(--card));border:1px solid color-mix(in srgb,#2e8b57 40%,var(--line))}
+  .estado.mal{background:color-mix(in srgb,#ff6b5b 14%,var(--card));border:1px solid color-mix(in srgb,#ff6b5b 45%,var(--line))}
+  .estado .pt{flex:0 0 10px;height:10px;border-radius:50%;margin-top:4px;background:#2e8b57}
+  .estado.mal .pt{background:#ff6b5b}
+  .mod-fila{display:grid;grid-template-columns:220px 1fr;gap:16px;padding:16px 0;border-top:1px solid var(--line)}
+  .mod-fila:first-of-type{border-top:0;padding-top:4px}
+  .mod-fila .nom{font-family:"Oswald","Arial Narrow",sans-serif;font-weight:500;font-size:17px;letter-spacing:.5px;text-transform:uppercase}
+  .mod-fila .des{font-size:12px;color:var(--ink3);margin-top:3px}
+  .chip{display:inline-block;margin-top:6px;font-size:11px;font-weight:700;letter-spacing:.3px;padding:2px 8px;border-radius:999px;background:var(--bg2);color:var(--ink3)}
+  .chip.si{background:color-mix(in srgb,#2e8b57 18%,var(--card));color:#2e8b57}
+  .switch{display:inline-flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;font-weight:600;cursor:pointer;user-select:none}
+  .switch input{appearance:none;width:38px;height:22px;border-radius:999px;background:var(--line);position:relative;cursor:pointer;transition:background .15s;margin:0}
+  .switch input::after{content:"";position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+  .switch input:checked{background:#2e8b57}.switch input:checked::after{left:19px}
+  .barra{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  button.btn{font:700 14px "Inter",system-ui,sans-serif;border:0;border-radius:10px;padding:11px 20px;cursor:pointer;background:var(--navy);color:#fff;transition:filter .15s}
+  [data-tema="oscuro"] button.btn{background:var(--cyan);color:#06263a}
+  button.btn.sec2{background:transparent;color:var(--ink);border:1px solid var(--line)}
+  button.btn:hover{filter:brightness(1.12)}button.btn:disabled{opacity:.55;cursor:default}
+  .msg{font-size:13px;font-weight:600}.msg.ok{color:#2e8b57}.msg.mal{color:#e5484d}
+  .prueba{display:flex;gap:10px;flex-wrap:wrap}.prueba input{flex:1;min-width:220px}
+  .meta{font-size:12px;color:var(--ink3);margin-left:auto}
+  .bloqueo{text-align:center;padding:40px 20px;color:var(--ink2)}
+  footer{padding:28px 0 24px;color:var(--ink3);font-size:12px}
+  footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  @media (max-width:700px){
+    .wrap{padding:0 16px}
+    header .wrap{height:68px}.logo{width:164px;height:40px}
+    .hero{padding-bottom:84px}.hero-txt{padding-top:20px}main{margin-top:-60px}.hero .hex{width:260px;height:260px;right:-70px}
+    .campos{grid-template-columns:1fr}.mod-fila{grid-template-columns:1fr;gap:10px}
+    .titulo{gap:12px}.titulo .sello{width:50px;height:50px;border-radius:13px}.titulo .sello svg{width:32px;height:32px}
+    .volver span{display:none}.volver{padding:0;width:36px;justify-content:center}
+    .meta{margin-left:0;width:100%}
+  }
+</style>
+</head>
+<body>
+<div class="hero">
+  <svg class="hex" viewBox="0 0 200 200" aria-hidden="true"><path d="M100 14l74 42v88l-74 42-74-42V56z"/><path d="M62 78l38 24 38-24"/></svg>
+  <header>
+    <div class="wrap">
+      <a href="/modulos" class="logo" aria-label="Grupo Meja"></a>
+      <div class="acciones">
+        <a class="volver" href="/herramientas"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg><span>Herramientas</span></a>
+        <button class="icono-btn" id="tema" type="button" title="Cambiar tema" aria-label="Cambiar entre tema claro y oscuro">
+          <svg class="tema-oscuro" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+          <svg class="tema-claro" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+  <div class="wrap hero-txt">
+    <p class="ruta"><a href="/modulos">meja<b>net</b></a><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg><a class="mods" href="/modulos">Módulos</a><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg><a class="mods" href="/herramientas">Herramientas</a></p>
+    <div class="titulo"><span class="sello correo" aria-hidden="true"><svg viewBox="0 0 64 64"><rect x="6" y="14" width="52" height="36" rx="6" fill="currentColor"/><path d="M10 19l22 17 22-17" fill="none" class="hs" stroke="#4fc9ee" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><h1>correo</h1></div>
+    <p class="lema">Un solo remitente para los avisos de todos los módulos</p>
+  </div>
+</div>
+
+<main>
+  <div class="wrap">
+    <div id="contenido"><div class="card bloqueo">Cargando…</div></div>
+  </div>
+</main>
+
+<footer><div class="wrap"><span>Grupo Meja · uso interno</span><span id="fecha"></span></div></footer>
+
+<template id="plantilla">
+  <div id="estado" class="estado"><span class="pt"></span><span id="estado-txt"></span></div>
+
+  <form id="form" autocomplete="off">
+    <div class="card">
+      <h2>Remitente</h2>
+      <p class="ayuda">Es la dirección desde la que salen todos los correos de MEJAnet. Tiene que ser de un dominio verificado en Resend (por ejemplo <b>@mail.grupomeja.com</b>).</p>
+      <div class="campos">
+        <label class="c">Nombre que se muestra<input type="text" id="nombre" maxlength="80" placeholder="MEJAnet"></label>
+        <label class="c">Dirección del remitente<input type="email" id="direccion" maxlength="200" placeholder="avisos@mail.grupomeja.com"></label>
+        <label class="c ancho">Responder a <small>Opcional. Si alguien contesta un aviso, la respuesta llega a esta dirección (por ejemplo una cuenta que sí se revise).</small><input type="email" id="responder" maxlength="200" placeholder="logistica@grupomeja.com"></label>
+      </div>
+      <div class="vista">Los correos se verán así: <b id="vista"></b></div>
+    </div>
+
+    <div class="card">
+      <h2>Destinatarios por módulo</h2>
+      <p class="ayuda">Quién recibe los avisos de cada módulo. Puedes poner varios correos separados por coma o uno por renglón. Si apagas un módulo, no se manda nada de ese módulo.</p>
+      <div id="modulos"></div>
+    </div>
+
+    <div class="card">
+      <div class="barra">
+        <button class="btn" type="submit" id="guardar">Guardar cambios</button>
+        <span class="msg" id="msg-guardar"></span>
+        <span class="meta" id="meta"></span>
+      </div>
+    </div>
+  </form>
+
+  <div class="card">
+    <h2>Correo de prueba</h2>
+    <p class="ayuda">Manda un correo de prueba con la configuración <b>guardada</b>. Guarda primero si hiciste cambios.</p>
+    <div class="prueba">
+      <input type="email" id="para-prueba" placeholder="tu-correo@ejemplo.com">
+      <button class="btn sec2" type="button" id="probar">Enviar prueba</button>
+    </div>
+    <div class="msg" id="msg-prueba" style="margin-top:10px"></div>
+  </div>
+</template>
+
+<script>
+  (function(){
+    var raiz=document.documentElement;
+    document.getElementById('tema').addEventListener('click',function(){
+      var t=raiz.dataset.tema==='oscuro'?'claro':'oscuro';raiz.dataset.tema=t;
+      try{localStorage.setItem('mejanet-tema',t)}catch(e){}
+    });
+    var fecha=new Date().toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    document.getElementById('fecha').textContent=fecha.charAt(0).toUpperCase()+fecha.slice(1);
+  })();
+
+  (function(){
+    var $=function(id){return document.getElementById(id)};
+    var cont=$('contenido'), datos=null, cambios=false;
+    function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+    function bloqueo(t){cont.innerHTML='<div class="card bloqueo">'+esc(t)+'</div>'}
+    function msg(el,t,ok){el.textContent=t||'';el.className='msg '+(t?(ok?'ok':'mal'):'')}
+
+    fetch('/api/correo/config',{credentials:'same-origin'}).then(function(r){
+      return r.json().then(function(j){if(!r.ok)throw new Error(j.error||'No se pudo cargar.');return j});
+    }).then(function(j){datos=j;pintar()}).catch(function(e){bloqueo(e.message)});
+
+    function pintar(){
+      cont.innerHTML='';cont.appendChild($('plantilla').content.cloneNode(true));
+      var c=datos.config;
+      $('nombre').value=c.nombre||'';$('direccion').value=c.direccion||'';$('responder').value=c.responder||'';
+      // Estado del envío
+      var est=$('estado'), t;
+      if(datos.metodo==='resend'){est.className='estado ok';t='Envío activo por <b>Resend</b> (la clave RESEND_API_KEY está en Render).'}
+      else if(datos.metodo==='smtp'){est.className='estado ok';t='Envío por <b>SMTP</b> con la cuenta '+esc(datos.smtpUsuario)+'. Por SMTP el correo siempre sale de esa cuenta; la dirección de remitente de abajo solo aplica con Resend.'}
+      else{est.className='estado mal';t='No hay clave de envío en Render. Agrega <b>RESEND_API_KEY</b> en Render → Environment para que se puedan mandar correos.'}
+      if(!datos.guardada)t+='<br>Todavía no se ha guardado esta configuración: los valores mostrados vienen de las variables anteriores (MAIL_FROM y MAIL_TO).';
+      $('estado-txt').innerHTML=t;
+      // Módulos
+      var html='';
+      datos.modulos.forEach(function(m){
+        var x=c.modulos[m.id]||{activo:false,para:[]};
+        html+='<div class="mod-fila" data-id="'+m.id+'"><div><div class="nom">'+esc(m.nombre)+'</div>'+
+          (m.descripcion?'<div class="des">'+esc(m.descripcion)+'</div>':'')+
+          '<span class="chip'+(m.envia?' si':'')+'">'+(m.envia?'Ya manda avisos':'Aún no manda avisos')+'</span><br>'+
+          '<label class="switch"><input type="checkbox" class="activo"'+(x.activo?' checked':'')+'> Enviar correos</label></div>'+
+          '<label class="c">Destinatarios<textarea class="para" placeholder="correo1@grupomeja.com, correo2@grupomeja.com">'+esc((x.para||[]).join(', '))+'</textarea></label></div>';
+      });
+      $('modulos').innerHTML=html;
+      meta();vista();
+      $('form').addEventListener('input',function(){cambios=true;vista();msg($('msg-guardar'),'')});
+      $('form').addEventListener('submit',guardar);
+      $('probar').addEventListener('click',probar);
+    }
+    function meta(){
+      $('meta').textContent=datos.actualizado?'Último cambio: '+new Date(datos.actualizado).toLocaleString('es-MX')+(datos.actualizadoPor?' · '+datos.actualizadoPor:''):'';
+    }
+    function vista(){
+      var n=$('nombre').value.trim()||'MEJAnet', d=$('direccion').value.trim()||'(falta la dirección)';
+      $('vista').textContent=n+' <'+d+'>';
+    }
+    function leerForm(){
+      var mods={};
+      document.querySelectorAll('.mod-fila').forEach(function(f){
+        mods[f.dataset.id]={activo:f.querySelector('.activo').checked,para:f.querySelector('.para').value};
+      });
+      return {nombre:$('nombre').value,direccion:$('direccion').value,responder:$('responder').value,modulos:mods};
+    }
+    function guardar(ev){
+      ev.preventDefault();
+      var b=$('guardar');b.disabled=true;msg($('msg-guardar'),'Guardando…',true);
+      fetch('/api/correo/config',{method:'PUT',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(leerForm())})
+        .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||'No se pudo guardar.');return j})})
+        .then(function(){cambios=false;msg($('msg-guardar'),'✓ Guardado',true);datos.guardada=true;datos.actualizado=new Date().toISOString();meta();
+          return fetch('/api/correo/config',{credentials:'same-origin'}).then(function(r){return r.json()}).then(function(j){datos=j;meta()});})
+        .catch(function(e){msg($('msg-guardar'),e.message,false)})
+        .then(function(){b.disabled=false});
+    }
+    function probar(){
+      var para=$('para-prueba').value.trim();
+      if(!para){msg($('msg-prueba'),'Escribe a qué correo mandar la prueba.',false);return}
+      if(cambios){msg($('msg-prueba'),'Tienes cambios sin guardar. Guarda primero para probar con la configuración nueva.',false);return}
+      var b=$('probar');b.disabled=true;msg($('msg-prueba'),'Enviando…',true);
+      fetch('/api/correo/prueba',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({para:para})})
+        .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||'No se pudo enviar.');return j})})
+        .then(function(){msg($('msg-prueba'),'✓ Enviado. Revisa la bandeja de '+para+' (y la carpeta de spam).',true)})
+        .catch(function(e){msg($('msg-prueba'),'No se pudo enviar: '+e.message,false)})
+        .then(function(){b.disabled=false});
+    }
+    window.addEventListener('beforeunload',function(e){if(cambios){e.preventDefault();e.returnValue=''}});
+  })();
+</script>
+</body>
+</html>

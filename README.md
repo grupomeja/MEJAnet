@@ -18,14 +18,23 @@ Al enviar, la orden se **guarda** y se **manda por correo en PDF**.
 | `USUARIOS` | Otros usuarios con el mismo acceso, formato `usuario:contraseña,usuario2:contraseña2`. El usuario distingue mayúsculas. Cambiar la contraseña de alguien cierra sus sesiones abiertas |
 | `ADMIN_PASSWORD` | Contraseña para entrar a MEJAnet |
 | `SESSION_SECRET` | Opcional. Texto secreto extra para firmar la cookie de sesión; cambiarlo cierra todas las sesiones |
-| `RESEND_API_KEY` | Clave de Resend (https://resend.com) para enviar el correo por HTTPS. Necesaria en el plan gratis de Render, que bloquea SMTP |
-| `MAIL_FROM` | Opcional. Remitente; por defecto `Orden de Carga <onboarding@resend.dev>` |
-| `SMTP_USER` | Solo si no usas Resend (SMTP; no funciona en el plan gratis de Render) |
-| `SMTP_PASS` | Contraseña de aplicación de ese correo (no la contraseña normal) |
-| `MAIL_TO` | Correo que recibe el aviso (varios, separados por coma) |
+| `RESEND_API_KEY` | Clave de Resend (https://resend.com) para enviar correos por HTTPS. Necesaria en el plan gratis de Render, que bloquea SMTP |
+| `SMTP_USER` / `SMTP_PASS` | Solo si no usas Resend (SMTP; no funciona en el plan gratis de Render). La contraseña es de aplicación, no la normal |
 | `SMTP_HOST` / `SMTP_PORT` | Opcionales. Por defecto `smtp.gmail.com` / `465` |
+| `MAIL_FROM` / `MAIL_TO` | Ya no hacen falta: solo se usan como valores iniciales hasta que se guarde la Configuración de correo |
 
 Sin `DATABASE_URL` las órdenes se guardan en un archivo local, que se borra cuando Render reinicia el servicio gratis.
+
+## Configuración de correo
+
+Todos los módulos mandan correo desde **un solo remitente**, que se configura en **Herramientas → Correo** (`/herramientas/correo`, solo el usuario principal):
+
+- Nombre y dirección del remitente (tiene que ser de un dominio verificado en Resend, por ejemplo `avisos@mail.grupomeja.com`) y, opcional, una dirección para respuestas.
+- Destinatarios de cada módulo y un interruptor para encender o apagar sus avisos.
+- Botón para mandar un correo de prueba.
+
+La configuración se guarda en la base de datos (tabla `config_correo`). La clave de envío sigue en Render (`RESEND_API_KEY`).
+Para mandar correo desde un módulo nuevo: `require('./correo').enviarCorreo({ modulo, asunto, texto, adjuntos })`, y agregar el módulo a la lista `MODULOS` de `correo.js`.
 
 ## Guardar los PDF en Google Drive (opcional)
 
