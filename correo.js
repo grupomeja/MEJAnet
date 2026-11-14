@@ -204,7 +204,10 @@ function rutas(admin) {
     res.status(500).json({ error: msg });
   };
 
-  r.get('/herramientas/correo', admin, (_req, res) => res.set('Cache-Control', 'no-store').sendFile(path.join(__dirname, 'admin', 'correo.html')));
+  // Otros usuarios que escriban la dirección a mano regresan a Herramientas
+  r.get('/herramientas/correo', admin, (req, res) => req.principal
+    ? res.set('Cache-Control', 'no-store').sendFile(path.join(__dirname, 'admin', 'correo.html'))
+    : res.redirect('/herramientas'));
 
   r.get('/api/correo/config', admin, principal, async (_req, res) => {
     try {

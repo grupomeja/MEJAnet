@@ -213,7 +213,7 @@
       </a>
       </nav>
     </section>
-    <section aria-label="Configuración">
+    <section aria-label="Configuración" id="sec-config" hidden>
       <div class="sec">Configuración</div>
       <nav class="grid">
       <a class="mod correo" href="/herramientas/correo">
@@ -238,6 +238,12 @@
     var fecha=new Date().toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
     document.getElementById('fecha').textContent=fecha.charAt(0).toUpperCase()+fecha.slice(1);
   })();
+</script>
+<script>
+  // La sección Configuración (Correo) solo se muestra al usuario principal
+  fetch('/api/sesion',{credentials:'same-origin'}).then(function(r){return r.ok?r.json():null}).then(function(s){
+    if(s&&s.principal)document.getElementById('sec-config').hidden=false;
+  }).catch(function(){});
 </script>
 <script src="/solo-lectura.js"></script>
 </body>
