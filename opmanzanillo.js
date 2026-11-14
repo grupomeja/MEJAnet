@@ -423,7 +423,7 @@ function rutas(admin) {
       if (!e) return res.status(404).json({ error: 'No encontrado' });
       const ref = String(e.ref || req.params.id);
       const pdf = await reportes.fichaEmbarque(e);
-      // Cuerpo: solo estos datos, uno por renglón
+      // Cuerpo: saludo, datos (uno por renglón), aviso del adjunto y quién lo envió
       const datos = [['Referencia', ref], ['Cliente', e.cliente], ['Buque', e.buque], ['Viaje', e.viaje], ['HBL', e.hbl], ['MBL', e.mbl],
         ['Pedimento', e.pedimento]].map(([k, v]) => `${k}: ${v || '—'}`).join('\n');
       const r2 = await enviarCorreo({
@@ -431,7 +431,7 @@ function rutas(admin) {
         // FICHA DE EMBARQUE - REF | CLIENTE | BUQUE V-VIAJE | HBL: … | MBL: … (se omite lo que esté vacío)
         asunto: ['FICHA DE EMBARQUE - ' + ref, e.cliente, [e.buque, e.viaje && 'V-' + e.viaje].filter(Boolean).join(' '),
           e.hbl && 'HBL: ' + e.hbl, e.mbl && 'MBL: ' + e.mbl].filter(Boolean).join(' | '),
-        texto: datos,
+        texto: `Se envía la ficha de embarque de la referencia ${ref}.\n\n${datos}\n\nEl PDF va adjunto.\n\nEnviado por ${req.usuario || 'MEJAnet'} desde OP Manzanillo.`,
         adjuntos: [{ nombre: `FICHA DE EMBARQUE ${ref.replace(/[\\/:*?"<>|]/g, '-')}.pdf`, contenido: pdf }],
       });
       if (!r2.enviado) return res.status(409).json({ error: 'El envío de correo de OP Manzanillo está apagado (Herramientas → Correo).' });
