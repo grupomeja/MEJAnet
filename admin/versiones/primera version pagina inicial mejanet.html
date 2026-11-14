@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Módulos · MEJAnet v1.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#f4f8fb;--ink:#0b1a33;--accent:#1f4e8c;--accent-ink:#fff}
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  main{width:100%;max-width:520px;padding:20px 16px;text-align:center}
+  img{width:min(210px,55%);height:auto;display:block;margin:0 auto 18px}
+  h1{margin:0 0 24px;font-size:clamp(28px,7vw,38px);letter-spacing:1px;font-weight:800}
+  h1 span{color:#4fc9ee}
+  h1 small{font-size:.38em;font-weight:700;color:#5d6672;letter-spacing:.5px;margin-left:6px}
+  .botones{display:grid;gap:12px;max-width:320px;margin:0 auto}
+  /* Botón: recuadro blanco con el ícono del color del botón + texto sobre el color */
+  a.boton{--c:#1f4e8c;--c-osc:#123;display:flex;align-items:stretch;height:54px;border-radius:9px;overflow:hidden;text-decoration:none;
+    background:var(--c);box-shadow:0 3px 0 var(--c-osc),0 6px 14px rgba(0,0,0,.16);transition:transform .08s,box-shadow .08s,filter .15s}
+  a.boton .ico{flex:0 0 54px;display:flex;align-items:center;justify-content:center;background:#fff;color:var(--c);
+    border-right:1px solid rgba(0,0,0,.08);box-shadow:inset 0 -6px 10px rgba(0,0,0,.06)}
+  a.boton .ico svg{width:38px;height:38px}
+  a.boton .txt{flex:1;display:flex;align-items:center;justify-content:center;padding:0 12px;color:#fff;
+    font-family:"Oswald","Arial Narrow",system-ui,sans-serif;font-weight:600;font-size:18px;letter-spacing:1.2px;text-transform:uppercase;white-space:nowrap;
+    background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,0) 55%,rgba(0,0,0,.08));text-shadow:0 1px 1px rgba(0,0,0,.2)}
+  a.boton:hover{filter:brightness(1.07)}
+  a.boton:active{transform:translateY(2px);box-shadow:0 1px 0 var(--c-osc),0 3px 8px rgba(0,0,0,.16)}
+  a.boton:focus-visible{outline:3px solid #4fc9ee;outline-offset:3px}
+  @media (max-width:420px){a.boton .txt{font-size:17px;letter-spacing:1px}}
+  /* Pantallas bajas (laptops, celular acostado): todo más compacto para que quepa sin bajar */
+  @media (max-height:700px){main{padding:12px 16px}img{width:min(160px,45%);margin-bottom:10px}h1{font-size:28px;margin-bottom:16px}.botones{gap:9px}a.boton{height:46px}a.boton .ico{flex-basis:46px}a.boton .ico svg{width:32px;height:32px}a.boton .txt{font-size:16px}a.salir{margin-top:16px}}
+  a.boton.carga{--c:#ff6100;--c-osc:#c24a00}
+  a.boton.bodega{--c:#875a86;--c-osc:#5f3f5e}
+  a.boton.cotizador{--c:#1a64c8;--c-osc:#114a99}
+  a.boton.manzanillo{--c:#C9B08C;--c-osc:#A08560}
+  a.boton.manzanillo .ico{color:#7A5C38}
+  a.boton.manzanillo .txt{color:#2E2419;text-shadow:none}
+  a.boton.herramientas{--c:#f5c400;--c-osc:#c99f00}
+  a.boton.herramientas .ico{color:#b38a00}
+  a.boton.herramientas .txt{color:#2b2400;text-shadow:none}
+  /* Cerrar sesión: botón secundario, discreto debajo de los módulos */
+  a.salir{display:inline-flex;align-items:center;gap:8px;margin-top:22px;padding:8px 18px;border:1.5px solid #c9d4e0;border-radius:999px;
+    background:#fff;color:#5d6672;text-decoration:none;font-weight:700;font-size:14px;letter-spacing:.3px;transition:color .15s,border-color .15s,background .15s}
+  a.salir svg{width:18px;height:18px}
+  a.salir:hover{color:#c0262d;border-color:#c0262d;background:#fff5f5}
+  a.salir:focus-visible{outline:3px solid #4fc9ee;outline-offset:3px}
+</style>
+</head>
+<body>
+<main>
+  <img src="/mejanet-logo.png" alt="Grupo Meja">
+  <h1>MEJA<span>net</span><small>v1.0</small></h1>
+  <div class="botones">
+    <a class="boton carga" href="/orden-de-carga">
+      <span class="ico" aria-hidden="true">
+        <svg viewBox="0 0 64 64">
+          <rect x="11" y="8" width="42" height="54" rx="4" fill="currentColor"/>
+          <rect x="16" y="15" width="32" height="42" rx="1.5" fill="#fff"/>
+          <path d="M24 5h16a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H24a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z" fill="#fff"/>
+          <path d="M25.5 7.5h13v4.5h-13z" fill="currentColor"/>
+          <g fill="currentColor"><rect x="20" y="20" width="11" height="2.6"/><rect x="38" y="20" width="6" height="2.6"/><rect x="22" y="25" width="22" height="2.6"/><rect x="20" y="30" width="24" height="2.6"/>
+            <rect x="20" y="35" width="12" height="2.6"/><rect x="20" y="39.5" width="15" height="2.6"/><rect x="20" y="44" width="13" height="2.6"/></g>
+          <g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M37.5 36l1.8 2 3.4-4"/><path d="M37.5 40.5l1.8 2 3.4-4"/><path d="M37.5 45l1.8 2 3.4-4"/></g>
+          <circle cx="23.5" cy="52.5" r="3.4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="23.5" cy="52.5" r="1.5" fill="currentColor"/>
+        </svg>
+      </span>
+      <span class="txt">Orden de Carga</span>
+    </a>
+    <a class="boton bodega" href="/entradas-bodega">
+      <span class="ico" aria-hidden="true">
+        <svg viewBox="0 0 64 64">
+          <path d="M2 30 L20 22 H62 V52 H2 Z" fill="currentColor"/>
+          <rect x="24" y="16" width="36" height="11" rx="1" fill="#fff"/>
+          <rect x="25.5" y="17.5" width="33" height="8" fill="currentColor"/>
+          <text x="42" y="24" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="7" fill="#fff" letter-spacing=".3">BODEGA</text>
+          <rect x="20" y="24" width="1.6" height="28" fill="#fff"/>
+          <rect x="7" y="38" width="7" height="14" fill="#fff"/>
+          <rect x="31" y="35" width="22" height="13" fill="#fff"/>
+          <g fill="currentColor"><rect x="31" y="37.5" width="22" height="1.2"/><rect x="31" y="40.5" width="22" height="1.2"/><rect x="31" y="43.5" width="22" height="1.2"/></g>
+          <path d="M29 48h26v4H29z" fill="#fff"/><path d="M30.5 49.5h23v2.5h-23z" fill="currentColor"/>
+          <rect x="1" y="52" width="62" height="2.5" fill="currentColor"/>
+        </svg>
+      </span>
+      <span class="txt">Entradas Bodega</span>
+    </a>
+    <a class="boton cotizador" href="/cotizador">
+      <span class="ico" aria-hidden="true">
+        <svg viewBox="0 0 64 64">
+          <rect x="13" y="5" width="38" height="54" rx="6" fill="currentColor"/>
+          <rect x="18" y="10" width="28" height="12" rx="2" fill="#fff"/>
+          <rect x="34" y="14.5" width="9" height="3" rx="1.2" fill="currentColor"/>
+          <g fill="#fff">
+            <rect x="18" y="27" width="7" height="6" rx="1.5"/><rect x="28.5" y="27" width="7" height="6" rx="1.5"/><rect x="39" y="27" width="7" height="6" rx="1.5"/>
+            <rect x="18" y="36" width="7" height="6" rx="1.5"/><rect x="28.5" y="36" width="7" height="6" rx="1.5"/><rect x="39" y="36" width="7" height="15" rx="1.5"/>
+            <rect x="18" y="45" width="7" height="6" rx="1.5"/><rect x="28.5" y="45" width="7" height="6" rx="1.5"/>
+          </g>
+          <g stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
+            <path d="M40.5 30h4M42.5 28v4"/><path d="M40.5 41.5h4M40.5 45.5h4"/><path d="M19.5 30h4"/>
+          </g>
+        </svg>
+      </span>
+      <span class="txt">Cotizador</span>
+    </a>
+    <a class="boton manzanillo" href="/op-manzanillo">
+      <span class="ico" aria-hidden="true">
+        <svg viewBox="0 0 64 64">
+          <rect x="29" y="6" width="3" height="10" fill="currentColor"/>
+          <path d="M20 16h22v10H20z" fill="currentColor"/>
+          <g fill="#fff"><rect x="23.5" y="19" width="4" height="3.5" rx=".6"/><rect x="29" y="19" width="4" height="3.5" rx=".6"/><rect x="34.5" y="19" width="4" height="3.5" rx=".6"/></g>
+          <path d="M14 26h34v6H14z" fill="currentColor"/>
+          <g fill="#fff"><rect x="17" y="27.6" width="5" height="2.8"/><rect x="23.5" y="27.6" width="5" height="2.8"/><rect x="30" y="27.6" width="5" height="2.8"/><rect x="36.5" y="27.6" width="5" height="2.8"/></g>
+          <path d="M6 33h52l-7 14H13z" fill="currentColor"/>
+          <path d="M11 37h42" stroke="#fff" stroke-width="1.6"/>
+          <path d="M3 52c4 0 4-2.6 8-2.6s4 2.6 8 2.6 4-2.6 8-2.6 4 2.6 8 2.6 4-2.6 8-2.6 4 2.6 8 2.6 4-2.6 8-2.6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
+          <path d="M9 58c4 0 4-2.4 8-2.4s4 2.4 8 2.4 4-2.4 8-2.4 4 2.4 8 2.4 4-2.4 8-2.4 4 2.4 7 2.4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" opacity=".6"/>
+        </svg>
+      </span>
+      <span class="txt">OP Manzanillo</span>
+    </a>
+    <a class="boton herramientas" href="/herramientas">
+      <span class="ico" aria-hidden="true">
+        <svg viewBox="0 0 64 64">
+          <path d="M44.5 6.5a13 13 0 0 0-12.3 17.2L8.6 47.3a5.6 5.6 0 0 0 0 7.9l.2.2a5.6 5.6 0 0 0 7.9 0l23.6-23.6A13 13 0 0 0 57.5 19.5l-7.6 7.6-8.1-1.5-1.5-8.1 7.6-7.6a13 13 0 0 0-3.4-3.4z" fill="currentColor"/>
+          <circle cx="12.7" cy="51.3" r="2.4" fill="#fff"/>
+          <path d="M9 13l5-5 7 4 1.5 5.5 13 13-4 4-13-13L13 20z" fill="currentColor"/>
+          <path d="M37.5 37.5l4-4 14.8 14.8a4 4 0 0 1 0 5.7l-1.6 1.6a4 4 0 0 1-5.7 0z" fill="currentColor"/>
+        </svg>
+      </span>
+      <span class="txt">Herramientas</span>
+    </a>
+  </div>
+  <a class="salir" href="/logout">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 17l-5-5 5-5"/><path d="M5 12h11"/>
+    </svg>
+    Cerrar sesión
+  </a>
+</main>
+<script src="/solo-lectura.js"></script>
+</body>
+</html>
