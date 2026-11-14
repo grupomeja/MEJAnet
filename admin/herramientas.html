@@ -101,7 +101,6 @@
     .des{white-space:normal}
     .flecha{position:absolute;right:16px;top:20px}
   }
-  @media (max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
   @media (max-width:600px){
     .wrap{padding:0 16px}
     header .wrap{height:68px}.logo{width:164px;height:40px}
@@ -134,15 +133,12 @@
   .sec::after{content:"";flex:1;height:1px;background:var(--line)}
   section:first-of-type .sec{color:var(--hero-sub)}
   section:first-of-type .sec::after{background:rgba(255,255,255,.14)}
-  .grid{grid-template-columns:repeat(3,1fr)}
   a.mod.reporte{--c:#2e8b57}
   a.mod.patio{--c:#0b1a33}
   [data-tema="oscuro"] a.mod.patio{--c:#2f6fb8}
   a.mod.conversion{--c:#5b6b7d}
   [data-tema="oscuro"] a.mod.reporte{--c:#36a467}
   [data-tema="oscuro"] a.mod.conversion{--c:#73859a}
-  @media (min-width:901px){a.mod{min-height:190px}}
-  @media (max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
   @media (max-width:600px){
     .grid{grid-template-columns:1fr}
     .titulo{gap:12px}.titulo .sello{width:50px;height:50px;border-radius:13px}.titulo .sello svg{width:32px;height:32px}
