@@ -427,8 +427,8 @@ function rutas(admin) {
         ['Contenedor', e.contenedor], ['Pedimento', e.pedimento]].filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join('\n');
       const r2 = await enviarCorreo({
         modulo: 'op-manzanillo',
-        // FICHA DE EMBARQUE - REF | CLIENTE | BUQUE VIAJE | HBL: … | MBL: … (se omite lo que esté vacío)
-        asunto: ['FICHA DE EMBARQUE - ' + ref, e.cliente, [e.buque, e.viaje].filter(Boolean).join(' '),
+        // FICHA DE EMBARQUE - REF | CLIENTE | BUQUE V-VIAJE | HBL: … | MBL: … (se omite lo que esté vacío)
+        asunto: ['FICHA DE EMBARQUE - ' + ref, e.cliente, [e.buque, e.viaje && 'V-' + e.viaje].filter(Boolean).join(' '),
           e.hbl && 'HBL: ' + e.hbl, e.mbl && 'MBL: ' + e.mbl].filter(Boolean).join(' | '),
         texto: `Se envía la ficha de embarque de la referencia ${ref}.\n\n${datos}${datos ? '\n\n' : ''}El PDF va adjunto.\n\nEnviado por ${req.usuario || 'MEJAnet'} desde OP Manzanillo.`,
         adjuntos: [{ nombre: `FICHA DE EMBARQUE ${ref.replace(/[\\/:*?"<>|]/g, '-')}.pdf`, contenido: pdf }],
