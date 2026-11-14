@@ -3,6 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/iconos/favicon-32.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#0b1a33">
+<meta name="apple-mobile-web-app-title" content="mejanet">
 <title>Módulos · MEJAnet v1.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -51,8 +57,9 @@
   /* Portada */
   .hero{position:relative;background:radial-gradient(1200px 400px at 85% -10%,rgba(79,201,238,.22),transparent 60%),linear-gradient(160deg,#0b1a33 0%,#10284d 100%);color:var(--hero-ink);overflow:hidden;padding-bottom:110px}
   [data-tema="oscuro"] .hero{background:radial-gradient(1200px 400px at 85% -10%,rgba(79,201,238,.16),transparent 60%),linear-gradient(160deg,#07101f 0%,#0d1d38 100%);border-bottom:1px solid var(--line)}
-  .hero .hex{position:absolute;right:-60px;top:-40px;width:420px;height:420px;opacity:.10;pointer-events:none}
-  .hero .hex path{fill:none;stroke:var(--cyan);stroke-width:14;stroke-linecap:round;stroke-linejoin:round}
+  /* Marca de agua: el cubo del logo grupomeja (imagen original, fondo transparente) */
+  .hero .hex{position:absolute;right:-20px;top:-30px;width:360px;height:390px;opacity:.10;pointer-events:none;background:var(--cyan);
+    -webkit-mask:url(/iconos/cubo-blanco.png) center/contain no-repeat;mask:url(/iconos/cubo-blanco.png) center/contain no-repeat}
   .hero-txt{position:relative;padding-top:48px}
   .saludo{margin:0 0 10px;color:var(--hero-sub);font-size:14px;font-weight:500}
   /* Nombre de la plataforma: "meja" + etiqueta "net" */
@@ -107,7 +114,7 @@
     .wrap{padding:0 16px}
     header .wrap{height:68px}.logo{width:164px;height:40px}
     .usuario .nombre{display:none}.usuario{padding:5px}
-    .hero{padding-bottom:84px}.hero-txt{padding-top:20px}main{margin-top:-60px}.hero .hex{width:260px;height:260px;right:-70px}
+    .hero{padding-bottom:84px}.hero-txt{padding-top:20px}main{margin-top:-60px}.hero .hex{width:230px;height:250px;right:-60px;top:-10px}
     .grid{grid-template-columns:1fr;gap:12px}
     a.mod{min-height:80px;padding:14px}.tile{flex-basis:48px;height:48px;border-radius:12px}.tile svg{width:30px;height:30px}.nom{font-size:18px}
   }
@@ -115,7 +122,7 @@
 </head>
 <body>
 <div class="hero">
-  <svg class="hex" viewBox="0 0 200 200" aria-hidden="true"><path d="M100 14l74 42v88l-74 42-74-42V56z"/><path d="M62 78l38 24 38-24"/></svg>
+  <div class="hex" aria-hidden="true"></div>
   <header>
     <div class="wrap">
       <a href="/modulos" class="logo" aria-label="Grupo Meja"></a>
