@@ -57,6 +57,7 @@ async function init() {
   await importarCampos('semaforo-ma061-2026-11-09', path.join(__dirname, 'seed', 'semaforo_ma061_2026-11-09.json'));
   await despachoDesdeSemaforo('despacho-semaforo-ma061-2026-11-09');
   await importarCampos('buques-2026-11-09', path.join(__dirname, 'seed', 'buques_2026-11-09.json'));
+  await importarGastosConArchivos('gastos-correo-2026-11-13', path.join(__dirname, 'seed', 'gastos_2026-11-13'));
   if (pool) await pool.query('CREATE TABLE IF NOT EXISTS opm_drive (archivo TEXT PRIMARY KEY, drive_id TEXT NOT NULL)');
   // Referencias que MEJAnet escribió en el Google Sheet de control (solo esas se quitan al borrar el embarque)
   if (pool) await pool.query('CREATE TABLE IF NOT EXISTS opm_refsheet (id TEXT PRIMARY KEY, ref TEXT NOT NULL)');
@@ -169,6 +170,45 @@ async function importarGastos(nombre, archivo) {
     if (!nuevos.length) continue;
     await cambiar(id, { gastos: ya.concat(nuevos) }); n += nuevos.length;
     console.log(`OP Manzanillo [${nombre}]: ${e.ref} → ${nuevos.length} gastos`);
+  }
+  await marcarAplicada(nombre);
+  console.log(`OP Manzanillo [${nombre}]: ${n} gastos agregados`);
+}
+
+// Gastos con sus archivos (PDF/XML de la factura y comprobante de pago) tomados de los correos "FACTURAS GENERADAS EN LA OPERACION".
+// Una sola vez; no duplica (misma factura sin espacios, o mismo UUID). Los archivos se guardan como si se hubieran subido.
+async function importarGastosConArchivos(nombre, dir) {
+  const archivo = path.join(dir, 'gastos.json');
+  if (!fs.existsSync(archivo) || await yaAplicada(nombre)) return;
+  const lista = JSON.parse(fs.readFileSync(archivo, 'utf8'));
+  const norm = (x) => String(x || '').replace(/\s+/g, '').toUpperCase();
+  const MIME = { pdf: 'application/pdf', xml: 'application/xml' };
+  let n = 0;
+  for (const [id, filas] of Object.entries(lista)) {
+    const e = await obtener(id); if (!e) { console.log(`OP Manzanillo [${nombre}]: ${id} no existe, se omite`); continue; }
+    const ya = e.gastos || [];
+    const nuevos = [], guardados = {};
+    for (const [i, f] of filas.entries()) {
+      if (ya.some((g) => (f.factura && norm(g.factura) === norm(f.factura)) || (f.uuid && norm(g.uuid) === norm(f.uuid)))) { console.log(`OP Manzanillo [${nombre}]: ${e.ref} ${f.factura} ya existe, se omite`); continue; }
+      const g = { ...f, id: 'g' + Date.now().toString(36) + i + Math.random().toString(36).slice(2, 6), moneda: 'MXN' };
+      for (const k of ['pdf', 'xml', 'pago']) {
+        const a = f[k]; if (!a || !a.archivo) { delete g[k]; continue; }
+        if (!guardados[a.archivo]) {
+          const datos = fs.readFileSync(path.join(dir, a.archivo));
+          const aid = Date.now().toString(36) + require('crypto').randomBytes(6).toString('hex');
+          const tipo = MIME[a.archivo.split('.').pop().toLowerCase()] || 'application/pdf';
+          if (pool) await pool.query('INSERT INTO opm_archivos (id, embarque, nombre, tipo, datos) VALUES ($1,$2,$3,$4,$5)', [aid, id, a.nombre, tipo, datos]);
+          else { const d2 = path.join(db.DIR, 'opm_archivos'); fs.mkdirSync(d2, { recursive: true }); fs.writeFileSync(path.join(d2, aid), datos); fs.writeFileSync(path.join(d2, aid + '.json'), JSON.stringify({ nombre: a.nombre, tipo })); }
+          guardados[a.archivo] = { id: aid, nombre: a.nombre };
+        }
+        g[k] = guardados[a.archivo];
+      }
+      nuevos.push(limpiarGasto(g));
+    }
+    if (!nuevos.length) continue;
+    const despues = await cambiar(id, { gastos: ya.concat(nuevos) }); n += nuevos.length;
+    console.log(`OP Manzanillo [${nombre}]: ${e.ref} → ${nuevos.length} gastos con archivos`);
+    if (drive.activo() && despues) drive.sincronizar(e, despues, ARCH).catch((x) => console.error('Drive:', x.message));
   }
   await marcarAplicada(nombre);
   console.log(`OP Manzanillo [${nombre}]: ${n} gastos agregados`);

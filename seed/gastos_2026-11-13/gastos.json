@@ -1,0 +1,182 @@
+{
+ "MA132-26": [
+  {
+   "factura": "RHM 024892",
+   "proveedor": "R.H. SHIPPING & CHARTERING",
+   "concepto": "020114",
+   "detalle": "GASTOS LOCALES · EXW CHARGES (factura USD 1,230.40)",
+   "importe": 22762.4,
+   "fecha": "2026-10-08",
+   "metodo": "PPD",
+   "uuid": "F940B850-3964-439E-B943-9B9D2C511223",
+   "pagado": true,
+   "pdf": {
+    "archivo": "MA132_RHM024892.pdf",
+    "nombre": "Factura RHM 024892.pdf"
+   },
+   "xml": {
+    "archivo": "MA132_RHM024892.xml",
+    "nombre": "Factura RHM 024892.xml"
+   },
+   "pago": {
+    "archivo": "MA132_pago_gastos_locales.pdf",
+    "nombre": "Pago gastos locales MA132-26.pdf"
+   }
+  },
+  {
+   "factura": "9205245",
+   "proveedor": "SSA MEXICO HOLDINGS",
+   "concepto": "020121",
+   "detalle": "VALIDACION ELECTRONICA D COSU6466429010-3",
+   "importe": 1352.53,
+   "fecha": "2026-11-05",
+   "metodo": "PUE",
+   "uuid": "322D8641-5572-4492-BC8B-784DED8135D0",
+   "pagado": true,
+   "pdf": {
+    "archivo": "MA132_9205245.pdf",
+    "nombre": "Factura 9205245.pdf"
+   },
+   "xml": {
+    "archivo": "MA132_9205245.xml",
+    "nombre": "Factura 9205245.xml"
+   },
+   "pago": {
+    "archivo": "MA132_pago_ssa.pdf",
+    "nombre": "Pago SSA MA132-26.pdf"
+   }
+  },
+  {
+   "factura": "9206585",
+   "proveedor": "SSA MEXICO HOLDINGS",
+   "concepto": "020102",
+   "detalle": "CONTROL ELECTRONICO Y DOCUMENTAL C, ALMACEN A CAMION, IMPO COSU6466429010-3",
+   "importe": 7213.32,
+   "fecha": "2026-11-05",
+   "metodo": "PUE",
+   "uuid": "4998F51B-3007-41BC-818A-B5E091B0C546",
+   "pagado": true,
+   "pdf": {
+    "archivo": "MA132_9206585.pdf",
+    "nombre": "Factura 9206585.pdf"
+   },
+   "xml": {
+    "archivo": "MA132_9206585.xml",
+    "nombre": "Factura 9206585.xml"
+   },
+   "pago": {
+    "archivo": "MA132_pago_ssa.pdf",
+    "nombre": "Pago SSA MA132-26.pdf"
+   }
+  },
+  {
+   "factura": "MNZ 54248",
+   "proveedor": "SERMEL",
+   "concepto": "020084",
+   "detalle": "MANIOBRAS 1ER. RECON. ADUANERO-DESCARGA",
+   "importe": 2455.5,
+   "fecha": "2026-11-10",
+   "metodo": "PUE",
+   "uuid": "D306ABEE-601B-404B-B6A6-D123F400CEB8",
+   "pagado": true,
+   "pdf": {
+    "archivo": "MA132_MNZ54248.pdf",
+    "nombre": "Factura MNZ 54248.pdf"
+   },
+   "xml": {
+    "archivo": "MA132_MNZ54248.xml",
+    "nombre": "Factura MNZ 54248.xml"
+   }
+  }
+ ],
+ "MA148-26": [
+  {
+   "factura": "F 96062",
+   "proveedor": "LCL PORTS",
+   "concepto": "020121",
+   "detalle": "VALIDACION DE SERVICIO DE DESCONSOLIDACION / EIP2680008FZLO",
+   "importe": 1160.0,
+   "fecha": "2026-11-03",
+   "metodo": "PUE",
+   "uuid": "C7C364B1-A53E-43E9-9D26-B34993464617",
+   "pagado": true,
+   "pdf": {
+    "archivo": "MA148_F96062.pdf",
+    "nombre": "Factura F 96062.pdf"
+   },
+   "xml": {
+    "archivo": "MA148_F96062.xml",
+    "nombre": "Factura F 96062.xml"
+   },
+   "pago": {
+    "archivo": "MA148_pago_vsc.pdf",
+    "nombre": "Pago VSC MA148-26.pdf"
+   }
+  },
+  {
+   "factura": "RFE 223252",
+   "proveedor": "MANIOBRISTA LA JUNTA",
+   "concepto": "020121",
+   "detalle": "VALIDACION ELECTRONICA DE HBL CS, CONTROL DOCUMENTAL Y DE INFORMACION ELECTRONICA HBL EIP2680008FZLO - PKG600500100",
+   "importe": 2210.5,
+   "fecha": "2026-11-03",
+   "metodo": "PUE",
+   "uuid": "9AA5D592-02BF-4C9E-96B7-13302FD77659",
+   "pagado": true,
+   "pdf": {
+    "archivo": "MA148_RFE223252.pdf",
+    "nombre": "Factura RFE 223252.pdf"
+   },
+   "xml": {
+    "archivo": "MA148_RFE223252.xml",
+    "nombre": "Factura RFE 223252.xml"
+   },
+   "pago": {
+    "archivo": "MA148_pago_rev.pdf",
+    "nombre": "Pago REV MA148-26.pdf"
+   }
+  },
+  {
+   "factura": "RFE 224641",
+   "proveedor": "MANIOBRISTA LA JUNTA",
+   "concepto": "020102",
+   "detalle": "DE ALMACEN A CAMION CARGA GENERAL, EIP2680008FZLO - PKG600500100",
+   "importe": 7276.68,
+   "fecha": "2026-11-04",
+   "metodo": "PUE",
+   "uuid": "90150F5E-500D-4239-9FE0-C935A76958CF",
+   "pagado": true,
+   "pdf": {
+    "archivo": "MA148_RFE224641.pdf",
+    "nombre": "Factura RFE 224641.pdf"
+   },
+   "xml": {
+    "archivo": "MA148_RFE224641.xml",
+    "nombre": "Factura RFE 224641.xml"
+   },
+   "pago": {
+    "archivo": "MA148_pago_salida.pdf",
+    "nombre": "Pago salida MA148-26.pdf"
+   }
+  },
+  {
+   "factura": "MNZ 54247",
+   "proveedor": "SERMEL",
+   "concepto": "020084",
+   "detalle": "MANIOBRAS 1ER. RECON. ADUANERO-DESCARGA",
+   "importe": 2455.5,
+   "fecha": "2026-11-10",
+   "metodo": "PUE",
+   "uuid": "61E651A0-41C1-49DB-810F-7569DA4FAED1",
+   "pagado": true,
+   "pdf": {
+    "archivo": "MA148_MNZ54247.pdf",
+    "nombre": "Factura MNZ 54247.pdf"
+   },
+   "xml": {
+    "archivo": "MA148_MNZ54247.xml",
+    "nombre": "Factura MNZ 54247.xml"
+   }
+  }
+ ]
+}
