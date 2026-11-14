@@ -100,6 +100,7 @@ nav.tabs button[aria-selected="true"]{background:#4A3826;color:#EAE1D3;box-shado
 .btn:hover{border-color:var(--ink-3)}
 .btn.primary{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
 .btn.danger{color:var(--bad);border-color:var(--bad)}
+.cor-msg{font-size:12.5px;font-weight:700}.cor-msg.ok{color:#1E7A46}.cor-msg.mal{color:var(--bad)}
 .btn.menta{background:#88F9C0;border-color:#5FD99A;color:#111;display:inline-flex;align-items:center}.btn.menta:hover{background:#6FEFAE}
 .btn.cafe{color:#5E4E37;border-color:#5E4E37;text-decoration:none;display:inline-flex;align-items:center}.btn.cafe:hover{background:#F4EDE0}
 .btn.sm{padding:3px 9px;font-size:12.5px}
@@ -1175,7 +1176,7 @@ function menuReporteRef(){
     if(b&&b.dataset.rrmodo){ui.reporte="ref";ui.rrModo=b.dataset.rrmodo;ui.open=null;ui.newMode=false;renderDrawer()}});
 }
 document.addEventListener("keydown",ev=>{if(ev.key==="Escape"&&$("#rr-menu"))$("#rr-menu").remove()});
-const BTN_FICHA=id=>`<a class="btn cafe sm" href="/api/admin/opm/embarques/${encodeURIComponent(id)}/ficha.pdf" download>Descargar ficha de embarque</a><button class="btn menta sm" type="button" id="b-correo">Enviar por correo</button>`;
+const BTN_FICHA=id=>`<a class="btn cafe sm" href="/api/admin/opm/embarques/${encodeURIComponent(id)}/ficha.pdf" download>Descargar ficha de embarque</a><button class="btn menta sm" type="button" id="b-correo">Enviar por correo</button><span class="cor-msg" id="cor-msg" role="status"></span>`;
 const BTN_PDF=(t,modo)=>`<a class="rp-pdf" href="/api/admin/opm/reporte/${t==="ejecutivo"?"ejecutivo":"referencias"}.pdf${modo?"?modo="+modo:""}" download><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Descargar PDF</a>`;
 function renderReporteRef(){
   const modo=ui.rrModo||"des",nomModo=(RR_MODOS.find(m=>m[0]===modo)||RR_MODOS[0])[1];
@@ -1677,8 +1678,10 @@ document.addEventListener("click",ev=>{
   if(t.id==="b-export"){exportCSV();return}
   if(t.id==="del-ask"){ui.confirmDel=true;renderDrawer();return}
   if(t.id==="b-correo"){if(!canWrite){toast("Este tablero es de solo lectura para ti");return}const id=ui.open;t.disabled=true;t.textContent="Enviando…";
-    api("POST","/api/admin/opm/embarques/"+encodeURIComponent(id)+"/correo",{}).then(()=>toast("Ficha "+(EMB[id]||{}).ref+" enviada por correo"))
-      .catch(e=>toast(e.message)).finally(()=>{t.disabled=false;t.textContent="Enviar por correo"});return}
+    const m=$("#cor-msg");if(m){m.className="cor-msg";m.textContent=""}
+    const msg=(txt,ok)=>{const x=$("#cor-msg");if(x&&ui.open===id){x.className="cor-msg "+(ok?"ok":"mal");x.textContent=txt}else toast(txt)};
+    api("POST","/api/admin/opm/embarques/"+encodeURIComponent(id)+"/correo",{}).then(()=>msg("✓ Correo enviado",true))
+      .catch(e=>msg(e.message,false)).finally(()=>{t.disabled=false;t.textContent="Enviar por correo"});return}
   if(t.id==="del-no"){ui.confirmDel=false;renderDrawer();return}
   if(t.id==="del-yes"){const id=ui.open;ui.open=null;ui.confirmDel=false;renderDrawer();api("DELETE","/api/admin/opm/embarques/"+encodeURIComponent(id)).then(()=>{delete EMB[id];renderAll();toast("Embarque eliminado")}).catch(e=>toast(e.message));return}
   if(t.dataset.gdel){const e=EMB[ui.open];write(ui.open,{gastos:(e.gastos||[]).filter(g=>g.id!==t.dataset.gdel)});return}
