@@ -414,28 +414,25 @@ function rutas(admin) {
       res.send(buf);
     } catch (e) { err(res, e, 'No se pudo generar la ficha'); }
   });
-  // Enviar la ficha de embarque por correo (PDF adjunto), vía el Apps Script de Google
-  r.post('/api/admin/opm/embarques/:id/correo', admin, express.json({ limit: '200kb' }), async (req, res) => {
+  // Enviar la ficha de embarque por correo (PDF adjunto) a los destinatarios de OP Manzanillo
+  // configurados en Herramientas → Correo (mismo servicio que Orden de Carga)
+  r.post('/api/admin/opm/embarques/:id/correo', admin, async (req, res) => {
     try {
       if (req.soloLectura) return res.status(403).json({ error: 'Usuario de solo lectura' });
       const e = await obtener(req.params.id);
       if (!e) return res.status(404).json({ error: 'No encontrado' });
-      const lista = (x) => String(x || '').split(/[;,\s]+/).map((s) => s.trim()).filter(Boolean);
-      const ok = (m) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(m);
-      const para = lista(req.body && req.body.para), cc = lista(req.body && req.body.cc);
-      if (!para.length) return res.status(400).json({ error: 'Escribe al menos un destinatario' });
-      const malos = para.concat(cc).filter((m) => !ok(m));
-      if (malos.length) return res.status(400).json({ error: 'Correo no válido: ' + malos.join(', ') });
-      const pdf = await reportes.fichaEmbarque(e);
       const ref = String(e.ref || req.params.id);
-      // Mismo servicio de correo que Orden de Carga (remitente configurado en Herramientas → Correo)
-      await enviarCorreo({
-        modulo: 'op-manzanillo', forzar: true, para, cc,
-        asunto: t(req.body.asunto, 200) || `Ficha de embarque ${ref}`,
-        texto: t(req.body.mensaje, 4000),
+      const pdf = await reportes.fichaEmbarque(e);
+      const datos = [['Cliente', e.cliente], ['Buque', [e.buque, e.viaje].filter(Boolean).join(' ')], ['HBL', e.hbl], ['MBL', e.mbl],
+        ['Contenedor', e.contenedor], ['Pedimento', e.pedimento]].filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join('\n');
+      const r2 = await enviarCorreo({
+        modulo: 'op-manzanillo',
+        asunto: `FICHA DE EMBARQUE ${ref}${e.cliente ? ' // ' + e.cliente : ''}`,
+        texto: `Se envía la ficha de embarque de la referencia ${ref}.\n\n${datos}${datos ? '\n\n' : ''}El PDF va adjunto.\n\nEnviado por ${req.usuario || 'MEJAnet'} desde OP Manzanillo.`,
         adjuntos: [{ nombre: `FICHA DE EMBARQUE ${ref.replace(/[\\/:*?"<>|]/g, '-')}.pdf`, contenido: pdf }],
       });
-      console.log(`OP Manzanillo: ficha ${ref} enviada por ${req.usuario} a ${para.join(', ')}${cc.length ? ' (cc ' + cc.join(', ') + ')' : ''}`);
+      if (!r2.enviado) return res.status(409).json({ error: 'El envío de correo de OP Manzanillo está apagado (Herramientas → Correo).' });
+      console.log(`OP Manzanillo: ficha ${ref} enviada por correo por ${req.usuario}`);
       res.json({ ok: true });
     } catch (e) { console.error(e); res.status(500).json({ error: 'No se pudo enviar el correo: ' + e.message }); }
   });

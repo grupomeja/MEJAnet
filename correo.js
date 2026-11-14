@@ -21,7 +21,7 @@ const MODULOS = [
   { id: 'orden-de-carga', nombre: 'Orden de Carga', envia: true, descripcion: 'Aviso con el PDF de cada orden nueva' },
   { id: 'entradas-bodega', nombre: 'Entradas Bodega', envia: false },
   { id: 'cotizador', nombre: 'Cotizador', envia: false },
-  { id: 'op-manzanillo', nombre: 'OP Manzanillo', envia: true, descripcion: 'Ficha de embarque en PDF (botón «Enviar por correo»; los destinatarios se escriben en cada envío)' },
+  { id: 'op-manzanillo', nombre: 'OP Manzanillo', envia: true, descripcion: 'Ficha de embarque en PDF (botón «Enviar por correo» de la ficha)' },
   { id: 'cajas-patio', nombre: 'Cajas en patio', envia: false },
 ];
 

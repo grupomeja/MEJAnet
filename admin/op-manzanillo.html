@@ -484,11 +484,6 @@ aside.drawer{position:fixed;top:0;right:0;bottom:0;width:min(820px,100%);backgro
 .tot{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;margin-top:8px;color:var(--ink-2)}
 .tot b{font-variant-numeric:tabular-nums;color:var(--ink)}
 .confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.correo-p{margin-top:12px;border:1px solid #5FD99A;background:#F2FFF8;border-radius:10px;padding:12px 14px;display:grid;gap:8px;max-width:640px}
-.correo-t{font-weight:800;color:#1B1F27}.correo-t small{font-weight:500;color:var(--ink-3)}
-.correo-p label{display:grid;gap:3px;font-size:11.5px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.04em}
-.correo-p input,.correo-p textarea{font:inherit;font-size:13px;text-transform:none;letter-spacing:0;color:var(--ink);font-weight:500;border:1px solid var(--line);border-radius:7px;padding:6px 9px;background:#fff;resize:vertical}
-.correo-m{font-size:12.5px;color:var(--bad)}
 .saved{font-size:12px;color:var(--ok);min-height:16px}
 .toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:8px 14px;border-radius:6px;z-index:60;font-size:13px}
 .ref-asig{display:flex;gap:6px;align-items:stretch}.ref-asig input{flex:0 1 130px;min-width:0}
@@ -1180,18 +1175,6 @@ function menuReporteRef(){
     if(b&&b.dataset.rrmodo){ui.reporte="ref";ui.rrModo=b.dataset.rrmodo;ui.open=null;ui.newMode=false;renderDrawer()}});
 }
 document.addEventListener("keydown",ev=>{if(ev.key==="Escape"&&$("#rr-menu"))$("#rr-menu").remove()});
-// Panel "Enviar por correo": la ficha de embarque en PDF va adjunta (sale por el Apps Script de Google)
-function correoHTML(e){if(!ui.correo||ui.correo.id!==ui.open)return"";const c=ui.correo;
-  return `<div class="correo-p"><div class="correo-t">Enviar ficha de embarque por correo <small>· se adjunta el PDF de la ficha</small></div>
-  <label>Para<input id="cor-para" type="text" value="${esc(c.para)}" placeholder="correo@empresa.com (separa varios con coma)"></label>
-  <label>CC<input id="cor-cc" type="text" value="${esc(c.cc)}" placeholder="Opcional"></label>
-  <label>Asunto<input id="cor-asunto" type="text" value="${esc(c.asunto)}"></label>
-  <label>Mensaje<textarea id="cor-msg" rows="5">${esc(c.mensaje)}</textarea></label>
-  <div class="confirm"><button class="btn menta sm" type="button" id="cor-enviar" ${c.enviando?"disabled":""}>${c.enviando?"Enviando…":"Enviar"}</button><button class="btn sm" type="button" id="cor-cancel">Cancelar</button><span class="correo-m">${esc(c.msg||"")}</span></div></div>`}
-function correoNuevo(id){const e=EMB[id]||{};let para="",cc="";try{para=localStorage.getItem("om.cor.para")||"";cc=localStorage.getItem("om.cor.cc")||""}catch(x){}
-  const lin=[e.cliente&&("Cliente: "+e.cliente),e.buque&&("Buque: "+e.buque+(e.viaje?" "+e.viaje:"")),e.hbl&&("HBL: "+e.hbl),e.contenedor&&("Contenedor: "+e.contenedor),e.pedimento&&("Pedimento: "+e.pedimento)].filter(Boolean);
-  return {id,para,cc,asunto:"Ficha de embarque "+(e.ref||"")+(e.cliente?" · "+e.cliente:""),
-    mensaje:"Buen día,\n\nAdjunto la ficha de embarque de la referencia "+(e.ref||"")+".\n"+(lin.length?"\n"+lin.join("\n")+"\n":"")+"\nQuedo a sus órdenes.\n\nGrupo MEJA"}}
 const BTN_FICHA=id=>`<a class="btn cafe sm" href="/api/admin/opm/embarques/${encodeURIComponent(id)}/ficha.pdf" download>Descargar ficha de embarque</a><button class="btn menta sm" type="button" id="b-correo">Enviar por correo</button>`;
 const BTN_PDF=(t,modo)=>`<a class="rp-pdf" href="/api/admin/opm/reporte/${t==="ejecutivo"?"ejecutivo":"referencias"}.pdf${modo?"?modo="+modo:""}" download><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Descargar PDF</a>`;
 function renderReporteRef(){
@@ -1384,7 +1367,6 @@ const LB=2.20462;
 function numero(v){v=String(v==null?"":v).replace(/[$,\s]/g,"").trim();if(v==="")return null;const n=Number(v);return Number.isFinite(n)&&n>=0?n:null}
 const dos=n=>n==null?"":String(Math.round(n*100)/100);
 /* Peso: al escribir kg se calcula lbs y al revés */
-document.addEventListener("input",ev=>{const el=ev.target,k={"cor-para":"para","cor-cc":"cc","cor-asunto":"asunto","cor-msg":"mensaje"}[el.id];if(k&&ui.correo)ui.correo[k]=el.value});
 document.addEventListener("input",ev=>{const el=ev.target;if(!el.closest||!el.closest("#drawer"))return;
   if(el.id==="fx-peso"){const n=numero(el.value),o=document.getElementById("fx-pesoLbs");if(o)o.value=n==null?"":dos(n*LB)}
   else if(el.id==="fx-pesoLbs"){const n=numero(el.value),o=document.getElementById("fx-peso");if(o)o.value=n==null?"":dos(n/LB)}});
@@ -1488,7 +1470,7 @@ function renderDrawerInner(){
       ${t.n?`<span class="${t.pdf<t.n?"warn":""}">PDF ${t.pdf}/${t.n}</span><span class="${t.xml<t.n?"warn":""}">XML ${t.xml}/${t.n}</span>`:""}
       ${e.gastosCerrada?`<span class="ok">Referencia cerrada</span>`:""}
       <button type="button" class="btn sm" id="g-ir">Ver / capturar en Gastos →</button></div></div>`})()}
-    ${canWrite?`<div class="confirm">${ui.confirmDel?`<span>¿Eliminar ${esc(e.ref)} con sus hitos y gastos?</span><button class="btn danger" type="button" id="del-yes">Sí, eliminar</button><button class="btn" type="button" id="del-no">Cancelar</button>`:`<button class="btn danger sm" type="button" id="del-ask">Eliminar embarque</button>${BTN_FICHA(ui.open)}`}</div>${correoHTML(e)}`:`<div class="confirm">${BTN_FICHA(ui.open)}</div>`}
+    ${canWrite?`<div class="confirm">${ui.confirmDel?`<span>¿Eliminar ${esc(e.ref)} con sus hitos y gastos?</span><button class="btn danger" type="button" id="del-yes">Sí, eliminar</button><button class="btn" type="button" id="del-no">Cancelar</button>`:`<button class="btn danger sm" type="button" id="del-ask">Eliminar embarque</button>${BTN_FICHA(ui.open)}`}</div>`:`<div class="confirm">${BTN_FICHA(ui.open)}</div>`}
   </div>
   <datalist id="dl-term">${["TIMSA","CONTECON","SSA MEXICO","OCUPA","CORPORACION MULTIMODAL","COMERCIALIZADORA LA JUNTA","TAP","FRIMAN","HAZESA"].map(t=>`<option value="${t}">`).join("")}</datalist>
   <datalist id="dl-cli">${clientes().map(c=>`<option value="${esc(c)}">`).join("")}</datalist>`;
@@ -1694,14 +1676,9 @@ document.addEventListener("click",ev=>{
   if(t.id==="b-nuevo"){if(!canWrite){toast("Este tablero es de solo lectura para ti");return}ui.newMode=true;ui.open=null;renderDrawer();return}
   if(t.id==="b-export"){exportCSV();return}
   if(t.id==="del-ask"){ui.confirmDel=true;renderDrawer();return}
-  if(t.id==="b-correo"){if(!canWrite){toast("Este tablero es de solo lectura para ti");return}ui.correo=ui.correo&&ui.correo.id===ui.open?null:correoNuevo(ui.open);renderDrawer();if(ui.correo){const x=$("#cor-para");x&&x.scrollIntoView({block:"center"});x&&!x.value&&x.focus()}return}
-  if(t.id==="cor-cancel"){ui.correo=null;renderDrawer();return}
-  if(t.id==="cor-enviar"){const c=ui.correo;if(!c||c.enviando)return;
-    if(!c.para.trim()){c.msg="Escribe al menos un destinatario";renderDrawer();return}
-    c.enviando=true;c.msg="";renderDrawer();
-    api("POST","/api/admin/opm/embarques/"+encodeURIComponent(c.id)+"/correo",{para:c.para,cc:c.cc,asunto:c.asunto,mensaje:c.mensaje})
-      .then(()=>{try{localStorage.setItem("om.cor.para",c.para);localStorage.setItem("om.cor.cc",c.cc)}catch(x){}ui.correo=null;renderDrawer();toast("Ficha "+(EMB[c.id]||{}).ref+" enviada a "+c.para)})
-      .catch(e=>{c.enviando=false;c.msg=e.message;renderDrawer()});return}
+  if(t.id==="b-correo"){if(!canWrite){toast("Este tablero es de solo lectura para ti");return}const id=ui.open;t.disabled=true;t.textContent="Enviando…";
+    api("POST","/api/admin/opm/embarques/"+encodeURIComponent(id)+"/correo",{}).then(()=>toast("Ficha "+(EMB[id]||{}).ref+" enviada por correo"))
+      .catch(e=>toast(e.message)).finally(()=>{t.disabled=false;t.textContent="Enviar por correo"});return}
   if(t.id==="del-no"){ui.confirmDel=false;renderDrawer();return}
   if(t.id==="del-yes"){const id=ui.open;ui.open=null;ui.confirmDel=false;renderDrawer();api("DELETE","/api/admin/opm/embarques/"+encodeURIComponent(id)).then(()=>{delete EMB[id];renderAll();toast("Embarque eliminado")}).catch(e=>toast(e.message));return}
   if(t.dataset.gdel){const e=EMB[ui.open];write(ui.open,{gastos:(e.gastos||[]).filter(g=>g.id!==t.dataset.gdel)});return}
